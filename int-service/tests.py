@@ -4,5 +4,3 @@ import main
 import unittest
 import suds
 
-
-
