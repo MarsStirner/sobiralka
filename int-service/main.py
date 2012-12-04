@@ -1,1 +1,2 @@
-__author__ = 'santipov'
+# -*- coding: utf-8 -*-
+from is_exceptions import *
