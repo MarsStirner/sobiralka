@@ -1,0 +1,5 @@
+Flask
+spyne
+SQLAlchemy
+Flask-SQLAlchemy
+suds
