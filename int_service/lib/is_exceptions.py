@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import exceptions
+from exceptions import Exception
 
 #Define exceptions
 class ISError(Exception): pass
