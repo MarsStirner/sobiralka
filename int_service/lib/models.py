@@ -27,6 +27,7 @@ class LPU(Base):
     protocol = Enum(['samson', 'intramed'])
     token = Column(String, length=45)
 
+
 class LPU_Units(Base):
     '''
     Mapping for lpu_units table
@@ -39,6 +40,25 @@ class LPU_Units(Base):
     address = Column(Unicode, length = 256)
 
     lpu = relationship("LPU", backref=backref('lpu_units', order_by=id))
+
+
+class UnitsParentForId(Base):
+    '''
+    Mapping for UnitsParentForId table
+    '''
+    __tablename__ = 'UnitsParentForId'
+
+    id = Column(Integer, primary_key = True)
+    LpuId = Column(String, ForeignKey('lpu.id'))
+    OrgId = Column(String, ForeignKey('lpu.id'))
+    ChildId = Column(String, ForeignKey('lpu_units.id'))
+    name = Column(Unicode, length = 256)
+    address = Column(Unicode, length = 256)
+
+    lpu = relationship("LPU", backref=backref('lpu', order_by=id))
+    org = relationship("LPU", backref=backref('lpu', order_by=id))
+    child = relationship("LPU_Units", backref=backref('lpu_units', order_by=id))
+
 
 class Enqueue(Base):
     '''
@@ -53,6 +73,7 @@ class Enqueue(Base):
     def __init__(self, error, data):
         self.Error = error
         self.Data = data
+
 
 class Personal(Base):
     '''
