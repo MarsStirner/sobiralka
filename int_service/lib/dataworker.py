@@ -7,6 +7,7 @@ from sqlalchemy import or_
 
 from settings import DB_CONNECT_STRING
 from models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal
+from soap_client import Clients
 
 engine = create_engine(DB_CONNECT_STRING)
 Session = sessionmaker(bind=engine)
@@ -15,8 +16,8 @@ class DataWorker(object):
     '''
     Provider class for current DataWorkers
     '''
-
-    def __init__(self, type):
+    @classmethod
+    def provider(cls, type):
         type = type.lower()
 
         if type == 'lpu':
@@ -39,15 +40,19 @@ class LPUWorker(object):
     model = LPU
 
     def get_list(self, **kwargs):
-        if kwargs['lpu_ids']:
-            lpu_ids = kwargs['lpu_ids']
+        '''
+        Get LPU list by parameters
+        '''
+        if kwargs['id']:
+            lpu_ids = kwargs['id']
         if kwargs['speciality']:
             speciality = kwargs['speciality']
         if kwargs['okato_code']:
             okato_code = kwargs['okato_code']
 
         # Prepare query for getting LPU
-        fields = [LPU.id, LPU.name, LPU.phone, LPU.address, LPU.token, LPU.key]
+#        fields = [LPU.id, LPU.name, LPU.phone, LPU.address, LPU.key, LPU.proxy, LPU.token, LPU.protocol]
+        fields = [LPU]
         filter = []
         join = []
 
@@ -68,22 +73,91 @@ class LPUWorker(object):
 
         return query_lpu.all()
 
-    def get_list_hospitals(self, id, speciality="", ocato_code=""):
+    def get_lpu_by_address(self, **kwargs):
+        '''
+        Get LPU list by address parameters
+        '''
+        if (kwargs['parsedAddress']['kladrCode']
+            and kwargs['parsedAddress']['block']
+            and kwargs['parsedAddress']['flat']
+#            and kwargs['parsedAddress']['house']['building']
+            and kwargs['parsedAddress']['house']['number']
+            ):
+            # Prepare search parameters
+            streetKLADR = kwargs['parsedAddress']['kladrCode']
+            pointKLADR = kwargs['parsedAddress']['kladrCode'][0:5].ljust(15, '0')
+        else:
+            return []
+
+        result = []
+
+        if kwargs['lpu_list']:
+            used_proxy = []
+            # Use LPU proxy for searching by Soap
+            for lpu in kwargs['lpu_list']:
+                proxy = lpu['proxy'].split(':')
+                if proxy[0] and proxy[0] not in used_proxy:
+                    used_proxy.append(proxy[0])
+                    proxy_client = Clients.provider(Clients, proxy[0])
+                    result.append(proxy_client.findOrgStructureByAddress({
+                        'serverId': lpu['key'],
+                        'number': kwargs['parsedAddress']['house']['number'],
+                        'corpus': kwargs['parsedAddress']['house']['building'],
+                        'pointKLADR': pointKLADR,
+                        'streetKLADR': streetKLADR,
+                        'flat': kwargs['parsedAddress']['house']['flat'],
+                    }))
+
+        if result:
+            result = self._get_lpu_ids(result)
+
+        return result
+
+    def _get_lpu_ids(self, lpu_list):
+        for key, item in lpu_list:
+            query = (self.session.query(UnitsParentForId.OrgId, LPU.id)
+                     .filter(UnitsParentForId.LpuId==LPU.id)
+                     .filter(LPU.key==item['serverId'])
+                     .filter(UnitsParentForId.ChildId==int(item['orgStructureId'])))
+
+            try:
+                lpu_ids = query.one()
+            except sqlalchemy.orm.exc.MultipleResultsFound, e:
+                print e
+            else:
+                lpu_list[key]['id'] = lpu_ids.id
+                lpu_list[key]['OrgId'] = lpu_ids.OrgId
+
+        return lpu_list
+
+    @classmethod
+    def parse_hospital_uid(cls, hospitalUid):
+        lpu = []
+        lpu_units = []
+        if not isinstance(hospitalUid, list):
+            hospitalUid = list(hospitalUid)
+        for i in hospitalUid:
+            tmp_list = i.split('/')
+            if tmp_list[1]:
+                lpu_units.append(tmp_list)
+            else:
+                lpu.append(tmp_list[0])
+
+        return (lpu, lpu_units)
+
+    def get_list_hospitals(self, hospitalUid, speciality="", ocato_code=""):
+        '''
+        Get list of LPUs and LPU_Units
+        '''
         result = {'hospitals':[]}
         lpu = []
         lpu_units = []
 
-        if id:
-            if not isinstance(id, list):
-                id = list(id)
-            for i in id:
-                tmp_list = i.split('/')
-                if tmp_list[1]:
-                    lpu_units.append(tmp_list)
-                else:
-                    lpu.append(tmp_list[0])
+        if hospitalUid:
+            lpu, lpu_units = LPUWorker.parse_hospital_uid(LPUWorker, hospitalUid)
 
-        lpu_list = self.get_list(lpu_ids=lpu, speciality=speciality, okato_code=okato_code)
+        lpu_list = self.get_list(id=lpu, speciality=speciality, okato_code=okato_code)
+        # Append LPUs to result
         for item in lpu_list:
             result['hospitals'].append({
                 'uid': item.id + '/0',
@@ -98,7 +172,8 @@ class LPUWorker(object):
 
         if not okato_code:
             units_dw = LPU_UnitsWorker()
-            lpu_units_list = units_dw.get_list(lpu_units_uids=lpu_units, speciality=speciality)
+            lpu_units_list = units_dw.get_list(uid=lpu_units, speciality=speciality)
+            # Append LPU_Units to result
             for item in lpu_units_list:
                 if item.parentId:
                     uid = item.id + '/' + item.parentId
@@ -110,6 +185,7 @@ class LPUWorker(object):
                     'title': item.name,
                     'phone': item.phone,
                     'address': item.address,
+                    # TODO: выяснить используется ли wsdlURL и верно ли указан
                     'wsdlURL': "http://" + SOAP_SERVER_HOST + ":" + SOAP_SERVER_PORT + '/schedule/?wsdl',
                     'token': item.token,
                     'key': item.key,
@@ -123,8 +199,11 @@ class LPU_UnitsWorker(object):
     model = LPU_Units
 
     def get_list(self, **kwargs):
-        if kwargs['lpu_units_ids']:
-            lpu_units_ids = kwargs['lpu_units_ids']
+        '''
+        Get LPU_Units list by parameters
+        '''
+        if kwargs['uid']:
+            lpu_units_ids = kwargs['uid']
         if kwargs['speciality']:
             speciality = kwargs['speciality']
 
@@ -151,7 +230,8 @@ class LPU_UnitsWorker(object):
 
         if len(lpu_units_ids):
             for unit in lpu_units_ids:
-                query_lpu_units = query_lpu_units.filter(or_(LPU_Units.lpuId==unit[0], LPU_Units.id==unit[1]))
+                or_list.append((LPU_Units.lpuId==unit[0], LPU_Units.id==unit[1]))
+            query_lpu_units = query_lpu_units.filter(or_(or_list))
 
         if speciality and isinstance(speciality, unicode):
             query_lpu_units = query_lpu_units.filter(Personal.speciality==speciality)
@@ -168,5 +248,83 @@ class PersonalWorker(object):
     session = Session
     model = Personal
 
-    def get_list_doctors(self):
-        pass
+    def get_list(self, **kwargs):
+        '''
+       Get Doctors list by lpu & lpu_units
+       '''
+        if kwargs['lpu']:
+            lpu = kwargs['lpu']
+        if kwargs['lpu_units']:
+            lpu_units = kwargs['lpu_units']
+
+        result = {}
+        query = self.session.query(
+            Personal.FirstName,
+            Personal.PatrName,
+            Personal.LastName,
+            Personal.speciality,
+            Personal.id,
+            Personal.lpuId,
+            Personal.orgId,
+            Personal.keyEPGU,
+            LPU.name.label('lpu_name'),
+            LPU_Units.name.label('lpu_units_name'),
+            LPU.address.label('lpu_address'),
+            LPU_Units.address.label('lpu_units_address'),
+            LPU.phone,
+            LPU.key,
+        )
+        or_list = []
+        if lpu:
+            for item in lpu:
+                or_list.append((Personal.lpuId==item['id'],))
+        if lpu_units:
+            for item in lpu:
+                or_list.append((Personal.lpuId==item['id'], Personal.orgId==item['id']))
+
+        query = query.outerjoin(LPU).outerjoin(LPU_Units)
+
+        for value in query.filter(or_(or_list)).all():
+            result['doctors'].append({
+                'uid': value.id,
+                'name': {
+                    'firstName': item.FirstName,
+                    'patronymic': item.PatrName,
+                    'lastName': item.LastName,
+                },
+                'hospitalUid': value.lpuId + '/' + value.orgId,
+                'speciality': value.speciality,
+                'keyEPGU': value.keyEPGU,
+            })
+
+            result['hospitals'].append({
+                'uid': value.lpuId + '/' + value.orgId,
+                'title': (value.lpu_name + " " + value.lpu_units_name).trim(),
+                'address': (value.lpu_address + " " + value.lpu_units_address).trim(),
+                # TODO: выяснить используется ли wsdlURL и верно ли указан
+                'wsdlURL': "http://" + SOAP_SERVER_HOST + ":" + SOAP_SERVER_PORT + '/schedule/?wsdl',
+                'token': '',
+                'key': value.key,
+            })
+
+        return result
+
+    def get_list_doctors(self, **kwargs):
+        '''
+        Get doctors list by parameters
+        '''
+        if kwargs['searchScope']['hospitalUid']:
+            hospitalUid = kwargs['searchScope']['hospitalUid']
+            lpu, lpu_units = LPU_Worker.parse_hospital_uid(LPU_Worker, hospitalUid)
+
+        lpu_dw = LPUWorker()
+        lpu_list = lpu_dw.get_list(id=lpu)
+
+        if kwargs['searchScope']['address']:
+            # TODO: уточнить используется ли поиск по адресу
+            lpu_list = lpu_dw.get_lpu_by_address(kwargs['searchScope']['address'], lpu_list)
+
+        lpu_units_dw = LPU_UnitsWorker()
+        lpu_units_list = lpu_units_dw.get_list(uid=lpu_units)
+
+        return self.get_list(lpu=lpu_list, lpu_units=lpu_units_list)

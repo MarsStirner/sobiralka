@@ -25,11 +25,11 @@ class InfoServer(object):
 class ListServer(object):
 
     def listHospitals(self, **kwargs):
-        obj = DataWorker('lpu')
+        obj = DataWorker.provider(DataWorker, 'lpu')
         return obj.get_list_hospitals(**kwargs)
 
     def listDoctors(self, **kwargs):
-        obj = DataWorker('personal')
+        obj = DataWorker.provider(DataWorker, 'personal')
         return obj.get_list_doctors(**kwargs)
 
     def listSpecialities(self):
