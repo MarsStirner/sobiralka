@@ -32,6 +32,10 @@ class AbstractClient(object):
     def findOrgStructureByAddress(self):
         pass
 
+    @abstractmethod
+    def getScheduleInfo(self):
+        pass
+
 class ClientSamson(AbstractClient):
     def __init__(self, url):
         self.client = Client(url)

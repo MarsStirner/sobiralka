@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import exceptions
+import urllib
+import datetime, time
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy import or_
 from sqlalchemy.orm.exc import MultipleResultsFound
+from suds import WebFault
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, DB_CONNECT_STRING
 from models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal
@@ -114,7 +117,7 @@ class LPUWorker(object):
                 proxy = lpu['proxy'].split(';')
                 if proxy[0] and proxy[0] not in used_proxy:
                     used_proxy.append(proxy[0])
-                    proxy_client = Clients.provider(proxy[0])
+                    proxy_client = Clients.provider(lpu['protocol'])
                     result.append(proxy_client.findOrgStructureByAddress({
                         'serverId': lpu['key'],
                         'number': kwargs['parsedAddress']['house']['number'],
@@ -149,7 +152,7 @@ class LPUWorker(object):
 
         return lpu_list
 
-    def get_list_hospitals(self, hospitalUid, speciality="", okato_code=""):
+    def get_list_hospitals(self, **kwargs):
         '''
         Get list of LPUs and LPU_Units
         '''
@@ -157,8 +160,15 @@ class LPUWorker(object):
         lpu = []
         lpu_units = []
 
-        if hospitalUid:
-            lpu, lpu_units = LPUWorker.parse_hospital_uid(hospitalUid)
+        if kwargs['hospitalUid']:
+            lpu, lpu_units = LPUWorker.parse_hospital_uid(kwargs['hospitalUid'])
+
+        speciality = ""
+        okato_code = ""
+        if kwargs['speciality']:
+            speciality = kwargs['speciality']
+        if kwargs['okato_code']:
+            okato_code = kwargs['okato_code']
 
         lpu_list = self.get_list(id=lpu, speciality=speciality, okato_code=okato_code)
         # Append LPUs to result
@@ -232,6 +242,23 @@ class LPUWorker(object):
 
         return result
 
+    def get_by_id(self, id):
+        '''
+        Get LPU by id and check if proxy url is available
+        '''
+        try:
+            result = self.session.query(LPU).filter(LPU.id==int(id))
+        except NoResultFound, e:
+            print e
+        else:
+            result.proxy = result.proxy.split(';')[0]
+            if urllib.urlopen(result.proxy).getcode() == 200:
+                return result
+            else:
+                raise WebFault
+
+        return None
+
 
 class LPU_UnitsWorker(object):
     session = Session
@@ -286,7 +313,54 @@ class LPU_UnitsWorker(object):
 class EnqueueWorker(object):
     session = Session
     model = Enqueue
-    pass
+    SCHEDULE_DAYS_DELTA = 14
+
+    def get_info(self, **kwargs):
+        result = {}
+
+        if kwargs['hospitalUid']:
+            hospital_uid = kwargs['hospitalUid'].split('/')
+            if len(hospital_uid)==2:
+                lpu_dw = LPUWorker()
+                lpu = lpu_dw.get_by_id(hospital_uid[0])
+            else:
+                raise exceptions.ValueError
+                return {}
+        else:
+            raise exceptions.ValueError
+            return {}
+
+        if kwargs['doctorUid']:
+            doctor_uid = kwargs['doctor_uid']
+        else:
+            raise exceptions.ValueError
+            return {}
+
+        if kwargs['hospitalUidFrom']:
+            hospital_uid_from = kwargs['hospitalUidFrom']
+
+        start, end = '', ''
+        if kwargs['start']:
+            start = kwargs['start']
+        if kwargs['end']:
+            end = kwargs['end']
+
+        start, end = self.__get_dates_period(start, end)
+
+        # TODO: get timeslots by date, doctor, hospital
+
+
+
+        return result
+
+    def __get_dates_period(self, start='', end=''):
+        if not start:
+            start = time.mktime(datetime.datetime.today().timetuple())
+
+        if not end:
+            end = time.mktime((datetime.datetime.today() + datetime.timedelta(self.SCHEDULE_DAYS_DELTA)).timetuple())
+
+        return (start, end)
 
 class PersonalWorker(object):
     session = Session

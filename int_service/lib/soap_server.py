@@ -42,8 +42,9 @@ class ListServer(object):
 
 class ScheduleServer(object):
 
-    def getScheduleInfo(self):
-        pass
+    def getScheduleInfo(self, **kwargs):
+        obj = DataWorker.provider('enqueue')
+        return obj.get_info(kwargs)
 
     def getTicketStatus(self):
         pass
