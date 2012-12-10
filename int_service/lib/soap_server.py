@@ -12,8 +12,9 @@ from dataworker import DataWorker
 
 class InfoServer(object):
 
-    def getHospitalInfo(self):
-        pass
+    def getHospitalInfo(self, **kwargs):
+        obj = DataWorker.provider('lpu')
+        return obj.get_info(kwargs)
 
     def setDoctorInfo(self):
         pass
@@ -25,12 +26,12 @@ class InfoServer(object):
 class ListServer(object):
 
     def listHospitals(self, **kwargs):
-        obj = DataWorker.provider(DataWorker, 'lpu')
+        obj = DataWorker.provider('lpu')
         return obj.get_list_hospitals(**kwargs)
 
     def listDoctors(self, **kwargs):
-        obj = DataWorker.provider(DataWorker, 'personal')
-        return obj.get_list_doctors(**kwargs)
+        obj = DataWorker.provider('personal')
+        return obj.get_list_doctors(kwargs)
 
     def listSpecialities(self):
         pass
