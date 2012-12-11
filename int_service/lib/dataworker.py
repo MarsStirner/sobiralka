@@ -3,6 +3,7 @@
 import exceptions
 import urllib
 import datetime, time
+import json
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy import or_
@@ -12,6 +13,7 @@ from suds import WebFault
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, DB_CONNECT_STRING
 from models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal
 from soap_client import Clients
+from is_exceptions import exception_by_code
 
 engine = create_engine(DB_CONNECT_STRING)
 Session = sessionmaker(bind=engine)
@@ -114,12 +116,12 @@ class LPUWorker(object):
             used_proxy = []
             # Use LPU proxy for searching by Soap
             for lpu in kwargs['lpu_list']:
-                proxy = lpu['proxy'].split(';')
+                proxy = lpu.proxy.split(';')
                 if proxy[0] and proxy[0] not in used_proxy:
                     used_proxy.append(proxy[0])
-                    proxy_client = Clients.provider(lpu['protocol'])
+                    proxy_client = Clients.provider(lpu.protocol, proxy[0])
                     result.append(proxy_client.findOrgStructureByAddress({
-                        'serverId': lpu['key'],
+                        'serverId': lpu.key,
                         'number': kwargs['parsedAddress']['house']['number'],
                         'corpus': kwargs['parsedAddress']['house']['building'],
                         'pointKLADR': pointKLADR,
@@ -247,7 +249,7 @@ class LPUWorker(object):
         Get LPU by id and check if proxy url is available
         '''
         try:
-            result = self.session.query(LPU).filter(LPU.id==int(id))
+            result = self.session.query(LPU).filter(LPU.id==int(id)).one()
         except NoResultFound, e:
             print e
         else:
@@ -310,6 +312,20 @@ class LPU_UnitsWorker(object):
         return query_lpu_units.all()
 
 
+    def get_by_id(self, id):
+        '''
+        Get LPU_Unit by id
+        '''
+        try:
+            result = self.session.query(LPU_Units).filter(LPU_Units.id==int(id)).one()
+        except NoResultFound, e:
+            print e
+        else:
+            return result
+
+        return None
+
+
 class EnqueueWorker(object):
     session = Session
     model = Enqueue
@@ -352,8 +368,7 @@ class EnqueueWorker(object):
 
         start, end = self.__get_dates_period(start, end)
 
-        # TODO: get timeslots by date, doctor, hospital
-        proxy_client = Clients.provider(lpu.protocol)
+        proxy_client = Clients.provider(lpu.protocol, lpu.proxy.split(';')[0])
         result = proxy_client.getScheduleInfo(
             hospital_uid=hospital_uid,
             doctor_uid = doctor_uid,
@@ -361,7 +376,8 @@ class EnqueueWorker(object):
             end=end,
             speciality = speciality,
             hospital_uid_from = hospital_uid_from,
-            server_id = lpu.key)
+            server_id = lpu.key
+        )
 
         return result
 
@@ -375,6 +391,183 @@ class EnqueueWorker(object):
             end = (datetime.datetime.today() + datetime.timedelta(days=self.SCHEDULE_DAYS_DELTA))
 
         return (start, end)
+
+    def __get_tickets_ge_id(self, id, hospital_uid=None):
+        tickets = []
+        for item in self.session.query().filter(
+            Enqueue.DataType=='0',
+            Enqueue.id>id,
+            Enqueue.Error=='100 ok',
+            Enqueue.status==0
+        ):
+            data = json.load(item.Data)
+            if hospital_uid and hospital_uid==data['hospitalUid'] or hospital_uid is None:
+                tickets.append({
+                    'id': item.id,
+                    'data': data,
+                    'error': item.error,
+                })
+        return tickets
+
+    def get_by_id(self, id):
+        '''
+        Get Ticket by id and check
+        '''
+        try:
+            result = self.session.query(Enqueue).filter(Enqueue.id==int(id)).one()
+        except NoResultFound, e:
+            print e
+        else:
+            return result
+
+        return None
+
+    def get_ticket_status(self, **kwargs):
+        '''
+        Get tickets' status
+        '''
+        result = {}
+        if kwargs['hospitalUid'] and kwargs['ticketUid']:
+            hospital_uid = kwargs['hospitalUid'].split('/')
+            if len(hospital_uid)==2:
+                if hospital_uid[1]:
+                    # It's lpu_unit, work with LPU_UnitsWorker
+                    dw = LPU_UnitsWorker()
+                    lpu_info = dw.get_by_id(hospital_uid[1])
+                    lpu_address = lpu_info.address
+                    lpu_name = lpu_info.name + '(' + lpu_info.lpu.name + ')'
+                    proxy_client = Clients.provider(lpu_info.lpu.protocol, lpu_info.lpu.proxy.split(';')[0])
+                    server_id = lpu_info.lpu.key
+                else:
+                    # It's lpu, works with LPUWorker
+                    dw = LPUWorker()
+                    lpu_info = dw.get_by_id(hospital_uid[0])
+                    lpu_address = lpu_info.address
+                    lpu_name = lpu_info.name
+                    proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
+                    server_id = lpu_info.key
+            else:
+                raise exceptions.ValueError
+                return {}
+        else:
+            raise exceptions.ValueError
+            return {}
+
+        if kwargs['lastUid']:
+            tickets = self.__get_tickets_ge_id(kwargs['lastUid'], kwargs['hospitalUid'])
+        else:
+            if isinstance(kwargs['ticketUid'], list):
+                tickets = kwargs['ticketUid']
+            else:
+                tickets = list(kwargs['ticketUid'])
+
+        doctor_dw = PersonalWorker()
+        if tickets:
+            for ticket in tickets:
+                # TODO: разнести по отдельным методам
+                if isinstance(ticket, dict):
+                    # Working on case where kwargs['lastUid']
+
+                    # For low code dependence get current hospital_uid
+                    _hospital_uid = ticket.data.hospital_uid.split('/')
+
+                    doctor = doctor_dw.get_doctor(lpu_unit=_hospital_uid, person_id=ticket.data.doctorUid)
+                    result['ticketInfo'].append({
+                        'id': ticket.id,
+                        'ticketUid': ticket.data.ticketUid,
+                        'hospitalUid': ticket.data.hospitalUid,
+                        'doctorUid': ticket.data.doctorUid,
+                        'doctor': {
+                            'firstName': doctor.firstName if doctor.firstName else '',
+                            'patronymic': doctor.patronymic if doctor.patronymic else '',
+                            'lastName': doctor.lastName if doctor.lastName else '',
+                        },
+                        'person': {
+                            'firstName': '',
+                            'patronymic': '',
+                            'lastName': '',
+                        },
+                        'status': 'forbidden',
+                        'timeslotStart': datetime.datetime.strptime(ticket.data.timeslotStart, '%Y-%m-%dT%H:%M:%S'),
+                        'comment': exception_by_code(ticket.Error),
+                        'location': lpu_name + " " + lpu_address,
+                    })
+
+                else:
+
+                    ticket_uid, patient_id = ticket.split('/')
+
+                    queue_info = proxy_client.getPatientQueue({'serverId': server_id, 'patientId': patient_id})
+                    patient_info = proxy_client.getPatientQueue({'serverId': server_id, 'patientId': patient_id})
+
+                    for ticket_info in queue_info:
+                        if ticket_info.queueId == ticket_uid:
+                            doctor = doctor_dw.get_doctor(lpu_unit=hospital_uid, person_id=ticket_info.personId)
+
+                            if ticket_info.enqueuePersonId:
+                                # TODO: проверить действительно ли возвращаемый enqueuePersonId - это office
+                                office = ticket_info.enqueuePersonId
+                            else:
+                                work_times = proxy_client.getWorkTimeAndStatus({
+                                    'serverId': server_id,
+                                    'personId': ticket_info.personId,
+                                    'date': ticket_info.enqueueDate,
+                                })
+                                if work_time:
+                                    office = work_time[0].office
+
+                            _ticket_date = datetime.datetime.strptime(
+                                ticket_info.date + ticket_info.time, '%Y-%m-%d %H:%M:%S'
+                            )
+
+                            document = self.__get_ticket_print({
+                                'name': lpu_name,
+                                'address': lpu_address,
+                                'fio': patient_info.lastName + ' ' +
+                                       patient_info.firstName[0:1] + '. ' +
+                                       patient_info.patrName[0:1] + '. ',
+                                'person': (doctor.lastName + ' ' if doctor.lastName else '' +
+                                           doctor.firstName + ' ' if doctor.firstName else '' +
+                                           doctor.patronymic + ' ' if doctor.patronymic else ''
+                                    ),
+                                'date_time':_ticket_date,
+                                'office': office,
+                            })
+
+                            result['ticketInfo'].append({
+                                'id': '',
+                                'ticketUid': ticket,
+                                'hospitalUid': hospital_uid,
+                                'doctorUid': ticket_info.personId,
+                                'doctor': {
+                                    'firstName': doctor.firstName if doctor.firstName else '',
+                                    'patronymic': doctor.patronymic if doctor.patronymic else '',
+                                    'lastName': doctor.lastName if doctor.lastName else '',
+                                    },
+                                'person': {
+                                    'firstName': patient_info.firstName,
+                                    'patronymic': patient_info.patrName,
+                                    'lastName': patient_info.lastName,
+                                    },
+                                'status': 'accepted',
+                                'timeslotStart': _ticket_date,
+#                                'comment': exception_by_code(ticket_info.Error),
+                                'location': 'кабинет:' + office + ' ' + lpu_address,
+                                'printableDocument': {
+                                    'printableVersionTitle': 'Талон',
+                                    'printableVersion': document.encode('base64'),
+                                    'printableVersionMimeType': 'application/pdf',
+                                }
+                                })
+
+        return result
+
+    def __get_ticket_print(self, **kwargs):
+        '''
+        Return generated pdf for ticket print
+        '''
+        # TODO: pdf creator
+        return ""
 
 class PersonalWorker(object):
     session = Session
@@ -396,6 +589,7 @@ class PersonalWorker(object):
             Personal.LastName,
             Personal.speciality,
             Personal.id,
+            Personal.personId,
             Personal.lpuId,
             Personal.orgId,
             Personal.keyEPGU,
@@ -409,20 +603,20 @@ class PersonalWorker(object):
         or_list = []
         if lpu:
             for item in lpu:
-                or_list.append((Personal.lpuId==item['id'],))
+                or_list.append((Personal.lpuId==item.id,))
         if lpu_units:
             for item in lpu:
-                or_list.append((Personal.lpuId==item['id'], Personal.orgId==item['id']))
+                or_list.append((Personal.lpuId==item.lpuId, Personal.orgId==item.id))
 
         query = query.outerjoin(LPU).outerjoin(LPU_Units)
 
         for value in query.filter(or_(or_list)).all():
             result['doctors'].append({
-                'uid': value.id,
+                'uid': value.personId,
                 'name': {
-                    'firstName': item.FirstName,
-                    'patronymic': item.PatrName,
-                    'lastName': item.LastName,
+                    'firstName': value.FirstName,
+                    'patronymic': value.PatrName,
+                    'lastName': value.LastName,
                 },
                 'hospitalUid': value.lpuId + '/' + value.orgId,
                 'speciality': value.speciality,
@@ -440,6 +634,27 @@ class PersonalWorker(object):
             })
 
         return result
+
+    def get_doctor(self, **kwargs):
+        '''
+        Get doctor by parameters
+        '''
+        if kwargs['lpu_unit']:
+            lpu_unit = kwargs['lpu_unit']
+        if kwargs['person_id']:
+            person_id = kwargs['person_id']
+
+        query = self.session.query(Personal)
+
+        if lpu_unit:
+            if lpu_unit[1]:
+                query.filter(Personal.lpuId==lpu_unit[0], Personal.orgId==lpu_unit[1])
+            else:
+                query.filter(Personal.lpuId==lpu_unit[0])
+        if person_id:
+            query.filter(Personal.personId==person_id)
+
+        return query.one()
 
     def get_list_doctors(self, **kwargs):
         '''

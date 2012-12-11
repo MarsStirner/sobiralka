@@ -37,9 +37,25 @@ class AbstractClient(object):
     def getScheduleInfo(self):
         pass
 
+    @abstractmethod
+    def getPatientQueue(self):
+        pass
+
+    @abstractmethod
+    def getPatientInfo(self):
+        pass
+
+    @abstractmethod
+    def getWorkTimeAndStatus(self):
+        pass
+
+    @abstractmethod
+    def def getWorkTimeAndStatus(self):
+        pass
+
 class ClientSamson(AbstractClient):
     def __init__(self, url):
-        self.client = Client(url)
+        self.client = Client(url, cache=None)
 
     def findOrgStructureByAddress(self, **kwargs):
         if (kwargs['serverId']
@@ -56,17 +72,15 @@ class ClientSamson(AbstractClient):
                       'streetKLADR': kwargs['streetKLADR'],
                       'flat': kwargs['flat'],
                       }
-        result = []
-        if params:
             try:
                 result = self.client.service.findOrgStructureByAddress(params)
-                return result['list']
             except WebFault, e:
                 print e
+            else:
+                return result['list']
         else:
             raise exceptions.ValueError
-
-        return result
+        return None
 
     def getScheduleInfo(self, **kwargs):
         result = {}
@@ -78,31 +92,65 @@ class ClientSamson(AbstractClient):
                           'date': start,
                           'hospitalUid': kwargs['hospital_uid_from'],
                           }
-                try:
-                    schedule = self.client.service.getWorkTimeAndStatus(params)
-                except WebFault, e:
-                    print e
-                else:
-                    for key, timeslot in enumerate(schedule.timeslots):
-                        result['timeslots'].append({
-                            'start': start + 'T' + timeslot.time,
-                            'finish': (start + 'T' + schedule.timeslots[key+1].time
-                                       if key < (len(schedule.timeslots) - 1)
-                                       else start + 'T' + timeslot.amb.endTime),
-                            'status': 'free' if timeslot.status>0 else 'locked',
-                            'office': timeslot.amb.office,
-                            'patientId': timeslot.patientId,
-                            'patientInfo': timeslot.patientInfo,
-                            })
+                result['timeslots'].extend(self.getWorkTimeAndStatus(**params))
         else:
             raise exceptions.ValueError
-
         return result
+
+    def getWorkTimeAndStatus(self, **kwargs):
+        try:
+            schedule = self.client.service.getWorkTimeAndStatus(kwargs)
+        except WebFault, e:
+            print e
+        else:
+            result = []
+            for key, timeslot in enumerate(schedule.amb.tickets):
+                result.append({
+                    'start': kwargs['date'] + 'T' + timeslot.time,
+                    'finish': (
+                        kwargs['date'] + 'T' + schedule.timeslots[key+1].time
+                        if key < (len(schedule.timeslots) - 1)
+                        else kwargs['date'] + 'T' + schedule.amb.endTime
+                        ),
+                    'status': 'free' if timeslot.status>0 else 'locked',
+                    'office': schedule.amb.office,
+                    'patientId': timeslot.patientId,
+                    'patientInfo': timeslot.patientInfo,
+                    })
+            return result
+        return []
+
+
+    def getPatientQueue(self, **kwargs):
+        if kwargs['serverId'] and kwargs['patientId']:
+            params = {'serverId': kwargs['serverId'], 'patientId': kwargs['patientId'],}
+            try:
+                result = self.client.service.getPatientQueue(params)
+            except WebFault, e:
+                print e
+            else:
+                return result['list']
+        else:
+            raise exceptions.ValueError
+        return None
+
+    def getPatientInfo(self, **kwargs):
+        if kwargs['serverId'] and kwargs['patientId']:
+            params = {'serverId': kwargs['serverId'], 'patientId': kwargs['patientId'],}
+            try:
+                result = self.client.service.getPatientQueue(params)
+            except WebFault, e:
+                print e
+            else:
+                return result['patientInfo']
+        else:
+            raise exceptions.ValueError
+        return None
 
 
 class ClientIntramed(AbstractClient):
     def __init__(self, url):
-        self.url = url
+        self.client = Client(url, cache=None)
 
     def findOrgStructureByAddress(self, **kwargs):
         if (kwargs['serverId']
@@ -128,7 +176,6 @@ class ClientIntramed(AbstractClient):
                 print e
         else:
             raise exceptions.ValueError
-
         return result
 
     def getScheduleInfo(self, **kwargs):
@@ -140,24 +187,57 @@ class ClientIntramed(AbstractClient):
                           'startDate': (kwargs['start'] + i).strftime('%Y-%m-%d'),
                           'hospitalUid': kwargs['hospital_uid'][1],
                           }
-                try:
-                    schedule = self.client.service.getScheduleInfo(params)
-                except WebFault, e:
-                    print e
-                else:
-                    for key, timeslot in enumerate(schedule.timeslots):
-                        result['timeslots'].append({
-                            'start': timeslot.start,
-                            'finish': (schedule.timeslots[key+1].start
-                                       if key < (len(schedule.timeslots) - 1)
-                                       else schedule.finish),
-                            'status': timeslot.status,
-                            'office': '0',
-                            })
+
+                result['timeslots'].extend(self.getWorkTimeAndStatus(**params))
+        else:
+            raise exceptions.ValueError
+        return result
+
+    def getWorkTimeAndStatus(self, **kwargs):
+        try:
+            schedule = self.client.service.getScheduleInfo(params)
+        except WebFault, e:
+            print e
+        else:
+            result = []
+            for key, timeslot in enumerate(schedule.timeslots):
+                result.append({
+                    'start': timeslot.start,
+                    'finish': (schedule.timeslots[key+1].start
+                               if key < (len(schedule.timeslots) - 1)
+                               else schedule.finish),
+                    'status': timeslot.status,
+                    'office': '0',
+                    })
+            return result
+        return []
+
+    def getPatientQueue(self, **kwargs):
+        if kwargs['serverId'] and kwargs['patientId']:
+            params = {'serverId': kwargs['serverId'], 'patientId': kwargs['patientId'],}
+            try:
+                result = self.client.service.getPatientQueue(params)
+            except WebFault, e:
+                print e
+            else:
+                return result['list']
+        else:
+            raise exceptions.ValueError
+        return None
+
+    def getPatientInfo(self, **kwargs):
+        if kwargs['serverId'] and kwargs['patientId']:
+            params = {'serverId': kwargs['serverId'], 'patientId': kwargs['patientId'],}
+            try:
+                result = self.client.service.getPatientQueue(params)
+            except WebFault, e:
+                print e
+            else:
+                return result['patientInfo']
         else:
             raise exceptions.ValueError
 
-        return result
+        return None
 
 
 class ClientCore(ProxyCAbstractClientlient):

@@ -46,8 +46,9 @@ class ScheduleServer(object):
         obj = DataWorker.provider('enqueue')
         return obj.get_info(kwargs)
 
-    def getTicketStatus(self):
-        pass
+    def getTicketStatus(self, **kwargs):
+        obj = DataWorker.provider('enqueue')
+        return obj.get_ticket_status(**kwargs)
 
     def enqueue(self):
         pass

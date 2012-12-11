@@ -82,6 +82,7 @@ class Personal(Base):
     __tablename__ = 'personal'
 
     id = Column(BigInteger, primary_key = True)
+    personId = Column(BigInteger)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'))
     orgId = Column(BigInteger, ForeignKey('lpu_units.id'))
     FirstName = Column(Unicode, length=32)
