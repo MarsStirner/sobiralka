@@ -336,6 +336,11 @@ class EnqueueWorker(object):
             raise exceptions.ValueError
             return {}
 
+        speciality = ""
+        if kwargs['speciality']:
+            speciality = kwargs['speciality']
+
+        hospital_uid_from = 0
         if kwargs['hospitalUidFrom']:
             hospital_uid_from = kwargs['hospitalUidFrom']
 
@@ -348,17 +353,26 @@ class EnqueueWorker(object):
         start, end = self.__get_dates_period(start, end)
 
         # TODO: get timeslots by date, doctor, hospital
-
-
+        proxy_client = Clients.provider(lpu.protocol)
+        result = proxy_client.getScheduleInfo(
+            hospital_uid=hospital_uid,
+            doctor_uid = doctor_uid,
+            start=start,
+            end=end,
+            speciality = speciality,
+            hospital_uid_from = hospital_uid_from,
+            server_id = lpu.key)
 
         return result
 
     def __get_dates_period(self, start='', end=''):
         if not start:
-            start = time.mktime(datetime.datetime.today().timetuple())
+#            start = time.mktime(datetime.datetime.today().timetuple())
+            start = datetime.datetime.today()
 
         if not end:
-            end = time.mktime((datetime.datetime.today() + datetime.timedelta(self.SCHEDULE_DAYS_DELTA)).timetuple())
+#            end = time.mktime((datetime.datetime.today() + datetime.timedelta(self.SCHEDULE_DAYS_DELTA)).timetuple())
+            end = (datetime.datetime.today() + datetime.timedelta(days=self.SCHEDULE_DAYS_DELTA))
 
         return (start, end)
 

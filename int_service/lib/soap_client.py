@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import exceptions
+import datetime
 from abc import ABCMeta, abstractmethod, abstractproperty
 from suds.client import Client
 
@@ -67,6 +68,37 @@ class ClientSamson(AbstractClient):
 
         return result
 
+    def getScheduleInfo(self, **kwargs):
+        result = {}
+        if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid']:
+            for i in xrange((kwargs['end'] - kwargs['start']).days):
+                start = (kwargs['start'] + i).strftime('%Y-%m-%d')
+                params = {'serverId': kwargs['server_id'],
+                          'personId': kwargs['doctor_uid'],
+                          'date': start,
+                          'hospitalUid': kwargs['hospital_uid_from'],
+                          }
+                try:
+                    schedule = self.client.service.getWorkTimeAndStatus(params)
+                except WebFault, e:
+                    print e
+                else:
+                    for key, timeslot in enumerate(schedule.timeslots):
+                        result['timeslots'].append({
+                            'start': start + 'T' + timeslot.time,
+                            'finish': (start + 'T' + schedule.timeslots[key+1].time
+                                       if key < (len(schedule.timeslots) - 1)
+                                       else start + 'T' + timeslot.amb.endTime),
+                            'status': 'free' if timeslot.status>0 else 'locked',
+                            'office': timeslot.amb.office,
+                            'patientId': timeslot.patientId,
+                            'patientInfo': timeslot.patientInfo,
+                            })
+        else:
+            raise exceptions.ValueError
+
+        return result
+
 
 class ClientIntramed(AbstractClient):
     def __init__(self, url):
@@ -99,10 +131,41 @@ class ClientIntramed(AbstractClient):
 
         return result
 
+    def getScheduleInfo(self, **kwargs):
+        result = {}
+        if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid'] and kwargs['hospital_uid']:
+            for i in xrange((kwargs['end'] - kwargs['start']).days):
+                params = {'doctorUid': kwargs['doctor_uid'],
+                          'speciality': kwargs['speciality'],
+                          'startDate': (kwargs['start'] + i).strftime('%Y-%m-%d'),
+                          'hospitalUid': kwargs['hospital_uid'][1],
+                          }
+                try:
+                    schedule = self.client.service.getScheduleInfo(params)
+                except WebFault, e:
+                    print e
+                else:
+                    for key, timeslot in enumerate(schedule.timeslots):
+                        result['timeslots'].append({
+                            'start': timeslot.start,
+                            'finish': (schedule.timeslots[key+1].start
+                                       if key < (len(schedule.timeslots) - 1)
+                                       else schedule.finish),
+                            'status': timeslot.status,
+                            'office': '0',
+                            })
+        else:
+            raise exceptions.ValueError
+
+        return result
+
 
 class ClientCore(ProxyCAbstractClientlient):
     def __init__(self, url):
         self.url = url
 
     def findOrgStructureByAddress(self):
+        pass
+
+    def getScheduleInfo(self):
         pass
