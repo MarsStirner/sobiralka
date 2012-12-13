@@ -4,6 +4,8 @@ import exceptions
 import datetime
 from abc import ABCMeta, abstractmethod, abstractproperty
 from suds.client import Client
+from suds import WebFault
+import is_exceptions
 
 class Clients(object):
     '''
@@ -120,7 +122,6 @@ class ClientSamson(AbstractClient):
             return result
         return []
 
-
     def getPatientQueue(self, **kwargs):
         if kwargs['serverId'] and kwargs['patientId']:
             params = {'serverId': kwargs['serverId'], 'patientId': kwargs['patientId'],}
@@ -147,12 +148,100 @@ class ClientSamson(AbstractClient):
             raise exceptions.ValueError
         return None
 
+    def findPatient(self, **kwargs):
+        try:
+            params = {
+                'serverId': kwargs['serverId'],
+                'lastName': kwargs['person']['lastName'],
+                'firstName': kwargs['person']['firstName'],
+                'patrName': kwargs['person']['patronymic'],
+                'omiPolicy': kwargs['omiPolicy'],
+                'birthday': kwargs['birthday'],
+                }
+        except:
+            raise exceptions.ValueError
+        else:
+            try:
+                result = self.client.service.findPatient(params)
+            except WebFault, e:
+                print e
+            else:
+                return result
+        return None
+
+    def addPatient(self, **kwargs):
+        try:
+            params = {
+                'serverId': kwargs['serverId'],
+                'lastName': kwargs['person']['lastName'],
+                'firstName': kwargs['person']['firstName'],
+                'patrName': kwargs['person']['patronymic'],
+#                'omiPolicy': kwargs['omiPolicy'],
+                'birthday': kwargs['birthday'],
+                }
+        except:
+            raise exceptions.ValueError
+        else:
+            try:
+                result = self.client.service.addPatient(params)
+            except WebFault, e:
+                print e
+            else:
+                return result
+        return None
+
+    def enqueue(self, **kwargs):
+        patient = self.findPatient(**kwargs)
+        if (not patient or not patient.success) and kwargs['hospitalUidFrom']:
+            patient = self.addPatient(**kwargs)
+
+        if patient.patientId:
+            patient_id = patient.patientId
+        else:
+            raise exceptions.LookupError
+            return {'result': False, 'error_code': result.message,}
+
+        try:
+            date_time = kwargs['timeslotStart'].split('T')
+            params = {
+                'serverId': kwargs['serverId'],
+                'patientId': patient_id,
+                'personId': kwargs['doctorUid'],
+                'date': date_time[0],
+                'time': date_time[1],
+                'note': kwargs['E-mail'],
+                'hospitalUidFrom': kwargs['hospitalUidFrom'],
+                }
+        except:
+            raise exceptions.ValueError
+        else:
+            try:
+                result = self.client.service.enqueuePatient(params)
+            except WebFault, e:
+                print e
+            else:
+                if result.success:
+                    return {
+                        'result': True,
+                        'error_code': result.message,
+                        'ticketUid': result.queueId + '/' + patient_id,
+                        }
+                else:
+                    return {
+                        'result': False,
+                        'error_code': result.message,
+                        'ticketUid': '',
+                        }
+        return None
+
 
 class ClientIntramed(AbstractClient):
     def __init__(self, url):
-        self.client = Client(url, cache=None)
+        self.url = url
 
     def findOrgStructureByAddress(self, **kwargs):
+        self.client = Client(self.url + 'egov.v3.listPort.CLS?WSDL=1', cache=None)
+
         if (kwargs['serverId']
             and kwargs['number']
 #            and kwargs['corpus']
@@ -179,6 +268,8 @@ class ClientIntramed(AbstractClient):
         return result
 
     def getScheduleInfo(self, **kwargs):
+        self.client = Client(self.url + 'egov.v3.queuePort.CLS?WSDL=1', cache=None)
+
         result = {}
         if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid'] and kwargs['hospital_uid']:
             for i in xrange((kwargs['end'] - kwargs['start']).days):
@@ -194,6 +285,9 @@ class ClientIntramed(AbstractClient):
         return result
 
     def getWorkTimeAndStatus(self, **kwargs):
+        if self.client is None:
+            self.client = Client(self.url + 'egov.v3.queuePort.CLS?WSDL=1', cache=None)
+
         try:
             schedule = self.client.service.getScheduleInfo(params)
         except WebFault, e:
@@ -213,6 +307,8 @@ class ClientIntramed(AbstractClient):
         return []
 
     def getPatientQueue(self, **kwargs):
+        self.client = Client(self.url + 'egov.v3.queuePort.CLS?WSDL=1', cache=None)
+
         if kwargs['serverId'] and kwargs['patientId']:
             params = {'serverId': kwargs['serverId'], 'patientId': kwargs['patientId'],}
             try:
@@ -226,6 +322,8 @@ class ClientIntramed(AbstractClient):
         return None
 
     def getPatientInfo(self, **kwargs):
+        self.client = Client(self.url + 'egov.v3.infoPort.CLS?WSDL=1', cache=None)
+
         if kwargs['serverId'] and kwargs['patientId']:
             params = {'serverId': kwargs['serverId'], 'patientId': kwargs['patientId'],}
             try:
@@ -237,6 +335,36 @@ class ClientIntramed(AbstractClient):
         else:
             raise exceptions.ValueError
 
+        return None
+
+    def enqueue(self, **kwargs):
+        self.client = Client(self.url + 'egov.v3.queuePort.CLS?WSDL=1', cache=None)
+        try:
+            params = {
+                'person': kwargs['person'],
+                'omiPolicyNumber': kwargs['omiPolicyNumber'],
+                'birthday': kwargs['birthday'],
+                'hospitalUid': kwargs['hospitalUid'],
+                'speciality': kwargs['speciality'],
+                'doctorUid': kwargs['doctorUid'],
+                'timeslotStart': kwargs['timeslotStart'] + 'Z',
+            }
+        except:
+            raise exceptions.ValueError
+        else:
+            try:
+                result = self.client.service.enqueue(params)
+            except WebFault, e:
+                print e
+            else:
+                if result.enqueueResult == 'accepted':
+                    return {
+                        'result': True,
+                        'error_code': result.enqueueResult,
+                        'ticketUid': result.ticketUid,
+                    }
+                else:
+                    return {'result': False, 'error_code': result.enqueueResult}
         return None
 
 

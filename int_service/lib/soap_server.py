@@ -14,7 +14,7 @@ class InfoServer(object):
 
     def getHospitalInfo(self, **kwargs):
         obj = DataWorker.provider('lpu')
-        return obj.get_info(kwargs)
+        return obj.get_info(**kwargs)
 
     def setDoctorInfo(self):
         pass
@@ -31,7 +31,7 @@ class ListServer(object):
 
     def listDoctors(self, **kwargs):
         obj = DataWorker.provider('personal')
-        return obj.get_list_doctors(kwargs)
+        return obj.get_list_doctors(**kwargs)
 
     def listSpecialities(self):
         pass
@@ -44,7 +44,7 @@ class ScheduleServer(object):
 
     def getScheduleInfo(self, **kwargs):
         obj = DataWorker.provider('enqueue')
-        return obj.get_info(kwargs)
+        return obj.get_info(**kwargs)
 
     def getTicketStatus(self, **kwargs):
         obj = DataWorker.provider('enqueue')

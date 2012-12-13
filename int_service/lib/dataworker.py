@@ -4,10 +4,11 @@ import exceptions
 import urllib
 import datetime, time
 import json
+from spyne.model.complex import json
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy import or_
-from sqlalchemy.orm.exc import MultipleResultsFound
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from suds import WebFault
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, DB_CONNECT_STRING
@@ -471,7 +472,7 @@ class EnqueueWorker(object):
                     # For low code dependence get current hospital_uid
                     _hospital_uid = ticket.data.hospital_uid.split('/')
 
-                    doctor = doctor_dw.get_doctor(lpu_unit=_hospital_uid, person_id=ticket.data.doctorUid)
+                    doctor = doctor_dw.get_doctor(lpu_unit=_hospital_uid, doctor_id=ticket.data.doctorUid)
                     result['ticketInfo'].append({
                         'id': ticket.id,
                         'ticketUid': ticket.data.ticketUid,
@@ -489,7 +490,7 @@ class EnqueueWorker(object):
                         },
                         'status': 'forbidden',
                         'timeslotStart': datetime.datetime.strptime(ticket.data.timeslotStart, '%Y-%m-%dT%H:%M:%S'),
-                        'comment': exception_by_code(ticket.Error),
+                        'comment': str(exception_by_code(ticket.Error)),
                         'location': lpu_name + " " + lpu_address,
                     })
 
@@ -502,7 +503,7 @@ class EnqueueWorker(object):
 
                     for ticket_info in queue_info:
                         if ticket_info.queueId == ticket_uid:
-                            doctor = doctor_dw.get_doctor(lpu_unit=hospital_uid, person_id=ticket_info.personId)
+                            doctor = doctor_dw.get_doctor(lpu_unit=hospital_uid, doctor_id=ticket_info.personId)
 
                             if ticket_info.enqueuePersonId:
                                 # TODO: проверить действительно ли возвращаемый enqueuePersonId - это office
@@ -566,8 +567,95 @@ class EnqueueWorker(object):
         '''
         Return generated pdf for ticket print
         '''
-        # TODO: pdf creator
+        # TODO: выяснить используется ли pdf в принципе. В эл.регестратуре он никак не используется
+        # TODO: pdf creator based on Flask templates and xhtml2pdf
         return ""
+
+    def enqueue(self, **kwargs):
+        '''
+        Запись на приём к врачу
+        '''
+        if (kwargs['hospitalUid'] and
+            kwargs['birthday'] and
+            kwargs['doctorUid'] and
+            kwargs['person'] and
+            kwargs['omiPolicyNumber']
+            ):
+            hospital_uid = kwargs['hospitalUid'].split('/')
+            if len(hospital_uid)==2:
+                dw = LPUWorker()
+                lpu_info = dw.get_by_id(hospital_uid[0])
+                proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
+            else:
+                raise exceptions.ValueError
+                return {}
+        else:
+            raise exceptions.ValueError
+            return {}
+
+        result = {}
+
+        person_dw = PersonalWorker()
+        doctor_info = person_dw.get_doctor(lpu_unit = hospital_uid, doctor_id = kwargs['doctorUid'])
+
+        hospital_uid_from = kwargs['hospitalUidFrom'] if kwargs['hospitalUidFrom'] else 0
+
+        if not doctor_info:
+            raise exceptions.LookupError
+            return {}
+
+        _enqueue = proxy_client.enqueue({
+            'serverId': lpu_info['key'],
+            'person': {
+                'firstName': kwargs['person']['firstName'],
+                'lastName': kwargs['person']['lastName'],
+                'patronymic': kwargs['person']['patronymic'],
+            },
+            'omiPolicyNumber': kwargs['omiPolicyNumber'],
+            'birthday': kwargs['birthday'].split('T')[0],
+            'hospitalUid': hospital_uid[1],
+            'hospitalUidFrom': hospital_uid_from,
+            'speciality': doctor_info.speciality,
+            'doctorUid': kwargs['doctorUid'],
+            'timeslotStart': kwargs['timeslotStart'],
+        })
+
+        if _enqueue and _enqueue.result == True:
+            self.__add_ticket({
+                'Error': _enqueue.message,
+                'Data': json.dumps({
+                    'ticketUID':_enqueue.ticketUid,
+                    'timeslotStart':kwargs['timeslotStart'],
+                    'timeslhospitalUidotStart':kwargs['hospitalUid'],
+                    'doctorUid':kwargs['doctorUid'],
+                }),
+            })
+            result = {'result': exception_by_code(_enqueue.message), 'ticketUid': _enqueue.ticketUid}
+        else:
+            enqueue_id = self.__add_ticket({
+                'Error': _enqueue.message,
+                'Data': json.dumps({
+                    'ticketUID':_enqueue.ticketUid,
+                    'timeslotStart':kwargs['timeslotStart'],
+                    'timeslhospitalUidotStart':kwargs['hospitalUid'],
+                    'doctorUid':kwargs['doctorUid'],
+                    }),
+                })
+            result = {'result': exception_by_code(_enqueue.message), 'ticketUid': 'e' + enqueue_id}
+
+        return result
+
+    def __add_ticket(self, **kwargs):
+        try:
+            enqueue = Enqueue(**kwargs)
+        except exceptions.ValueError, e:
+            print e
+        else:
+            self.session.add(enqueue)
+            self.session.commit()
+            return enqueue.id
+        return None
+
 
 class PersonalWorker(object):
     session = Session
@@ -575,8 +663,8 @@ class PersonalWorker(object):
 
     def get_list(self, **kwargs):
         '''
-       Get Doctors list by lpu & lpu_units
-       '''
+        Get Doctors list by lpu & lpu_units
+        '''
         if kwargs['lpu']:
             lpu = kwargs['lpu']
         if kwargs['lpu_units']:
@@ -628,7 +716,7 @@ class PersonalWorker(object):
                 'title': (value.lpu_name + " " + value.lpu_units_name).trim(),
                 'address': (value.lpu_address + " " + value.lpu_units_address).trim(),
                 # TODO: выяснить используется ли wsdlURL и верно ли указан
-                'wsdlURL': "http://" + SOAP_SERVER_HOST + ":" + SOAP_SERVER_PORT + '/schedule/?wsdl',
+                'wsdlURL': 'http://' + SOAP_SERVER_HOST + ':' + SOAP_SERVER_PORT + '/schedule/?wsdl',
                 'token': '',
                 'key': value.key,
             })
@@ -641,8 +729,8 @@ class PersonalWorker(object):
         '''
         if kwargs['lpu_unit']:
             lpu_unit = kwargs['lpu_unit']
-        if kwargs['person_id']:
-            person_id = kwargs['person_id']
+        if kwargs['doctor_id']:
+            doctor_id = kwargs['doctor_id']
 
         query = self.session.query(Personal)
 
@@ -652,7 +740,7 @@ class PersonalWorker(object):
             else:
                 query.filter(Personal.lpuId==lpu_unit[0])
         if person_id:
-            query.filter(Personal.personId==person_id)
+            query.filter(Personal.personId==doctor_id)
 
         return query.one()
 

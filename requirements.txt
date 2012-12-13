@@ -4,3 +4,4 @@ spyne
 SQLAlchemy
 Flask-SQLAlchemy
 suds
+#xhtml2pdf

@@ -4,8 +4,9 @@ from exceptions import Exception
 #Define exceptions
 class ISError(Exception): pass
 class ISInvalidInputParametersError(ISError): pass
-class ISInvalidAgeError(ISError): pass
-class ISInvalidSexError(ISError): pass
+
+class IS_ConnectionError(ISError):
+    message = u'Ошибка связи'
 
 class IS_PatientNotRegistered(ISError):
     message = u'Пациент не зарегестрирован в выбранном ЛПУ'
@@ -57,6 +58,7 @@ def exception_by_code(code):
         200: IS_PatientNotRegistered,
         201: IS_FoundMultiplePatients,
         202: IS_NoSuchPatientTypeId,
+        210: IS_ConnectionError,
         302: IS_NoSuchPatientId,
         303: IS_DeadPatient,
         304: IS_FailedAgeOrSex,
@@ -71,4 +73,4 @@ def exception_by_code(code):
         400: IS_EnqueueDenied,
     }
 
-    return exc[int(code)]()
+    return exc[int(code)]() if code in exc else code
