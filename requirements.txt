@@ -1,6 +1,6 @@
 Flask
 spyne
-#mysql-python
+mysql-python
 SQLAlchemy
 Flask-SQLAlchemy
 suds

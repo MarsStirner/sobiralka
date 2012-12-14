@@ -762,3 +762,7 @@ class PersonalWorker(object):
         lpu_units_list = lpu_units_dw.get_list(uid=lpu_units)
 
         return self.get_list(lpu=lpu_list, lpu_units=lpu_units_list)
+
+
+class UpdateWorker(object):
+    pass

@@ -18,14 +18,14 @@ class LPU(Base):
     proxy = Column(UnicodeText)
     email = Column(UnicodeText)
     kladr = Column(UnicodeText)
-    OGRN = Column(String, length=15)
-    OKATO = Column(String, length=15)
+    OGRN = Column(String(15))
+    OKATO = Column(String(15))
     LastUpdate = Column(Integer)
-    phone = Column(String, length=20)
-    schedule = Column(String, length=256)
-    type = Column(String, length=32)
+    phone = Column(String(20))
+    schedule = Column(String(256))
+    type = Column(String(32))
     protocol = Enum(['samson', 'intramed'])
-    token = Column(String, length=45)
+    token = Column(String(45))
 
 
 class LPU_Units(Base):
@@ -36,8 +36,8 @@ class LPU_Units(Base):
 
     id = Column(BigInteger, primary_key = True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'))
-    name = Column(Unicode, length = 256)
-    address = Column(Unicode, length = 256)
+    name = Column(Unicode(256))
+    address = Column(Unicode(256))
 
     lpu = relationship("LPU", backref=backref('lpu_units', order_by=id))
 
@@ -52,8 +52,8 @@ class UnitsParentForId(Base):
     LpuId = Column(String, ForeignKey('lpu.id'))
     OrgId = Column(String, ForeignKey('lpu.id'))
     ChildId = Column(String, ForeignKey('lpu_units.id'))
-    name = Column(Unicode, length = 256)
-    address = Column(Unicode, length = 256)
+    name = Column(Unicode(256))
+    address = Column(Unicode(256))
 
     lpu = relationship("LPU", backref=backref('lpu', order_by=id))
     org = relationship("LPU", backref=backref('lpu', order_by=id))
@@ -67,7 +67,7 @@ class Enqueue(Base):
     __tablename__ = 'enqueue'
 
     id = Column(BigInteger, primary_key=True)
-    Error = Column(String, length = 64)
+    Error = Column(String(64))
     Data = Column(Text)
 
     def __init__(self, error, data):
@@ -85,12 +85,12 @@ class Personal(Base):
     personId = Column(BigInteger)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'))
     orgId = Column(BigInteger, ForeignKey('lpu_units.id'))
-    FirstName = Column(Unicode, length=32)
-    LastName = Column(Unicode, length=32)
-    PatrName = Column(Unicode, length=32)
+    FirstName = Column(Unicode(32))
+    LastName = Column(Unicode(32))
+    PatrName = Column(Unicode(32))
 #    TODO: replace to relationship on speciality_id=speciality.id
-    speciality = Column(Unicode, length=64)
-    keyEPGU = Column(String, length=45)
+    speciality = Column(Unicode(64))
+    keyEPGU = Column(String(45))
 
     lpu = relationship("LPU", backref=backref('personal', order_by=id))
     lpu_units = relationship("LPU_Units", backref=backref('personal', order_by=id))

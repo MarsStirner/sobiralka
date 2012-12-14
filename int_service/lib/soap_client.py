@@ -52,7 +52,7 @@ class AbstractClient(object):
         pass
 
     @abstractmethod
-    def def getWorkTimeAndStatus(self):
+    def getWorkTimeAndStatus(self):
         pass
 
 class ClientSamson(AbstractClient):
@@ -368,7 +368,7 @@ class ClientIntramed(AbstractClient):
         return None
 
 
-class ClientCore(ProxyCAbstractClientlient):
+class ClientCore(AbstractClient):
     def __init__(self, url):
         self.url = url
 

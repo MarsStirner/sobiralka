@@ -6,11 +6,14 @@ from spyne.application import Application
 from spyne.protocol.soap import Soap11
 from spyne.util.simple import wsgi_soap_application
 from spyne.util.wsgi_wrapper import WsgiMounter
+from spyne.decorator import srpc
+from spyne.service import ServiceBase
+from spyne.protocol.http import HttpRpc
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
 from dataworker import DataWorker
 
-class InfoServer(object):
+class InfoServer(ServiceBase):
 
     def getHospitalInfo(self, **kwargs):
         obj = DataWorker.provider('lpu')
@@ -23,7 +26,7 @@ class InfoServer(object):
         pass
 
 
-class ListServer(object):
+class ListServer(ServiceBase):
 
     def listHospitals(self, **kwargs):
         obj = DataWorker.provider('lpu')
@@ -40,7 +43,7 @@ class ListServer(object):
         pass
 
 
-class ScheduleServer(object):
+class ScheduleServer(ServiceBase):
 
     def getScheduleInfo(self, **kwargs):
         obj = DataWorker.provider('enqueue')
@@ -51,7 +54,8 @@ class ScheduleServer(object):
         return obj.get_ticket_status(**kwargs)
 
     def enqueue(self):
-        pass
+        obj = DataWorker.provider('enqueue')
+        return obj.enqueue(**kwargs)
 
     def setTicketReadStatus(self):
         pass
@@ -74,10 +78,25 @@ class Server(object):
     @classmethod
     def run(cls):
         from wsgiref.simple_server import make_server
+        info = Application([InfoServer],
+            tns='urn:ru.gov.economy:std.ws',
+            in_protocol=HttpRpc(),
+            out_protocol=Soap11()
+        )
+        list = Application([ListServer],
+            tns='urn:ru.gov.economy:std.ws',
+            in_protocol=HttpRpc(),
+            out_protocol=Soap11()
+        )
+        schedule = Application([ScheduleServer],
+            tns='urn:ru.gov.economy:std.ws',
+            in_protocol=HttpRpc(),
+            out_protocol=Soap11()
+        )
         root = WsgiMounter({
-            'info': InfoServer(),
-            'list': ListServer(),
-            'schedule': ScheduleServer(),
+            'info': info,
+            'list': list,
+            'schedule': schedule,
             })
 
         server = make_server(SOAP_SERVER_HOST, SOAP_SERVER_PORT, root)
