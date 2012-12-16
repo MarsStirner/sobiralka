@@ -4,17 +4,22 @@ from __builtin__ import classmethod
 import logging
 from spyne.application import Application
 from spyne.protocol.soap import Soap11
+from spyne.interface.wsdl.wsdl11 import Wsdl11
 from spyne.util.simple import wsgi_soap_application
 from spyne.util.wsgi_wrapper import WsgiMounter
-from spyne.decorator import srpc
+from spyne.decorator import rpc
 from spyne.service import ServiceBase
 from spyne.protocol.http import HttpRpc
+from spyne.model.primitive import NATIVE_MAP, Mandatory
+from spyne.decorator import srpc, rpc
+from spyne.model.primitive import AnyDict
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
 from dataworker import DataWorker
 
 class InfoServer(ServiceBase):
 
+    @rpc(AnyDict, _returns=AnyDict)
     def getHospitalInfo(self, **kwargs):
         obj = DataWorker.provider('lpu')
         return obj.get_info(**kwargs)
@@ -28,10 +33,12 @@ class InfoServer(ServiceBase):
 
 class ListServer(ServiceBase):
 
+    @rpc(AnyDict, _returns=AnyDict)
     def listHospitals(self, **kwargs):
         obj = DataWorker.provider('lpu')
         return obj.get_list_hospitals(**kwargs)
 
+    @rpc(AnyDict, _returns=AnyDict)
     def listDoctors(self, **kwargs):
         obj = DataWorker.provider('personal')
         return obj.get_list_doctors(**kwargs)
@@ -45,14 +52,17 @@ class ListServer(ServiceBase):
 
 class ScheduleServer(ServiceBase):
 
+    @rpc(AnyDict, _returns=AnyDict)
     def getScheduleInfo(self, **kwargs):
         obj = DataWorker.provider('enqueue')
         return obj.get_info(**kwargs)
 
+    @rpc(AnyDict, _returns=AnyDict)
     def getTicketStatus(self, **kwargs):
         obj = DataWorker.provider('enqueue')
         return obj.get_ticket_status(**kwargs)
 
+    @rpc(AnyDict, _returns=AnyDict)
     def enqueue(self):
         obj = DataWorker.provider('enqueue')
         return obj.enqueue(**kwargs)
@@ -79,17 +89,20 @@ class Server(object):
     def run(cls):
         from wsgiref.simple_server import make_server
         info = Application([InfoServer],
-            tns='urn:ru.gov.economy:std.ws',
-            in_protocol=HttpRpc(),
+            'tns',
+            interface=Wsdl11(),
+            in_protocol=Soap11(),
             out_protocol=Soap11()
         )
         list = Application([ListServer],
-            tns='urn:ru.gov.economy:std.ws',
+            'tns',
+            interface=Wsdl11(),
             in_protocol=HttpRpc(),
             out_protocol=Soap11()
         )
         schedule = Application([ScheduleServer],
-            tns='urn:ru.gov.economy:std.ws',
+            'tns',
+            interface=Wsdl11(),
             in_protocol=HttpRpc(),
             out_protocol=Soap11()
         )
