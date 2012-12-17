@@ -70,7 +70,7 @@ class GetHospitalInfoRequest(ComplexModel):
 class GetHospitalInfoResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    info = DetailedHospitalInfo()
+    info = Array(DetailedHospitalInfo())
 
     def __init__(self):
         super(GetHospitalInfoResponse, self).__init__(doc=u'Подробная информация о запрошенных ЛПУ')
@@ -248,17 +248,6 @@ class SearchScope(ComplexModel):
         super(SearchScope, self).__init__(doc=u'Область поиска (территориальные критерии)', **kwargs)
 
 
-class ListDoctorsRequest(ComplexModel):
-    __namespace__ = SOAP_NAMESPACE
-
-    lastName = String(doc=u'Фамилия врача')
-    speciality = String(doc=u'Наименование специальности')
-    searchScope = SearchScope(doc=u'Область поиска (ЛПУ, МО, адрес)')
-
-    def __init__(self):
-        super(ListDoctorsRequest, self).__init__(doc=u'Один или несколько критериев поиска (получения списка) врачей')
-
-
 class ListNewEnqueueRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
@@ -296,6 +285,17 @@ class ListServTypesInfoResponse(ComplexModel):
 
     def __init__(self):
         super(ListServTypesInfoResponse, self).__init__(doc=u'Результаты поиска услуги по заданным критериям')
+
+
+class ListDoctorsRequest(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    lastName = String(doc=u'Фамилия врача')
+    speciality = String(doc=u'Наименование специальности')
+    searchScope = SearchScope(doc=u'Область поиска (ЛПУ, МО, адрес)')
+
+    def __init__(self):
+        super(ListDoctorsRequest, self).__init__(doc=u'Один или несколько критериев поиска (получения списка) врачей')
 
 
 class ListDoctorsResponse(ComplexModel):
@@ -385,6 +385,15 @@ class GetScheduleInfoRequest(ComplexModel):
         super(GetScheduleInfoRequest, self).__init__(doc=u'Получение обобщённой информации о расписании врача')
 
 
+class GetScheduleInfoResponse(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    timeslots = Array(Timeslot, doc=u'Расписание на отдельные дни в заданном интервале')
+
+    def __init__(self):
+        super(GetScheduleInfoResponse, self).__init__(doc=u'Информация о расписании врача')
+
+
 Timeslot_Statuses = Enum(
     "free",
     "locked",
@@ -443,15 +452,6 @@ class Session(ComplexModel):
 
     def __init__(self):
         super(Session, self).__init__(doc=u'Группа интервалов (смена) в расписании врача')
-
-
-class GetScheduleInfoResponse(ComplexModel):
-    __namespace__ = SOAP_NAMESPACE
-
-    timeslots = Array(Timeslot, doc=u'Расписание на отдельные дни в заданном интервале')
-
-    def __init__(self):
-        super(GetScheduleInfoResponse, self).__init__(doc=u'Информация о расписании врача')
 
 
 Ticket_Statuses = Enum(
@@ -554,17 +554,6 @@ class SetTicketReadStatusResponse(ComplexModel):
         super(SetTicketReadStatusResponse, self).__init__(doc=u'Запрос о текущем статусе заявки на приём')
 
 
-class GetTicketReadStatusResponse(ComplexModel):
-    __namespace__ = SOAP_NAMESPACE
-
-    hospitalUid = String(doc=u'Уникальный идентификатор ЛПУ')
-    ticketUid = String(doc=u'Уникальный для МИС соответствующего ЛПУ идентификатор ранее поданной заявки на приём')
-    lastUid = String(doc=u'Последний обработанный тикет')
-
-    def __init__(self):
-        super(GetTicketReadStatusResponse, self).__init__(doc=u'Данные запроса о текущем статусе заявки на приём')
-
-
 class PrintableDocument(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
@@ -600,6 +589,17 @@ class TicketInfo(ComplexModel):
 
     def __init__(self):
         super(TicketInfo, self).__init__( doc=u'Данные о текущем статусе заявки на приём')
+
+
+class GetTicketStatusRequest(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    hospitalUid = String(doc=u'Уникальный идентификатор ЛПУ')
+    ticketUid = String(doc=u'Уникальный для МИС соответствующего ЛПУ идентификатор ранее поданной заявки на приём')
+    lastUid = String(doc=u'Последний обработанный тикет')
+
+    def __init__(self):
+        super(GetTicketStatusRequest, self).__init__(doc=u'Данные запроса о текущем статусе заявки на приём')
 
 
 class GetTicketStatusResponse(ComplexModel):

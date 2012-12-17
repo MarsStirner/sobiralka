@@ -16,10 +16,11 @@ from spyne.model.complex import Array, Iterable, ComplexModel
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
 from dataworker import DataWorker
+import soap_models
 
 class InfoServer(ServiceBase):
 
-    @rpc(AnyDict, _returns=AnyDict)
+    @rpc(GetHospitalInfoRequest, _returns=GetHospitalInfoResponse)
     def getHospitalInfo(self, **kwargs):
         obj = DataWorker.provider('lpu')
         return obj.get_info(**kwargs)
@@ -33,12 +34,12 @@ class InfoServer(ServiceBase):
 
 class ListServer(ServiceBase):
 
-    @rpc(AnyDict, _returns=AnyDict)
+    @rpc(ListHospitalsRequest, _returns=ListHospitalsResponse)
     def listHospitals(self, **kwargs):
         obj = DataWorker.provider('lpu')
         return obj.get_list_hospitals(**kwargs)
 
-    @rpc(AnyDict, _returns=AnyDict)
+    @rpc(ListDoctorsRequest, _returns=ListDoctorsResponse)
     def listDoctors(self, **kwargs):
         obj = DataWorker.provider('personal')
         return obj.get_list_doctors(**kwargs)
@@ -52,17 +53,17 @@ class ListServer(ServiceBase):
 
 class ScheduleServer(ServiceBase):
 
-    @rpc(AnyDict, _returns=AnyDict)
+    @rpc(GetScheduleInfoRequest, _returns=GetScheduleInfoResponse)
     def getScheduleInfo(self, **kwargs):
         obj = DataWorker.provider('enqueue')
         return obj.get_info(**kwargs)
 
-    @rpc(AnyDict, _returns=AnyDict)
+    @rpc(GetTicketStatusRequest, _returns=GetTicketStatusResponse)
     def getTicketStatus(self, **kwargs):
         obj = DataWorker.provider('enqueue')
         return obj.get_ticket_status(**kwargs)
 
-    @rpc(AnyDict, _returns=AnyDict)
+    @rpc(EnqueueRequest, _returns=EnqueueResponse)
     def enqueue(self):
         obj = DataWorker.provider('enqueue')
         return obj.enqueue(**kwargs)
