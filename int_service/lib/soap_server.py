@@ -10,9 +10,9 @@ from spyne.util.wsgi_wrapper import WsgiMounter
 from spyne.decorator import rpc
 from spyne.service import ServiceBase
 from spyne.protocol.http import HttpRpc
-from spyne.model.primitive import NATIVE_MAP, Mandatory
+from spyne.model.primitive import NATIVE_MAP, Mandatory, AnyDict
 from spyne.decorator import srpc, rpc
-from spyne.model.primitive import AnyDict
+from spyne.model.complex import Array, Iterable, ComplexModel
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
 from dataworker import DataWorker
@@ -89,7 +89,8 @@ class Server(object):
     def run(cls):
         from wsgiref.simple_server import make_server
         info = Application([InfoServer],
-            'tns',
+            'urn:ru.gov.economy:std.ws',
+            name='HospitalInfo',
             interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
@@ -97,13 +98,13 @@ class Server(object):
         list = Application([ListServer],
             'tns',
             interface=Wsdl11(),
-            in_protocol=HttpRpc(),
+            in_protocol=Soap11(),
             out_protocol=Soap11()
         )
         schedule = Application([ScheduleServer],
             'tns',
             interface=Wsdl11(),
-            in_protocol=HttpRpc(),
+            in_protocol=Soap11(),
             out_protocol=Soap11()
         )
         root = WsgiMounter({
