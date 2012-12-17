@@ -20,7 +20,7 @@ import soap_models
 
 class InfoServer(ServiceBase):
 
-    @rpc(GetHospitalInfoRequest, _returns=GetHospitalInfoResponse)
+    @rpc(soap_models.GetHospitalInfoRequest, _returns=soap_models.GetHospitalInfoResponse)
     def getHospitalInfo(self, **kwargs):
         obj = DataWorker.provider('lpu')
         return obj.get_info(**kwargs)
@@ -34,12 +34,12 @@ class InfoServer(ServiceBase):
 
 class ListServer(ServiceBase):
 
-    @rpc(ListHospitalsRequest, _returns=ListHospitalsResponse)
+    @rpc(soap_models.ListHospitalsRequest, _returns=soap_models.ListHospitalsResponse)
     def listHospitals(self, **kwargs):
         obj = DataWorker.provider('lpu')
         return obj.get_list_hospitals(**kwargs)
 
-    @rpc(ListDoctorsRequest, _returns=ListDoctorsResponse)
+    @rpc(soap_models.ListDoctorsRequest, _returns=soap_models.ListDoctorsResponse)
     def listDoctors(self, **kwargs):
         obj = DataWorker.provider('personal')
         return obj.get_list_doctors(**kwargs)
@@ -53,17 +53,17 @@ class ListServer(ServiceBase):
 
 class ScheduleServer(ServiceBase):
 
-    @rpc(GetScheduleInfoRequest, _returns=GetScheduleInfoResponse)
+    @rpc(soap_models.GetScheduleInfoRequest, _returns=soap_models.GetScheduleInfoResponse)
     def getScheduleInfo(self, **kwargs):
         obj = DataWorker.provider('enqueue')
         return obj.get_info(**kwargs)
 
-    @rpc(GetTicketStatusRequest, _returns=GetTicketStatusResponse)
+    @rpc(soap_models.GetTicketStatusRequest, _returns=soap_models.GetTicketStatusResponse)
     def getTicketStatus(self, **kwargs):
         obj = DataWorker.provider('enqueue')
         return obj.get_ticket_status(**kwargs)
 
-    @rpc(EnqueueRequest, _returns=EnqueueResponse)
+    @rpc(soap_models.EnqueueRequest, _returns=soap_models.EnqueueResponse)
     def enqueue(self):
         obj = DataWorker.provider('enqueue')
         return obj.enqueue(**kwargs)

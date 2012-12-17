@@ -48,7 +48,7 @@ class DetailedHospitalInfo(ComplexModel):
         doc=u'Информация о расписании работы объекта, если оно отличается от общего расписания работы ЛПУ'
     )
     buildings = Array(HospitalAddress, doc=u'Перечень адресов зданий, входящих в состав ЛПУ')
-    servicedDistricts = Array(ServicedDistrict())
+    servicedDistricts = Array(ServicedDistrict)
 
     def __init__(self, **kwargs):
         super(DetailedHospitalInfo, self).__init__(doc = u'Подробная информация о ЛПУ', **kwargs)
@@ -70,7 +70,7 @@ class GetHospitalInfoRequest(ComplexModel):
 class GetHospitalInfoResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    info = Array(DetailedHospitalInfo())
+    info = Array(DetailedHospitalInfo)
 
     def __init__(self):
         super(GetHospitalInfoResponse, self).__init__(doc=u'Подробная информация о запрошенных ЛПУ')
@@ -127,14 +127,18 @@ class PersonName(ComplexModel):
     lastName = String(doc=u'Фамилия')
 
     def __init__(self, **kwargs):
-        super(PersonName, self).__init__(doc=u'Имя врача', **kwargs)
+        doc=u'Имя врача'
+        if 'doc' in kwargs and kwargs['doc']:
+            doc = kwargs['doc']
+            del kwargs['doc']
+        super(PersonName, self).__init__(doc=doc, **kwargs)
 
 
 class DoctorInfo(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     uid = String(doc=u'Уникальный идентификатор врача в Реестре')
-    name = PersonName(doc=u'Имя врача')
+    name = PersonName()
     hospitalUid = String(doc=u'Уникальный идентификатор ЛПУ')
     speciality = String(doc=u'Наименование специальности')
     keyEPGU = String(doc=u'Ключ на ЕПГУ')
@@ -214,7 +218,7 @@ class ParsedAddress(ComplexModel):
             u'(для муниципальных образований, в которых адресация зданий производится с помощью кварталов, а не улиц)'
     )
     flat = Integer(doc=u'Номер квартиры')
-    house = BuildingNumber(doc=u'Номер здания')
+    house = BuildingNumber()
     kladrCode = String(
         doc=u'Идентификатор по классификатору КЛАДР. ' +
             u'Для муниципальных образований, ' +
@@ -231,7 +235,7 @@ class Address(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     rawAddress = String(doc=u'Адрес объекта, записанный в виде строки')
-    parsedAddress = ParsedAddress(doc=u'Структурированная информация об адресе')
+    parsedAddress = ParsedAddress()
 
     def __init__(self, **kwargs):
         super(Address, self).__init__(doc=u'Информация об адресе', **kwargs)
@@ -242,7 +246,7 @@ class SearchScope(ComplexModel):
 
     hospitalUid = String(doc=u'Один или несколько идентификаторов ЛПУ')
     ocatoCode = String(doc=u'Код муниципального образования по классификатору ОКАТО')
-    address = Address(doc=u'Обслуживаемый адрес')
+    address = Address()
 
     def __init__(self, **kwargs):
         super(SearchScope, self).__init__(doc=u'Область поиска (территориальные критерии)', **kwargs)
@@ -261,7 +265,7 @@ class ListNewEnqueueRequest(ComplexModel):
 class ListNewEnqueueResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    Enqueue = NewEnqueue(doc=u'Перечень объектов, содержащих информацию о найденных новых записях')
+    Enqueue = Array(NewEnqueue)
 
     def __init__(self):
         super(ListNewEnqueueResponse, self).__init__(doc=u'Результаты поиска услуги по заданным критериям')
@@ -292,7 +296,7 @@ class ListDoctorsRequest(ComplexModel):
 
     lastName = String(doc=u'Фамилия врача')
     speciality = String(doc=u'Наименование специальности')
-    searchScope = SearchScope(doc=u'Область поиска (ЛПУ, МО, адрес)')
+    searchScope = SearchScope()
 
     def __init__(self):
         super(ListDoctorsRequest, self).__init__(doc=u'Один или несколько критериев поиска (получения списка) врачей')
@@ -342,7 +346,7 @@ class ListHospitalsRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     speciality = String(doc=u'Наименование специальности')
-    searchScope = SearchScope(doc=u'Область поиска (ЛПУ, МО, адрес)')
+    searchScope = SearchScope()
     ocatoCode = String(doc=u'Код муниципального образования по классификатору ОКАТО')
     hospitalUid = String(doc=u'Перечень уникальных идентификаторов ЛПУ')
 
@@ -385,15 +389,6 @@ class GetScheduleInfoRequest(ComplexModel):
         super(GetScheduleInfoRequest, self).__init__(doc=u'Получение обобщённой информации о расписании врача')
 
 
-class GetScheduleInfoResponse(ComplexModel):
-    __namespace__ = SOAP_NAMESPACE
-
-    timeslots = Array(Timeslot, doc=u'Расписание на отдельные дни в заданном интервале')
-
-    def __init__(self):
-        super(GetScheduleInfoResponse, self).__init__(doc=u'Информация о расписании врача')
-
-
 Timeslot_Statuses = Enum(
     "free",
     "locked",
@@ -408,6 +403,29 @@ class TimeslotStatus(ComplexModel):
 
     def __init__(self, **kwargs):
         super(TimeslotStatus, self).__init__(doc=u'Состояние интервала времени в расписании', **kwargs)
+
+
+class Timeslot(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    start = DateTime(doc=u'Начало интервала')
+    finish = DateTime(doc=u'Окончание интервала')
+    status = TimeslotStatus()
+    office = String(doc=u'Кабинет')
+    patientId = String(doc=u'Идентификатор записанного пациента')
+    patientInfo = String(doc=u'ФИО записанного пациента')
+
+    def __init__(self):
+        super(Timeslot, self).__init__(doc=u'Интервал в расписании врача')
+
+
+class GetScheduleInfoResponse(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    timeslots = Array(Timeslot, doc=u'Расписание на отдельные дни в заданном интервале')
+
+    def __init__(self):
+        super(GetScheduleInfoResponse, self).__init__(doc=u'Информация о расписании врача')
 
 
 SessionStatuses = Enum(
@@ -427,26 +445,12 @@ class SessionType(ComplexModel):
         super(SessionType, self).__init__(doc=u'Статус группы интервалов в расписании врача', **kwargs)
 
 
-class Timeslot(ComplexModel):
-    __namespace__ = SOAP_NAMESPACE
-
-    start = DateTime(doc=u'Начало интервала')
-    finish = DateTime(doc=u'Окончание интервала')
-    status = TimeslotStatus(doc=u'Статус интервала')
-    office = String(doc=u'Кабинет')
-    patientId = String(doc=u'Идентификатор записанного пациента')
-    patientInfo = String(doc=u'ФИО записанного пациента')
-
-    def __init__(self):
-        super(Timeslot, self).__init__(doc=u'Интервал в расписании врача')
-
-
 class Session(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     sessionStart = DateTime(doc=u'Начало смены')
     sessionEnd = DateTime(doc=u'Окончание смены')
-    sessionType = SessionType(doc=u'Статус смены (возможность электронной записи на приём)')
+    sessionType = SessionType()
     timeslots = Array(Timeslot, doc=u'Информация об отдельных элементах расписания (тайм-слотах)')
     comments = String(doc=u'Дополнительная информация о месте приёма или о замещениях')
 
@@ -579,13 +583,11 @@ class TicketInfo(ComplexModel):
     doctorUid = String(doc=u'Уникальный идентификатор врача')
     doctor = PersonName(doc=u'ФИО врача')
     person = PersonName(doc=u'ФИО записавшегося')
-    status = TicketStatus(doc=u'Текущий статус заявки')
+    status = TicketStatus()
     timeslotStart = DateTime(doc=u'Начало приёма у врача, соответствующее данной заявке')
     location = String(doc=u'Информация о месте приёма (копрус, этаж, кабинет и т.п.)')
     comment = String(doc=u'Дополнительные указания и информация')
-    printableDocument = PrintableDocument(
-        doc=u'Данныее электронного документа с печатной формой заявки на приём (талоном)',
-    )
+    printableDocument = PrintableDocument()
 
     def __init__(self):
         super(TicketInfo, self).__init__( doc=u'Данные о текущем статусе заявки на приём')
