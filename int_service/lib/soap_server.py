@@ -6,6 +6,7 @@ from spyne.application import Application
 from spyne.protocol.soap import Soap11
 from spyne.interface.wsdl.wsdl11 import Wsdl11
 from spyne.util.simple import wsgi_soap_application
+from spyne.server.wsgi import WsgiApplication
 from spyne.util.wsgi_wrapper import WsgiMounter
 from spyne.decorator import rpc
 from spyne.service import ServiceBase
@@ -17,6 +18,20 @@ from spyne.model.complex import Array, Iterable, ComplexModel
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
 from dataworker import DataWorker
 import soap_models
+
+class CustomWsgiMounter(WsgiMounter):
+    """
+    Customized WsgiMounter for bug fix of location address in wsdl:
+
+    <wsdl:port name="Application" binding="tns:Application">
+        <soap:address location="http://127.0.0.1:9900list"/>
+    </wsdl:port>
+    """
+
+    def __call__(self, environ, start_response):
+        environ['SCRIPT_NAME'] = environ.get('SCRIPT_NAME', '').rstrip('/') + '/'
+        return super(CustomWsgiMounter, self).__call__(environ, start_response)
+
 
 class InfoServer(ServiceBase):
 
@@ -97,24 +112,25 @@ class Server(object):
             out_protocol=Soap11()
         )
         list = Application([ListServer],
-            'tns',
+            'urn:ru.gov.economy:std.ws',
             interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
         schedule = Application([ScheduleServer],
-            'tns',
+            'urn:ru.gov.economy:std.ws',
             interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
-        root = WsgiMounter({
+        root = CustomWsgiMounter({
             'info': info,
             'list': list,
             'schedule': schedule,
             })
 
         server = make_server(SOAP_SERVER_HOST, SOAP_SERVER_PORT, root)
+#        server = make_server(SOAP_SERVER_HOST, SOAP_SERVER_PORT, WsgiApplication(list))
         logging.basicConfig(level=logging.DEBUG)
         logging.info("listening to http://%s:%d" % (SOAP_SERVER_HOST, SOAP_SERVER_PORT))
 

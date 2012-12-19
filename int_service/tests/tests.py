@@ -5,10 +5,10 @@ import int_service.main
 import unittest
 from suds.client import Client
 
-IS = "http://localhost/int-service/?wsdl="
+IS = "http://127.0.0.1:9910/%s/?wsdl"
 
 class TestListWSDL(unittest.TestCase):
-    client = Client(IS + "list")
+    client = Client(IS % "list")
 
     def testListHospitals(self):
         okato = "56401000000"
@@ -351,7 +351,7 @@ class TestListWSDL(unittest.TestCase):
 
 
 class TestInfoWSDL(unittest.TestCase):
-    client = Client(IS + "info")
+    client = Client(IS % "info")
 
     def testGetHospitalInfo(self):
         hospitalUid = '17/0'
@@ -478,7 +478,7 @@ class TestInfoWSDL(unittest.TestCase):
 
 
 class TestScheduleWSDL(unittest.TestCase):
-    client = Client(IS + "schedule")
+    client = Client(IS % "schedule")
 
     def testGetScheduleInfo(self):
         hospitalUid = '17/53'
