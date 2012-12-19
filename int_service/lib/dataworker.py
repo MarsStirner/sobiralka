@@ -51,10 +51,10 @@ class LPUWorker(object):
         lpu = []
         lpu_units = []
         if not isinstance(hospitalUid, list):
-            hospitalUid = list(hospitalUid)
+            hospitalUid = (hospitalUid,)
         for i in hospitalUid:
             tmp_list = i.split('/')
-            if tmp_list[1]:
+            if int(tmp_list[1]):
                 lpu_units.append(tmp_list)
             else:
                 lpu.append(tmp_list[0])
@@ -65,12 +65,12 @@ class LPUWorker(object):
         '''
         Get LPU list by parameters
         '''
-        if kwargs['id']:
+        speciality = None
+        lpu_ids = None
+        if 'id' in kwargs and kwargs['id']:
             lpu_ids = kwargs['id']
-        if kwargs['speciality']:
+        if 'speciality' in kwargs and kwargs['speciality']:
             speciality = kwargs['speciality']
-        if kwargs['okato_code']:
-            okato_code = kwargs['okato_code']
 
         # Prepare query for getting LPU
 #        fields = [LPU.id, LPU.name, LPU.phone, LPU.address, LPU.key, LPU.proxy, LPU.token, LPU.protocol]
@@ -90,8 +90,8 @@ class LPUWorker(object):
         if len(lpu_ids):
             query_lpu = query_lpu.filter(LPU.id.in_(lpu_ids))
 
-        if okato_code:
-            query_lpu = query_lpu.filter(LPU.OKATO.like('%' + okato_code + '%'))
+        if 'okato_code' in kwargs and kwargs['ocato_code']:
+            query_lpu = query_lpu.filter(LPU.OKATO.like('%' + kwargs['ocato_code'] + '%'))
 
         return query_lpu.all()
 
@@ -99,21 +99,22 @@ class LPUWorker(object):
         '''
         Get LPU list by address parameters
         '''
-        if (kwargs['parsedAddress']['kladrCode']
-            and kwargs['parsedAddress']['block']
-            and kwargs['parsedAddress']['flat']
-#            and kwargs['parsedAddress']['house']['building']
-            and kwargs['parsedAddress']['house']['number']
-            ):
-            # Prepare search parameters
-            streetKLADR = kwargs['parsedAddress']['kladrCode']
-            pointKLADR = kwargs['parsedAddress']['kladrCode'][0:5].ljust(15, '0')
-        else:
+        try:
+            if (kwargs['parsedAddress']['kladrCode']
+                and kwargs['parsedAddress']['block']
+                and kwargs['parsedAddress']['flat']
+    #            and kwargs['parsedAddress']['house']['building']
+                and kwargs['parsedAddress']['house']['number']
+                ):
+                    # Prepare search parameters
+                    streetKLADR = kwargs['parsedAddress']['kladrCode']
+                    pointKLADR = kwargs['parsedAddress']['kladrCode'][0:5].ljust(15, '0')
+        except exceptions.AttributeError:
             return []
 
         result = []
 
-        if kwargs['lpu_list']:
+        if 'lpu_list' in kwargs and kwargs['lpu_list']:
             used_proxy = []
             # Use LPU proxy for searching by Soap
             for lpu in kwargs['lpu_list']:
@@ -335,17 +336,17 @@ class EnqueueWorker(object):
     def get_info(self, **kwargs):
         result = {}
 
-        if kwargs['hospitalUid']:
+        try:
             hospital_uid = kwargs['hospitalUid'].split('/')
+        except exceptions.KeyError, e:
+            print e
+        else:
             if len(hospital_uid)==2:
                 lpu_dw = LPUWorker()
                 lpu = lpu_dw.get_by_id(hospital_uid[0])
             else:
                 raise exceptions.ValueError
                 return {}
-        else:
-            raise exceptions.ValueError
-            return {}
 
         if kwargs['doctorUid']:
             doctor_uid = kwargs['doctor_uid']

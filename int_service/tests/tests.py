@@ -3,12 +3,15 @@ import os
 import datetime
 import int_service.main
 import unittest
+import logging
 from suds.client import Client
+
+logging.basicConfig()
 
 IS = "http://127.0.0.1:9910/%s/?wsdl"
 
 class TestListWSDL(unittest.TestCase):
-    client = Client(IS % "list")
+    client = Client(IS % "list", cache=None)
 
     def testListHospitals(self):
         okato = "56401000000"
@@ -278,7 +281,7 @@ class TestListWSDL(unittest.TestCase):
         ]
         doctors = self.client.service.listDoctors(searchScope = {'hospitalUid': hospital_Uid, }).doctors
         self.assertIsInstance(doctors, list)
-        self.assertListEqual(hospitals, result)
+        self.assertListEqual(doctors, result)
 
         hospital_Uid = "17/52"
         result = [
@@ -335,13 +338,13 @@ class TestListWSDL(unittest.TestCase):
             ]
         doctors = self.client.service.listDoctors(searchScope = {'hospitalUid': hospital_Uid, }).doctors
         self.assertIsInstance(doctors, list)
-        self.assertListEqual(hospitals, result)
+        self.assertListEqual(doctors, result)
 
         hospital_Uid = "11111"
         result = []
         doctors = self.client.service.listDoctors().doctors
         self.assertIsInstance(doctors, list)
-        self.assertListEqual(hospitals, result)
+        self.assertListEqual(doctors, result)
 
     def testListSpecialities(self):
         pass
@@ -351,7 +354,7 @@ class TestListWSDL(unittest.TestCase):
 
 
 class TestInfoWSDL(unittest.TestCase):
-    client = Client(IS % "info")
+    client = Client(IS % "info", cache=None)
 
     def testGetHospitalInfo(self):
         hospitalUid = '17/0'
@@ -379,15 +382,15 @@ class TestInfoWSDL(unittest.TestCase):
                                   },
                                  ],
                    },]
-        info_list = self.client.service.getHospitalInfo(hospitalUid = hospitalUid)
+        info_list = self.client.service.getHospitalInfo({'hospitalUid':hospitalUid})
         self.assertIsInstance(info_list, list)
-        self.assertListEqual(hospitals, result)
+        self.assertListEqual(info_list, result)
 
         hospitalUid = '123'
         result = []
-        info_list = self.client.service.getHospitalInfo(hospitalUid = hospitalUid)
+        info_list = self.client.service.getHospitalInfo(hospitalUid=hospitalUid)
         self.assertIsInstance(info_list, list)
-        self.assertListEqual(hospitals, result)
+        self.assertListEqual(info_list, result)
 
         result = [{'uid': "5/0",
                    'title': u"ГБУЗ «Пензенская областная клиническая больница им. Н.Н. Бурденко»",
@@ -466,9 +469,9 @@ class TestInfoWSDL(unittest.TestCase):
                                   },
                                  ],
                    },]
-        info_list = self.client.service.getHospitalInfo()
-        self.assertIsInstance(info_list, list)
-        self.assertListEqual(hospitals, result)
+#        info_list = self.client.service.getHospitalInfo()
+#        self.assertIsInstance(info_list, list)
+#        self.assertListEqual(info_list, result)
 
     def testGetDoctorInfo(self):
         pass
@@ -478,7 +481,7 @@ class TestInfoWSDL(unittest.TestCase):
 
 
 class TestScheduleWSDL(unittest.TestCase):
-    client = Client(IS % "schedule")
+    client = Client(IS % "schedule", cache=None)
 
     def testGetScheduleInfo(self):
         hospitalUid = '17/53'

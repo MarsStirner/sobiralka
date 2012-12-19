@@ -11,11 +11,11 @@ from spyne.util.wsgi_wrapper import WsgiMounter
 from spyne.decorator import rpc
 from spyne.service import ServiceBase
 from spyne.protocol.http import HttpRpc
-from spyne.model.primitive import NATIVE_MAP, Mandatory, AnyDict
+from spyne.model.primitive import NATIVE_MAP, Mandatory, AnyDict, String
 from spyne.decorator import srpc, rpc
 from spyne.model.complex import Array, Iterable, ComplexModel
 
-from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
+from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, SOAP_NAMESPACE
 from dataworker import DataWorker
 import soap_models
 
@@ -35,10 +35,10 @@ class CustomWsgiMounter(WsgiMounter):
 
 class InfoServer(ServiceBase):
 
-    @rpc(soap_models.GetHospitalInfoRequest, _returns=soap_models.GetHospitalInfoResponse)
-    def getHospitalInfo(self, **kwargs):
+    @srpc(soap_models.GetHospitalInfoRequest, _returns=soap_models.GetHospitalInfoResponse)
+    def getHospitalInfo(HospitalInfoRequest):
         obj = DataWorker.provider('lpu')
-        return obj.get_info(**kwargs)
+        return obj.get_info(**vars(HospitalInfoRequest))
 
     def setDoctorInfo(self):
         pass
@@ -49,12 +49,12 @@ class InfoServer(ServiceBase):
 
 class ListServer(ServiceBase):
 
-    @rpc(soap_models.ListHospitalsRequest, _returns=soap_models.ListHospitalsResponse)
+    @srpc(soap_models.ListHospitalsRequest, _returns=soap_models.ListHospitalsResponse)
     def listHospitals(self, **kwargs):
         obj = DataWorker.provider('lpu')
         return obj.get_list_hospitals(**kwargs)
 
-    @rpc(soap_models.ListDoctorsRequest, _returns=soap_models.ListDoctorsResponse)
+    @srpc(soap_models.ListDoctorsRequest, _returns=soap_models.ListDoctorsResponse)
     def listDoctors(self, **kwargs):
         obj = DataWorker.provider('personal')
         return obj.get_list_doctors(**kwargs)
@@ -68,17 +68,17 @@ class ListServer(ServiceBase):
 
 class ScheduleServer(ServiceBase):
 
-    @rpc(soap_models.GetScheduleInfoRequest, _returns=soap_models.GetScheduleInfoResponse)
+    @srpc(soap_models.GetScheduleInfoRequest, _returns=soap_models.GetScheduleInfoResponse)
     def getScheduleInfo(self, **kwargs):
         obj = DataWorker.provider('enqueue')
         return obj.get_info(**kwargs)
 
-    @rpc(soap_models.GetTicketStatusRequest, _returns=soap_models.GetTicketStatusResponse)
+    @srpc(soap_models.GetTicketStatusRequest, _returns=soap_models.GetTicketStatusResponse)
     def getTicketStatus(self, **kwargs):
         obj = DataWorker.provider('enqueue')
         return obj.get_ticket_status(**kwargs)
 
-    @rpc(soap_models.EnqueueRequest, _returns=soap_models.EnqueueResponse)
+    @srpc(soap_models.EnqueueRequest, _returns=soap_models.EnqueueResponse)
     def enqueue(self):
         obj = DataWorker.provider('enqueue')
         return obj.enqueue(**kwargs)
@@ -87,9 +87,6 @@ class ScheduleServer(ServiceBase):
         pass
 
     def cancel(self):
-        pass
-
-    def getTicketStatus(self):
         pass
 
     def sendRequest(self):
@@ -103,22 +100,23 @@ class Server(object):
 
     @classmethod
     def run(cls):
+        logging.basicConfig()
         from wsgiref.simple_server import make_server
         info = Application([InfoServer],
-            'urn:ru.gov.economy:std.ws',
+            SOAP_NAMESPACE,
             name='HospitalInfo',
             interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
         list = Application([ListServer],
-            'urn:ru.gov.economy:std.ws',
+            SOAP_NAMESPACE,
             interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
         schedule = Application([ScheduleServer],
-            'urn:ru.gov.economy:std.ws',
+            SOAP_NAMESPACE,
             interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
@@ -131,7 +129,6 @@ class Server(object):
 
         server = make_server(SOAP_SERVER_HOST, SOAP_SERVER_PORT, root)
 #        server = make_server(SOAP_SERVER_HOST, SOAP_SERVER_PORT, WsgiApplication(list))
-        logging.basicConfig(level=logging.DEBUG)
         logging.info("listening to http://%s:%d" % (SOAP_SERVER_HOST, SOAP_SERVER_PORT))
 
         server.serve_forever()

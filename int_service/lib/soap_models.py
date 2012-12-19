@@ -14,7 +14,8 @@ class HospitalAddress(ComplexModel):
     title = String(doc=u'Наименование объекта (корпуса, отделения) ЛПУ, расположенных по данному адресу')
     address = String(doc=u'Почтовый адрес объекта')
     phone = String(doc=u'Телефон объекта')
-    route = String(doc=u'Информация о маршруте проезда')
+    route = String()
+    route.Annotations.doc = u'Информация о маршруте проезда'
     schedule = String(
         doc=u'Информация о расписании работы объекта, если оно отличается от общего расписания работы ЛПУ'
     )
@@ -61,7 +62,8 @@ class Hospital(ComplexModel):
 class GetHospitalInfoRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    hospitalUid = String(doc=u'Один или несколько идентификаторов ЛПУ')
+    hospitalUid = String()
+    hospitalUid.Annotations.doc=u'Один или несколько идентификаторов ЛПУ'
 
     def __init__(self):
         super(GetHospitalInfoRequest, self).__init__(doc=u'Параметры запроса для получения подробной информация о ЛПУ')
