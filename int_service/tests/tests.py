@@ -32,7 +32,7 @@ class TestListWSDL(unittest.TestCase):
                     'key': "580064"
                    },
                    ]
-        hospitals = self.client.service.listHospitals(ocatoCode=okato).hospitals
+        hospitals = self.client.service.listHospitals({'ocatoCode': okato}).hospitals
         self.assertIsInstance(hospitals, list)
         self.assertListEqual(hospitals, result)
 
@@ -45,13 +45,13 @@ class TestListWSDL(unittest.TestCase):
                     'token': "None",
                     'key': "580033"
                    },]
-        hospitals = self.client.service.listHospitals(ocatoCode=okato).hospitals
+        hospitals = self.client.service.listHospitals({'ocatoCode': okato}).hospitals
         self.assertIsInstance(hospitals, list)
         self.assertListEqual(hospitals, result)
 
         okato = "56203000000"
         result = []
-        hospitals = self.client.service.listHospitals(ocatoCode=okato).hospitals
+        hospitals = self.client.service.listHospitals({'ocatoCode': okato}).hospitals
         self.assertIsInstance(hospitals, list)
         self.assertListEqual(hospitals, result)
 
@@ -158,7 +158,7 @@ class TestListWSDL(unittest.TestCase):
 
         okato = "11111111"
         result = []
-        hospitals = self.client.service.listHospitals(ocatoCode=okato).hospitals
+        hospitals = self.client.service.listHospitals({'ocatoCode': okato}).hospitals
         self.assertIsInstance(hospitals, list)
         self.assertListEqual(hospitals, result)
 
@@ -177,33 +177,33 @@ class TestListWSDL(unittest.TestCase):
              'keyEPGU': '50bddafa2a889bb40e000822',
              },
             ]
-        doctors = self.client.service.listDoctors(
-            searchScope = {'hospitalUid': hospital_Uid, }, speciality = speciality
-        ).doctors
+        doctors = self.client.service.listDoctors({
+            'searchScope': {'hospitalUid': hospital_Uid, }, 'speciality': speciality
+        }).doctors
         self.assertIsInstance(doctors, list)
 
         hospital_Uid = '1111'
         speciality = u"Акушер-гинеколог (лечебное дело, педиатрия)"
         result = []
-        doctors = self.client.service.listDoctors(
-            searchScope = {'hospitalUid': hospital_Uid, }, speciality = speciality
-        ).doctors
+        doctors = self.client.service.listDoctors({
+            'searchScope': {'hospitalUid': hospital_Uid, }, 'speciality': speciality
+        }).doctors
         self.assertIsInstance(doctors, list)
 
         hospital_Uid = '1111'
         speciality = "1111"
         result = []
-        doctors = self.client.service.listDoctors(
-            searchScope = {'hospitalUid': hospital_Uid, }, speciality = speciality
-        ).doctors
+        doctors = self.client.service.listDoctors({
+            'searchScope': {'hospitalUid': hospital_Uid, }, 'speciality': speciality
+        }).doctors
         self.assertIsInstance(doctors, list)
 
         hospital_Uid = '17/52'
         speciality = "1111"
         result = []
-        doctors = self.client.service.listDoctors(
-            searchScope = {'hospitalUid': hospital_Uid, }, speciality = speciality
-        ).doctors
+        doctors = self.client.service.listDoctors({
+            'searchScope': {'hospitalUid': hospital_Uid, }, 'speciality': speciality
+        }).doctors
         self.assertIsInstance(doctors, list)
 
         hospital_Uid = "17/53"
@@ -279,7 +279,7 @@ class TestListWSDL(unittest.TestCase):
              'keyEPGU': '50be0110bb4d33e26e0014c2',
              },
         ]
-        doctors = self.client.service.listDoctors(searchScope = {'hospitalUid': hospital_Uid, }).doctors
+        doctors = self.client.service.listDoctors({'searchScope': {'hospitalUid': hospital_Uid, }}).doctors
         self.assertIsInstance(doctors, list)
         self.assertListEqual(doctors, result)
 
@@ -336,7 +336,7 @@ class TestListWSDL(unittest.TestCase):
              'keyEPGU': '50bddafa2a889bb40e000822',
              },
             ]
-        doctors = self.client.service.listDoctors(searchScope = {'hospitalUid': hospital_Uid, }).doctors
+        doctors = self.client.service.listDoctors({'searchScope': {'hospitalUid': hospital_Uid, }}).doctors
         self.assertIsInstance(doctors, list)
         self.assertListEqual(doctors, result)
 
@@ -382,13 +382,13 @@ class TestInfoWSDL(unittest.TestCase):
                                   },
                                  ],
                    },]
-        info_list = self.client.service.getHospitalInfo({'hospitalUid':hospitalUid})
+        info_list = self.client.service.getHospitalInfo({'hospitalUid': hospitalUid})
         self.assertIsInstance(info_list, list)
         self.assertListEqual(info_list, result)
 
         hospitalUid = '123'
         result = []
-        info_list = self.client.service.getHospitalInfo(hospitalUid=hospitalUid)
+        info_list = self.client.service.getHospitalInfo({'hospitalUid': hospitalUid})
         self.assertIsInstance(info_list, list)
         self.assertListEqual(info_list, result)
 
@@ -486,7 +486,7 @@ class TestScheduleWSDL(unittest.TestCase):
     def testGetScheduleInfo(self):
         hospitalUid = '17/53'
         doctorUid = '344'
-        ticket = self.client.service.getScheduleInfo(hospitalUid=hospitalUid, doctorUid=doctorUid)
+        ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
         self.assertIsInstance(ticket, list)
         self.assertGreater(len(ticket), 0)
 
@@ -496,7 +496,7 @@ class TestScheduleWSDL(unittest.TestCase):
     def testGetTicketStatus(self):
         hospitalUid = 0
         ticketUid = 0
-        ticket = self.client.service.getTicketStatus(hospitalUid=hospitalUid, ticketUid=ticketUid)[0]
+        ticket = self.client.service.getTicketStatus({'hospitalUid':hospitalUid, 'ticketUid': ticketUid})[0]
         self.assertIsInstance(ticket, list)
 
     def testSetTicketReadStatus(self):
@@ -511,13 +511,15 @@ class TestScheduleWSDL(unittest.TestCase):
         hospitalUidFrom=0
         birthday="1954-10-20"
 
-        ticket = self.client.service.enqueue(person=person,
-            omiPolicyNumber=omiPolicyNumber,
-            hospitalUid=hospitalUid,
-            doctorUid=doctorUid,
-            timeslotStart=timeslotStart,
-            hospitalUidFrom=hospitalUidFrom,
-            birthday=birthday)
+        ticket = self.client.service.enqueue({
+            'person': person,
+            'omiPolicyNumber': omiPolicyNumber,
+            'hospitalUid': hospitalUid,
+            'doctorUid': doctorUid,
+            'timeslotStart': timeslotStart,
+            'hospitalUidFrom': hospitalUidFrom,
+            'birthday': birthday
+        })
 
         self.assertIsInstance(ticket, dict)
         if ticket['result'] == 'true':

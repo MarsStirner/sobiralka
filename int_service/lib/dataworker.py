@@ -16,7 +16,8 @@ from models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal
 from soap_client import Clients
 from is_exceptions import exception_by_code
 
-engine = create_engine(DB_CONNECT_STRING)
+engine = create_engine(DB_CONNECT_STRING) #?? convert_unicode=True
+engine.execute("SET NAMES utf8") # For correct selecting UTF-8 DATA
 Session = sessionmaker(bind=engine)
 
 class DataWorker(object):
@@ -43,7 +44,7 @@ class DataWorker(object):
 
 
 class LPUWorker(object):
-    session = Session
+    session = Session()
     model = LPU
 
     @classmethod
@@ -55,9 +56,9 @@ class LPUWorker(object):
         for i in hospitalUid:
             tmp_list = i.split('/')
             if int(tmp_list[1]):
-                lpu_units.append(tmp_list)
+                lpu_units.append([int(tmp_list[0]), int(tmp_list[1])])
             else:
-                lpu.append(tmp_list[0])
+                lpu.append(int(tmp_list[0]))
 
         return (lpu, lpu_units)
 
@@ -104,7 +105,7 @@ class LPUWorker(object):
                 and kwargs['parsedAddress']['house']['number']
                 ):
                     # Prepare search parameters
-                    streetKLADR = kwargs.get('parsedAddress').get('kladrCode')
+                    streetKLADR = kwargs.get('parsedAddress', {}).get('kladrCode')
                     pointKLADR = kwargs.get('parsedAddress').get('kladrCode')[0:5].ljust(15, '0')
         except exceptions.AttributeError:
             return []
@@ -174,11 +175,11 @@ class LPUWorker(object):
         # Append LPUs to result
         for item in lpu_list:
             result['hospitals'].append({
-                'uid': item.id + '/0',
+                'uid': str(item.id) + '/0',
                 'title': item.name,
                 'phone': item.phone,
                 'address': item.address,
-                'wsdlURL': "http://" + SOAP_SERVER_HOST + ":" + SOAP_SERVER_PORT + '/schedule/?wsdl',
+                'wsdlURL': "http://" + SOAP_SERVER_HOST + ":" + str(SOAP_SERVER_PORT) + '/schedule/?wsdl',
                 'token': item.token,
                 'key': item.key,
                 }
@@ -190,17 +191,17 @@ class LPUWorker(object):
             # Append LPU_Units to result
             for item in lpu_units_list:
                 if item.parentId:
-                    uid = item.id + '/' + item.parentId
+                    uid = str(item.id) + '/' + str(item.parentId)
                 else:
-                    uid = item.id +'/0'
+                    uid = str(item.id) +'/0'
 
                 result['hospitals'].append({
                     'uid': uid,
                     'title': item.name,
-                    'phone': item.phone,
+                    'phone': item.lpu.phone,
                     'address': item.address,
                     # TODO: выяснить используется ли wsdlURL и верно ли указан
-                    'wsdlURL': "http://" + SOAP_SERVER_HOST + ":" + SOAP_SERVER_PORT + '/schedule/?wsdl',
+                    'wsdlURL': "http://" + SOAP_SERVER_HOST + ":" + str(SOAP_SERVER_PORT) + '/schedule/?wsdl',
                     'token': item.token,
                     'key': item.key,
                     }
@@ -231,15 +232,16 @@ class LPUWorker(object):
                     'schedule': lpu_item.schedule,
                 })
 
-            result['info'].append({
-                'uid': lpu_item.id + '/0',
-                'title': lpu_item.name,
-                'type': lpu_item.type,
-                'phone': lpu_item.phone,
-                'email': lpu_item.email,
-                'siteURL': '',
-                'schedule': lpu_item.schedule,
-                'buildings': units,
+            result.update({'info':
+                               {'uid': str(lpu_item.id) + '/0',
+                                'title': lpu_item.name,
+                                'type': lpu_item.type,
+                                'phone': lpu_item.phone,
+                                'email': lpu_item.email,
+                                'siteURL': '',
+                                'schedule': lpu_item.schedule,
+                                'buildings': units,
+                                }
             })
 
         return result
@@ -263,7 +265,7 @@ class LPUWorker(object):
 
 
 class LPU_UnitsWorker(object):
-    session = Session
+    session = Session()
     model = LPU_Units
 
     def get_list(self, **kwargs):
@@ -275,11 +277,12 @@ class LPU_UnitsWorker(object):
         lpu_id = kwargs.get('lpu_id')
 
         # Prepare query for getting LPU_Units
-        fields = [LPU_Units.id, LPU_Units.lpuId, LPU_Units.name, LPU_Units.address,
-                  LPU.phone, LPU.token, LPU.key, UnitsParentForId.lpuId.label('parentId')]
+#        fields = [LPU_Units.id, LPU_Units.lpuId, LPU_Units.name, LPU_Units.address,
+#                  LPU.phone, LPU.token, LPU.key, UnitsParentForId.LpuId.label('parentId')]
+        fields = [LPU_Units.id, LPU_Units.lpuId, LPU_Units.name, LPU_Units.address, LPU_Units.lpu,
+                  UnitsParentForId.LpuId.label('parentId')]
         filter = []
         _join = []
-        _outerjoin = [LPU, UnitsParentForId]
 
         if speciality and isinstance(speciality, unicode):
             fields.append(Personal.speciality)
@@ -291,9 +294,8 @@ class LPU_UnitsWorker(object):
             for i in _join:
                 query_lpu_units = query_lpu_units.join(i)
 
-        if _outerjoin:
-            for i in _outerjoin:
-                query_lpu_units = query_lpu_units.outerjoin(i)
+        query_lpu_units = query_lpu_units.outerjoin(LPU)
+        query_lpu_units = query_lpu_units.outerjoin(UnitsParentForId, LPU_Units.id==UnitsParentForId.ChildId)
 
         if len(lpu_units_ids):
             for unit in lpu_units_ids:
@@ -324,14 +326,14 @@ class LPU_UnitsWorker(object):
 
 
 class EnqueueWorker(object):
-    session = Session
+    session = Session()
     model = Enqueue
     SCHEDULE_DAYS_DELTA = 14
 
     def get_info(self, **kwargs):
         result = {}
 
-        hospital_uid = kwargs.get('hospitalUid').split('/')
+        hospital_uid = kwargs.get('hospitalUid', '').split('/')
         if isinstance(hospital_uid, list) and len(hospital_uid)==2:
             lpu_dw = LPUWorker()
             lpu = lpu_dw.get_by_id(hospital_uid[0])
@@ -408,7 +410,7 @@ class EnqueueWorker(object):
         Get tickets' status
         '''
         result = {}
-        hospital_uid = kwargs.get('hospitalUid').split('/')
+        hospital_uid = kwargs.get('hospitalUid', '').split('/')
         ticket_uid = kwargs.get('ticketUid')
         if hospital_uid and ticket_uid:
             if len(hospital_uid)==2:
@@ -562,7 +564,7 @@ class EnqueueWorker(object):
         '''
         Запись на приём к врачу
         '''
-        hospital_uid = kwargs.get('hospitalUid').split('/')
+        hospital_uid = kwargs.get('hospitalUid', '').split('/')
         birthday = kwargs.get('birthday')
         doctor_uid = kwargs.get('doctorUid')
         person = kwargs.get('person')
@@ -646,7 +648,7 @@ class EnqueueWorker(object):
 
 
 class PersonalWorker(object):
-    session = Session
+    session = Session()
     model = Personal
 
     def get_list(self, **kwargs):
@@ -702,7 +704,7 @@ class PersonalWorker(object):
                 'title': (value.lpu_name + " " + value.lpu_units_name).trim(),
                 'address': (value.lpu_address + " " + value.lpu_units_address).trim(),
                 # TODO: выяснить используется ли wsdlURL и верно ли указан
-                'wsdlURL': 'http://' + SOAP_SERVER_HOST + ':' + SOAP_SERVER_PORT + '/schedule/?wsdl',
+                'wsdlURL': 'http://' + SOAP_SERVER_HOST + ':' + str(SOAP_SERVER_PORT) + '/schedule/?wsdl',
                 'token': '',
                 'key': value.key,
             })

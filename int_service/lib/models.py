@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, BigInteger, String, Unicode, Text, UnicodeText, Enum, ForeignKey
+from sqlalchemy import Column, Table, Integer, BigInteger, String, Unicode, Text, UnicodeText, Enum, ForeignKey
 from sqlalchemy.orm import relationship, backref
 
 Base = declarative_base()
@@ -22,8 +22,8 @@ class LPU(Base):
     OKATO = Column(String(15))
     LastUpdate = Column(Integer)
     phone = Column(String(20))
-    schedule = Column(String(256))
-    type = Column(String(32))
+    schedule = Column(Unicode(256))
+    type = Column(Unicode(32))
     protocol = Enum(['samson', 'intramed'])
     token = Column(String(45))
 
@@ -42,6 +42,10 @@ class LPU_Units(Base):
     lpu = relationship("LPU", backref=backref('lpu_units', order_by=id))
 
 
+units_parents = Table("units_parents", Base.metadata,
+    Column("lpuid", BigInteger, ForeignKey("lpu.id")),
+    Column("orgid", BigInteger, ForeignKey("lpu.id")),
+)
 class UnitsParentForId(Base):
     '''
     Mapping for UnitsParentForId table
@@ -49,15 +53,15 @@ class UnitsParentForId(Base):
     __tablename__ = 'UnitsParentForId'
 
     id = Column(Integer, primary_key = True)
-    LpuId = Column(String, ForeignKey('lpu.id'))
-    OrgId = Column(String, ForeignKey('lpu.id'))
-    ChildId = Column(String, ForeignKey('lpu_units.id'))
+    LpuId = Column(BigInteger, ForeignKey('lpu.id'))
+    OrgId = Column(BigInteger, ForeignKey('lpu.id'))
+    ChildId = Column(BigInteger, ForeignKey('lpu_units.id'))
     name = Column(Unicode(256))
     address = Column(Unicode(256))
 
-    lpu = relationship("LPU", backref=backref('lpu', order_by=id))
-    org = relationship("LPU", backref=backref('lpu', order_by=id))
-    child = relationship("LPU_Units", backref=backref('lpu_units', order_by=id))
+    lpu = relationship("LPU", backref=backref('lpu', order_by=id), foreign_keys=LpuId, primaryjoin=LPU.id==LpuId,)
+    org = relationship("LPU", backref=backref('org', order_by=id), foreign_keys=OrgId, primaryjoin=LPU.id==OrgId,)
+    child = relationship("LPU_Units", backref=backref('lpu_units', order_by=id), foreign_keys=ChildId)
 
 
 class Enqueue(Base):

@@ -50,14 +50,14 @@ class InfoServer(ServiceBase):
 class ListServer(ServiceBase):
 
     @srpc(soap_models.ListHospitalsRequest, _returns=soap_models.ListHospitalsResponse)
-    def listHospitals(self, **kwargs):
+    def listHospitals(HospitalsRequest):
         obj = DataWorker.provider('lpu')
-        return obj.get_list_hospitals(**kwargs)
+        return obj.get_list_hospitals(**vars(HospitalsRequest))
 
     @srpc(soap_models.ListDoctorsRequest, _returns=soap_models.ListDoctorsResponse)
-    def listDoctors(self, **kwargs):
+    def listDoctors(DoctorsRequest):
         obj = DataWorker.provider('personal')
-        return obj.get_list_doctors(**kwargs)
+        return obj.get_list_doctors(**vars(DoctorsRequest))
 
     def listSpecialities(self):
         pass
@@ -69,19 +69,19 @@ class ListServer(ServiceBase):
 class ScheduleServer(ServiceBase):
 
     @srpc(soap_models.GetScheduleInfoRequest, _returns=soap_models.GetScheduleInfoResponse)
-    def getScheduleInfo(self, **kwargs):
+    def getScheduleInfo(ScheduleInfoRequest):
         obj = DataWorker.provider('enqueue')
-        return obj.get_info(**kwargs)
+        return obj.get_info(**vars(ScheduleInfoRequest))
 
     @srpc(soap_models.GetTicketStatusRequest, _returns=soap_models.GetTicketStatusResponse)
-    def getTicketStatus(self, **kwargs):
+    def getTicketStatus(TicketStatusRequest):
         obj = DataWorker.provider('enqueue')
-        return obj.get_ticket_status(**kwargs)
+        return obj.get_ticket_status(**vars(TicketStatusRequest))
 
     @srpc(soap_models.EnqueueRequest, _returns=soap_models.EnqueueResponse)
-    def enqueue(self):
+    def enqueue(EnqueueRequest):
         obj = DataWorker.provider('enqueue')
-        return obj.enqueue(**kwargs)
+        return obj.enqueue(**vars(EnqueueRequest))
 
     def setTicketReadStatus(self):
         pass
