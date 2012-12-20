@@ -51,7 +51,7 @@ class LPUWorker(object):
         lpu = []
         lpu_units = []
         if not isinstance(hospitalUid, list):
-            hospitalUid = (hospitalUid,)
+            hospitalUid = [hospitalUid,]
         for i in hospitalUid:
             tmp_list = i.split('/')
             if int(tmp_list[1]):
@@ -65,12 +65,9 @@ class LPUWorker(object):
         '''
         Get LPU list by parameters
         '''
-        speciality = None
-        lpu_ids = None
-        if 'id' in kwargs and kwargs['id']:
-            lpu_ids = kwargs['id']
-        if 'speciality' in kwargs and kwargs['speciality']:
-            speciality = kwargs['speciality']
+        lpu_ids = kwargs.get('id')
+        speciality = kwargs.get('speciality')
+        ocato_code = kwargs.get('ocato_code')
 
         # Prepare query for getting LPU
 #        fields = [LPU.id, LPU.name, LPU.phone, LPU.address, LPU.key, LPU.proxy, LPU.token, LPU.protocol]
@@ -90,8 +87,8 @@ class LPUWorker(object):
         if len(lpu_ids):
             query_lpu = query_lpu.filter(LPU.id.in_(lpu_ids))
 
-        if 'okato_code' in kwargs and kwargs['ocato_code']:
-            query_lpu = query_lpu.filter(LPU.OKATO.like('%' + kwargs['ocato_code'] + '%'))
+        if ocato_code:
+            query_lpu = query_lpu.filter(LPU.OKATO.like('%' + ocato_code + '%'))
 
         return query_lpu.all()
 
@@ -107,28 +104,29 @@ class LPUWorker(object):
                 and kwargs['parsedAddress']['house']['number']
                 ):
                     # Prepare search parameters
-                    streetKLADR = kwargs['parsedAddress']['kladrCode']
-                    pointKLADR = kwargs['parsedAddress']['kladrCode'][0:5].ljust(15, '0')
+                    streetKLADR = kwargs.get('parsedAddress').get('kladrCode')
+                    pointKLADR = kwargs.get('parsedAddress').get('kladrCode')[0:5].ljust(15, '0')
         except exceptions.AttributeError:
             return []
 
         result = []
 
-        if 'lpu_list' in kwargs and kwargs['lpu_list']:
+        lpu_list = kwargs.get('lpu_list')
+        if lpu_list:
             used_proxy = []
             # Use LPU proxy for searching by Soap
-            for lpu in kwargs['lpu_list']:
+            for lpu in lpu_list:
                 proxy = lpu.proxy.split(';')
                 if proxy[0] and proxy[0] not in used_proxy:
                     used_proxy.append(proxy[0])
                     proxy_client = Clients.provider(lpu.protocol, proxy[0])
                     result.append(proxy_client.findOrgStructureByAddress({
                         'serverId': lpu.key,
-                        'number': kwargs['parsedAddress']['house']['number'],
-                        'corpus': kwargs['parsedAddress']['house']['building'],
+                        'number': kwargs.get('parsedAddress').get('house').get('number'),
+                        'corpus': kwargs.get('parsedAddress').get('house', {}).get('building'),
                         'pointKLADR': pointKLADR,
                         'streetKLADR': streetKLADR,
-                        'flat': kwargs['parsedAddress']['house']['flat'],
+                        'flat': kwargs.get('parsedAddress').get('flat'),
                     }))
 
         if result:
@@ -164,15 +162,13 @@ class LPUWorker(object):
         lpu = []
         lpu_units = []
 
-        if kwargs['hospitalUid']:
-            lpu, lpu_units = LPUWorker.parse_hospital_uid(kwargs['hospitalUid'])
+        hospital_uid = kwargs.get('hospitalUid')
 
-        speciality = ""
-        okato_code = ""
-        if kwargs['speciality']:
-            speciality = kwargs['speciality']
-        if kwargs['okato_code']:
-            okato_code = kwargs['okato_code']
+        if hospital_uid:
+            lpu, lpu_units = LPUWorker.parse_hospital_uid(hospital_uid)
+
+        speciality = kwargs.get('speciality')
+        okato_code = kwargs.get('okato_code')
 
         lpu_list = self.get_list(id=lpu, speciality=speciality, okato_code=okato_code)
         # Append LPUs to result
@@ -217,8 +213,10 @@ class LPUWorker(object):
         '''
         lpu, lpu_units = [], []
         result = {}
-        if kwargs['hospitalUid']:
-            lpu, lpu_units = self.parse_hospital_uid(kwargs['hospitalUid'])
+
+        hospital_uid = kwargs.get('hospitalUid')
+        if hospital_uid:
+            lpu, lpu_units = self.parse_hospital_uid(hospital_uid)
 
         lpu_units_dw = LPU_UnitsWorker()
 
@@ -272,12 +270,9 @@ class LPU_UnitsWorker(object):
         '''
         Get LPU_Units list by parameters
         '''
-        if kwargs['uid']:
-            lpu_units_ids = kwargs['uid']
-        if kwargs['speciality']:
-            speciality = kwargs['speciality']
-        if kwargs['lpu_id']:
-            lpu_id = kwargs['lpu_id']
+        lpu_units_ids = kwargs.get('uid')
+        speciality = kwargs.get('speciality')
+        lpu_id = kwargs.get('lpu_id')
 
         # Prepare query for getting LPU_Units
         fields = [LPU_Units.id, LPU_Units.lpuId, LPU_Units.name, LPU_Units.address,
@@ -336,39 +331,23 @@ class EnqueueWorker(object):
     def get_info(self, **kwargs):
         result = {}
 
-        try:
-            hospital_uid = kwargs['hospitalUid'].split('/')
-        except exceptions.KeyError, e:
-            print e
-        else:
-            if len(hospital_uid)==2:
-                lpu_dw = LPUWorker()
-                lpu = lpu_dw.get_by_id(hospital_uid[0])
-            else:
-                raise exceptions.ValueError
-                return {}
-
-        if kwargs['doctorUid']:
-            doctor_uid = kwargs['doctor_uid']
+        hospital_uid = kwargs.get('hospitalUid').split('/')
+        if isinstance(hospital_uid, list) and len(hospital_uid)==2:
+            lpu_dw = LPUWorker()
+            lpu = lpu_dw.get_by_id(hospital_uid[0])
         else:
             raise exceptions.ValueError
             return {}
 
-        speciality = ""
-        if kwargs['speciality']:
-            speciality = kwargs['speciality']
+        if 'doctorUid' in kwargs:
+            doctor_uid = kwargs.get('doctor_uid')
+        else:
+            raise exceptions.KeyError
+            return {}
 
-        hospital_uid_from = 0
-        if kwargs['hospitalUidFrom']:
-            hospital_uid_from = kwargs['hospitalUidFrom']
-
-        start, end = '', ''
-        if kwargs['start']:
-            start = kwargs['start']
-        if kwargs['end']:
-            end = kwargs['end']
-
-        start, end = self.__get_dates_period(start, end)
+        speciality = kwargs.get('speciality')
+        hospital_uid_from = kwargs.get('hospitalUidFrom', 0)
+        start, end = self.__get_dates_period(kwargs.get('start', ''), kwargs.get('end', ''))
 
         proxy_client = Clients.provider(lpu.protocol, lpu.proxy.split(';')[0])
         result = proxy_client.getScheduleInfo(
@@ -429,8 +408,9 @@ class EnqueueWorker(object):
         Get tickets' status
         '''
         result = {}
-        if kwargs['hospitalUid'] and kwargs['ticketUid']:
-            hospital_uid = kwargs['hospitalUid'].split('/')
+        hospital_uid = kwargs.get('hospitalUid').split('/')
+        ticket_uid = kwargs.get('ticketUid')
+        if hospital_uid and ticket_uid:
             if len(hospital_uid)==2:
                 if hospital_uid[1]:
                     # It's lpu_unit, work with LPU_UnitsWorker
@@ -452,16 +432,18 @@ class EnqueueWorker(object):
                 raise exceptions.ValueError
                 return {}
         else:
-            raise exceptions.ValueError
+            raise exceptions.KeyError
             return {}
 
-        if kwargs['lastUid']:
-            tickets = self.__get_tickets_ge_id(kwargs['lastUid'], kwargs['hospitalUid'])
+        last_uid = kwargs.get('lastUid')
+
+        if last_uid:
+            tickets = self.__get_tickets_ge_id(last_uid, hospital_uid)
         else:
-            if isinstance(kwargs['ticketUid'], list):
-                tickets = kwargs['ticketUid']
+            if isinstance(ticket_uid, list):
+                tickets = ticket_uid
             else:
-                tickets = list(kwargs['ticketUid'])
+                tickets = [ticket_uid,]
 
         doctor_dw = PersonalWorker()
         if tickets:
@@ -469,20 +451,21 @@ class EnqueueWorker(object):
                 # TODO: разнести по отдельным методам
                 if isinstance(ticket, dict):
                     # Working on case where kwargs['lastUid']
+                    ticket_data = ticket['data']
 
                     # For low code dependence get current hospital_uid
-                    _hospital_uid = ticket.data.hospital_uid.split('/')
+                    _hospital_uid = ticket_data['hospital_uid'].split('/')
 
-                    doctor = doctor_dw.get_doctor(lpu_unit=_hospital_uid, doctor_id=ticket.data.doctorUid)
+                    doctor = doctor_dw.get_doctor(lpu_unit=_hospital_uid, doctor_id=ticket_data['doctorUid'])
                     result['ticketInfo'].append({
-                        'id': ticket.id,
-                        'ticketUid': ticket.data.ticketUid,
-                        'hospitalUid': ticket.data.hospitalUid,
-                        'doctorUid': ticket.data.doctorUid,
+                        'id': ticket['id'],
+                        'ticketUid': ticket_data['ticketUid'],
+                        'hospitalUid': ticket_data['hospitalUid'],
+                        'doctorUid': ticket_data['doctorUid'],
                         'doctor': {
-                            'firstName': doctor.firstName if doctor.firstName else '',
-                            'patronymic': doctor.patronymic if doctor.patronymic else '',
-                            'lastName': doctor.lastName if doctor.lastName else '',
+                            'firstName': doctor.get('firstName', ''),
+                            'patronymic': doctor.get('patronymic', ''),
+                            'lastName': doctor.get('lastName', ''),
                         },
                         'person': {
                             'firstName': '',
@@ -490,8 +473,8 @@ class EnqueueWorker(object):
                             'lastName': '',
                         },
                         'status': 'forbidden',
-                        'timeslotStart': datetime.datetime.strptime(ticket.data.timeslotStart, '%Y-%m-%dT%H:%M:%S'),
-                        'comment': str(exception_by_code(ticket.Error)),
+                        'timeslotStart': datetime.datetime.strptime(ticket_data['timeslotStart'], '%Y-%m-%dT%H:%M:%S'),
+                        'comment': str(exception_by_code(ticket.get('Error'))),
                         'location': lpu_name + " " + lpu_address,
                     })
 
@@ -504,34 +487,37 @@ class EnqueueWorker(object):
 
                     for ticket_info in queue_info:
                         if ticket_info.queueId == ticket_uid:
-                            doctor = doctor_dw.get_doctor(lpu_unit=hospital_uid, doctor_id=ticket_info.personId)
+                            doctor = doctor_dw.get_doctor(lpu_unit=hospital_uid, doctor_id=ticket_info['personId'])
 
-                            if ticket_info.enqueuePersonId:
+                            if ticket_info['enqueuePersonId']:
                                 # TODO: проверить действительно ли возвращаемый enqueuePersonId - это office
-                                office = ticket_info.enqueuePersonId
+                                office = ticket_info['enqueuePersonId']
                             else:
                                 work_times = proxy_client.getWorkTimeAndStatus({
                                     'serverId': server_id,
-                                    'personId': ticket_info.personId,
-                                    'date': ticket_info.enqueueDate,
+                                    'personId': ticket_info['personId'],
+                                    'date': ticket_info['enqueueDate'],
                                 })
                                 if work_time:
-                                    office = work_time[0].office
+                                    office = work_time[0].get('office')
 
                             _ticket_date = datetime.datetime.strptime(
-                                ticket_info.date + ticket_info.time, '%Y-%m-%d %H:%M:%S'
+                                ticket_info['date'] + ticket_info['time'], '%Y-%m-%d %H:%M:%S'
                             )
 
                             document = self.__get_ticket_print({
                                 'name': lpu_name,
                                 'address': lpu_address,
-                                'fio': patient_info.lastName + ' ' +
-                                       patient_info.firstName[0:1] + '. ' +
-                                       patient_info.patrName[0:1] + '. ',
-                                'person': (doctor.lastName + ' ' if doctor.lastName else '' +
-                                           doctor.firstName + ' ' if doctor.firstName else '' +
-                                           doctor.patronymic + ' ' if doctor.patronymic else ''
-                                    ),
+                                'fio': ' '.join((
+                                    patient_info['lastName'],
+                                    patient_info['firstName'][0:1] + '.',
+                                    patient_info['patrName'][0:1] + '.'
+                                    )),
+                                'person': ' '.join((
+                                    doctor.get('lastName', ''),
+                                    doctor.get('firstName', ''),
+                                    doctor.get('patronymic', '')
+                                    )),
                                 'date_time':_ticket_date,
                                 'office': office,
                             })
@@ -540,16 +526,16 @@ class EnqueueWorker(object):
                                 'id': '',
                                 'ticketUid': ticket,
                                 'hospitalUid': hospital_uid,
-                                'doctorUid': ticket_info.personId,
+                                'doctorUid': ticket_info['personId'],
                                 'doctor': {
-                                    'firstName': doctor.firstName if doctor.firstName else '',
-                                    'patronymic': doctor.patronymic if doctor.patronymic else '',
-                                    'lastName': doctor.lastName if doctor.lastName else '',
+                                    'firstName': doctor.get('firstName', ''),
+                                    'patronymic': doctor.get('patronymic', ''),
+                                    'lastName': doctor.get('lastName', ''),
                                     },
                                 'person': {
-                                    'firstName': patient_info.firstName,
-                                    'patronymic': patient_info.patrName,
-                                    'lastName': patient_info.lastName,
+                                    'firstName': patient_info.get('firstName'),
+                                    'patronymic': patient_info.get('patrName'),
+                                    'lastName': patient_info.get('lastName'),
                                     },
                                 'status': 'accepted',
                                 'timeslotStart': _ticket_date,
@@ -576,13 +562,14 @@ class EnqueueWorker(object):
         '''
         Запись на приём к врачу
         '''
-        if (kwargs['hospitalUid'] and
-            kwargs['birthday'] and
-            kwargs['doctorUid'] and
-            kwargs['person'] and
-            kwargs['omiPolicyNumber']
-            ):
-            hospital_uid = kwargs['hospitalUid'].split('/')
+        hospital_uid = kwargs.get('hospitalUid').split('/')
+        birthday = kwargs.get('birthday')
+        doctor_uid = kwargs.get('doctorUid')
+        person = kwargs.get('person')
+        omi_policy_number = kwargs.get('omiPolicyNumber')
+        timeslot_start = kwargs.get('timeslotStart', '')
+
+        if hospital_uid and birthday and doctor_uid and person and omi_policy_number:
             if len(hospital_uid)==2:
                 dw = LPUWorker()
                 lpu_info = dw.get_by_id(hospital_uid[0])
@@ -597,9 +584,9 @@ class EnqueueWorker(object):
         result = {}
 
         person_dw = PersonalWorker()
-        doctor_info = person_dw.get_doctor(lpu_unit = hospital_uid, doctor_id = kwargs['doctorUid'])
+        doctor_info = person_dw.get_doctor(lpu_unit = hospital_uid, doctor_id = doctor_uid)
 
-        hospital_uid_from = kwargs['hospitalUidFrom'] if kwargs['hospitalUidFrom'] else 0
+        hospital_uid_from = kwargs.get('hospitalUidFrom', 0)
 
         if not doctor_info:
             raise exceptions.LookupError
@@ -608,41 +595,41 @@ class EnqueueWorker(object):
         _enqueue = proxy_client.enqueue({
             'serverId': lpu_info['key'],
             'person': {
-                'firstName': kwargs['person']['firstName'],
-                'lastName': kwargs['person']['lastName'],
-                'patronymic': kwargs['person']['patronymic'],
+                'firstName': person['firstName'],
+                'lastName': person['lastName'],
+                'patronymic': person['patronymic'],
             },
-            'omiPolicyNumber': kwargs['omiPolicyNumber'],
-            'birthday': kwargs['birthday'].split('T')[0],
+            'omiPolicyNumber': omi_policy_number,
+            'birthday': birthday.split('T')[0],
             'hospitalUid': hospital_uid[1],
             'hospitalUidFrom': hospital_uid_from,
             'speciality': doctor_info.speciality,
-            'doctorUid': kwargs['doctorUid'],
-            'timeslotStart': kwargs['timeslotStart'],
+            'doctorUid': doctor_uid,
+            'timeslotStart': timeslot_start,
         })
 
-        if _enqueue and _enqueue.result == True:
+        if _enqueue and _enqueue['result'] == True:
             self.__add_ticket({
-                'Error': _enqueue.message,
+                'Error': _enqueue['message'],
                 'Data': json.dumps({
-                    'ticketUID':_enqueue.ticketUid,
-                    'timeslotStart':kwargs['timeslotStart'],
-                    'timeslhospitalUidotStart':kwargs['hospitalUid'],
-                    'doctorUid':kwargs['doctorUid'],
+                    'ticketUID': _enqueue['ticketUid'],
+                    'timeslotStart': timeslot_start,
+                    'hospitalUid': kwargs.get('hospitalUid'),
+                    'doctorUid': doctor_uid,
                 }),
             })
-            result = {'result': exception_by_code(_enqueue.message), 'ticketUid': _enqueue.ticketUid}
+            result = {'result': exception_by_code(_enqueue['message']), 'ticketUid': _enqueue['ticketUid']}
         else:
             enqueue_id = self.__add_ticket({
-                'Error': _enqueue.message,
+                'Error': _enqueue['message'],
                 'Data': json.dumps({
-                    'ticketUID':_enqueue.ticketUid,
-                    'timeslotStart':kwargs['timeslotStart'],
-                    'timeslhospitalUidotStart':kwargs['hospitalUid'],
-                    'doctorUid':kwargs['doctorUid'],
+                    'ticketUID': _enqueue['ticketUid'],
+                    'timeslotStart': timeslot_start,
+                    'timeslhospitalUidotStart': kwargs.get('hospitalUid'),
+                    'doctorUid': doctor_uid,
                     }),
                 })
-            result = {'result': exception_by_code(_enqueue.message), 'ticketUid': 'e' + enqueue_id}
+            result = {'result': exception_by_code(_enqueue['message']), 'ticketUid': 'e' + enqueue_id}
 
         return result
 
@@ -666,10 +653,8 @@ class PersonalWorker(object):
         '''
         Get Doctors list by lpu & lpu_units
         '''
-        if kwargs['lpu']:
-            lpu = kwargs['lpu']
-        if kwargs['lpu_units']:
-            lpu_units = kwargs['lpu_units']
+        lpu = kwargs.get('lpu')
+        lpu_units = kwargs.get('lpu_units')
 
         result = {}
         query = self.session.query(
@@ -728,10 +713,8 @@ class PersonalWorker(object):
         '''
         Get doctor by parameters
         '''
-        if kwargs['lpu_unit']:
-            lpu_unit = kwargs['lpu_unit']
-        if kwargs['doctor_id']:
-            doctor_id = kwargs['doctor_id']
+        lpu_unit = kwargs.get('lpu_unit')
+        doctor_id = kwarg.get('doctor_id')
 
         query = self.session.query(Personal)
 
@@ -749,15 +732,19 @@ class PersonalWorker(object):
         '''
         Get doctors list by parameters
         '''
-        if kwargs['searchScope']['hospitalUid']:
-            lpu, lpu_units = LPU_Worker.parse_hospital_uid(kwargs['searchScope']['hospitalUid'])
+        lpu, lpu_list = [], []
+        hospital_uid = kwargs.get('searchScope', {}).get('hospitalUid')
+        if hospital_uid:
+            lpu, lpu_units = LPU_Worker.parse_hospital_uid(hospital_uid)
 
         lpu_dw = LPUWorker()
         lpu_list = lpu_dw.get_list(id=lpu)
 
-        if kwargs['searchScope']['address']:
+        address = kwargs.get('searchScope', {}).get('address')
+
+        if address:
             # TODO: уточнить используется ли поиск по адресу
-            lpu_list = lpu_dw.get_lpu_by_address(kwargs['searchScope']['address'], lpu_list)
+            lpu_list = lpu_dw.get_lpu_by_address(address, lpu_list)
 
         lpu_units_dw = LPU_UnitsWorker()
         lpu_units_list = lpu_units_dw.get_list(uid=lpu_units)
