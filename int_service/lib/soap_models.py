@@ -1,6 +1,6 @@
 # coding: utf-8 -*-
 
-from spyne.model.primitive import String, Integer, Date, DateTime, Boolean
+from spyne.model.primitive import String, Unicode, Integer, Date, DateTime, Boolean
 from spyne.model.complex import Array, ComplexModel
 from spyne.model.enum import Enum
 from spyne.model.binary import ByteArray
@@ -11,12 +11,12 @@ from settings import SOAP_NAMESPACE
 class HospitalAddress(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    title = String(doc=u'Наименование объекта (корпуса, отделения) ЛПУ, расположенных по данному адресу')
-    address = String(doc=u'Почтовый адрес объекта')
+    title = Unicode(doc=u'Наименование объекта (корпуса, отделения) ЛПУ, расположенных по данному адресу')
+    address = Unicode(doc=u'Почтовый адрес объекта')
     phone = String(doc=u'Телефон объекта')
-    route = String()
+    route = Unicode()
     route.Annotations.doc = u'Информация о маршруте проезда'
-    schedule = String(
+    schedule = Unicode(
         doc=u'Информация о расписании работы объекта, если оно отличается от общего расписания работы ЛПУ'
     )
 
@@ -27,10 +27,10 @@ class HospitalAddress(ComplexModel):
 class ServicedDistrict(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    addressInfo = String(doc=u'Информация об адресе или  адресах, обслуживаемом данным врачом ЛПУ')
+    addressInfo = Unicode(doc=u'Информация об адресе или  адресах, обслуживаемом данным врачом ЛПУ')
     doctorUid = String(doc=u'Уникальный идентификатор врача в Реестре')
-    doctor = String(doc=u'ФИО врача')
-    speciality = String(doc=u'Специальность врача')
+    doctor = Unicode(doc=u'ФИО врача')
+    speciality = Unicode(doc=u'Специальность врача')
 
     def __init__(self, **kwargs):
         super(ServicedDistrict, self).__init__(doc=u'Информация об обслуживаемом участке', **kwargs)
@@ -40,12 +40,12 @@ class DetailedHospitalInfo(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     uid = String(doc=u'Уникальный идентификатор ЛПУ')
-    title = String(doc=u'Полное наименование ЛПУ')
-    type = String(doc=u'Наименование типа (категории) ЛПУ')
+    title = Unicode(doc=u'Полное наименование ЛПУ')
+    type = Unicode(doc=u'Наименование типа (категории) ЛПУ')
     phone = String(doc=u'Номер телефона ЛПУ')
-    email = String(doc=u'Адрес электронной почты ЛПУ')
+    email = Unicode(doc=u'Адрес электронной почты ЛПУ')
     siteURL = String(doc=u'Адрес сайта ЛПУ')
-    schedule = String(
+    schedule = Unicode(
         doc=u'Информация о расписании работы объекта, если оно отличается от общего расписания работы ЛПУ'
     )
     buildings = Array(HospitalAddress, doc=u'Перечень адресов зданий, входящих в состав ЛПУ')
@@ -124,9 +124,9 @@ class GetHospitalUidResponse(ComplexModel):
 class PersonName(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    firstName = String(doc=u'Имя')
-    patronymic = String(doc=u'Отчество')
-    lastName = String(doc=u'Фамилия')
+    firstName = Unicode(doc=u'Имя')
+    patronymic = Unicode(doc=u'Отчество')
+    lastName = Unicode(doc=u'Фамилия')
 
     def __init__(self, **kwargs):
         doc=u'Имя врача'
@@ -142,7 +142,7 @@ class DoctorInfo(ComplexModel):
     uid = String(doc=u'Уникальный идентификатор врача в Реестре')
     name = PersonName()
     hospitalUid = String(doc=u'Уникальный идентификатор ЛПУ')
-    speciality = String(doc=u'Наименование специальности')
+    speciality = Unicode(doc=u'Наименование специальности')
     keyEPGU = String(doc=u'Ключ на ЕПГУ')
 
     def __init__(self, **kwargs):
@@ -153,9 +153,9 @@ class HospitalInfo(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     uid = String(doc=u'Уникальный идентификатор ЛПУ (ОГРН)')
-    title = String(doc=u'Наименование ЛПУ')
+    title = Unicode(doc=u'Наименование ЛПУ')
     phone = String(doc=u'Номер телефона ЛПУ')
-    address = String(doc=u'Адрес ЛПУ')
+    address = Unicode(doc=u'Адрес ЛПУ')
     wsdlURL = String(doc=u'URL веб-сервиса МИС, предоставляющего возможность записи на приём')
     token = String(doc=u'Токен ЛПУ')
     key = String(doc=u'Key ЛПУ')
@@ -168,8 +168,8 @@ class ServTypesInfo(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     id = String(doc=u'Уникальный идентификатор услуги в Реестре')
-    servTypeName = String(doc=u'Наименование услуги')
-    speciality = String(doc=u'Наименование специальности')
+    servTypeName = Unicode(doc=u'Наименование услуги')
+    speciality = Unicode(doc=u'Наименование специальности')
     keyEPGU = String(doc=u'ключ на EPGU')
 
     def __init__(self, **kwargs):
@@ -182,8 +182,8 @@ class NewEnqueue(ComplexModel):
     id = String(doc=u'Уникальный идентификатор услуги в Реестре')
     LPUKey = String(doc=u'Key LPU')
     EPGUKey = String(doc=u'ключ на EPGU')
-    Status = String(doc=u'Статус')
-    data = String(doc=u'Наименование услуги')
+    Status = Unicode(doc=u'Статус')
+    data = Unicode(doc=u'Наименование услуги')
 
     def __init__(self, **kwargs):
         super(NewEnqueue, self).__init__(doc=u'Запись пациента', **kwargs)
@@ -192,7 +192,7 @@ class NewEnqueue(ComplexModel):
 class SpecialtyInfo(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    speciality = String(doc=u'Наименований специальности')
+    speciality = Unicode(doc=u'Наименований специальности')
     ticketsPerMonths = String(doc=u'Количество талончиков на месяц')
     ticketsAvailable = String(doc=u'Количество доступных талончиков')
     nameEPGU = String(doc=u'на EPGU')
@@ -205,7 +205,7 @@ class SpecialtyInfo(ComplexModel):
 class BuildingNumber(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    building = String(doc=u'Указание на литеру, корпус, строение')
+    building = Unicode(doc=u'Указание на литеру, корпус, строение')
     number = Integer(doc=u'Номер дома')
 
     def __init__(self, **kwargs):
@@ -236,7 +236,7 @@ class ParsedAddress(ComplexModel):
 class Address(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    rawAddress = String(doc=u'Адрес объекта, записанный в виде строки')
+    rawAddress = Unicode(doc=u'Адрес объекта, записанный в виде строки')
     parsedAddress = ParsedAddress()
 
     def __init__(self, **kwargs):
@@ -296,8 +296,8 @@ class ListServTypesInfoResponse(ComplexModel):
 class ListDoctorsRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    lastName = String(doc=u'Фамилия врача')
-    speciality = String(doc=u'Наименование специальности')
+    lastName = Unicode(doc=u'Фамилия врача')
+    speciality = Unicode(doc=u'Наименование специальности')
     searchScope = SearchScope()
 
     def __init__(self):
@@ -347,7 +347,7 @@ class ListSpecialitiesResponse(ComplexModel):
 class ListHospitalsRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    speciality = String(doc=u'Наименование специальности')
+    speciality = Unicode(doc=u'Наименование специальности')
     searchScope = SearchScope()
     ocatoCode = String(doc=u'Код муниципального образования по классификатору ОКАТО')
     hospitalUid = String(doc=u'Перечень уникальных идентификаторов ЛПУ')
@@ -375,7 +375,7 @@ class GetScheduleInfoRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     hospitalUid = String(doc=u'Уникальный идентификатор ЛПУ')
-    speciality = String(doc=u'Специальность врача')
+    speciality = Unicode(doc=u'Специальность врача')
     doctorUid = String(doc=u'Уникальный идентификатор врача')
     startDate = Date(doc=u'Начало интересующего периода. Если не указан, принимается равным текущей дате')
     endDate = Date(
@@ -415,7 +415,7 @@ class Timeslot(ComplexModel):
     status = TimeslotStatus()
     office = String(doc=u'Кабинет')
     patientId = String(doc=u'Идентификатор записанного пациента')
-    patientInfo = String(doc=u'ФИО записанного пациента')
+    patientInfo = Unicode(doc=u'ФИО записанного пациента')
 
     def __init__(self):
         super(Timeslot, self).__init__(doc=u'Интервал в расписании врача')
@@ -454,7 +454,7 @@ class Session(ComplexModel):
     sessionEnd = DateTime(doc=u'Окончание смены')
     sessionType = SessionType()
     timeslots = Array(Timeslot, doc=u'Информация об отдельных элементах расписания (тайм-слотах)')
-    comments = String(doc=u'Дополнительная информация о месте приёма или о замещениях')
+    comments = Unicode(doc=u'Дополнительная информация о месте приёма или о замещениях')
 
     def __init__(self):
         super(Session, self).__init__(doc=u'Группа интервалов (смена) в расписании врача')
@@ -489,7 +489,7 @@ class EnqueueRequest(ComplexModel):
     omiPolicyNumber = String(doc=u'Номер и серия полиса ОМС пациента (пользователя)')
     birthday = Date(doc=u'Дата рождения пациента (пользователя)')
     hospitalUid = String(doc=u'Уникальный идентификатор ЛПУ')
-    speciality = String(doc=u'Специальность врача')
+    speciality = Unicode(doc=u'Специальность врача')
     doctorUid = String(doc=u'Уникальный идентификатор врача')
     timeslotStart = DateTime(doc=u'Желаемое время начала приёма')
     hospitalUidFrom = String(doc=u'Уникальный идентификатор ЛПУ отправителя')
@@ -523,7 +523,7 @@ class CancelResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     success = Boolean(doc=u'Признак успешности выполнения операции')
-    comment = String(doc=u'Дополнительная информация о результатах выполнения операции')
+    comment = Unicode(doc=u'Дополнительная информация о результатах выполнения операции')
 
     def __init__(self):
         super(CancelResponse, self).__init__(doc=u'Результат запроса об отмене записи на приём')
@@ -533,7 +533,7 @@ class DetailedOperationStatus(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     status = String(doc=u'Статус операции')
-    errMessage = String(doc=u'Сообщение об ошибке')
+    errMessage = Unicode(doc=u'Сообщение об ошибке')
 
     def __init__(self):
         super(DetailedOperationStatus, self).__init__(doc=u'Подробная информация о статусе')
@@ -545,7 +545,7 @@ class SetTicketReadStatusRequest(ComplexModel):
     ticketID = String(doc=u'Один идентификатор записи')
     EPGUKey = String(doc=u'EPGU Key')
     LPUKey = String(doc=u'LPU Key')
-    value = String(doc=u'значение')
+    value = Unicode(doc=u'значение')
 
     def __init__(self):
         super(SetTicketReadStatusRequest, self).__init__(doc=u'Параметры запроса для обновления  информация о записи')
@@ -563,7 +563,7 @@ class SetTicketReadStatusResponse(ComplexModel):
 class PrintableDocument(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    printableVersionTitle = String(doc=u'Название элетронного документа, прилагаемого к данным о статусе заявления')
+    printableVersionTitle = Unicode(doc=u'Название элетронного документа, прилагаемого к данным о статусе заявления')
     printableVersion = ByteArray(doc=u'Содержание элетронного документа, прилагаемого к данным о статусе заявления')
     printableVersionMimeType = String(
         doc=u'Тип содержания (mime-type) элетронного документа, прилагаемого к данным о статусе заявления.'
@@ -587,8 +587,8 @@ class TicketInfo(ComplexModel):
     person = PersonName(doc=u'ФИО записавшегося')
     status = TicketStatus()
     timeslotStart = DateTime(doc=u'Начало приёма у врача, соответствующее данной заявке')
-    location = String(doc=u'Информация о месте приёма (копрус, этаж, кабинет и т.п.)')
-    comment = String(doc=u'Дополнительные указания и информация')
+    location = Unicode(doc=u'Информация о месте приёма (копрус, этаж, кабинет и т.п.)')
+    comment = Unicode(doc=u'Дополнительные указания и информация')
     printableDocument = PrintableDocument()
 
     def __init__(self):
