@@ -35,7 +35,7 @@ class CustomWsgiMounter(WsgiMounter):
 
 class InfoServer(ServiceBase):
 
-    @srpc(soap_models.GetHospitalInfoRequest, _returns=soap_models.GetHospitalInfoResponse)
+    @srpc(soap_models.GetHospitalInfoRequest, _returns=Array(soap_models.DetailedHospitalInfo))
     def getHospitalInfo(HospitalInfoRequest):
         obj = DataWorker.provider('lpu')
         return obj.get_info(**vars(HospitalInfoRequest))

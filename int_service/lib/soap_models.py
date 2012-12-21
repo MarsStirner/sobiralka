@@ -81,8 +81,10 @@ class GetHospitalInfoResponse(ComplexModel):
 class SetHospitalInfoRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    hospitalUid = String(doc=u'Один идентификатор ЛПУ')
-    keyEPGU = String(doc=u'идентификатор ЛПУ на ЕПГУ')
+    hospitalUid = String()
+    hospitalUid.Annotations.doc=u'Один идентификатор ЛПУ'
+    keyEPGU = String()
+    keyEPGU.Annotations.doc=u'идентификатор ЛПУ на ЕПГУ'
 
     def __init__(self):
         super(SetHospitalInfoRequest, self).__init__(doc=u'Параметры запроса для обновления информация о ЛПУ')
@@ -91,8 +93,10 @@ class SetHospitalInfoRequest(ComplexModel):
 class DetailedOperationStatus(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    status = String(doc=u'Статус операции')
-    errMessage = String(doc=u'Сообщение об ошибке')
+    status = String()
+    status.Annotations.doc=u'Статус операции'
+    errMessage = String()
+    errMessage.Annotations.doc=u'Сообщение об ошибке'
 
 
 class SetDoctorInfoResponse(ComplexModel):
@@ -104,7 +108,8 @@ class SetDoctorInfoResponse(ComplexModel):
 class GetHospitalUidRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    hospitalCode = String(doc=u'Один или несколько идентификаторов ЛПУ')
+    hospitalCode = String()
+    hospitalCode.Annotations.doc=u'Один или несколько идентификаторов ЛПУ'
 
     def __init__(self):
         super(GetHospitalUidRequest, self).__init__(
@@ -115,7 +120,8 @@ class GetHospitalUidRequest(ComplexModel):
 class GetHospitalUidResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    hospitalUid = String(doc=u'Идентификатор ЛПУ')
+    hospitalUid = String()
+    hospitalUid.Annotations.doc=u'Идентификатор ЛПУ'
 
     def __init__(self):
         super(GetHospitalUidResponse, self).__init__(doc=u'Идентификатор ЛПУ')
@@ -124,13 +130,16 @@ class GetHospitalUidResponse(ComplexModel):
 class PersonName(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    firstName = Unicode(doc=u'Имя')
-    patronymic = Unicode(doc=u'Отчество')
-    lastName = Unicode(doc=u'Фамилия')
+    firstName = Unicode()
+    firstName.Annotations.doc=u'Имя'
+    patronymic = Unicode()
+    patronymic.Annotations.doc=u'Отчество'
+    lastName = Unicode()
+    lastName.Annotations.doc=u'Фамилия'
 
     def __init__(self, **kwargs):
         doc=u'Имя врача'
-        if 'doc' in kwargs and kwargs['doc']:
+        if kwargs and 'doc' in kwargs and kwargs['doc']:
             doc = kwargs['doc']
             del kwargs['doc']
         super(PersonName, self).__init__(doc=doc, **kwargs)
@@ -139,11 +148,15 @@ class PersonName(ComplexModel):
 class DoctorInfo(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    uid = String(doc=u'Уникальный идентификатор врача в Реестре')
+    uid = String()
+    uid.Annotations.doc=u'Уникальный идентификатор врача в Реестре'
     name = PersonName()
-    hospitalUid = String(doc=u'Уникальный идентификатор ЛПУ')
-    speciality = Unicode(doc=u'Наименование специальности')
-    keyEPGU = String(doc=u'Ключ на ЕПГУ')
+    hospitalUid = String()
+    hospitalUid.Annotations.doc=u'Уникальный идентификатор ЛПУ'
+    speciality = Unicode()
+    speciality.Annotations.doc=u'Наименование специальности'
+    keyEPGU = String()
+    keyEPGU.Annotations.doc=u'Ключ на ЕПГУ'
 
     def __init__(self, **kwargs):
         super(DoctorInfo, self).__init__(doc=u'Информация о враче', **kwargs)
@@ -152,13 +165,20 @@ class DoctorInfo(ComplexModel):
 class HospitalInfo(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    uid = String(doc=u'Уникальный идентификатор ЛПУ (ОГРН)')
-    title = Unicode(doc=u'Наименование ЛПУ')
-    phone = String(doc=u'Номер телефона ЛПУ')
-    address = Unicode(doc=u'Адрес ЛПУ')
-    wsdlURL = String(doc=u'URL веб-сервиса МИС, предоставляющего возможность записи на приём')
-    token = String(doc=u'Токен ЛПУ')
-    key = String(doc=u'Key ЛПУ')
+    uid = String()
+    uid.Annotations.doc=u'Уникальный идентификатор ЛПУ (ОГРН)'
+    title = Unicode()
+    title.Annotations.doc=u'Наименование ЛПУ'
+    phone = String()
+    phone.Annotations.doc=u'Номер телефона ЛПУ'
+    address = Unicode()
+    address.Annotations.doc=u'Адрес ЛПУ'
+    wsdlURL = String()
+    wsdlURL.Annotations.doc=u'URL веб-сервиса МИС, предоставляющего возможность записи на приём'
+    token = String()
+    token.Annotations.doc=u'Токен ЛПУ'
+    key = String()
+    key.Annotations.doc=u'Key ЛПУ'
 
     def __init__(self, **kwargs):
         super(HospitalInfo, self).__init__(doc=u'Основная информация об ЛПУ', **kwargs)
@@ -205,8 +225,10 @@ class SpecialtyInfo(ComplexModel):
 class BuildingNumber(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    building = Unicode(doc=u'Указание на литеру, корпус, строение')
-    number = Integer(doc=u'Номер дома')
+    building = Unicode
+#    building.Annotations.doc=u'Указание на литеру, корпус, строение'
+    number = Integer
+#    number.Annotations.doc=u'Номер дома'
 
     def __init__(self, **kwargs):
         super(BuildingNumber, self).__init__(doc=u'Номер дома', **kwargs)
@@ -215,19 +237,18 @@ class BuildingNumber(ComplexModel):
 class ParsedAddress(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    block = String(
-        doc=u'Номер квартала ' +
-            u'(для муниципальных образований, в которых адресация зданий производится с помощью кварталов, а не улиц)'
-    )
-    flat = Integer(doc=u'Номер квартиры')
-    house = BuildingNumber()
-    kladrCode = String(
-        doc=u'Идентификатор по классификатору КЛАДР. ' +
-            u'Для муниципальных образований, ' +
-            u'использующих улицы при адресации зданий -- идентификатор улицы, ' +
-            u'для муниципальных образований, ' +
-            u'использующих для тех же целей номера кварталов -- идентификатор муниципального образования'
-    )
+    block = String
+#    block.Annotations.doc=u'Номер квартала (для муниципальных образований, ' \
+#                          u'в которых адресация зданий производится с помощью кварталов, а не улиц)'
+    flat = Integer
+#    flat.Annotations.doc=u'Номер квартиры'
+    house = BuildingNumber
+    kladrCode = String
+#    kladrCode.Annotations.doc=u'Идентификатор по классификатору КЛАДР. Для муниципальных образований, ' \
+#                              u'использующих улицы при адресации зданий -- идентификатор улицы, ' \
+#                              u'для муниципальных образований, ' \
+#                              u'использующих для тех же целей номера кварталов ' \
+#                              u'- идентификатор муниципального образования'
 
     def __init__(self, **kwargs):
         super(ParsedAddress, self).__init__(doc=u'Структурированная информация об адресе', **kwargs)
@@ -236,8 +257,9 @@ class ParsedAddress(ComplexModel):
 class Address(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    rawAddress = Unicode(doc=u'Адрес объекта, записанный в виде строки')
-    parsedAddress = ParsedAddress()
+    rawAddress = Unicode
+#    rawAddress.Annotations.doc=u'Адрес объекта, записанный в виде строки'
+    parsedAddress = ParsedAddress
 
     def __init__(self, **kwargs):
         super(Address, self).__init__(doc=u'Информация об адресе', **kwargs)
@@ -246,9 +268,11 @@ class Address(ComplexModel):
 class SearchScope(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    hospitalUid = String(doc=u'Один или несколько идентификаторов ЛПУ')
-    ocatoCode = String(doc=u'Код муниципального образования по классификатору ОКАТО')
-    address = Address()
+    hospitalUid = String
+#    hospitalUid.Annotations.doc=u'Один или несколько идентификаторов ЛПУ'
+    ocatoCode = String
+#    ocatoCode.Annotations.doc=u'Код муниципального образования по классификатору ОКАТО'
+    address = Address
 
     def __init__(self, **kwargs):
         super(SearchScope, self).__init__(doc=u'Область поиска (территориальные критерии)', **kwargs)
@@ -296,9 +320,11 @@ class ListServTypesInfoResponse(ComplexModel):
 class ListDoctorsRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    lastName = Unicode(doc=u'Фамилия врача')
-    speciality = Unicode(doc=u'Наименование специальности')
-    searchScope = SearchScope()
+    lastName = Unicode
+#    lastName.Annotations.doc=u'Фамилия врача'
+    speciality = Unicode
+#    speciality.Annotations.doc=u'Наименование специальности'
+    searchScope = SearchScope
 
     def __init__(self):
         super(ListDoctorsRequest, self).__init__(doc=u'Один или несколько критериев поиска (получения списка) врачей')
@@ -347,10 +373,13 @@ class ListSpecialitiesResponse(ComplexModel):
 class ListHospitalsRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    speciality = Unicode(doc=u'Наименование специальности')
-    searchScope = SearchScope()
-    ocatoCode = String(doc=u'Код муниципального образования по классификатору ОКАТО')
-    hospitalUid = String(doc=u'Перечень уникальных идентификаторов ЛПУ')
+    speciality = Unicode
+#    speciality.Annotations.doc=u'Наименование специальности'
+    ocatoCode = String
+#    ocatoCode.Annotations.doc=u'Код муниципального образования по классификатору ОКАТО'
+    hospitalUid = String
+#    hospitalUid.Annotations.doc=u'Перечень уникальных идентификаторов ЛПУ'
+    searchScope = SearchScope
 
     def __init__(self):
         super(ListHospitalsRequest, self).__init__(doc=u'Критерии для получения списка ЛПУ')
@@ -485,14 +514,22 @@ class TicketStatus(ComplexModel):
 class EnqueueRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    person = PersonName(doc=u'ФИО пациента (пользователя)')
-    omiPolicyNumber = String(doc=u'Номер и серия полиса ОМС пациента (пользователя)')
-    birthday = Date(doc=u'Дата рождения пациента (пользователя)')
-    hospitalUid = String(doc=u'Уникальный идентификатор ЛПУ')
-    speciality = Unicode(doc=u'Специальность врача')
-    doctorUid = String(doc=u'Уникальный идентификатор врача')
-    timeslotStart = DateTime(doc=u'Желаемое время начала приёма')
-    hospitalUidFrom = String(doc=u'Уникальный идентификатор ЛПУ отправителя')
+    person = PersonName
+#    person.Annotations.doc=u'ФИО пациента (пользователя)'
+    omiPolicyNumber = String
+#    omiPolicyNumber.Annotations.doc=u'Номер и серия полиса ОМС пациента (пользователя)'
+    birthday = Date
+#    birthday.Annotations.doc=u'Дата рождения пациента (пользователя)'
+    hospitalUid = String
+#    hospitalUid.Annotations.doc=u'Уникальный идентификатор ЛПУ'
+    speciality = Unicode
+#    speciality.Annotations.doc=u'Специальность врача'
+    doctorUid = String
+#    doctorUid.Annotations.doc=u'Уникальный идентификатор врача'
+    timeslotStart = DateTime
+#    timeslotStart.Annotations.doc=u'Желаемое время начала приёма'
+    hospitalUidFrom = String
+#    hospitalUidFrom.Annotations.doc=u'Уникальный идентификатор ЛПУ отправителя'
 
     def __init__(self):
         super(EnqueueRequest, self).__init__(doc=u'Данные запроса о записи на приём')

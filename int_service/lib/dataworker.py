@@ -7,7 +7,7 @@ import json
 from spyne.model.complex import json
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from suds import WebFault
 
@@ -281,6 +281,7 @@ class LPU_UnitsWorker(object):
         fields = [LPU_Units]
         filter = []
         _join = []
+        or_list = []
 
         if speciality and isinstance(speciality, unicode):
             fields.append(Personal.speciality)
@@ -298,8 +299,8 @@ class LPU_UnitsWorker(object):
 
         if len(lpu_units_ids):
             for unit in lpu_units_ids:
-                or_list.append((LPU_Units.lpuId==unit[0], LPU_Units.id==unit[1]))
-            query_lpu_units = query_lpu_units.filter(or_(or_list))
+                or_list.append(and_(LPU_Units.lpuId==unit[0], LPU_Units.id==unit[1]))
+            query_lpu_units = query_lpu_units.filter(or_(*or_list))
 
         if speciality and isinstance(speciality, unicode):
             query_lpu_units = query_lpu_units.filter(Personal.speciality==speciality)
@@ -341,7 +342,7 @@ class EnqueueWorker(object):
             return {}
 
         if 'doctorUid' in kwargs:
-            doctor_uid = kwargs.get('doctor_uid')
+            doctor_uid = kwargs.get('hospitalUid')
         else:
             raise exceptions.KeyError
             return {}
@@ -353,12 +354,12 @@ class EnqueueWorker(object):
         proxy_client = Clients.provider(lpu.protocol, lpu.proxy.split(';')[0])
         result = proxy_client.getScheduleInfo(
             hospital_uid=hospital_uid,
-            doctor_uid = doctor_uid,
+            doctor_uid=doctor_uid,
             start=start,
             end=end,
-            speciality = speciality,
-            hospital_uid_from = hospital_uid_from,
-            server_id = lpu.key
+            speciality=speciality,
+            hospital_uid_from=hospital_uid_from,
+            server_id=lpu.key
         )
 
         return result
@@ -594,11 +595,11 @@ class EnqueueWorker(object):
             return {}
 
         _enqueue = proxy_client.enqueue({
-            'serverId': lpu_info['key'],
+            'serverId': lpu_info.key,
             'person': {
-                'firstName': person['firstName'],
-                'lastName': person['lastName'],
-                'patronymic': person['patronymic'],
+                'firstName': doctor_info.FirstName,
+                'lastName': doctor_info.LastName,
+                'patronymic': doctor_info.PatrName,
             },
             'omiPolicyNumber': omi_policy_number,
             'birthday': birthday.split('T')[0],
@@ -658,6 +659,9 @@ class PersonalWorker(object):
         lpu_units = kwargs.get('lpu_units')
 
         result = {}
+        result['doctors'] = []
+        result['hospitals'] = []
+
         query = self.session.query(
             Personal.FirstName,
             Personal.PatrName,
@@ -678,14 +682,14 @@ class PersonalWorker(object):
         or_list = []
         if lpu:
             for item in lpu:
-                or_list.append((Personal.lpuId==item.id,))
+                or_list.append(and_(Personal.lpuId==item.id,))
         if lpu_units:
-            for item in lpu:
-                or_list.append((Personal.lpuId==item.lpuId, Personal.orgId==item.id))
+            for item in lpu_units:
+                or_list.append(and_(Personal.lpuId==item.lpuId, Personal.orgId==item.id))
 
         query = query.outerjoin(LPU).outerjoin(LPU_Units)
 
-        for value in query.filter(or_(or_list)).all():
+        for value in query.filter(or_(*or_list)).all():
             result['doctors'].append({
                 'uid': value.personId,
                 'name': {
@@ -693,15 +697,15 @@ class PersonalWorker(object):
                     'patronymic': value.PatrName,
                     'lastName': value.LastName,
                 },
-                'hospitalUid': value.lpuId + '/' + value.orgId,
+                'hospitalUid': str(value.lpuId) + '/' + str(value.orgId),
                 'speciality': value.speciality,
                 'keyEPGU': value.keyEPGU,
             })
 
             result['hospitals'].append({
-                'uid': value.lpuId + '/' + value.orgId,
-                'title': (value.lpu_name + " " + value.lpu_units_name).trim(),
-                'address': (value.lpu_address + " " + value.lpu_units_address).trim(),
+                'uid': str(value.lpuId) + '/' + str(value.orgId),
+                'title': (value.lpu_name + " " + value.lpu_units_name).strip(),
+                'address': (value.lpu_address + " " + value.lpu_units_address).strip(),
                 # TODO: выяснить используется ли wsdlURL и верно ли указан
                 'wsdlURL': 'http://' + SOAP_SERVER_HOST + ':' + str(SOAP_SERVER_PORT) + '/schedule/?wsdl',
                 'token': '',
@@ -715,17 +719,17 @@ class PersonalWorker(object):
         Get doctor by parameters
         '''
         lpu_unit = kwargs.get('lpu_unit')
-        doctor_id = kwarg.get('doctor_id')
+        doctor_id = kwargs.get('doctor_id')
 
         query = self.session.query(Personal)
 
         if lpu_unit:
-            if lpu_unit[1]:
-                query.filter(Personal.lpuId==lpu_unit[0], Personal.orgId==lpu_unit[1])
+            if int(lpu_unit[1]):
+                query = query.filter(Personal.lpuId==int(lpu_unit[0]), Personal.orgId==int(lpu_unit[1]))
             else:
-                query.filter(Personal.lpuId==lpu_unit[0])
-        if person_id:
-            query.filter(Personal.personId==doctor_id)
+                query = query.filter(Personal.lpuId==int(lpu_unit[0]))
+        if doctor_id:
+            query = query.filter(Personal.personId==int(doctor_id))
 
         return query.one()
 
@@ -734,18 +738,24 @@ class PersonalWorker(object):
         Get doctors list by parameters
         '''
         lpu, lpu_list = [], []
-        hospital_uid = kwargs.get('searchScope', {}).get('hospitalUid')
-        if hospital_uid:
-            lpu, lpu_units = LPU_Worker.parse_hospital_uid(hospital_uid)
+        search_scope = kwargs.get('searchScope')
+        if search_scope:
+            try:
+                hospital_uid = search_scope.hospitalUid
+            except:
+                pass
+            else:
+                lpu, lpu_units = LPUWorker.parse_hospital_uid(hospital_uid)
 
         lpu_dw = LPUWorker()
         lpu_list = lpu_dw.get_list(id=lpu)
 
-        address = kwargs.get('searchScope', {}).get('address')
-
-        if address:
-            # TODO: уточнить используется ли поиск по адресу
-            lpu_list = lpu_dw.get_lpu_by_address(address, lpu_list)
+        search_scope = kwargs.get('searchScope')
+        if search_scope:
+            address = search_scope.address
+            if address:
+                # TODO: уточнить используется ли поиск по адресу
+                lpu_list = lpu_dw.get_lpu_by_address(address, lpu_list)
 
         lpu_units_dw = LPU_UnitsWorker()
         lpu_units_list = lpu_units_dw.get_list(uid=lpu_units)
