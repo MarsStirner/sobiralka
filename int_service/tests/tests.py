@@ -33,7 +33,7 @@ class TestListWSDL(unittest.TestCase):
                    },
                    ]
         hospitals = self.client.service.listHospitals({'ocatoCode': okato}).hospitals
-        self.assertIsInstance(hospitals, list)
+        self.assertIsInstance(hospitals, dict)
         self.assertListEqual(hospitals, result)
 
         okato = "56405000000"
@@ -496,7 +496,8 @@ class TestScheduleWSDL(unittest.TestCase):
     def testGetTicketStatus(self):
         hospitalUid = 0
         ticketUid = 0
-        ticket = self.client.service.getTicketStatus({'hospitalUid':hospitalUid, 'ticketUid': ticketUid})[0]
+#        ticket = self.client.service.getTicketStatus({'hospitalUid':hospitalUid, 'ticketUid': ticketUid})[0]
+        ticket = self.client.service.getTicketStatus({'hospitalUid':hospitalUid, 'ticketUid': ticketUid})
         self.assertIsInstance(ticket, list)
 
     def testSetTicketReadStatus(self):

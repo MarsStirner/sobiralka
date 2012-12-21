@@ -17,7 +17,6 @@ from soap_client import Clients
 from is_exceptions import exception_by_code
 
 engine = create_engine(DB_CONNECT_STRING) #?? convert_unicode=True
-engine.execute("SET NAMES utf8") # For correct selecting UTF-8 DATA
 Session = sessionmaker(bind=engine)
 
 class DataWorker(object):
@@ -190,8 +189,8 @@ class LPUWorker(object):
             lpu_units_list = units_dw.get_list(uid=lpu_units, speciality=speciality)
             # Append LPU_Units to result
             for item in lpu_units_list:
-                if item.parentId:
-                    uid = str(item.id) + '/' + str(item.parentId)
+                if item.parent:
+                    uid = str(item.id) + '/' + str(item.parent.LpuId)
                 else:
                     uid = str(item.id) +'/0'
 
@@ -202,8 +201,8 @@ class LPUWorker(object):
                     'address': item.address,
                     # TODO: выяснить используется ли wsdlURL и верно ли указан
                     'wsdlURL': "http://" + SOAP_SERVER_HOST + ":" + str(SOAP_SERVER_PORT) + '/schedule/?wsdl',
-                    'token': item.token,
-                    'key': item.key,
+                    'token': item.lpu.token,
+                    'key': item.lpu.key,
                     }
                 )
         return result
@@ -279,8 +278,7 @@ class LPU_UnitsWorker(object):
         # Prepare query for getting LPU_Units
 #        fields = [LPU_Units.id, LPU_Units.lpuId, LPU_Units.name, LPU_Units.address,
 #                  LPU.phone, LPU.token, LPU.key, UnitsParentForId.LpuId.label('parentId')]
-        fields = [LPU_Units.id, LPU_Units.lpuId, LPU_Units.name, LPU_Units.address, LPU_Units.lpu,
-                  UnitsParentForId.LpuId.label('parentId')]
+        fields = [LPU_Units]
         filter = []
         _join = []
 
@@ -294,8 +292,9 @@ class LPU_UnitsWorker(object):
             for i in _join:
                 query_lpu_units = query_lpu_units.join(i)
 
-        query_lpu_units = query_lpu_units.outerjoin(LPU)
-        query_lpu_units = query_lpu_units.outerjoin(UnitsParentForId, LPU_Units.id==UnitsParentForId.ChildId)
+        query_lpu_units = query_lpu_units.outerjoin(LPU_Units.lpu)
+        query_lpu_units = query_lpu_units.outerjoin(LPU_Units.parent, aliased=True)
+        #.filter(LPU_Units.lpuId == UnitsParentForId.OrgId)
 
         if len(lpu_units_ids):
             for unit in lpu_units_ids:
@@ -308,7 +307,7 @@ class LPU_UnitsWorker(object):
         if lpu_id:
             query_lpu_units = query_lpu_units.filter(LPU_Units.lpuId==lpu_id)
 
-        return query_lpu_units.all()
+        return query_lpu_units.group_by(LPU_Units.id).all()
 
 
     def get_by_id(self, id):
@@ -431,7 +430,7 @@ class EnqueueWorker(object):
                     proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
                     server_id = lpu_info.key
             else:
-                raise exceptions.ValueError
+#                raise exceptions.ValueError
                 return {}
         else:
             raise exceptions.KeyError

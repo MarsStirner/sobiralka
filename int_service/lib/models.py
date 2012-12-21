@@ -24,7 +24,7 @@ class LPU(Base):
     phone = Column(String(20))
     schedule = Column(Unicode(256))
     type = Column(Unicode(32))
-    protocol = Enum(['samson', 'intramed'])
+    protocol = Column(Enum(['samson', 'intramed']))
     token = Column(String(45))
 
 
@@ -56,12 +56,14 @@ class UnitsParentForId(Base):
     LpuId = Column(BigInteger, ForeignKey('lpu.id'))
     OrgId = Column(BigInteger, ForeignKey('lpu.id'))
     ChildId = Column(BigInteger, ForeignKey('lpu_units.id'))
-    name = Column(Unicode(256))
-    address = Column(Unicode(256))
 
     lpu = relationship("LPU", backref=backref('lpu', order_by=id), foreign_keys=LpuId, primaryjoin=LPU.id==LpuId,)
     org = relationship("LPU", backref=backref('org', order_by=id), foreign_keys=OrgId, primaryjoin=LPU.id==OrgId,)
-    child = relationship("LPU_Units", backref=backref('lpu_units', order_by=id), foreign_keys=ChildId)
+    child = relationship("LPU_Units",
+        backref=backref('parent', order_by=id),
+        foreign_keys=ChildId,
+        primaryjoin="and_(LPU_Units.id==UnitsParentForId.ChildId, LPU_Units.lpuId==UnitsParentForId.OrgId)"
+    )
 
 
 class Enqueue(Base):
