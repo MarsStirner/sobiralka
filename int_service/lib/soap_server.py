@@ -79,9 +79,9 @@ class ScheduleServer(ServiceBase):
         return obj.get_ticket_status(**vars(TicketStatusRequest))
 
     @srpc(soap_models.EnqueueRequest, _returns=soap_models.EnqueueResponse)
-    def enqueue(EnqueueRequest):
+    def enqueue(EnqRequest):
         obj = DataWorker.provider('enqueue')
-        return obj.enqueue(**vars(EnqueueRequest))
+        return obj.enqueue(**vars(EnqRequest))
 
     def setTicketReadStatus(self):
         pass
@@ -103,20 +103,22 @@ class Server(object):
         logging.basicConfig()
         from wsgiref.simple_server import make_server
         info = Application([InfoServer],
-            SOAP_NAMESPACE,
-            name='HospitalInfo',
+            tns=SOAP_NAMESPACE,
+            name='InfoService',
             interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
         list = Application([ListServer],
-            SOAP_NAMESPACE,
+            tns=SOAP_NAMESPACE,
+            name='ListService',
             interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
         schedule = Application([ScheduleServer],
-            SOAP_NAMESPACE,
+            tns=SOAP_NAMESPACE,
+            name='ScheduleService',
             interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()

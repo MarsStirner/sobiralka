@@ -175,7 +175,7 @@ class LPUWorker(object):
         for item in lpu_list:
             result['hospitals'].append({
                 'uid': str(item.id) + '/0',
-                'title': item.name,
+                'name': item.name,
                 'phone': item.phone,
                 'address': item.address,
                 'wsdlURL': "http://" + SOAP_SERVER_HOST + ":" + str(SOAP_SERVER_PORT) + '/schedule/?wsdl',
@@ -196,7 +196,7 @@ class LPUWorker(object):
 
                 result['hospitals'].append({
                     'uid': uid,
-                    'title': item.name,
+                    'name': item.name,
                     'phone': item.lpu.phone,
                     'address': item.address,
                     # TODO: выяснить используется ли wsdlURL и верно ли указан
@@ -224,8 +224,8 @@ class LPUWorker(object):
             units = []
             for lpu_units_item in lpu_units_dw.get_list(uid=lpu_units, lpu_id=lpu_item.id):
                 units.append({
-                    'id': lpu_units_item.id,
-                    'title': lpu_units_item.name,
+#                    'id': lpu_units_item.id,
+                    'name': lpu_units_item.name,
                     'address': lpu_units_item.address,
                     'phone': lpu_item.phone,
                     'schedule': lpu_item.schedule,
@@ -233,7 +233,7 @@ class LPUWorker(object):
 
             result.update({'info':
                                {'uid': str(lpu_item.id) + '/0',
-                                'title': lpu_item.name,
+                                'name': lpu_item.name,
                                 'type': lpu_item.type,
                                 'phone': lpu_item.phone,
                                 'email': lpu_item.email,
@@ -342,7 +342,7 @@ class EnqueueWorker(object):
             return {}
 
         if 'doctorUid' in kwargs:
-            doctor_uid = kwargs.get('hospitalUid')
+            doctor_uid = int(kwargs.get('doctorUid'))
         else:
             raise exceptions.KeyError
             return {}
@@ -594,20 +594,16 @@ class EnqueueWorker(object):
             raise exceptions.LookupError
             return {}
 
-        _enqueue = proxy_client.enqueue({
+        _enqueue = proxy_client.enqueue(**{
             'serverId': lpu_info.key,
-            'person': {
-                'firstName': doctor_info.FirstName,
-                'lastName': doctor_info.LastName,
-                'patronymic': doctor_info.PatrName,
-            },
+            'person': person,
             'omiPolicyNumber': omi_policy_number,
-            'birthday': birthday.split('T')[0],
+            'birthday': birthday,
             'hospitalUid': hospital_uid[1],
             'hospitalUidFrom': hospital_uid_from,
             'speciality': doctor_info.speciality,
             'doctorUid': doctor_uid,
-            'timeslotStart': timeslot_start,
+            'timeslotStart': timeslot_start
         })
 
         if _enqueue and _enqueue['result'] == True:
@@ -704,7 +700,7 @@ class PersonalWorker(object):
 
             result['hospitals'].append({
                 'uid': str(value.lpuId) + '/' + str(value.orgId),
-                'title': (value.lpu_name + " " + value.lpu_units_name).strip(),
+                'name': (value.lpu_name + " " + value.lpu_units_name).strip(),
                 'address': (value.lpu_address + " " + value.lpu_units_address).strip(),
                 # TODO: выяснить используется ли wsdlURL и верно ли указан
                 'wsdlURL': 'http://' + SOAP_SERVER_HOST + ':' + str(SOAP_SERVER_PORT) + '/schedule/?wsdl',

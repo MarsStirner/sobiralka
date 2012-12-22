@@ -383,8 +383,6 @@ class TestInfoWSDL(unittest.TestCase):
                                  ],
                    },]
         info_list = self.client.service.getHospitalInfo({'hospitalUid': hospitalUid})
-        import sys
-        sys.exit()
         self.assertIsInstance(info_list, list)
         self.assertListEqual(info_list, result)
 

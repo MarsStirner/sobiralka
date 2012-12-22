@@ -11,14 +11,16 @@ from settings import SOAP_NAMESPACE
 class HospitalAddress(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    title = Unicode(doc=u'Наименование объекта (корпуса, отделения) ЛПУ, расположенных по данному адресу')
-    address = Unicode(doc=u'Почтовый адрес объекта')
+    name = Unicode()
+    name.Annotations.doc=u'Наименование объекта (корпуса, отделения) ЛПУ, расположенных по данному адресу'
+    address = Unicode()
+    address.Annotations.doc=u'Почтовый адрес объекта'
     phone = String(doc=u'Телефон объекта')
+    phone.Annotations.doc=u'Телефон объекта'
     route = Unicode()
     route.Annotations.doc = u'Информация о маршруте проезда'
-    schedule = Unicode(
-        doc=u'Информация о расписании работы объекта, если оно отличается от общего расписания работы ЛПУ'
-    )
+    schedule = Unicode()
+    schedule.Annotations.doc=u'Информация о расписании работы объекта, если оно отличается от общего расписания работы ЛПУ'
 
     def __init__(self, **kwargs):
         super(HospitalAddress, self).__init__(doc = u'Информация об адресе ЛПУ', **kwargs)
@@ -27,10 +29,14 @@ class HospitalAddress(ComplexModel):
 class ServicedDistrict(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    addressInfo = Unicode(doc=u'Информация об адресе или  адресах, обслуживаемом данным врачом ЛПУ')
-    doctorUid = String(doc=u'Уникальный идентификатор врача в Реестре')
-    doctor = Unicode(doc=u'ФИО врача')
-    speciality = Unicode(doc=u'Специальность врача')
+    addressInfo = Unicode()
+    addressInfo.Annotations.doc=u'Информация об адресе или  адресах, обслуживаемом данным врачом ЛПУ'
+    doctorUid = String()
+    doctorUid.Annotations.doc=u'Уникальный идентификатор врача в Реестре'
+    doctor = Unicode()
+    doctor.Annotations.doc=u'ФИО врача'
+    speciality = Unicode()
+    speciality.Annotations.doc=u'Специальность врача'
 
     def __init__(self, **kwargs):
         super(ServicedDistrict, self).__init__(doc=u'Информация об обслуживаемом участке', **kwargs)
@@ -39,16 +45,23 @@ class ServicedDistrict(ComplexModel):
 class DetailedHospitalInfo(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    uid = String(doc=u'Уникальный идентификатор ЛПУ')
-    title = Unicode(doc=u'Полное наименование ЛПУ')
-    type = Unicode(doc=u'Наименование типа (категории) ЛПУ')
-    phone = String(doc=u'Номер телефона ЛПУ')
-    email = Unicode(doc=u'Адрес электронной почты ЛПУ')
-    siteURL = String(doc=u'Адрес сайта ЛПУ')
-    schedule = Unicode(
-        doc=u'Информация о расписании работы объекта, если оно отличается от общего расписания работы ЛПУ'
-    )
-    buildings = Array(HospitalAddress, doc=u'Перечень адресов зданий, входящих в состав ЛПУ')
+    uid = String()
+    uid.Annotations.doc=u'Уникальный идентификатор ЛПУ'
+    name = Unicode()
+    name.Annotations.doc=u'Полное наименование ЛПУ'
+    type = Unicode()
+    type.Annotations.doc=u'Наименование типа (категории) ЛПУ'
+    phone = String()
+    phone.Annotations.doc=u'Номер телефона ЛПУ'
+    email = Unicode()
+    email.Annotations.doc=u'Адрес электронной почты ЛПУ'
+    siteURL = String()
+    siteURL.Annotations.doc=u'Адрес сайта ЛПУ'
+    schedule = Unicode()
+    schedule.Annotations.doc=(u'Информация о расписании работы объекта, '
+                              u'если оно отличается от общего расписания работы ЛПУ')
+    buildings = Array(HospitalAddress)
+    buildings.Annotations.doc=u'Перечень адресов зданий, входящих в состав ЛПУ'
     servicedDistricts = Array(ServicedDistrict)
 
     def __init__(self, **kwargs):
@@ -130,33 +143,30 @@ class GetHospitalUidResponse(ComplexModel):
 class PersonName(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    firstName = Unicode()
-    firstName.Annotations.doc=u'Имя'
-    patronymic = Unicode()
-    patronymic.Annotations.doc=u'Отчество'
-    lastName = Unicode()
-    lastName.Annotations.doc=u'Фамилия'
+    firstName = Unicode
+#    firstName.Annotations.doc=u'Имя'
+    patronymic = Unicode
+#    patronymic.Annotations.doc=u'Отчество'
+    lastName = Unicode
+#    lastName.Annotations.doc=u'Фамилия'
 
     def __init__(self, **kwargs):
-        doc=u'Имя врача'
-        if kwargs and 'doc' in kwargs and kwargs['doc']:
-            doc = kwargs['doc']
-            del kwargs['doc']
+        doc = kwargs.pop('doc', u'ФИО')
         super(PersonName, self).__init__(doc=doc, **kwargs)
 
 
 class DoctorInfo(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    uid = String()
-    uid.Annotations.doc=u'Уникальный идентификатор врача в Реестре'
-    name = PersonName()
-    hospitalUid = String()
-    hospitalUid.Annotations.doc=u'Уникальный идентификатор ЛПУ'
-    speciality = Unicode()
-    speciality.Annotations.doc=u'Наименование специальности'
-    keyEPGU = String()
-    keyEPGU.Annotations.doc=u'Ключ на ЕПГУ'
+    uid = Integer
+#    uid.Annotations.doc=u'Уникальный идентификатор врача в Реестре'
+    name = PersonName
+    hospitalUid = String
+#    hospitalUid.Annotations.doc=u'Уникальный идентификатор ЛПУ'
+    speciality = Unicode
+#    speciality.Annotations.doc=u'Наименование специальности'
+    keyEPGU = String
+#    keyEPGU.Annotations.doc=u'Ключ на ЕПГУ'
 
     def __init__(self, **kwargs):
         super(DoctorInfo, self).__init__(doc=u'Информация о враче', **kwargs)
@@ -167,8 +177,8 @@ class HospitalInfo(ComplexModel):
 
     uid = String()
     uid.Annotations.doc=u'Уникальный идентификатор ЛПУ (ОГРН)'
-    title = Unicode()
-    title.Annotations.doc=u'Наименование ЛПУ'
+    name = Unicode()
+    name.Annotations.doc=u'Наименование ЛПУ'
     phone = String()
     phone.Annotations.doc=u'Номер телефона ЛПУ'
     address = Unicode()

@@ -85,41 +85,43 @@ class ClientSamson(AbstractClient):
         return None
 
     def getScheduleInfo(self, **kwargs):
-        result = {}
+        result = {'timeslots': []}
         if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid']:
             for i in xrange((kwargs['end'] - kwargs['start']).days):
-                start = (kwargs['start'] + i).strftime('%Y-%m-%d')
-                params = {'serverId': kwargs['server_id'],
-                          'personId': kwargs['doctor_uid'],
-                          'date': start,
-                          'hospitalUid': kwargs['hospital_uid_from'],
-                          }
-                result['timeslots'].extend(self.getWorkTimeAndStatus(**params))
+                start = (kwargs['start'].date() + datetime.timedelta(days=i))
+                params = {
+                    'serverId': kwargs['server_id'],
+                    'personId': kwargs.get('doctor_uid'),
+                    'date': start,
+                    'hospitalUidFrom': kwargs.get('hospital_uid_from', '0'),
+                    }
+                result['timeslots'].append(self.getWorkTimeAndStatus(**params))
         else:
             raise exceptions.ValueError
         return result
 
     def getWorkTimeAndStatus(self, **kwargs):
         try:
-            schedule = self.client.service.getWorkTimeAndStatus(kwargs)
+            schedule = self.client.service.getWorkTimeAndStatus(**kwargs)
         except WebFault, e:
             print e
         else:
-            result = []
-            for key, timeslot in enumerate(schedule.amb.tickets):
-                result.append({
-                    'start': kwargs['date'] + 'T' + timeslot.time,
-                    'finish': (
-                        kwargs['date'] + 'T' + schedule.timeslots[key+1].time
-                        if key < (len(schedule.timeslots) - 1)
-                        else kwargs['date'] + 'T' + schedule.amb.endTime
-                        ),
-                    'status': 'free' if timeslot.status>0 else 'locked',
-                    'office': schedule.amb.office,
-                    'patientId': timeslot.patientId,
-                    'patientInfo': timeslot.patientInfo,
-                    })
-            return result
+            if schedule:
+                result = []
+                for key, timeslot in enumerate(schedule.tickets):
+                    result.append({
+                        'start': datetime.datetime.combine(kwargs['date'], timeslot.time),
+                        'finish': (
+                            datetime.datetime.combine(kwargs['date'], schedule.tickets[key+1].time)
+                            if key < (len(schedule.tickets) - 1)
+                            else datetime.datetime.combine(kwargs['date'], schedule.endTime)
+                            ),
+                        'status': 'free' if timeslot.free else 'locked',
+                        'office': schedule.office,
+                        'patientId': timeslot.patientId,
+                        'patientInfo': timeslot.patientInfo,
+                        })
+                return result
         return []
 
     def getPatientQueue(self, **kwargs):
@@ -152,14 +154,14 @@ class ClientSamson(AbstractClient):
         try:
             params = {
                 'serverId': kwargs['serverId'],
-                'lastName': kwargs['person']['lastName'],
-                'firstName': kwargs['person']['firstName'],
-                'patrName': kwargs['person']['patronymic'],
+                'lastName': kwargs['lastName'],
+                'firstName': kwargs['firstName'],
+                'patrName': kwargs['patrName'],
                 'omiPolicy': kwargs['omiPolicy'],
-                'birthday': kwargs['birthday'],
+                'birthDate': kwargs['birthDate'],
                 }
-        except:
-            raise exceptions.ValueError
+        except exceptions.KeyError:
+            pass
         else:
             try:
                 result = self.client.service.findPatient(params)
@@ -170,29 +172,42 @@ class ClientSamson(AbstractClient):
         return None
 
     def addPatient(self, **kwargs):
-        try:
+        person = kwargs.get('person')
+        if person:
             params = {
-                'serverId': kwargs['serverId'],
-                'lastName': kwargs['person']['lastName'],
-                'firstName': kwargs['person']['firstName'],
-                'patrName': kwargs['person']['patronymic'],
-#                'omiPolicy': kwargs['omiPolicy'],
-                'birthday': kwargs['birthday'],
+#                'serverId': kwargs.get('serverId'),
+                'lastName': person.lastName,
+                'firstName': person.firstName,
+                'patrName': person.patronymic,
+#                'omiPolicy': kwargs['omiPolicyNumber'],
+                'birthDate': kwargs.get('birthday'),
                 }
-        except:
-            raise exceptions.ValueError
-        else:
             try:
                 result = self.client.service.addPatient(params)
             except WebFault, e:
                 print e
             else:
                 return result
-        return None
+        else:
+            raise exceptions.AttributeError
+        return {}
 
     def enqueue(self, **kwargs):
-        patient = self.findPatient(**kwargs)
-        if (not patient or not patient.success) and kwargs['hospitalUidFrom']:
+        hospital_uid_from = kwargs.get('hospitalUidFrom', 0)
+        person = kwargs.get('person')
+        if person is None:
+            raise exceptions.AttributeError
+            return {}
+
+        patient = self.findPatient(**{
+            'serverId': kwargs.get('serverId'),
+            'lastName': person.lastName,
+            'firstName': person.firstName,
+            'patrName': person.patronymic,
+            'omiPolicy': kwargs.get('omiPolicyNumber'),
+            'birthDate': kwargs.get('birthDate'),
+        })
+        if not patient or not patient.success:
             patient = self.addPatient(**kwargs)
 
         if patient.patientId:
@@ -202,13 +217,13 @@ class ClientSamson(AbstractClient):
             return {'result': False, 'error_code': result.message,}
 
         try:
-            date_time = kwargs['timeslotStart'].split('T')
+            date_time = kwargs.get('timeslotStart').datetime.datetime.now()
             params = {
                 'serverId': kwargs['serverId'],
                 'patientId': patient_id,
                 'personId': kwargs['doctorUid'],
-                'date': date_time[0],
-                'time': date_time[1],
+                'date': date_time.strftime('%Y-%m-%d'),
+                'time': date_time.strftime('%H:%M:%S'),
                 'note': kwargs['E-mail'],
                 'hospitalUidFrom': kwargs['hospitalUidFrom'],
                 }
@@ -341,13 +356,13 @@ class ClientIntramed(AbstractClient):
         self.client = Client(self.url + 'egov.v3.queuePort.CLS?WSDL=1', cache=None)
         try:
             params = {
-                'person': kwargs['person'],
-                'omiPolicyNumber': kwargs['omiPolicyNumber'],
-                'birthday': kwargs['birthday'],
-                'hospitalUid': kwargs['hospitalUid'],
-                'speciality': kwargs['speciality'],
-                'doctorUid': kwargs['doctorUid'],
-                'timeslotStart': kwargs['timeslotStart'] + 'Z',
+                'person': kwargs.get('person'),
+                'omiPolicyNumber': kwargs.get('omiPolicyNumber'),
+                'birthday': kwargs.get('birthday'),
+                'hospitalUid': kwargs.get('hospitalUid'),
+                'speciality': kwargs.get('speciality'),
+                'doctorUid': kwargs.get('doctorUid'),
+                'timeslotStart': kwargs.get('timeslotStart').strftime('%Y-%m-%d %H:%M:%S') + 'Z',
             }
         except:
             raise exceptions.ValueError
