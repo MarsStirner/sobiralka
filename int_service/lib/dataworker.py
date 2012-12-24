@@ -4,7 +4,6 @@ import exceptions
 import urllib
 import datetime, time
 import json
-from spyne.model.complex import json
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy import or_, and_
@@ -158,7 +157,8 @@ class LPUWorker(object):
         '''
         Get list of LPUs and LPU_Units
         '''
-        result = {'hospitals':[]}
+        result = {}
+        result['hospitals'] = []
         lpu = []
         lpu_units = []
 
@@ -349,7 +349,7 @@ class EnqueueWorker(object):
 
         speciality = kwargs.get('speciality')
         hospital_uid_from = kwargs.get('hospitalUidFrom', 0)
-        start, end = self.__get_dates_period(kwargs.get('start', ''), kwargs.get('end', ''))
+        start, end = self.__get_dates_period(kwargs.get('startDate', ''), kwargs.get('endDate', ''))
 
         proxy_client = Clients.provider(lpu.protocol, lpu.proxy.split(';')[0])
         result = proxy_client.getScheduleInfo(
@@ -410,6 +410,7 @@ class EnqueueWorker(object):
         Get tickets' status
         '''
         result = {}
+        result['ticketInfo'] = []
         hospital_uid = kwargs.get('hospitalUid', '').split('/')
         ticket_uid = kwargs.get('ticketUid')
         if hospital_uid and ticket_uid:
@@ -601,33 +602,33 @@ class EnqueueWorker(object):
             'birthday': birthday,
             'hospitalUid': hospital_uid[1],
             'hospitalUidFrom': hospital_uid_from,
-            'speciality': doctor_info.speciality,
+            'speciality': doctor_info.speciality.lower(),
             'doctorUid': doctor_uid,
             'timeslotStart': timeslot_start
         })
 
         if _enqueue and _enqueue['result'] == True:
             self.__add_ticket({
-                'Error': _enqueue['message'],
-                'Data': json.dumps({
+                'error': _enqueue['error_code'],
+                'data': json.dumps({
                     'ticketUID': _enqueue['ticketUid'],
-                    'timeslotStart': timeslot_start,
+                    'timeslotStart': timeslot_start.strftime('%Y-%m-%d %H:%M:%S'),
                     'hospitalUid': kwargs.get('hospitalUid'),
                     'doctorUid': doctor_uid,
                 }),
             })
             result = {'result': exception_by_code(_enqueue['message']), 'ticketUid': _enqueue['ticketUid']}
         else:
-            enqueue_id = self.__add_ticket({
-                'Error': _enqueue['message'],
-                'Data': json.dumps({
+            enqueue_id = self.__add_ticket(**{
+                'error': _enqueue['error_code'],
+                'data': json.dumps({
                     'ticketUID': _enqueue['ticketUid'],
-                    'timeslotStart': timeslot_start,
+                    'timeslotStart': timeslot_start.strftime('%Y-%m-%d %H:%M:%S'),
                     'timeslhospitalUidotStart': kwargs.get('hospitalUid'),
                     'doctorUid': doctor_uid,
                     }),
                 })
-            result = {'result': exception_by_code(_enqueue['message']), 'ticketUid': 'e' + enqueue_id}
+            result = {'result': exception_by_code(_enqueue['error_code']), 'ticketUid': 'e' + str(enqueue_id)}
 
         return result
 

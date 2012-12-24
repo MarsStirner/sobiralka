@@ -440,7 +440,7 @@ Timeslot_Statuses = Enum(
 class TimeslotStatus(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    timeslotStatus = Timeslot_Statuses()
+    timeslotStatus = Timeslot_Statuses
 
     def __init__(self, **kwargs):
         super(TimeslotStatus, self).__init__(doc=u'Состояние интервала времени в расписании', **kwargs)
@@ -449,12 +449,17 @@ class TimeslotStatus(ComplexModel):
 class Timeslot(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    start = DateTime(doc=u'Начало интервала')
-    finish = DateTime(doc=u'Окончание интервала')
-    status = TimeslotStatus()
-    office = String(doc=u'Кабинет')
-    patientId = String(doc=u'Идентификатор записанного пациента')
-    patientInfo = Unicode(doc=u'ФИО записанного пациента')
+    start = DateTime
+#    start.Annotations.doc = u'Начало интервала'
+    finish = DateTime
+#    finish.Annotations.doc = u'Окончание интервала'
+    status = TimeslotStatus
+    office = String
+#    office.Annotations.doc = u'Кабинет'
+    patientId = String
+#    patientId.Annotations.doc = u'Идентификатор записанного пациента'
+    patientInfo = Unicode
+#    patientInfo.Annotations.doc = u'ФИО записанного пациента'
 
     def __init__(self):
         super(Timeslot, self).__init__(doc=u'Интервал в расписании врача')
@@ -463,7 +468,8 @@ class Timeslot(ComplexModel):
 class GetScheduleInfoResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    timeslots = Array(Timeslot, doc=u'Расписание на отдельные дни в заданном интервале')
+    timeslots = Array(Timeslot)
+    timeslots.Annotations.doc=u'Расписание на отдельные дни в заданном интервале'
 
     def __init__(self):
         super(GetScheduleInfoResponse, self).__init__(doc=u'Информация о расписании врача')
