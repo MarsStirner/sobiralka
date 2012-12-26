@@ -2,10 +2,12 @@
 
 import exceptions
 import datetime
+import logging
 from abc import ABCMeta, abstractmethod, abstractproperty
 from suds.client import Client
 from suds import WebFault
 import is_exceptions
+import settings
 
 class Clients(object):
     '''
@@ -13,6 +15,11 @@ class Clients(object):
     '''
     @classmethod
     def provider(cls, type, proxy_url):
+
+        logging.basicConfig(level=logging.INFO)
+        if settings.DEBUG:
+            logging.getLogger('suds.client').setLevel(logging.DEBUG)
+
         type = type.lower()
 
         if type == 'samson':
@@ -95,7 +102,9 @@ class ClientSamson(AbstractClient):
                     'date': start,
                     'hospitalUidFrom': kwargs.get('hospital_uid_from', '0'),
                     }
-                result.append(self.getWorkTimeAndStatus(**params))
+                timeslot = self.getWorkTimeAndStatus(**params)
+                if timeslot:
+                    result.extend(timeslot)
         else:
             raise exceptions.ValueError
         return {'timeslots': result}
@@ -117,10 +126,10 @@ class ClientSamson(AbstractClient):
                             else datetime.datetime.combine(kwargs['date'], schedule.endTime)
                             ),
                         'status': 'free' if timeslot.free else 'locked',
-                        'office': schedule.office,
+                        'office': str(schedule.office),
                         'patientId': timeslot.patientId,
                         'patientInfo': timeslot.patientInfo,
-                        })
+                    })
                 return result
         return []
 
@@ -226,8 +235,8 @@ class ClientSamson(AbstractClient):
                 date_time = datetime.datetime.now()
             params = {
                 'serverId': kwargs.get('serverId'),
-                'patientId': patient_id,
-                'personId': kwargs.get('doctorUid'),
+                'patientId': int(patient_id),
+                'personId': int(kwargs.get('doctorUid')),
                 'date': date_time.date(),
                 'time': date_time.time(),
                 'note': kwargs.get('E-mail', 'E-mail'),

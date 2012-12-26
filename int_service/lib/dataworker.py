@@ -212,7 +212,7 @@ class LPUWorker(object):
         Get info about LPU/LPUs and its Units
         '''
         lpu, lpu_units = [], []
-        result = {}
+        result = []
 
         hospital_uid = kwargs.get('hospitalUid')
         if hospital_uid:
@@ -231,19 +231,29 @@ class LPUWorker(object):
                     'schedule': lpu_item.schedule,
                 })
 
-            result.update({'info':
-                               {'uid': str(lpu_item.id) + '/0',
-                                'name': lpu_item.name,
-                                'type': lpu_item.type,
-                                'phone': lpu_item.phone,
-                                'email': lpu_item.email,
-                                'siteURL': '',
-                                'schedule': lpu_item.schedule,
-                                'buildings': units,
-                                }
+#            result.update({'info':
+#                               {'uid': str(lpu_item.id) + '/0',
+#                                'name': lpu_item.name,
+#                                'type': lpu_item.type,
+#                                'phone': lpu_item.phone,
+#                                'email': lpu_item.email,
+#                                'siteURL': '',
+#                                'schedule': lpu_item.schedule,
+#                                'buildings': units,
+#                                }
+#            })
+            result.append({
+                'uid': str(lpu_item.id) + '/0',
+                'name': lpu_item.name,
+                'type': lpu_item.type,
+                'phone': lpu_item.phone,
+                'email': lpu_item.email,
+                'siteURL': '',
+                'schedule': lpu_item.schedule,
+                'buildings': units,
             })
 
-        return result
+        return {'info': result}
 
     def get_by_id(self, id):
         '''
@@ -352,15 +362,16 @@ class EnqueueWorker(object):
         start, end = self.__get_dates_period(kwargs.get('startDate', ''), kwargs.get('endDate', ''))
 
         proxy_client = Clients.provider(lpu.protocol, lpu.proxy.split(';')[0])
-        result = proxy_client.getScheduleInfo(
-            hospital_uid=hospital_uid,
-            doctor_uid=doctor_uid,
-            start=start,
-            end=end,
-            speciality=speciality,
-            hospital_uid_from=hospital_uid_from,
-            server_id=lpu.key
-        )
+        params = {
+            'hospital_uid': hospital_uid,
+            'doctor_uid': doctor_uid,
+            'start': start,
+            'end': end,
+            'speciality': speciality,
+            'hospital_uid_from': hospital_uid_from,
+            'server_id': lpu.key
+        }
+        result = proxy_client.getScheduleInfo(**params)
 
         return result
 
@@ -608,7 +619,7 @@ class EnqueueWorker(object):
         })
 
         if _enqueue and _enqueue['result'] == True:
-            self.__add_ticket({
+            self.__add_ticket(**{
                 'error': _enqueue['error_code'],
                 'data': json.dumps({
                     'ticketUID': _enqueue['ticketUid'],
@@ -624,7 +635,7 @@ class EnqueueWorker(object):
                 'data': json.dumps({
                     'ticketUID': _enqueue['ticketUid'],
                     'timeslotStart': timeslot_start.strftime('%Y-%m-%d %H:%M:%S'),
-                    'timeslhospitalUidotStart': kwargs.get('hospitalUid'),
+                    'hospitalUid': kwargs.get('hospitalUid'),
                     'doctorUid': doctor_uid,
                     }),
                 })

@@ -5,6 +5,8 @@ import int_service.main
 import unittest
 import logging
 from suds.client import Client
+from int_service.lib import soap_models
+
 
 logging.basicConfig()
 
@@ -33,8 +35,8 @@ class TestListWSDL(unittest.TestCase):
                    },
                    ]
         hospitals = self.client.service.listHospitals({'ocatoCode': okato}).hospitals
-#        self.assertIsInstance(hospitals, list)
-        self.assertEqual(hospitals, result)
+        self.assertIsInstance(hospitals, soap_models.ListHospitalsResponse)
+        self.assertEqual(list(hospitals), result)
 
         okato = "56405000000"
         result = [ {'uid': "11/0",
@@ -46,14 +48,14 @@ class TestListWSDL(unittest.TestCase):
                     'key': "580033"
                    },]
         hospitals = self.client.service.listHospitals({'ocatoCode': okato}).hospitals
-        self.assertIsInstance(hospitals, list)
-        self.assertListEqual(hospitals, result)
+        self.assertIsInstance(hospitals, soap_models.ListHospitalsResponse)
+        self.assertListEqual(list(hospitals), result)
 
         okato = "56203000000"
         result = []
         hospitals = self.client.service.listHospitals({'ocatoCode': okato}).hospitals
-        self.assertIsInstance(hospitals, list)
-        self.assertListEqual(hospitals, result)
+        self.assertIsInstance(hospitals, soap_models.ListHospitalsResponse)
+        self.assertListEqual(list(hospitals), result)
 
         result = [ {'uid': "5/0",
                     'title': u"ГБУЗ «Пензенская областная клиническая больница им. Н.Н. Бурденко»",
@@ -153,14 +155,14 @@ class TestListWSDL(unittest.TestCase):
                    },
                    ]
         hospitals = self.client.service.listHospitals().hospitals
-        self.assertIsInstance(hospitals, list)
-        self.assertListEqual(hospitals, result)
+        self.assertIsInstance(hospitals, soap_models.ListHospitalsResponse)
+        self.assertListEqual(list(hospitals), result)
 
         okato = "11111111"
         result = []
         hospitals = self.client.service.listHospitals({'ocatoCode': okato}).hospitals
-        self.assertIsInstance(hospitals, list)
-        self.assertListEqual(hospitals, result)
+        self.assertIsInstance(hospitals, soap_models.ListHospitalsResponse)
+        self.assertListEqual(list(hospitals), result)
 
     def testListDoctors(self):
         hospital_Uid = '17/52'
@@ -180,7 +182,8 @@ class TestListWSDL(unittest.TestCase):
         doctors = self.client.service.listDoctors({
             'searchScope': {'hospitalUid': hospital_Uid, }, 'speciality': speciality
         }).doctors
-        self.assertIsInstance(doctors, list)
+        self.assertIsInstance(doctors, soap_models.ListDoctorsResponse)
+        self.assertListEqual(list(doctors), result)
 
         hospital_Uid = '1111'
         speciality = u"Акушер-гинеколог (лечебное дело, педиатрия)"
@@ -188,7 +191,8 @@ class TestListWSDL(unittest.TestCase):
         doctors = self.client.service.listDoctors({
             'searchScope': {'hospitalUid': hospital_Uid, }, 'speciality': speciality
         }).doctors
-        self.assertIsInstance(doctors, list)
+        self.assertIsInstance(doctors, soap_models.ListDoctorsResponse)
+        self.assertListEqual(list(doctors), result)
 
         hospital_Uid = '1111'
         speciality = "1111"
@@ -196,7 +200,8 @@ class TestListWSDL(unittest.TestCase):
         doctors = self.client.service.listDoctors({
             'searchScope': {'hospitalUid': hospital_Uid, }, 'speciality': speciality
         }).doctors
-        self.assertIsInstance(doctors, list)
+        self.assertIsInstance(doctors, soap_models.ListDoctorsResponse)
+        self.assertListEqual(list(doctors), result)
 
         hospital_Uid = '17/52'
         speciality = "1111"
@@ -204,7 +209,8 @@ class TestListWSDL(unittest.TestCase):
         doctors = self.client.service.listDoctors({
             'searchScope': {'hospitalUid': hospital_Uid, }, 'speciality': speciality
         }).doctors
-        self.assertIsInstance(doctors, list)
+        self.assertIsInstance(doctors, soap_models.ListDoctorsResponse)
+        self.assertListEqual(list(doctors), result)
 
         hospital_Uid = "17/53"
         result = [
@@ -280,8 +286,8 @@ class TestListWSDL(unittest.TestCase):
              },
         ]
         doctors = self.client.service.listDoctors({'searchScope': {'hospitalUid': hospital_Uid, }}).doctors
-        self.assertIsInstance(doctors, list)
-        self.assertListEqual(doctors, result)
+        self.assertIsInstance(doctors, soap_models.ListDoctorsResponse)
+        self.assertListEqual(list(doctors), result)
 
         hospital_Uid = "17/52"
         result = [
@@ -337,14 +343,14 @@ class TestListWSDL(unittest.TestCase):
              },
             ]
         doctors = self.client.service.listDoctors({'searchScope': {'hospitalUid': hospital_Uid, }}).doctors
-        self.assertIsInstance(doctors, list)
-        self.assertListEqual(doctors, result)
+        self.assertIsInstance(doctors, soap_models.ListDoctorsResponse)
+        self.assertListEqual(list(doctors), result)
 
         hospital_Uid = "11111"
         result = []
         doctors = self.client.service.listDoctors().doctors
-        self.assertIsInstance(doctors, list)
-        self.assertListEqual(doctors, result)
+        self.assertIsInstance(doctors, soap_models.ListDoctorsResponse)
+        self.assertListEqual(list(doctors), result)
 
     def testListSpecialities(self):
         pass
@@ -487,18 +493,18 @@ class TestScheduleWSDL(unittest.TestCase):
         hospitalUid = '17/53'
         doctorUid = '344'
         ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
-        self.assertIsInstance(ticket, list)
+        self.assertIsInstance(ticket, soap_models.GetScheduleInfoResponse)
         self.assertGreater(len(ticket), 0)
 
         ticket = self.client.service.getScheduleInfo()
-        self.assertIsInstance(ticket, list)
+        self.assertIsInstance(ticket, soap_models.GetScheduleInfoResponse)
 
     def testGetTicketStatus(self):
         hospitalUid = 0
         ticketUid = 0
 #        ticket = self.client.service.getTicketStatus({'hospitalUid':hospitalUid, 'ticketUid': ticketUid})[0]
         ticket = self.client.service.getTicketStatus({'hospitalUid':hospitalUid, 'ticketUid': ticketUid})
-        self.assertIsInstance(ticket, list)
+        self.assertIsInstance(ticket, soap_models.GetTicketStatusResponse)
 
     def testSetTicketReadStatus(self):
         pass

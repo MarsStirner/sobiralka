@@ -456,7 +456,7 @@ class Timeslot(ComplexModel):
     status = TimeslotStatus
     office = String
 #    office.Annotations.doc = u'Кабинет'
-    patientId = String
+    patientId = Integer
 #    patientId.Annotations.doc = u'Идентификатор записанного пациента'
     patientInfo = Unicode
 #    patientInfo.Annotations.doc = u'ФИО записанного пациента'
