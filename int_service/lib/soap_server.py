@@ -35,7 +35,7 @@ class CustomWsgiMounter(WsgiMounter):
 
 class InfoServer(ServiceBase):
 
-    @srpc(soap_models.GetHospitalInfoRequest, _returns=Array(soap_models.DetailedHospitalInfo))
+    @srpc(soap_models.GetHospitalInfoRequest, _returns=soap_models.GetHospitalInfoResponse)
     def getHospitalInfo(HospitalInfoRequest):
         obj = DataWorker.provider('lpu')
         return obj.get_info(**vars(HospitalInfoRequest))
@@ -52,7 +52,11 @@ class ListServer(ServiceBase):
     @srpc(soap_models.ListHospitalsRequest, _returns=soap_models.ListHospitalsResponse)
     def listHospitals(HospitalsRequest):
         obj = DataWorker.provider('lpu')
-        return obj.get_list_hospitals(**vars(HospitalsRequest))
+        if HospitalsRequest:
+            hospitals = obj.get_list_hospitals(**vars(HospitalsRequest))
+        else:
+            hospitals = obj.get_list_hospitals()
+        return hospitals
 
     @srpc(soap_models.ListDoctorsRequest, _returns=soap_models.ListDoctorsResponse)
     def listDoctors(DoctorsRequest):

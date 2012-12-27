@@ -60,6 +60,8 @@ class UnitsParentForId(Base):
 
     lpu = relationship("LPU", backref=backref('lpu', order_by=id), foreign_keys=LpuId, primaryjoin=LPU.id==LpuId,)
     org = relationship("LPU", backref=backref('org', order_by=id), foreign_keys=OrgId, primaryjoin=LPU.id==OrgId,)
+
+    #TODO: проверка выборки parent
     child = relationship("LPU_Units",
         backref=backref('parent', order_by=id),
         foreign_keys=ChildId,
@@ -90,7 +92,7 @@ class Personal(Base):
 
     id = Column(BigInteger, primary_key = True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'), primary_key = True)
-    orgId = Column(BigInteger, ForeignKey('lpu_units.id'), primary_key = True)
+    orgId = Column(BigInteger, ForeignKey('lpu_units.orgId'), primary_key = True)
     FirstName = Column(Unicode(32))
     LastName = Column(Unicode(32))
     PatrName = Column(Unicode(32))

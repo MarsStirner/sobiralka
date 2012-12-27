@@ -11,6 +11,8 @@ from settings import SOAP_NAMESPACE
 class HospitalAddress(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
+    id = Integer()
+    uid = Unicode()
     name = Unicode()
     name.Annotations.doc=u'Наименование объекта (корпуса, отделения) ЛПУ, расположенных по данному адресу'
     address = Unicode()
@@ -45,7 +47,7 @@ class ServicedDistrict(ComplexModel):
 class DetailedHospitalInfo(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    uid = String()
+    uid = Unicode()
     uid.Annotations.doc=u'Уникальный идентификатор ЛПУ'
     name = Unicode()
     name.Annotations.doc=u'Полное наименование ЛПУ'
@@ -343,17 +345,17 @@ class ListDoctorsRequest(ComplexModel):
 class ListDoctorsResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    doctors = Array(DoctorInfo, doc=u'Перечень объектов, содержащих информацию о найденных врачах')
-    hospitals = Array(HospitalInfo,
-        doc=u'Перечень связанных ЛПУ с краткой информацией. '
-            u'Перечень может быть пустым только в том случае, если пуст перечень найденных врачей.'
-    )
-    addressVariants = Array(Address,
-        doc=u'Возможные варианты адреса, предлагаемые Реестром пользователю для уточнения. '
-            u'Список генерируется, если запрос содержал критерий поиска "по адресу", '
-            u'структурированная информация отсутствовала, '
-            u'а при разборе адреса на стороне Реестра была выявлена неоднозначность в трактовке входных данных.'
-    )
+    doctors = Array(DoctorInfo)
+    doctors.Annotations.doc=u'Перечень объектов, содержащих информацию о найденных врачах'
+    hospitals = Array(HospitalInfo)
+    hospitals.Annotations.doc=u'Перечень связанных ЛПУ с краткой информацией. ' \
+                              u'Перечень может быть пустым только в том случае, если пуст перечень найденных врачей.'
+    addressVariants = Array(Address)
+    addressVariants.Annotations.doc=u'Возможные варианты адреса, предлагаемые Реестром пользователю для уточнения. ' \
+                                    u'Список генерируется, если запрос содержал критерий поиска "по адресу", ' \
+                                    u'структурированная информация отсутствовала, ' \
+                                    u'а при разборе адреса на стороне Реестра была выявлена неоднозначность ' \
+                                    u'в трактовке входных данных.'
 
     def __init__(self):
         super(ListDoctorsResponse, self).__init__(doc=u'Результаты поиска врача по заданным критериям')

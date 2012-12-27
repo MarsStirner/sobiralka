@@ -212,7 +212,7 @@ class TestListWSDL(unittest.TestCase):
         self.assertIsInstance(doctors, soap_models.ListDoctorsResponse)
         self.assertListEqual(list(doctors), result)
 
-        hospital_Uid = "17/53"
+        hospital_Uid = "53"
         result = [
             {'uid': "299",
              'name':

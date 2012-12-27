@@ -61,7 +61,6 @@ class LPUWorker(object):
                 lpu_units.append([int(tmp_list[0]), int(tmp_list[1])])
             else:
                 lpu.append(int(tmp_list[0]))
-
         return (lpu, lpu_units)
 
     def get_list(self, **kwargs):
@@ -173,7 +172,7 @@ class LPUWorker(object):
 
         speciality = kwargs.get('speciality')
         okato_code = kwargs.get('ocatoCode')
-        
+
         lpu_list = self.get_list(id=lpu, speciality=speciality, okato_code=okato_code)
         # Append LPUs to result
         for item in lpu_list:
@@ -193,12 +192,14 @@ class LPUWorker(object):
             lpu_units_list = units_dw.get_list(uid=lpu_units, speciality=speciality)
             # Append LPU_Units to result
             for item in lpu_units_list:
-                if item.parent:
-                    uid = str(item.id) + '/' + str(item.parent.LpuId)
+                uid = str(item.lpuId) + str(item.orgId)
+                if lpu_units_item.parent:
+                    uid += '/' + str(item.parent.LpuId)
                 else:
-                    uid = str(item.id) +'/0'
+                    uid += '/0'
 
                 result['hospitals'].append({
+                    'id': item.orgId,
                     'uid': uid,
                     'name': item.name,
                     'phone': item.lpu.phone,
@@ -227,8 +228,15 @@ class LPUWorker(object):
         for lpu_item in self.get_list(id=lpu):
             units = []
             for lpu_units_item in lpu_units_dw.get_list(uid=lpu_units, lpu_id=lpu_item.id):
+                uid = str(lpu_units_item.lpuId) + '/' + str(lpu_units_item.orgId)
+                if lpu_units_item.parent:
+                    uid += '/' + str(lpu_units_item.parent.LpuId)
+                else:
+                    uid += '/0'
+
                 units.append({
-#                    'id': lpu_units_item.id,
+                    'id': lpu_units_item.orgId,
+                    'uid': uid,
                     'name': lpu_units_item.name,
                     'address': lpu_units_item.address,
                     'phone': lpu_item.phone,
@@ -313,7 +321,7 @@ class LPU_UnitsWorker(object):
 
         if len(lpu_units_ids):
             for unit in lpu_units_ids:
-                or_list.append(and_(LPU_Units.lpuId==unit[0], LPU_Units.id==unit[1]))
+                or_list.append(and_(LPU_Units.lpuId==unit[0], LPU_Units.orgId==unit[1]))
             query_lpu_units = query_lpu_units.filter(or_(*or_list))
 
         if speciality and isinstance(speciality, unicode):
@@ -696,11 +704,12 @@ class PersonalWorker(object):
                 or_list.append(and_(Personal.lpuId==item.id,))
         if lpu_units:
             for item in lpu_units:
-                or_list.append(and_(Personal.lpuId==item.lpuId, Personal.orgId==item.id))
+                or_list.append(and_(Personal.lpuId==item.lpuId, Personal.orgId==item.orgId))
 
-        query = query.outerjoin(LPU).outerjoin(LPU_Units)
+        query = query.outerjoin(LPU_Units).outerjoin(LPU).filter(or_(*or_list))
+        query = query.order_by(Personal.LastName, Personal.FirstName, Personal.PatrName)
 
-        for value in query.filter(or_(*or_list)).all():
+        for value in query.all():
             result['doctors'].append({
                 'uid': value.id,
                 'name': {
@@ -715,8 +724,8 @@ class PersonalWorker(object):
 
             result['hospitals'].append({
                 'uid': str(value.lpuId) + '/' + str(value.orgId),
-                'name': (value.lpu_name + " " + value.lpu_units_name).strip(),
-                'address': (value.lpu_address + " " + value.lpu_units_address).strip(),
+                'name': (unicode(value.lpu_name) + " " + unicode(value.lpu_units_name)).strip(),
+                'address': (unicode(value.lpu_address) + " " + unicode(value.lpu_units_address)).strip(),
                 # TODO: выяснить используется ли wsdlURL и верно ли указан
                 'wsdlURL': 'http://' + SOAP_SERVER_HOST + ':' + str(SOAP_SERVER_PORT) + '/schedule/?wsdl',
                 'token': '',
@@ -748,7 +757,7 @@ class PersonalWorker(object):
         '''
         Get doctors list by parameters
         '''
-        lpu, lpu_list = [], []
+        lpu, lpu_list, lpu_units_list = [], [], []
         search_scope = kwargs.get('searchScope')
         if search_scope:
             try:
@@ -758,8 +767,9 @@ class PersonalWorker(object):
             else:
                 lpu, lpu_units = LPUWorker.parse_hospital_uid(hospital_uid)
 
-        lpu_dw = LPUWorker()
-        lpu_list = lpu_dw.get_list(id=lpu)
+        if lpu:
+            lpu_dw = LPUWorker()
+            lpu_list = lpu_dw.get_list(id=lpu)
 
         search_scope = kwargs.get('searchScope')
         if search_scope:
@@ -768,8 +778,9 @@ class PersonalWorker(object):
                 # TODO: уточнить используется ли поиск по адресу
                 lpu_list = lpu_dw.get_lpu_by_address(address, lpu_list)
 
-        lpu_units_dw = LPU_UnitsWorker()
-        lpu_units_list = lpu_units_dw.get_list(uid=lpu_units)
+        if lpu_units:
+            lpu_units_dw = LPU_UnitsWorker()
+            lpu_units_list = lpu_units_dw.get_list(uid=lpu_units)
 
         return self.get_list(lpu=lpu_list, lpu_units=lpu_units_list)
 
