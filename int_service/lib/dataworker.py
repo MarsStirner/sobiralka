@@ -628,7 +628,7 @@ class EnqueueWorker(object):
                     'doctorUid': doctor_uid,
                 }),
             })
-            result = {'result': exception_by_code(_enqueue['message']), 'ticketUid': _enqueue['ticketUid']}
+            result = {'result': exception_by_code(_enqueue.get('error_code')), 'ticketUid': _enqueue.get('ticketUid')}
         else:
             enqueue_id = self.__add_ticket(**{
                 'error': _enqueue['error_code'],
@@ -639,7 +639,7 @@ class EnqueueWorker(object):
                     'doctorUid': doctor_uid,
                     }),
                 })
-            result = {'result': exception_by_code(_enqueue['error_code']), 'ticketUid': 'e' + str(enqueue_id)}
+            result = {'result': exception_by_code(_enqueue.get('error_code')), 'ticketUid': 'e' + str(enqueue_id)}
 
         return result
 
@@ -676,7 +676,6 @@ class PersonalWorker(object):
             Personal.LastName,
             Personal.speciality,
             Personal.id,
-            Personal.personId,
             Personal.lpuId,
             Personal.orgId,
             Personal.keyEPGU,
@@ -699,7 +698,7 @@ class PersonalWorker(object):
 
         for value in query.filter(or_(*or_list)).all():
             result['doctors'].append({
-                'uid': value.personId,
+                'uid': value.id,
                 'name': {
                     'firstName': value.FirstName,
                     'patronymic': value.PatrName,
@@ -737,7 +736,7 @@ class PersonalWorker(object):
             else:
                 query = query.filter(Personal.lpuId==int(lpu_unit[0]))
         if doctor_id:
-            query = query.filter(Personal.personId==int(doctor_id))
+            query = query.filter(Personal.id==int(doctor_id))
 
         return query.one()
 

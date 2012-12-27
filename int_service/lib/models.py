@@ -36,6 +36,7 @@ class LPU_Units(Base):
 
     id = Column(BigInteger, primary_key = True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'))
+    orgId = Column(BigInteger)
     name = Column(Unicode(256))
     address = Column(Unicode(256))
 
@@ -55,14 +56,14 @@ class UnitsParentForId(Base):
     id = Column(Integer, primary_key = True)
     LpuId = Column(BigInteger, ForeignKey('lpu.id'))
     OrgId = Column(BigInteger, ForeignKey('lpu.id'))
-    ChildId = Column(BigInteger, ForeignKey('lpu_units.id'))
+    ChildId = Column(BigInteger)
 
     lpu = relationship("LPU", backref=backref('lpu', order_by=id), foreign_keys=LpuId, primaryjoin=LPU.id==LpuId,)
     org = relationship("LPU", backref=backref('org', order_by=id), foreign_keys=OrgId, primaryjoin=LPU.id==OrgId,)
     child = relationship("LPU_Units",
         backref=backref('parent', order_by=id),
         foreign_keys=ChildId,
-        primaryjoin="and_(LPU_Units.id==UnitsParentForId.ChildId, LPU_Units.lpuId==UnitsParentForId.OrgId)"
+        primaryjoin="and_(LPU_Units.orgId==UnitsParentForId.ChildId, LPU_Units.lpuId==UnitsParentForId.OrgId)"
     )
 
 
@@ -88,9 +89,8 @@ class Personal(Base):
     __tablename__ = 'personal'
 
     id = Column(BigInteger, primary_key = True)
-    personId = Column(BigInteger)
-    lpuId = Column(BigInteger, ForeignKey('lpu.id'))
-    orgId = Column(BigInteger, ForeignKey('lpu_units.id'))
+    lpuId = Column(BigInteger, ForeignKey('lpu.id'), primary_key = True)
+    orgId = Column(BigInteger, ForeignKey('lpu_units.id'), primary_key = True)
     FirstName = Column(Unicode(32))
     LastName = Column(Unicode(32))
     PatrName = Column(Unicode(32))
