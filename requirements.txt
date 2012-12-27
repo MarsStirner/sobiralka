@@ -2,6 +2,6 @@ Flask
 spyne==2.9.3
 mysql-python
 SQLAlchemy
-Flask-SQLAlchemy
+#Flask-SQLAlchemy
 suds
 #xhtml2pdf
