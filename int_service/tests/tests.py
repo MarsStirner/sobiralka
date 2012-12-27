@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import datetime
-import int_service.main
+import main
 import unittest
 import logging
 from suds.client import Client
