@@ -70,7 +70,7 @@ class LPUWorker(object):
         '''
         lpu_ids = kwargs.get('id')
         speciality = kwargs.get('speciality')
-        ocato_code = kwargs.get('ocato_code')
+        okato_code = kwargs.get('okato_code')
 
         # Prepare query for getting LPU
 #        fields = [LPU.id, LPU.name, LPU.phone, LPU.address, LPU.key, LPU.proxy, LPU.token, LPU.protocol]
@@ -90,8 +90,8 @@ class LPUWorker(object):
         if len(lpu_ids):
             query_lpu = query_lpu.filter(LPU.id.in_(lpu_ids))
 
-        if ocato_code:
-            query_lpu = query_lpu.filter(LPU.OKATO.like('%' + ocato_code + '%'))
+        if okato_code:
+            query_lpu = query_lpu.filter(LPU.OKATO.like('%' + okato_code + '%'))
 
         return query_lpu.all()
 
@@ -172,8 +172,8 @@ class LPUWorker(object):
             lpu, lpu_units = LPUWorker.parse_hospital_uid(hospital_uid)
 
         speciality = kwargs.get('speciality')
-        okato_code = kwargs.get('okato_code')
-
+        okato_code = kwargs.get('ocatoCode')
+        
         lpu_list = self.get_list(id=lpu, speciality=speciality, okato_code=okato_code)
         # Append LPUs to result
         for item in lpu_list:
