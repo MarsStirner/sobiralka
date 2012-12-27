@@ -1,5 +1,5 @@
 Flask
-spyne=='2.9.3'
+spyne==2.9.3
 mysql-python
 SQLAlchemy
 Flask-SQLAlchemy
