@@ -3,7 +3,11 @@
 import exceptions
 import urllib
 import datetime, time
-import json
+try:
+    import json
+except ImportError:
+    import simplejson as json
+
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
 from sqlalchemy import or_, and_
