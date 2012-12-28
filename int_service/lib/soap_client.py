@@ -115,7 +115,7 @@ class ClientSamson(AbstractClient):
         except WebFault, e:
             print e
         else:
-            if schedule:
+            if schedule and hasattr(schedule, 'tickets'):
                 result = []
                 for key, timeslot in enumerate(schedule.tickets):
                     result.append({
@@ -206,7 +206,7 @@ class ClientSamson(AbstractClient):
         return {}
 
     def enqueue(self, **kwargs):
-        hospital_uid_from = kwargs.get('hospitalUidFrom', 0)
+        hospital_uid_from = kwargs.get('hospitalUidFrom')
         person = kwargs.get('person')
         if person is None:
             raise exceptions.AttributeError
@@ -220,14 +220,14 @@ class ClientSamson(AbstractClient):
             'omiPolicy': kwargs.get('omiPolicyNumber'),
             'birthDate': kwargs.get('birthday'),
         })
-        if not patient or not patient.success:
+        if not patient.success and hospital_uid_from and hospital_uid_from != '0':
             patient = self.addPatient(**kwargs)
 
-        if patient.patientId:
+        if patient.success and patient.patientId:
             patient_id = patient.patientId
         else:
-            raise exceptions.LookupError
-            return {'result': False, 'error_code': result.message,}
+#            raise exceptions.LookupError
+            return {'result': False, 'error_code': patient.message,}
 
         try:
             date_time = kwargs.get('timeslotStart')

@@ -612,7 +612,7 @@ class EnqueueWorker(object):
         person_dw = PersonalWorker()
         doctor_info = person_dw.get_doctor(lpu_unit = hospital_uid, doctor_id = doctor_uid)
 
-        hospital_uid_from = kwargs.get('hospitalUidFrom', 0)
+        hospital_uid_from = kwargs.get('hospitalUidFrom', '0')
 
         if not doctor_info:
             raise exceptions.LookupError
@@ -634,7 +634,7 @@ class EnqueueWorker(object):
             self.__add_ticket(**{
                 'error': _enqueue['error_code'],
                 'data': json.dumps({
-                    'ticketUID': _enqueue['ticketUid'],
+                    'ticketUID': _enqueue.get('ticketUid'),
                     'timeslotStart': timeslot_start.strftime('%Y-%m-%d %H:%M:%S'),
                     'hospitalUid': kwargs.get('hospitalUid'),
                     'doctorUid': doctor_uid,
@@ -645,7 +645,7 @@ class EnqueueWorker(object):
             enqueue_id = self.__add_ticket(**{
                 'error': _enqueue['error_code'],
                 'data': json.dumps({
-                    'ticketUID': _enqueue['ticketUid'],
+                    'ticketUID': _enqueue.get('ticketUid'),
                     'timeslotStart': timeslot_start.strftime('%Y-%m-%d %H:%M:%S'),
                     'hospitalUid': kwargs.get('hospitalUid'),
                     'doctorUid': doctor_uid,

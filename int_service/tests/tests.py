@@ -490,8 +490,14 @@ class TestScheduleWSDL(unittest.TestCase):
     client = Client(IS % "schedule", cache=None)
 
     def testGetScheduleInfo(self):
-        hospitalUid = '17/53'
-        doctorUid = '344'
+#        hospitalUid = '17/53'
+#        doctorUid = '344'
+#        ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
+#        self.assertIsInstance(ticket, soap_models.GetScheduleInfoResponse)
+#        self.assertGreater(len(ticket), 0)
+
+        hospitalUid = '19/44'
+        doctorUid = '293'
         ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
         self.assertIsInstance(ticket, soap_models.GetScheduleInfoResponse)
         self.assertGreater(len(ticket), 0)

@@ -9,7 +9,7 @@ class IS_ConnectionError(ISError):
     message = u'Ошибка связи'
 
 class IS_PatientNotRegistered(ISError):
-    message = u'Пациент не зарегестрирован в выбранном ЛПУ'
+    message = u'Пациент не зарегистрирован в выбранном ЛПУ'
 
 class IS_FoundMultiplePatients(ISError):
     message = u'Найдено более одного пациента по указанным данным'

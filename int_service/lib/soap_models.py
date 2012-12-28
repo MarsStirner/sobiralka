@@ -547,7 +547,7 @@ class EnqueueRequest(ComplexModel):
 #    doctorUid.Annotations.doc=u'Уникальный идентификатор врача'
     timeslotStart = DateTime
 #    timeslotStart.Annotations.doc=u'Желаемое время начала приёма'
-    hospitalUidFrom = Unicode
+    hospitalUidFrom = String
 #    hospitalUidFrom.Annotations.doc=u'Уникальный идентификатор ЛПУ отправителя'
 
     def __init__(self):
