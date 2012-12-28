@@ -72,5 +72,5 @@ def exception_by_code(code):
         312: IS_WorkWithSMOPatientsTerminated,
         400: IS_EnqueueDenied,
     }
-
-    return exc[int(code)]() if code in exc else code
+    num_code = int(code.split()[0])
+    return exc[num_code].message if num_code in exc else code

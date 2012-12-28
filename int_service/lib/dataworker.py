@@ -651,7 +651,9 @@ class EnqueueWorker(object):
                     'doctorUid': doctor_uid,
                     }),
                 })
-            result = {'result': exception_by_code(_enqueue.get('error_code')), 'ticketUid': 'e' + str(enqueue_id)}
+            result = {'result': _enqueue.get('result'),
+                      'message': exception_by_code(_enqueue.get('error_code')),
+                      'ticketUid': 'e' + str(enqueue_id)}
 
         return result
 

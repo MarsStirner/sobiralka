@@ -455,7 +455,8 @@ class Timeslot(ComplexModel):
 #    start.Annotations.doc = u'Начало интервала'
     finish = DateTime
 #    finish.Annotations.doc = u'Окончание интервала'
-    status = TimeslotStatus
+#    status = TimeslotStatus
+    status = String
     office = String
 #    office.Annotations.doc = u'Кабинет'
     patientId = Integer
@@ -534,19 +535,19 @@ class EnqueueRequest(ComplexModel):
 
     person = PersonName
 #    person.Annotations.doc=u'ФИО пациента (пользователя)'
-    omiPolicyNumber = String
+    omiPolicyNumber = Unicode
 #    omiPolicyNumber.Annotations.doc=u'Номер и серия полиса ОМС пациента (пользователя)'
     birthday = Date
 #    birthday.Annotations.doc=u'Дата рождения пациента (пользователя)'
-    hospitalUid = String
+    hospitalUid = Unicode
 #    hospitalUid.Annotations.doc=u'Уникальный идентификатор ЛПУ'
     speciality = Unicode
 #    speciality.Annotations.doc=u'Специальность врача'
-    doctorUid = String
+    doctorUid = Unicode
 #    doctorUid.Annotations.doc=u'Уникальный идентификатор врача'
     timeslotStart = DateTime
 #    timeslotStart.Annotations.doc=u'Желаемое время начала приёма'
-    hospitalUidFrom = String
+    hospitalUidFrom = Unicode
 #    hospitalUidFrom.Annotations.doc=u'Уникальный идентификатор ЛПУ отправителя'
 
     def __init__(self):
@@ -556,7 +557,8 @@ class EnqueueRequest(ComplexModel):
 class EnqueueResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    result = String(doc=u'Тип результата запроса о записи на приём')
+    result = Boolean(doc=u'Результат запроса о записи на приём')
+    message = String(doc=u'Сообщение об ошибке')
     ticketUid = String(doc=u'Уникальный для МИС данного ЛПУ идентификатор принятой заявки')
     printableDocument = String(doc=u'Данныее электронного документа с печатной формой заявки на приём (талоном)')
 
