@@ -6,3 +6,5 @@ SQLAlchemy
 suds
 #xhtml2pdf
 simplejson
+twisted
+thrift

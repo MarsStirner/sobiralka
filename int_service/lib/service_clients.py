@@ -22,12 +22,12 @@ class Clients(object):
 
         type = type.lower()
 
-        if type == 'samson':
-            obj = ClientSamson(proxy_url)
+        if type in ('samson', 'korus20'):
+            obj = ClientKorus20(proxy_url)
         elif type == 'intramed':
             obj = ClientIntramed(proxy_url)
-        elif type == 'core':
-            obj = ClientCore(proxy_url)
+        elif type in ('core', 'korus30'):
+            obj = ClientKorus30(proxy_url)
         else:
             obj = None
             raise exceptions.NameError
@@ -62,7 +62,20 @@ class AbstractClient(object):
     def getWorkTimeAndStatus(self):
         pass
 
-class ClientSamson(AbstractClient):
+    @abstractmethod
+    def findPatient(self):
+        pass
+
+    @abstractmethod
+    def addPatient(self):
+        pass
+
+    @abstractmethod
+    def enqueue(self):
+        pass
+
+
+class ClientKorus20(AbstractClient):
     def __init__(self, url):
         self.client = Client(url, cache=None)
 
@@ -411,12 +424,200 @@ class ClientIntramed(AbstractClient):
         return None
 
 
-class ClientCore(AbstractClient):
+class ClientKorus30(AbstractClient):
+
     def __init__(self, url):
+        from urlparse import urlparse
+        from thrift.transport import TTransport, TSocket, THttpClient
+        from core_services.Communications import Client
+
         self.url = url
+        url_parsed = urlparse(self.url)
+        host = url_parsed.host
+        port = url_parsed.port
 
-    def findOrgStructureByAddress(self):
-        pass
+        socket = TSocket.TSocket(host, port)
+        transport = TTransport.TBufferedTransport(socket)
+        protocol = TBinaryProtocol.TBinaryProtocol(transport)
+        self.client = Communications.Client(protocol)
+        transport.open()
 
-    def getScheduleInfo(self):
-        pass
+    def findOrgStructureByAddress(self, **kwargs):
+        if (kwargs['serverId']
+            and kwargs['number']
+            #            and kwargs['corpus']
+            and kwargs['pointKLADR']
+            and kwargs['streetKLADR']
+            and kwargs['flat']
+            ):
+            params = {'serverId': kwargs['serverId'],
+                      'number': kwargs['number'],
+                      'corpus': kwargs.get('corpus'),
+                      'pointKLADR': kwargs['pointKLADR'],
+                      'streetKLADR': kwargs['streetKLADR'],
+                      'flat': kwargs['flat'],
+                      }
+            try:
+                result = self.client.findOrgStructureByAddress(**params)
+            except WebFault, e:
+                print e
+            else:
+                return result['list']
+        else:
+            raise exceptions.ValueError
+        return None
+
+    def getScheduleInfo(self, **kwargs):
+        result = []
+        if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid']:
+            for i in xrange((kwargs['end'] - kwargs['start']).days):
+                start = (kwargs['start'].date() + datetime.timedelta(days=i))
+                params = {
+                    'serverId': kwargs.get('server_id'),
+                    'personId': kwargs.get('doctor_uid'),
+                    'date': start,
+                    'hospitalUidFrom': kwargs.get('hospital_uid_from', '0'),
+                    }
+                timeslot = self.getWorkTimeAndStatus(**params)
+                if timeslot:
+                    result.extend(timeslot)
+        else:
+            raise exceptions.ValueError
+        return {'timeslots': result}
+
+    def getWorkTimeAndStatus(self, **kwargs):
+        try:
+            schedule = self.getWorkTimeAndStatus(**kwargs)
+        except WebFault, e:
+            print e
+        else:
+            if schedule and hasattr(schedule, 'tickets'):
+                result = []
+                for key, timeslot in enumerate(schedule.tickets):
+                    result.append({
+                        'start': datetime.datetime.combine(kwargs['date'], timeslot.time),
+                        'finish': (
+                            datetime.datetime.combine(kwargs['date'], schedule.tickets[key+1].time)
+                            if key < (len(schedule.tickets) - 1)
+                            else datetime.datetime.combine(kwargs['date'], schedule.endTime)
+                            ),
+                        'status': 'free' if timeslot.free else 'locked',
+                        'office': str(schedule.office),
+                        'patientId': timeslot.patientId,
+                        'patientInfo': timeslot.patientInfo,
+                        })
+                return result
+        return []
+
+    def getPatientQueue(self, **kwargs):
+        server_id = kwargs.get('serverId')
+        patient_id = kwargs.get('patientId')
+        if server_id and patient_id:
+            params = {'serverId': server_id, 'patientId': patient_id,}
+            try:
+                result = self.client.getPatientQueue(**params)
+            except WebFault, e:
+                print e
+            else:
+                return result['list']
+        else:
+            raise exceptions.ValueError
+        return None
+
+    def getPatientInfo(self, **kwargs):
+        server_id = kwargs.get('serverId')
+        patient_id = kwargs.get('patientId')
+        if server_id and patient_id:
+            params = {'serverId': server_id, 'patientId': patient_id,}
+            try:
+                result = self.client.getPatientQueue(**params)
+            except WebFault, e:
+                print e
+            else:
+                return result['patientInfo']
+        else:
+            raise exceptions.ValueError
+        return None
+
+    def getWorkTimeAndStatus(self, **kwargs):
+        try:
+            schedule = self.client.getWorkTimeAndStatus(**kwargs)
+        except WebFault, e:
+            print e
+        else:
+            if schedule and hasattr(schedule, 'tickets'):
+                result = []
+                for key, timeslot in enumerate(schedule.tickets):
+                    result.append({
+                        'start': datetime.datetime.combine(kwargs['date'], timeslot.time),
+                        'finish': (
+                            datetime.datetime.combine(kwargs['date'], schedule.tickets[key+1].time)
+                            if key < (len(schedule.tickets) - 1)
+                            else datetime.datetime.combine(kwargs['date'], schedule.endTime)
+                            ),
+                        'status': 'free' if timeslot.free else 'locked',
+                        'office': str(schedule.office),
+                        'patientId': timeslot.patientId,
+                        'patientInfo': timeslot.patientInfo,
+                        })
+                return result
+        return []
+
+    def enqueue(self, **kwargs):
+        hospital_uid_from = kwargs.get('hospitalUidFrom')
+        person = kwargs.get('person')
+        if person is None:
+            raise exceptions.AttributeError
+            return {}
+
+        patient = self.findPatient(**{
+            'serverId': kwargs.get('serverId'),
+            'lastName': person.lastName,
+            'firstName': person.firstName,
+            'patrName': person.patronymic,
+            'omiPolicy': kwargs.get('omiPolicyNumber'),
+            'birthDate': kwargs.get('birthday'),
+            })
+        if not patient.success and hospital_uid_from and hospital_uid_from != '0':
+            patient = self.addPatient(**kwargs)
+
+        if patient.success and patient.patientId:
+            patient_id = patient.patientId
+        else:
+        #            raise exceptions.LookupError
+            return {'result': False, 'error_code': patient.message,}
+
+        try:
+            date_time = kwargs.get('timeslotStart')
+            if not date_time:
+                date_time = datetime.datetime.now()
+            params = {
+                'serverId': kwargs.get('serverId'),
+                'patientId': int(patient_id),
+                'personId': int(kwargs.get('doctorUid')),
+                'date': date_time.date(),
+                'time': date_time.time(),
+                'note': kwargs.get('E-mail', 'E-mail'),
+                'hospitalUidFrom': kwargs.get('hospitalUidFrom'),
+                }
+        except:
+            raise exceptions.ValueError
+        else:
+            try:
+                result = self.client.enqueuePatient(**params)
+            except WebFault, e:
+                print e
+            else:
+                if result.success:
+                    return {
+                        'result': True,
+                        'error_code': result.message,
+                        'ticketUid': str(result.queueId) + '/' + str(patient_id),
+                        }
+                else:
+                    return {
+                        'result': False,
+                        'error_code': result.message,
+                        'ticketUid': '',
+                        }
+        return None

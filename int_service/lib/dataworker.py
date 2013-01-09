@@ -16,7 +16,7 @@ from suds import WebFault
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, DB_CONNECT_STRING
 from models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal
-from soap_client import Clients
+from service_clients import Clients
 from is_exceptions import exception_by_code
 
 engine = create_engine(DB_CONNECT_STRING) #?? convert_unicode=True
