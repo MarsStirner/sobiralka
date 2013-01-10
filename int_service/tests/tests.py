@@ -6,7 +6,7 @@ import unittest
 import logging
 from suds.client import Client
 from int_service.lib import soap_models
-
+from int_service.lib.service_clients import ClientKorus30
 
 logging.basicConfig()
 
@@ -179,6 +179,16 @@ class TestListWSDL(unittest.TestCase):
         hospitals = self.client.service.listHospitals({'ocatoCode': okato}).hospitals
         self.assertIsInstance(hospitals, soap_models.ListHospitalsResponse)
         self.assertListEqual(list(hospitals), result)
+
+    def testFindOrgStructureByAddressKorus30(self):
+        client = ClientKorus30('http://10.2.1.58:7911')
+        hospitals = client.findOrgStructureByAddress(
+            pointKLADR = '4800000100000',
+            streetKLADR = '48000001000030800',
+            number = '43',
+            flat = 0
+        )
+        self.assertIsInstance(hospitals, list)
 
     def testListDoctors(self):
         hospital_Uid = '17/52'
