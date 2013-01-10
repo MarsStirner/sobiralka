@@ -2,12 +2,21 @@
 
 import exceptions
 import datetime
+import time
 import logging
+from urlparse import urlparse
 from abc import ABCMeta, abstractmethod, abstractproperty
 from suds.client import Client
 from suds import WebFault
 import is_exceptions
 import settings
+
+from thrift.transport import TTransport, TSocket, THttpClient
+from thrift.protocol import TBinaryProtocol, TProtocol
+from core_services.Communications import Client as Thrift_Client
+from core_services.ttypes import GetTimeWorkAndStatusParameters, EnqueuePatientParameters
+from core_services.ttypes import AddPatientParameters, FindOrgStructureByAdressParameters
+from core_services.ttypes import FindPatientParameters
 
 class Clients(object):
     '''
@@ -427,19 +436,15 @@ class ClientIntramed(AbstractClient):
 class ClientKorus30(AbstractClient):
 
     def __init__(self, url):
-        from urlparse import urlparse
-        from thrift.transport import TTransport, TSocket, THttpClient
-        from core_services.Communications import Client
-
         self.url = url
         url_parsed = urlparse(self.url)
-        host = url_parsed.host
+        host = url_parsed.hostname
         port = url_parsed.port
 
         socket = TSocket.TSocket(host, port)
         transport = TTransport.TBufferedTransport(socket)
         protocol = TBinaryProtocol.TBinaryProtocol(transport)
-        self.client = Communications.Client(protocol)
+        self.client = Thrift_Client(protocol)
         transport.open()
 
     def findOrgStructureByAddress(self, **kwargs):
@@ -539,13 +544,62 @@ class ClientKorus30(AbstractClient):
             raise exceptions.ValueError
         return None
 
+    def findPatient(self, **kwargs):
+        try:
+            params = {
+                #                'serverId': kwargs['serverId'],
+                'lastName': kwargs['lastName'],
+                'firstName': kwargs['firstName'],
+                'patrName': kwargs['patrName'],
+                'birthDate': kwargs['birthDate'],
+                'omiPolicy': kwargs['omiPolicy'],
+                }
+        except exceptions.KeyError:
+            pass
+        else:
+            try:
+                result = self.client.service.findPatient(**params)
+            except WebFault, e:
+                print e
+            else:
+                return result
+        return None
+
+    def addPatient(self, **kwargs):
+        person = kwargs.get('person')
+        if person:
+            params = {
+                #                'serverId': kwargs.get('serverId'),
+                'lastName': person.lastName,
+                'firstName': person.firstName,
+                'patrName': person.patronymic,
+                #                'omiPolicy': kwargs['omiPolicyNumber'],
+                'birthDate': kwargs.get('birthday'),
+                }
+            try:
+                result = self.client.service.addPatient(**params)
+            except WebFault, e:
+                print e
+            else:
+                return result
+        else:
+            raise exceptions.AttributeError
+        return {}
+
     def getWorkTimeAndStatus(self, **kwargs):
         try:
-            schedule = self.client.getWorkTimeAndStatus(**kwargs)
+            date = kwargs.get('date', datetime.datetime.now())
+            time_tuple = date.timetuple()
+            parameters = GetTimeWorkAndStatusParameters(
+                hospitalUidFrom=kwargs.get('hospitalUidFrom'),
+                personId=kwargs.get('personId'),
+                date=time.mktime(time_tuple)
+            )
+            schedule = self.client.getWorkTimeAndStatus(parameters)
         except WebFault, e:
             print e
         else:
-            if schedule and hasattr(schedule, 'tickets'):
+            if schedule and hasattr(schedule, 'tickets') and schedule.tickets:
                 result = []
                 for key, timeslot in enumerate(schedule.tickets):
                     result.append({

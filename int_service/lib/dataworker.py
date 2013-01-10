@@ -277,10 +277,14 @@ class LPUWorker(object):
             print e
         else:
             result.proxy = result.proxy.split(';')[0]
-            if urllib.urlopen(result.proxy).getcode() == 200:
-                return result
+            if result.protocol in ('intramed', 'samson', 'korus20'):
+                # Проверка для soap-сервисов на доступность, неактуально для thrift (т.е. для korus30)
+                if urllib.urlopen(result.proxy).getcode() == 200:
+                    return result
+                else:
+                    raise WebFault
             else:
-                raise WebFault
+                return result
 
         return None
 

@@ -15,7 +15,7 @@ IS = "http://127.0.0.1:9910/%s/?wsdl"
 class TestListWSDL(unittest.TestCase):
     client = Client(IS % "list", cache=None)
 
-    def testListHospitals(self):
+    def testListHospitalsKorus20(self):
         okato = "56401000000"
         result = [ {'uid': "5/0",
                     'title': u"ГБУЗ «Пензенская областная клиническая больница им. Н.Н. Бурденко»",
@@ -38,6 +38,7 @@ class TestListWSDL(unittest.TestCase):
         self.assertIsInstance(hospitals, soap_models.ListHospitalsResponse)
         self.assertEqual(list(hospitals), result)
 
+    def testListHospitalsKorus20_(self):
         okato = "56405000000"
         result = [ {'uid': "11/0",
                     'title': u"ГБУЗ «Кузнецкая ЦРБ»",
@@ -51,6 +52,21 @@ class TestListWSDL(unittest.TestCase):
         self.assertIsInstance(hospitals, soap_models.ListHospitalsResponse)
         self.assertListEqual(list(hospitals), result)
 
+    def testListHospitalsKorus30(self):
+        okato = "45293578000"
+#        result = [ {'uid': "11/0",
+#                    'title': u"ГБУЗ «Кузнецкая ЦРБ»",
+#                    'phone': "(841-57) 2-05-99",
+#                    'address': u"Пензенская обл., г. Кузнецк, ул. Сызранская, 142",
+#                    'wsdlURL': IS + "schedule",
+#                    'token': "None",
+#                    'key': "580033"
+#                   },]
+        hospitals = self.client.service.listHospitals({'ocatoCode': okato}).hospitals
+        self.assertIsInstance(hospitals, soap_models.ListHospitalsResponse)
+#        self.assertListEqual(list(hospitals), result)
+
+    def testListHospitals(self):
         okato = "56203000000"
         result = []
         hospitals = self.client.service.listHospitals({'ocatoCode': okato}).hospitals
@@ -362,7 +378,7 @@ class TestListWSDL(unittest.TestCase):
 class TestInfoWSDL(unittest.TestCase):
     client = Client(IS % "info", cache=None)
 
-    def testGetHospitalInfo(self):
+    def testGetHospitalInfoKorus20(self):
         hospitalUid = '17/0'
         result = [{'uid': "17/0",
                    'title': u"ГБУЗ «Пензенская областная детская клиническая больница им. Н. Ф. Филатова»",
@@ -392,12 +408,14 @@ class TestInfoWSDL(unittest.TestCase):
         self.assertIsInstance(info_list, list)
         self.assertListEqual(info_list, result)
 
-        hospitalUid = '123'
+    def testGetHospitalInfoKorus30(self):
+        hospitalUid = '41/0'
         result = []
         info_list = self.client.service.getHospitalInfo({'hospitalUid': hospitalUid})
         self.assertIsInstance(info_list, list)
-        self.assertListEqual(info_list, result)
+#        self.assertListEqual(info_list, result)
 
+    def testGetHospitalInfo(self):
         result = [{'uid': "5/0",
                    'title': u"ГБУЗ «Пензенская областная клиническая больница им. Н.Н. Бурденко»",
                    'type': "None",
@@ -489,7 +507,7 @@ class TestInfoWSDL(unittest.TestCase):
 class TestScheduleWSDL(unittest.TestCase):
     client = Client(IS % "schedule", cache=None)
 
-    def testGetScheduleInfo(self):
+    def testGetScheduleInfoKorus20(self):
 #        hospitalUid = '17/53'
 #        doctorUid = '344'
 #        ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
@@ -502,7 +520,10 @@ class TestScheduleWSDL(unittest.TestCase):
         self.assertIsInstance(ticket, soap_models.GetScheduleInfoResponse)
         self.assertGreater(len(ticket), 0)
 
-        ticket = self.client.service.getScheduleInfo()
+    def testGetScheduleInfoKorus30(self):
+        hospitalUid = '41/0'
+        doctorUid = '293'
+        ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
         self.assertIsInstance(ticket, soap_models.GetScheduleInfoResponse)
 
     def testGetTicketStatus(self):
@@ -515,7 +536,35 @@ class TestScheduleWSDL(unittest.TestCase):
     def testSetTicketReadStatus(self):
         pass
 
-    def testEnqueue(self):
+    def testEnqueueKorus20(self):
+        person={'firstName': u"Асия", 'lastName': u"Абаева", 'patronymic': u"Абдуловна", }
+        omiPolicyNumber="4106 5801954102020017"
+        hospitalUid="17/53"
+        doctorUid="344"
+        timeslotStart=(datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") + "T15:00:00"
+        hospitalUidFrom=0
+        birthday="1954-10-20"
+
+        ticket = self.client.service.enqueue({
+            'person': person,
+            'omiPolicyNumber': omiPolicyNumber,
+            'hospitalUid': hospitalUid,
+            'doctorUid': doctorUid,
+            'timeslotStart': timeslotStart,
+            'hospitalUidFrom': hospitalUidFrom,
+            'birthday': birthday
+        })
+
+        self.assertIsInstance(ticket, dict)
+        if ticket['result'] == 'true':
+            self.assertIn('ticketUid', ticket)
+
+        if ticket['ticketUid'] == "":
+            self.assertNotIn(ticket['result'], ("", "true"))
+
+        # TODO: разобрать варианты с проверкой ограничений по дате рождения и полу
+
+    def testEnqueueKorus30(self):
         person={'firstName': u"Асия", 'lastName': u"Абаева", 'patronymic': u"Абдуловна", }
         omiPolicyNumber="4106 5801954102020017"
         hospitalUid="17/53"
