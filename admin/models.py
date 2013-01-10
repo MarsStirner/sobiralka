@@ -24,7 +24,7 @@ class LPU(Base):
     phone = Column(String(20))
     schedule = Column(Unicode(256))
     type = Column(Unicode(32))
-    protocol = Column(Enum(['samson', 'intramed']))
+    protocol = Column(Enum(['samson', 'intramed', 'korus20', 'korus30']))
     token = Column(String(45))
 
 

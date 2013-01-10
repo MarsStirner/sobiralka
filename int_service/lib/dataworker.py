@@ -8,24 +8,21 @@ try:
 except ImportError:
     import simplejson as json
 
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
 from sqlalchemy import or_, and_
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from suds import WebFault
 
-from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, DB_CONNECT_STRING
-from models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal
+from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
+from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal
 from service_clients import Clients
 from is_exceptions import exception_by_code
 
-engine = create_engine(DB_CONNECT_STRING) #?? convert_unicode=True
-Session = sessionmaker(bind=engine)
+from admin.database import Session
 
 class DataWorker(object):
-    '''
+    """
     Provider class for current DataWorkers
-    '''
+    """
     @classmethod
     def provider(cls, type):
         type = type.lower()
@@ -64,9 +61,9 @@ class LPUWorker(object):
         return (lpu, lpu_units)
 
     def get_list(self, **kwargs):
-        '''
+        """
         Get LPU list by parameters
-        '''
+        """
         lpu_ids = kwargs.get('id')
         speciality = kwargs.get('speciality')
         okato_code = kwargs.get('okato_code')
@@ -95,9 +92,9 @@ class LPUWorker(object):
         return query_lpu.all()
 
     def get_lpu_by_address(self, **kwargs):
-        '''
+        """
         Get LPU list by address parameters
-        '''
+        """
         try:
             if (kwargs['parsedAddress']['kladrCode']
                 and kwargs['parsedAddress']['block']
@@ -137,10 +134,10 @@ class LPUWorker(object):
         return result
 
     def _get_lpu_ids(self, lpu_list):
-        '''
+        """
         Get ids and OrgIds by lpu data list
         lpu_list contains info from `findOrgStructureByAddress` remote method
-        '''
+        """
         for key, item in lpu_list:
             query = (self.session.query(UnitsParentForId.OrgId, LPU.id)
                      .filter(UnitsParentForId.LpuId==LPU.id)
@@ -157,9 +154,9 @@ class LPUWorker(object):
         return lpu_list
 
     def get_list_hospitals(self, **kwargs):
-        '''
+        """
         Get list of LPUs and LPU_Units
-        '''
+        """
         result = {}
         result['hospitals'] = []
         lpu = []
@@ -213,9 +210,9 @@ class LPUWorker(object):
         return result
 
     def get_info(self, **kwargs):
-        '''
+        """
         Get info about LPU/LPUs and its Units
-        '''
+        """
         lpu, lpu_units = [], []
         result = []
 
@@ -268,9 +265,9 @@ class LPUWorker(object):
         return {'info': result}
 
     def get_by_id(self, id):
-        '''
+        """
         Get LPU by id and check if proxy url is available
-        '''
+        """
         try:
             result = self.session.query(LPU).filter(LPU.id==int(id)).one()
         except NoResultFound, e:
@@ -294,9 +291,9 @@ class LPU_UnitsWorker(object):
     model = LPU_Units
 
     def get_list(self, **kwargs):
-        '''
+        """
         Get LPU_Units list by parameters
-        '''
+        """
         lpu_units_ids = kwargs.get('uid')
         speciality = kwargs.get('speciality')
         lpu_id = kwargs.get('lpu_id')
@@ -338,9 +335,9 @@ class LPU_UnitsWorker(object):
 
 
     def get_by_id(self, id):
-        '''
+        """
         Get LPU_Unit by id
-        '''
+        """
         try:
             result = self.session.query(LPU_Units).filter(LPU_Units.id==int(id)).one()
         except NoResultFound, e:
@@ -420,9 +417,9 @@ class EnqueueWorker(object):
         return tickets
 
     def get_by_id(self, id):
-        '''
+        """
         Get Ticket by id and check
-        '''
+        """
         try:
             result = self.session.query(Enqueue).filter(Enqueue.id==int(id)).one()
         except NoResultFound, e:
@@ -433,9 +430,9 @@ class EnqueueWorker(object):
         return None
 
     def get_ticket_status(self, **kwargs):
-        '''
+        """
         Get tickets' status
-        '''
+        """
         result = {}
         result['ticketInfo'] = []
         hospital_uid = kwargs.get('hospitalUid', '').split('/')
@@ -581,17 +578,17 @@ class EnqueueWorker(object):
         return result
 
     def __get_ticket_print(self, **kwargs):
-        '''
+        """
         Return generated pdf for ticket print
-        '''
+        """
         # TODO: выяснить используется ли pdf в принципе. В эл.регестратуре он никак не используется
         # TODO: pdf creator based on Flask templates and xhtml2pdf
         return ""
 
     def enqueue(self, **kwargs):
-        '''
+        """
         Запись на приём к врачу
-        '''
+        """
         hospital_uid = kwargs.get('hospitalUid', '').split('/')
         birthday = kwargs.get('birthday')
         doctor_uid = kwargs.get('doctorUid')
@@ -678,9 +675,9 @@ class PersonalWorker(object):
     model = Personal
 
     def get_list(self, **kwargs):
-        '''
+        """
         Get Doctors list by lpu & lpu_units
-        '''
+        """
         lpu = kwargs.get('lpu')
         lpu_units = kwargs.get('lpu_units')
 
@@ -741,9 +738,9 @@ class PersonalWorker(object):
         return result
 
     def get_doctor(self, **kwargs):
-        '''
+        """
         Get doctor by parameters
-        '''
+        """
         lpu_unit = kwargs.get('lpu_unit')
         doctor_id = kwargs.get('doctor_id')
 
@@ -760,21 +757,16 @@ class PersonalWorker(object):
         return query.one()
 
     def get_list_doctors(self, **kwargs):
-        '''
-        Get doctors list by parameters
-        '''
+        """
+        Get doctors list by parameters''
+        """
         lpu, lpu_list, lpu_units_list = [], [], []
         search_scope = kwargs.get('searchScope')
-        if search_scope:
-            try:
-                hospital_uid = search_scope.hospitalUid
-            except:
-                pass
-            else:
-                lpu, lpu_units = LPUWorker.parse_hospital_uid(hospital_uid)
+        if search_scope and hasattr(search_scope, 'hospitalUid'):
+            lpu, lpu_units = LPUWorker.parse_hospital_uid(search_scope.hospitalUid)
 
+        lpu_dw = LPUWorker()
         if lpu:
-            lpu_dw = LPUWorker()
             lpu_list = lpu_dw.get_list(id=lpu)
 
         search_scope = kwargs.get('searchScope')
