@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from admin import app, admin
 from flask.ext.admin.contrib.sqlamodel import ModelView

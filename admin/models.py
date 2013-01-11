@@ -6,32 +6,33 @@ from sqlalchemy.orm import relationship, backref
 Base = declarative_base()
 
 class LPU(Base):
-    '''
-    Mapping for LPU table
-    '''
+    """Mapping for LPU table"""
     __tablename__ = 'lpu'
 
     id = Column(BigInteger, primary_key=True)
-    name = Column(UnicodeText)
-    address = Column(UnicodeText)
-    key = Column(UnicodeText)
-    proxy = Column(UnicodeText)
-    email = Column(UnicodeText)
-    kladr = Column(UnicodeText)
-    OGRN = Column(String(15))
-    OKATO = Column(String(15))
-    LastUpdate = Column(Integer)
-    phone = Column(String(20))
-    schedule = Column(Unicode(256))
-    type = Column(Unicode(32))
-    protocol = Column(Enum(['samson', 'intramed', 'korus20', 'korus30']))
-    token = Column(String(45))
+    name = Column(UnicodeText, nullable=False)
+    address = Column(UnicodeText, nullable=False)
+    key = Column(UnicodeText, doc='ServerId')
+    proxy = Column(UnicodeText, doc=u'Прокси для запросов', nullable=False)
+    email = Column(UnicodeText, doc='E-mail')
+    kladr = Column(UnicodeText, doc=u'КЛАДР', nullable=False)
+    OGRN = Column(String(15), doc=u'ОГРН', nullable=False)
+    OKATO = Column(String(15), doc=u'ОКАТО', nullable=False)
+    LastUpdate = Column(
+        Integer,
+        doc=u'Время последнего обновления специальностей для данного ЛПУ',
+        nullable=False,
+        default=0
+    )
+    phone = Column(String(20), doc=u'Телефон', nullable=False)
+    schedule = Column(Unicode(256), doc=u'Расписание работы')
+    type = Column(Unicode(32), doc=u'Тип ЛПУ: (Поликлиника)')
+    protocol = Column(Enum(['samson', 'intramed', 'korus20', 'korus30']), nullable=False, default='korus30')
+    token = Column(String(45), doc=u'Токен')
 
 
 class LPU_Units(Base):
-    '''
-    Mapping for lpu_units table
-    '''
+    """Mapping for lpu_units table"""
     __tablename__ = 'lpu_units'
 
     id = Column(BigInteger, primary_key = True)
@@ -48,9 +49,7 @@ units_parents = Table("units_parents", Base.metadata,
     Column("orgid", BigInteger, ForeignKey("lpu.id")),
 )
 class UnitsParentForId(Base):
-    '''
-    Mapping for UnitsParentForId table
-    '''
+    """Mapping for UnitsParentForId table"""
     __tablename__ = 'UnitsParentForId'
 
     id = Column(Integer, primary_key = True)
@@ -70,9 +69,7 @@ class UnitsParentForId(Base):
 
 
 class Enqueue(Base):
-    '''
-    Mapping for enqueue table
-    '''
+    """Mapping for enqueue table"""
     __tablename__ = 'enqueue'
 
     id = Column(BigInteger, primary_key=True)
@@ -85,20 +82,28 @@ class Enqueue(Base):
 
 
 class Personal(Base):
-    '''
-    Mapping for personal table
-    '''
+    """Mapping for personal table"""
     __tablename__ = 'personal'
 
-    id = Column(BigInteger, primary_key = True)
-    lpuId = Column(BigInteger, ForeignKey('lpu.id'), primary_key = True)
-    orgId = Column(BigInteger, ForeignKey('lpu_units.orgId'), primary_key = True)
-    FirstName = Column(Unicode(32))
-    LastName = Column(Unicode(32))
-    PatrName = Column(Unicode(32))
+    id = Column(BigInteger, primary_key=True)
+    lpuId = Column(BigInteger, ForeignKey('lpu.id'), primary_key=True)
+    orgId = Column(BigInteger, ForeignKey('lpu_units.orgId'), primary_key=True)
+    FirstName = Column(Unicode(32), nullable=False)
+    LastName = Column(Unicode(32), nullable=False)
+    PatrName = Column(Unicode(32), nullable=False)
 #    TODO: replace to relationship on speciality_id=speciality.id
     speciality = Column(Unicode(64))
     keyEPGU = Column(String(45))
 
     lpu = relationship("LPU", backref=backref('personal', order_by=id))
     lpu_units = relationship("LPU_Units", backref=backref('personal', order_by=id))
+
+
+class Speciality(Base):
+    """Mapping for speciality table"""
+    __tablename__ = 'speciality'
+
+    id = Column(Integer(10), primary_key=True)
+    lpuId = Column(BigInteger, ForeignKey('lpu.id'))
+    speciality = Column(Unicode(64), nullable=False)
+    nameEPGU = Column(Unicode(64))

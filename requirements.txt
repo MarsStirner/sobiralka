@@ -1,6 +1,6 @@
 Flask
 Flask-Admin
-Flask-Login
+#Flask-Login
 spyne==2.9.3
 mysql-python
 SQLAlchemy

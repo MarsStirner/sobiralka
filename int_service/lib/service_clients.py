@@ -88,6 +88,18 @@ class ClientKorus20(AbstractClient):
     def __init__(self, url):
         self.client = Client(url, cache=None)
 
+    def listHospitals(self, **kwargs):
+        params['recursive'] = True
+        if 'parent_id' in kwargs and kwargs['parent_id']:
+            params['parentId'] = kwargs['parent_id']
+        try:
+            result = self.client.service.getOrgStructures(**params)
+        except WebFault, e:
+            print e
+        else:
+            return result['list']
+        return None
+
     def findOrgStructureByAddress(self, **kwargs):
         if (kwargs['serverId']
             and kwargs['number']
@@ -110,7 +122,7 @@ class ClientKorus20(AbstractClient):
             else:
                 return result['list']
         else:
-            raise exceptions.ValueError
+            raise exceptions.AttributeError
         return None
 
     def getScheduleInfo(self, **kwargs):
@@ -291,6 +303,23 @@ class ClientIntramed(AbstractClient):
     def __init__(self, url):
         self.url = url
 
+    def listHospitals(self, **kwargs):
+        list_client = Client(self.url + 'egov.v3.listPort.CLS?WSDL=1', cache=None)
+        try:
+            result = list_client.service.listHospitals()
+        except WebFault, e:
+            print e
+        else:
+            if 'hospitals' in result:#
+            # info_client = Client(self.url + 'egov.v3.infoPort.CLS?WSDL=1', cache=None)
+                for key, hospital in result['hospitals']:
+                    result['hospitals'][key]['id'] = hospital['uid']
+                    result['hospitals'][key]['name'] = hospital['title']
+                    result['hospitals'][key]['address'] = ""
+#                    hospital_info = info_client.service.getHospitalInfo(hospitalUid=hospital.uid)
+                return result['hospitals']
+        return None
+
     def findOrgStructureByAddress(self, **kwargs):
         self.client = Client(self.url + 'egov.v3.listPort.CLS?WSDL=1', cache=None)
 
@@ -446,6 +475,18 @@ class ClientKorus30(AbstractClient):
         protocol = TBinaryProtocol.TBinaryProtocol(transport)
         self.client = Thrift_Client(protocol)
         transport.open()
+
+    def listHospitals(self, **kwargs):
+        params['recursive'] = True
+        if 'parent_id' in kwargs and kwargs['parent_id']:
+            params['parent_id'] = kwargs['parent_id']
+        try:
+            result = self.client.getOrgStructures(**params)
+        except WebFault, e:
+            print e
+        else:
+            return result['list']
+        return None
 
     def findOrgStructureByAddress(self, **kwargs):
         if (

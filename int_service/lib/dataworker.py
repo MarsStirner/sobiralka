@@ -9,7 +9,8 @@ except ImportError:
     import simplejson as json
 
 from sqlalchemy import or_, and_
-from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound,
+from sqlalchemy.exc import InvalidRequestError
 from suds import WebFault
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
@@ -344,7 +345,6 @@ class LPU_UnitsWorker(object):
             print e
         else:
             return result
-
         return None
 
 
@@ -760,7 +760,7 @@ class PersonalWorker(object):
         """
         Get doctors list by parameters''
         """
-        lpu, lpu_list, lpu_units_list = [], [], []
+        lpu, lpu_list, lpu_units, lpu_units_list = [], [], [], []
         search_scope = kwargs.get('searchScope')
         if search_scope and hasattr(search_scope, 'hospitalUid'):
             lpu, lpu_units = LPUWorker.parse_hospital_uid(search_scope.hospitalUid)
@@ -784,4 +784,64 @@ class PersonalWorker(object):
 
 
 class UpdateWorker(object):
-    pass
+    session = Session()
+
+    def __init_database(self):
+        """Create tables from models if not exists"""
+        from admin.database import init_db
+        init_db()
+
+    def __clear_data(self, lpu):
+        if lpu.lpu_units:
+            self.session.delete(lpu.lpu_units)
+        self.session.delete(self.session.query(UnitsParentForId).filter(LpuId=lpu.id).all())
+        self.session.delete(self.session.query(Speciality).filter(lpuId=lpu.id).all())
+        self.session.delete(self.session.query(Personal).filter(lpuId=lpu.id).all())
+
+    def __update_lpu_units(self, lpu):
+        proxy = lpu.proxy.split(';')
+        if proxy[0]:
+            proxy_client = Clients.provider(lpu.protocol, proxy[0])
+            lpu_units = proxy_client.listHospitals(parent_id=lpu.id)
+            if lpu_units:
+                try:
+                    self.session.add_all(
+                        [LPU_Units(
+                            lpuId=lpu.id, orgId=unit.id, name=unit.name, address=unit.address
+                        ) for unit in lpu_units]
+                    )
+                    # TODO: INSERT INTO UnitsParentForId
+                except InvalidRequestError:
+                    return False
+        return True
+
+    def __update_personal(self):
+        pass
+
+    def __update_speciality(self):
+        pass
+
+    def update_data(self):
+        from admin.database import shutdown_session
+
+        self.__init_database()
+        # Update data in tables
+        lpu_dw = LPUWorker()
+        lpu_list = lpu_dw.get_list()
+        self.session.begin()
+        for lpu in lpu_list:
+            self.__clear_data(lpu)
+            try:
+                self.__update_lpu_units(lpu)
+                self.__update_personal()
+                self.__update_speciality()
+            except WebFault:
+                self.session.rollback()
+                return False
+            except exceptions.UserWarning:
+                self.session.rollback()
+                return False
+
+        self.session.commit()
+        shutdown_session()
+        return True
