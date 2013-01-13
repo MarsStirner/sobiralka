@@ -97,7 +97,19 @@ class ClientKorus20(AbstractClient):
         except WebFault, e:
             print e
         else:
-            return result['list']
+            return result.list
+        return None
+
+    def listDoctors(self, **kwargs):
+        params['recursive'] = True
+        if 'hospital_id' in kwargs and kwargs['hospital_id']:
+            params['orgStructureId'] = kwargs['hospital_id']
+        try:
+            result = self.client.service.getPersonnel(params)
+        except WebFault, e:
+            print e
+        else:
+            return result.list
         return None
 
     def findOrgStructureByAddress(self, **kwargs):
@@ -310,14 +322,36 @@ class ClientIntramed(AbstractClient):
         except WebFault, e:
             print e
         else:
-            if 'hospitals' in result:#
+            if hasattr(result, 'hospitals'):#
             # info_client = Client(self.url + 'egov.v3.infoPort.CLS?WSDL=1', cache=None)
-                for key, hospital in result['hospitals']:
-                    result['hospitals'][key]['id'] = hospital['uid']
-                    result['hospitals'][key]['name'] = hospital['title']
-                    result['hospitals'][key]['address'] = ""
+                for key, hospital in result.hospitals:
+                    hospitals[key] = hospital
+                    hospitals[key]['id'] = hospital['uid']
+                    hospitals[key]['name'] = hospital['title']
+                    hospitals[key]['address'] = ""
 #                    hospital_info = info_client.service.getHospitalInfo(hospitalUid=hospital.uid)
-                return result['hospitals']
+                return hospitals
+        return None
+
+    def listDoctors(self, **kwargs):
+        list_client = Client(self.url + 'egov.v3.listPort.CLS?WSDL=1', cache=None)
+        if 'hospital_id' and kwargs['hospital_id']:
+            params['searchScope']['hospitalUid'] = kwargs['hospital_id']
+        try:
+            result = list_client.listDoctors(params)
+        except WebFault, e:
+            print e
+        else:
+            if hasattr(result, 'doctors'):
+                for key, doctor in result.doctors:
+                    doctors[key] = doctor
+                    doctors[key]['id'] = doctor.uid
+                    doctors[key]['firstName'] = doctor.name.firstName
+                    doctors[key]['lastName'] = doctor.name.lastName
+                    doctors[key]['patrName'] = doctor.name.patronymic
+                    doctors[key]['speciality'] = doctor.speciality
+
+            return doctors
         return None
 
     def findOrgStructureByAddress(self, **kwargs):
@@ -488,6 +522,18 @@ class ClientKorus30(AbstractClient):
             return result['list']
         return None
 
+    def listDoctors(self, **kwargs):
+        params['recursive'] = True
+        if 'hospital_id' in kwargs and kwargs['hospital_id']:
+            params['orgStructureId'] = kwargs['hospital_id']
+        try:
+            result = self.client.getPersonnel(params)
+        except WebFault, e:
+            print e
+        else:
+            return result['list']
+        return None
+
     def findOrgStructureByAddress(self, **kwargs):
         if (
             'pointKLADR' in kwargs and
@@ -520,7 +566,7 @@ class ClientKorus30(AbstractClient):
                 start = (kwargs['start'].date() + datetime.timedelta(days=i))
                 timeslot = self.getWorkTimeAndStatus(
                     serverId = kwargs.get('server_id'),
-                   personId =  kwargs.get('doctor_uid'),
+                    personId =  kwargs.get('doctor_uid'),
                     date = start,
                     hospitalUidFrom = kwargs.get('hospital_uid_from', '0'),
                 )

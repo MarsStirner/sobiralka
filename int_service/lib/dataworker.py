@@ -9,7 +9,7 @@ except ImportError:
     import simplejson as json
 
 from sqlalchemy import or_, and_
-from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound,
+from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.exc import InvalidRequestError
 from suds import WebFault
 
@@ -791,6 +791,10 @@ class UpdateWorker(object):
         from admin.database import init_db
         init_db()
 
+    def __get_proxy_address(self, proxy):
+        proxy = proxy.split(';')
+        return proxy.get(0)
+
     def __clear_data(self, lpu):
         if lpu.lpu_units:
             self.session.delete(lpu.lpu_units)
@@ -799,31 +803,68 @@ class UpdateWorker(object):
         self.session.delete(self.session.query(Personal).filter(lpuId=lpu.id).all())
 
     def __update_lpu_units(self, lpu):
-        proxy = lpu.proxy.split(';')
-        if proxy[0]:
-            proxy_client = Clients.provider(lpu.protocol, proxy[0])
-            lpu_units = proxy_client.listHospitals(parent_id=lpu.id)
-            if lpu_units:
-                try:
-                    self.session.add_all(
-                        [LPU_Units(
+        return_units = []
+        proxy = self.__get_proxy_address(lpu.proxy)
+        if proxy:
+            proxy_client = Clients.provider(lpu.protocol, proxy)
+            # В Samson КС предполагается, что сначала выбираются ЛПУ Верхнего уровня и они идут в табл lpu_units, а их дети идут в UnitsParentForId
+            # Необходимо с этим разобраться
+            # т.е. первая выборка должна быть без parent_id (т.к. локальный lpu.id из БД ИС никак не связан с id в КС)
+            try:
+                for unit in proxy_client.listHospitals():
+                    if not hasattr(unit, 'parentId') or not unit.parentId:
+                        self.session.add(LPU_Units(
                             lpuId=lpu.id, orgId=unit.id, name=unit.name, address=unit.address
-                        ) for unit in lpu_units]
-                    )
-                    # TODO: INSERT INTO UnitsParentForId
-                except InvalidRequestError:
-                    return False
+                        ))
+                        return_units.append(unit)
+                    elif unit.parentId:
+                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parentId,ChildId=unit.id))
+            except InvalidRequestError:
+                return False
+        return return_units
+
+    def __update_personal(self, lpu, lpu_units):
+        proxy = self.__get_proxy_address(lpu.proxy)
+        if proxy and lpu_units:
+            proxy_client = Clients.provider(lpu.protocol, proxy)
+            for unit in lpu_units:
+                if unit.id:
+                    try:
+                        for doctor in proxy_client.listDoctors(hospital_id=unit.id):
+                            self.session.add(Personal(
+                                id=doctor.id,
+                                lpuId=lpu.id,
+                                orgId=unit.id,
+                                FirstName=doctor.firstName,
+                                PatrName=doctor.patrName,
+                                LastName=doctor.lastName,
+                                speciality=doctor.speciality,
+                            ))
+                            self.__update_speciality(lpu_id=lpu.id, speciality=doctor.speciality)
+                    except InvalidRequestError:
+                        return False
         return True
 
-    def __update_personal(self):
-        pass
+    def __update_speciality(self, **kwargs):
+        try:
+            self.session.add(Speciality(lpuId=kwargs['lpu_id'], speciality=kwargs['speciality']))
+        except InvalidRequestError:
+            return False
+        else:
+            return True
 
-    def __update_speciality(self):
-        pass
+    def __failed_update(self):
+        self.session.rollback()
+        shutdown_session()
+        return False
+
+    def __success_update(self):
+        self.session.commit()
+        shutdown_session()
+        return True
 
     def update_data(self):
         from admin.database import shutdown_session
-
         self.__init_database()
         # Update data in tables
         lpu_dw = LPUWorker()
@@ -832,16 +873,15 @@ class UpdateWorker(object):
         for lpu in lpu_list:
             self.__clear_data(lpu)
             try:
-                self.__update_lpu_units(lpu)
-                self.__update_personal()
-                self.__update_speciality()
+                lpu_units = self.__update_lpu_units(lpu)
+                if lpu_units:
+                    if not self.__update_personal(lpu, lpu_units):
+                        return self.__failed_update()
+                else:
+                    return self.__failed_update()
+                lpu.LastUpdate = time.mktime(datetime.datetime.now().timetuple())
             except WebFault:
-                self.session.rollback()
-                return False
+                return self.__failed_update()
             except exceptions.UserWarning:
-                self.session.rollback()
-                return False
-
-        self.session.commit()
-        shutdown_session()
-        return True
+                return self.__failed_update()
+        return self.__success_update()
