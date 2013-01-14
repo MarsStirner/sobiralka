@@ -14,7 +14,7 @@ from sqlalchemy.exc import InvalidRequestError
 from suds import WebFault
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
-from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal
+from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality
 from service_clients import Clients
 from is_exceptions import exception_by_code
 
@@ -84,7 +84,7 @@ class LPUWorker(object):
             query_lpu = query_lpu.join(Personal)
             query_lpu = query_lpu.filter(Personal.speciality==speciality)
 
-        if len(lpu_ids):
+        if lpu_ids and len(lpu_ids):
             query_lpu = query_lpu.filter(LPU.id.in_(lpu_ids))
 
         if okato_code:
@@ -456,7 +456,7 @@ class EnqueueWorker(object):
                     proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
                     server_id = lpu_info.key
             else:
-#                raise exceptions.ValueError
+#                raise exceptions.AttributeError
                 return {}
         else:
             raise exceptions.KeyError
@@ -793,14 +793,18 @@ class UpdateWorker(object):
 
     def __get_proxy_address(self, proxy):
         proxy = proxy.split(';')
-        return proxy.get(0)
+        return proxy[0]
 
     def __clear_data(self, lpu):
         if lpu.lpu_units:
-            self.session.delete(lpu.lpu_units)
-        self.session.delete(self.session.query(UnitsParentForId).filter(LpuId=lpu.id).all())
-        self.session.delete(self.session.query(Speciality).filter(lpuId=lpu.id).all())
-        self.session.delete(self.session.query(Personal).filter(lpuId=lpu.id).all())
+            for lpu_unit in lpu.lpu_units:
+                self.session.delete(lpu_unit)
+        for unit_parent in self.session.query(UnitsParentForId).filter(UnitsParentForId.LpuId==lpu.id).all():
+            self.session.delete(unit_parent)
+        for speciality in self.session.query(Speciality).filter(Speciality.lpuId==lpu.id).all():
+            self.session.delete(speciality)
+        for doctor in self.session.query(Personal).filter(Personal.lpuId==lpu.id).all():
+            self.session.delete(doctor)
 
     def __update_lpu_units(self, lpu):
         return_units = []
@@ -811,14 +815,14 @@ class UpdateWorker(object):
             # Необходимо с этим разобраться
             # т.е. первая выборка должна быть без parent_id (т.к. локальный lpu.id из БД ИС никак не связан с id в КС)
             try:
-                for unit in proxy_client.listHospitals():
-                    if not hasattr(unit, 'parentId') or not unit.parentId:
+                for unit in proxy_client.listHospitals(infis_code=lpu.key):
+                    if not 'parentId' in unit or not unit['parentId']:
                         self.session.add(LPU_Units(
-                            lpuId=lpu.id, orgId=unit.id, name=unit.name, address=unit.address
+                            lpuId=lpu.id, orgId=unit['id'], name=unit['name'], address=unit['address']
                         ))
                         return_units.append(unit)
-                    elif unit.parentId:
-                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parentId,ChildId=unit.id))
+                    elif unit['parentId']:
+                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit['parentId'],ChildId=unit['id']))
             except InvalidRequestError:
                 return False
         return return_units
@@ -828,19 +832,19 @@ class UpdateWorker(object):
         if proxy and lpu_units:
             proxy_client = Clients.provider(lpu.protocol, proxy)
             for unit in lpu_units:
-                if unit.id:
+                if unit['id']:
                     try:
-                        for doctor in proxy_client.listDoctors(hospital_id=unit.id):
+                        for doctor in proxy_client.listDoctors(hospital_id=unit['id']):
                             self.session.add(Personal(
-                                id=doctor.id,
+                                id=doctor['id'],
                                 lpuId=lpu.id,
-                                orgId=unit.id,
-                                FirstName=doctor.firstName,
-                                PatrName=doctor.patrName,
-                                LastName=doctor.lastName,
-                                speciality=doctor.speciality,
+                                orgId=unit['id'],
+                                FirstName=doctor['firstName'],
+                                PatrName=doctor['patrName'],
+                                LastName=doctor['lastName'],
+                                speciality=doctor['speciality'],
                             ))
-                            self.__update_speciality(lpu_id=lpu.id, speciality=doctor.speciality)
+                            self.__update_speciality(lpu_id=lpu.id, speciality=doctor['speciality'])
                     except InvalidRequestError:
                         return False
         return True
@@ -869,7 +873,6 @@ class UpdateWorker(object):
         # Update data in tables
         lpu_dw = LPUWorker()
         lpu_list = lpu_dw.get_list()
-        self.session.begin()
         for lpu in lpu_list:
             self.__clear_data(lpu)
             try:

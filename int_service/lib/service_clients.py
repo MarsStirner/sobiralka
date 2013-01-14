@@ -19,18 +19,14 @@ from core_services.ttypes import AddPatientParameters, FindOrgStructureByAdressP
 from core_services.ttypes import FindPatientParameters, PatientInfo
 
 class Clients(object):
-    '''
-    Class provider for current Clients
-    '''
+    """Class provider for current Clients"""
     @classmethod
     def provider(cls, type, proxy_url):
-
         logging.basicConfig(level=logging.INFO)
         if settings.DEBUG:
             logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
         type = type.lower()
-
         if type in ('samson', 'korus20'):
             obj = ClientKorus20(proxy_url)
         elif type == 'intramed':
@@ -40,7 +36,6 @@ class Clients(object):
         else:
             obj = None
             raise exceptions.NameError
-
         return obj
 
 
@@ -72,47 +67,115 @@ class AbstractClient(object):
         pass
 
     @abstractmethod
-    def findPatient(self):
-        pass
-
-    @abstractmethod
-    def addPatient(self):
-        pass
-
-    @abstractmethod
     def enqueue(self):
         pass
 
 
 class ClientKorus20(AbstractClient):
+    """Класс клиента для взаимодействия со старой КС"""
     def __init__(self, url):
+        """
+        Args:
+            url: URL-адрес WSDL старой КС
+
+        """
         self.client = Client(url, cache=None)
 
     def listHospitals(self, **kwargs):
+        """Получаеи список подразделений
+
+        Args:
+            parent_id: id ЛПУ, для которого необходимо получить подразделения (необязательный)
+            infis_code: infis_code ЛПУ, для которого необходимо получить подразделения (необязательный)
+
+        Returns:
+            Массив найденных подразделений. Пример:
+            [OrgStructureInfo: (OrgStructureInfo){
+               id = 108
+               parentId = None
+               name = "Главные специалисты МЗ и СР ПО"
+               address = None
+               sexFilter = None
+               ageFilter =
+                  (AgeFilter){
+                     _id = "ref1"
+                     from =
+                        (AgeSpec){
+                           unit = "y"
+                           count = 18
+                        }
+                     to =
+                        (AgeSpec){
+                           unit = "y"
+                           count = 130
+                        }
+                  }
+             },]
+
+        """
+        params = {}
         params['recursive'] = True
         if 'parent_id' in kwargs and kwargs['parent_id']:
             params['parentId'] = kwargs['parent_id']
+        if 'infis_code' in kwargs and kwargs['infis_code']:
+            params['serverId'] = kwargs['infis_code']
         try:
             result = self.client.service.getOrgStructures(**params)
         except WebFault, e:
             print e
         else:
-            return result.list
+            return result
         return None
 
     def listDoctors(self, **kwargs):
+        """Получает список врачей
+
+        Args:
+            hospital_id: id ЛПУ, для которого необходимо получить список врачей (необязательный)
+
+        Returns:
+            Массив найденных врачей. Пример:
+            [PersonInfo: (PersonInfo){
+               orgStructureId = 108
+               id = 428
+               code = "222"
+               lastName = "Бартош"
+               firstName = "Леонид"
+               patrName = "Федорович"
+               office = "607"
+               post = "Главный терапевт"
+               speciality = "Терапевт (лечебное дело, педиатрия)"
+               specialityRegionalCode = "27"
+               specialityOKSOCode = None
+               sexFilter = None
+               ageFilter = None
+             },]
+
+        """
+        params = {}
         params['recursive'] = True
         if 'hospital_id' in kwargs and kwargs['hospital_id']:
             params['orgStructureId'] = kwargs['hospital_id']
         try:
-            result = self.client.service.getPersonnel(params)
+            result = self.client.service.getPersonnel(**params)
         except WebFault, e:
             print e
         else:
-            return result.list
+            return result
         return None
 
     def findOrgStructureByAddress(self, **kwargs):
+        """Получает подразделение по адресу пациента
+
+        Args:
+            serverId: infisCode ЛПУ
+            pointKLADR: код населённого пункта по КЛАДР
+            streetKLADR: код улицы по КЛАДР
+            number: номер дома
+            corpus: корпус дома (необязательный)
+            flat: квартира
+
+        """
         if (kwargs['serverId']
             and kwargs['number']
 #            and kwargs['corpus']
@@ -200,7 +263,7 @@ class ClientKorus20(AbstractClient):
         if server_id and patient_id:
             params = {'serverId': server_id, 'patientId': patient_id,}
             try:
-                result = self.client.service.getPatientQueue(**params)
+                result = self.client.service.getPatientInfo(**params)
             except WebFault, e:
                 print e
             else:
@@ -322,37 +385,39 @@ class ClientIntramed(AbstractClient):
         except WebFault, e:
             print e
         else:
-            if hasattr(result, 'hospitals'):#
+            if 'hospitals' in result:
+                hospitals = []
             # info_client = Client(self.url + 'egov.v3.infoPort.CLS?WSDL=1', cache=None)
-                for key, hospital in result.hospitals:
-                    hospitals[key] = hospital
-                    hospitals[key]['id'] = hospital['uid']
-                    hospitals[key]['name'] = hospital['title']
-                    hospitals[key]['address'] = ""
+                for hospital in result['hospitals']:
+                    hospitals.append({
+                        'id': int(hospital.uid),
+                        'name': unicode(hospital.title),
+                        'address': unicode(hospital.address),
+                    })
 #                    hospital_info = info_client.service.getHospitalInfo(hospitalUid=hospital.uid)
                 return hospitals
         return None
 
     def listDoctors(self, **kwargs):
+        doctors = []
         list_client = Client(self.url + 'egov.v3.listPort.CLS?WSDL=1', cache=None)
         if 'hospital_id' and kwargs['hospital_id']:
-            params['searchScope']['hospitalUid'] = kwargs['hospital_id']
+            params = {'searchScope': {'hospitalUid': [str(kwargs['hospital_id']),]}}
         try:
-            result = list_client.listDoctors(params)
+            result = list_client.service.listDoctors(**params)
         except WebFault, e:
             print e
         else:
-            if hasattr(result, 'doctors'):
-                for key, doctor in result.doctors:
-                    doctors[key] = doctor
-                    doctors[key]['id'] = doctor.uid
-                    doctors[key]['firstName'] = doctor.name.firstName
-                    doctors[key]['lastName'] = doctor.name.lastName
-                    doctors[key]['patrName'] = doctor.name.patronymic
-                    doctors[key]['speciality'] = doctor.speciality
-
-            return doctors
-        return None
+            if 'doctors' in result:
+                for doctor in result.doctors:
+                    doctors.append({
+                        'id': int(doctor.uid),
+                        'firstName': doctor.name.firstName,
+                        'lastName': doctor.name.lastName,
+                        'patrName': doctor.name.patronymic,
+                        'speciality': doctor.speciality,
+                    })
+        return doctors
 
     def findOrgStructureByAddress(self, **kwargs):
         self.client = Client(self.url + 'egov.v3.listPort.CLS?WSDL=1', cache=None)
@@ -511,9 +576,12 @@ class ClientKorus30(AbstractClient):
         transport.open()
 
     def listHospitals(self, **kwargs):
+        params = {}
         params['recursive'] = True
         if 'parent_id' in kwargs and kwargs['parent_id']:
             params['parent_id'] = kwargs['parent_id']
+        if 'infis_code' in kwargs and kwargs['infis_code']:
+            params['infisCode'] = str(kwargs['infis_code'])
         try:
             result = self.client.getOrgStructures(**params)
         except WebFault, e:
@@ -523,6 +591,7 @@ class ClientKorus30(AbstractClient):
         return None
 
     def listDoctors(self, **kwargs):
+        params = {}
         params['recursive'] = True
         if 'hospital_id' in kwargs and kwargs['hospital_id']:
             params['orgStructureId'] = kwargs['hospital_id']
@@ -580,9 +649,9 @@ class ClientKorus30(AbstractClient):
         server_id = kwargs.get('serverId')
         patient_id = kwargs.get('patientId')
         if server_id and patient_id:
-            params = {'serverId': server_id, 'patientId': patient_id,}
+            params = PatientInfo(infisCode = server_id, patientId = patient_id,)
             try:
-                result = self.client.getPatientQueue(**params)
+                result = self.client.getPatientQueue(params)
             except WebFault, e:
                 print e
             else:
@@ -595,9 +664,9 @@ class ClientKorus30(AbstractClient):
         server_id = kwargs.get('serverId')
         patient_id = kwargs.get('patientId')
         if server_id and patient_id:
-            params = PatientInfo(serverId = server_id, patientId = patient_id,)
+            params = PatientInfo(infisCode = server_id, patientId = patient_id,)
             try:
-                result = self.client.getPatientQueue(params)
+                result = self.client.getPatientInfo(params)
             except WebFault, e:
                 print e
             else:
@@ -609,11 +678,11 @@ class ClientKorus30(AbstractClient):
     def findPatient(self, **kwargs):
         try:
             params = FindPatientParameters(
-                lastName = kwargs['lastName'],
-                firstName = kwargs['firstName'],
-                patrName = kwargs['patrName'],
-                birthDate = kwargs['birthDate'],
-                omiPolicy = kwargs['omiPolicy'],
+                lastName=kwargs.get('lastName'),
+                firstName=kwargs.get('firstName'),
+                patrName=kwargs.get('patrName'),
+                birthDate=kwargs.get('birthDate'),
+                omiPolicy=kwargs.get('omiPolicy'),
             )
         except exceptions.KeyError:
             pass
