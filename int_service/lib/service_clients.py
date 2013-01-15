@@ -82,7 +82,7 @@ class ClientKorus20(AbstractClient):
         self.client = Client(url, cache=None)
 
     def listHospitals(self, **kwargs):
-        """Получаеи список подразделений
+        """Получает список подразделений
 
         Args:
             parent_id: id ЛПУ, для которого необходимо получить подразделения (необязательный)
@@ -201,6 +201,15 @@ class ClientKorus20(AbstractClient):
         return None
 
     def getScheduleInfo(self, **kwargs):
+        """Формирует и возвращает информацию о расписании приёма врача
+
+        Args:
+            start: дата начала расписания (обязательный)
+            end: дата окончания расписания (обязательный)
+            doctor_uid: id врача (обязательный)
+            hospital_uid_from: id ЛПУ, из которого производится запрос (необязательный)
+
+        """
         result = []
         if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid']:
             for i in xrange((kwargs['end'] - kwargs['start']).days):
@@ -215,10 +224,18 @@ class ClientKorus20(AbstractClient):
                 if timeslot:
                     result.extend(timeslot)
         else:
-            raise exceptions.ValueError
+            raise exceptions.AttributeError
         return {'timeslots': result}
 
     def getWorkTimeAndStatus(self, **kwargs):
+        """Возвращает расписание врача на определенную дату
+
+        Args:
+            personId: id врача (обязательный)
+            date: дата, на которую запрашивается расписание (обязательный)
+            hospitalUidFrom: id ЛПУ, из которого производится запрос (необязательный)
+
+        """
         try:
             schedule = self.client.service.getWorkTimeAndStatus(**kwargs)
         except WebFault, e:
@@ -228,11 +245,11 @@ class ClientKorus20(AbstractClient):
                 result = []
                 for key, timeslot in enumerate(schedule.tickets):
                     result.append({
-                        'start': datetime.datetime.combine(kwargs['date'], timeslot.time),
+                        'start': datetime.datetime.combine(kwargs.get('date'), timeslot.time),
                         'finish': (
-                            datetime.datetime.combine(kwargs['date'], schedule.tickets[key+1].time)
+                            datetime.datetime.combine(kwargs.get('date'), schedule.tickets[key+1].time)
                             if key < (len(schedule.tickets) - 1)
-                            else datetime.datetime.combine(kwargs['date'], schedule.endTime)
+                            else datetime.datetime.combine(kwargs.get('date'), schedule.endTime)
                             ),
                         'status': 'free' if timeslot.free else 'locked',
                         'office': str(schedule.office),
@@ -243,6 +260,13 @@ class ClientKorus20(AbstractClient):
         return []
 
     def getPatientQueue(self, **kwargs):
+        """Возвращает информацию о записях пациента
+
+        Args:
+            serverId: infis код ЛПУ (обязательный)
+            patientId: id пациента (обязательный)
+
+        """
         server_id = kwargs.get('serverId')
         patient_id = kwargs.get('patientId')
         if server_id and patient_id:
@@ -258,6 +282,13 @@ class ClientKorus20(AbstractClient):
         return None
 
     def getPatientInfo(self, **kwargs):
+        """Возвращает информацию о пациенте
+
+        Args:
+             serverId: infis код ЛПУ (обязательный)
+             patientId: id пациента (обязательный)
+
+        """
         server_id = kwargs.get('serverId')
         patient_id = kwargs.get('patientId')
         if server_id and patient_id:
@@ -273,6 +304,16 @@ class ClientKorus20(AbstractClient):
         return None
 
     def findPatient(self, **kwargs):
+        """Получает id пациента по параметрам
+
+        Args:
+            lastName: фамилия (обязательный)
+            firstName: имя (обязательный)
+            patrName: отчество (обязательный)
+            birthDate: дата рождения (обязательный)
+            omiPolicy: номер полиса ОМС (обязательный)
+
+        """
         try:
             params = {
 #                'serverId': kwargs['serverId'],
@@ -294,6 +335,17 @@ class ClientKorus20(AbstractClient):
         return None
 
     def addPatient(self, **kwargs):
+        """Добавление пациента в БД ЛПУ
+
+        Args:
+            person: словарь с данными о пациенте (обязательный):
+                {'lastName': фамилия
+                'firstName': имя
+                'patronymic': отчество
+                }
+            birthDate: дата рождения (необязательный)
+
+        """
         person = kwargs.get('person')
         if person:
             params = {
@@ -315,6 +367,17 @@ class ClientKorus20(AbstractClient):
         return {}
 
     def enqueue(self, **kwargs):
+        """Записывает пациента на приём
+
+        Args:
+            person: словарь с данными о пациенте (обязательный):
+                {'lastName': фамилия
+                'firstName': имя
+                'patronymic': отчество
+                }
+            hospitalUidFrom: id ЛПУ, из которого производится запись (необязательный)
+
+        """
         hospital_uid_from = kwargs.get('hospitalUidFrom')
         person = kwargs.get('person')
         if person is None:
@@ -375,34 +438,45 @@ class ClientKorus20(AbstractClient):
 
 
 class ClientIntramed(AbstractClient):
+    """Класс клиента для работы с Интрамед"""
     def __init__(self, url):
         self.url = url
 
     def listHospitals(self, **kwargs):
+        """Получает список ЛПУ"""
         list_client = Client(self.url + 'egov.v3.listPort.CLS?WSDL=1', cache=None)
+#        info_client = Client(self.url + 'egov.v3.infoPort.CLS?WSDL=1', cache=None)
         try:
             result = list_client.service.listHospitals()
         except WebFault, e:
             print e
         else:
-            if 'hospitals' in result:
+            try:
                 hospitals = []
-            # info_client = Client(self.url + 'egov.v3.infoPort.CLS?WSDL=1', cache=None)
                 for hospital in result['hospitals']:
+#                    hospital_info = info_client.service.getHospitalInfo(hospitalUid=hospital.uid)
                     hospitals.append({
                         'id': int(hospital.uid),
                         'name': unicode(hospital.title),
                         'address': unicode(hospital.address),
-                    })
-#                    hospital_info = info_client.service.getHospitalInfo(hospitalUid=hospital.uid)
+                        })
+            except exceptions.AttributeError:
+                pass
+            else:
                 return hospitals
         return None
 
     def listDoctors(self, **kwargs):
+        """Получает список врачей
+
+        Args:
+            hospital_id: id ЛПУ, для которого необходимо получить список врачей (необязательный)
+
+        """
         doctors = []
         list_client = Client(self.url + 'egov.v3.listPort.CLS?WSDL=1', cache=None)
         if 'hospital_id' and kwargs['hospital_id']:
-            params = {'searchScope': {'hospitalUid': [str(kwargs['hospital_id']),]}}
+            params = {'searchScope': {'hospitalUid': str(kwargs['hospital_id'])}}
         try:
             result = list_client.service.listDoctors(**params)
         except WebFault, e:
@@ -420,6 +494,17 @@ class ClientIntramed(AbstractClient):
         return doctors
 
     def findOrgStructureByAddress(self, **kwargs):
+        """Получает подразделение по адресу пациента
+
+        Args:
+            serverId: infisCode ЛПУ
+            pointKLADR: код населённого пункта по КЛАДР
+            streetKLADR: код улицы по КЛАДР
+            number: номер дома
+            corpus: корпус дома (необязательный)
+            flat: квартира
+
+        """
         self.client = Client(self.url + 'egov.v3.listPort.CLS?WSDL=1', cache=None)
 
         if (kwargs['serverId']
@@ -448,6 +533,15 @@ class ClientIntramed(AbstractClient):
         return result
 
     def getScheduleInfo(self, **kwargs):
+        """Формирует и возвращает информацию о расписании приёма врача
+
+        Args:
+            start: дата начала расписания (обязательный)
+            end: дата окончания расписания (обязательный)
+            doctor_uid: id врача (обязательный)
+            hospital_uid_from: id ЛПУ, из которого производится запрос (необязательный)
+
+        """
         self.client = Client(self.url + 'egov.v3.queuePort.CLS?WSDL=1', cache=None)
 
         result = {}
@@ -466,6 +560,15 @@ class ClientIntramed(AbstractClient):
         return result
 
     def getWorkTimeAndStatus(self, **kwargs):
+        """Возвращает расписание врача на определенную дату
+
+        Args:
+            doctorUid: id врача (обязательный)
+            startDate: дата, на которую запрашивается расписание (обязательный)
+            speciality: дата, на которую запрашивается расписание (обязательный)
+            hospitalUid: id ЛПУ (необязательный)
+
+        """
         if self.client is None:
             self.client = Client(self.url + 'egov.v3.queuePort.CLS?WSDL=1', cache=None)
         # TODO: перепроверить параметры для Intramed
@@ -497,6 +600,13 @@ class ClientIntramed(AbstractClient):
         return []
 
     def getPatientQueue(self, **kwargs):
+        """Возвращает информацию о записях пациента
+
+        Args:
+            serverId: infis код ЛПУ (обязательный)
+            patientId: id пациента (обязательный)
+
+        """
         self.client = Client(self.url + 'egov.v3.queuePort.CLS?WSDL=1', cache=None)
 
         server_id = kwargs.get('serverId')
@@ -515,6 +625,13 @@ class ClientIntramed(AbstractClient):
         return None
 
     def getPatientInfo(self, **kwargs):
+        """Возвращает информацию о пациенте
+
+        Args:
+             serverId: infis код ЛПУ (обязательный)
+             patientId: id пациента (обязательный)
+
+        """
         self.client = Client(self.url + 'egov.v3.infoPort.CLS?WSDL=1', cache=None)
 
         if kwargs['serverId'] and kwargs['patientId']:
@@ -531,6 +648,17 @@ class ClientIntramed(AbstractClient):
         return None
 
     def enqueue(self, **kwargs):
+        """Записывает пациента на приём
+
+        Args:
+            person: словарь с данными о пациенте (обязательный):
+                {'lastName': фамилия
+                'firstName': имя
+                'patronymic': отчество
+                }
+            hospitalUidFrom: id ЛПУ, из которого производится запись (необязательный)
+
+        """
         self.client = Client(self.url + 'egov.v3.queuePort.CLS?WSDL=1', cache=None)
         try:
             params = {
@@ -562,6 +690,7 @@ class ClientIntramed(AbstractClient):
 
 
 class ClientKorus30(AbstractClient):
+    """Класс клиента для взаимодействия с КС в ядре"""
 
     def __init__(self, url):
         self.url = url
@@ -576,6 +705,13 @@ class ClientKorus30(AbstractClient):
         transport.open()
 
     def listHospitals(self, **kwargs):
+        """Получает список подразделений
+
+        Args:
+            parent_id: id ЛПУ, для которого необходимо получить подразделения (необязательный)
+            infis_code: infis_code ЛПУ, для которого необходимо получить подразделения (необязательный)
+
+        """
         params = {}
         params['recursive'] = True
         if 'parent_id' in kwargs and kwargs['parent_id']:
@@ -591,6 +727,12 @@ class ClientKorus30(AbstractClient):
         return None
 
     def listDoctors(self, **kwargs):
+        """Получает список врачей
+
+        Args:
+            hospital_id: id ЛПУ, для которого необходимо получить список врачей (необязательный)
+
+        """
         params = {}
         params['recursive'] = True
         if 'hospital_id' in kwargs and kwargs['hospital_id']:
@@ -604,6 +746,17 @@ class ClientKorus30(AbstractClient):
         return None
 
     def findOrgStructureByAddress(self, **kwargs):
+        """Получает подразделение по адресу пациента
+
+        Args:
+            serverId: infisCode ЛПУ
+            pointKLADR: код населённого пункта по КЛАДР
+            streetKLADR: код улицы по КЛАДР
+            number: номер дома
+            corpus: корпус дома (необязательный)
+            flat: квартира
+
+        """
         if (
             'pointKLADR' in kwargs and
             'streetKLADR' in kwargs and
@@ -629,6 +782,15 @@ class ClientKorus30(AbstractClient):
         return None
 
     def getScheduleInfo(self, **kwargs):
+        """Формирует и возвращает информацию о расписании приёма врача
+
+        Args:
+            start: дата начала расписания (обязательный)
+            end: дата окончания расписания (обязательный)
+            doctor_uid: id врача (обязательный)
+            hospital_uid_from: id ЛПУ, из которого производится запрос (необязательный)
+
+        """
         result = []
         if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid']:
             for i in xrange((kwargs['end'] - kwargs['start']).days):
@@ -646,6 +808,13 @@ class ClientKorus30(AbstractClient):
         return {'timeslots': result}
 
     def getPatientQueue(self, **kwargs):
+        """Возвращает информацию о записях пациента
+
+        Args:
+            serverId: infis код ЛПУ (обязательный)
+            patientId: id пациента (обязательный)
+
+        """
         server_id = kwargs.get('serverId')
         patient_id = kwargs.get('patientId')
         if server_id and patient_id:
@@ -661,6 +830,13 @@ class ClientKorus30(AbstractClient):
         return None
 
     def getPatientInfo(self, **kwargs):
+        """Возвращает информацию о пациенте
+
+        Args:
+             serverId: infis код ЛПУ (обязательный)
+             patientId: id пациента (обязательный)
+
+        """
         server_id = kwargs.get('serverId')
         patient_id = kwargs.get('patientId')
         if server_id and patient_id:
@@ -676,6 +852,16 @@ class ClientKorus30(AbstractClient):
         return None
 
     def findPatient(self, **kwargs):
+        """Получает id пациента по параметрам
+
+        Args:
+            lastName: фамилия (обязательный)
+            firstName: имя (обязательный)
+            patrName: отчество (обязательный)
+            birthDate: дата рождения (обязательный)
+            omiPolicy: номер полиса ОМС (обязательный)
+
+        """
         try:
             params = FindPatientParameters(
                 lastName=kwargs.get('lastName'),
@@ -696,6 +882,17 @@ class ClientKorus30(AbstractClient):
         return None
 
     def addPatient(self, **kwargs):
+        """Добавление пациента в БД ЛПУ
+
+        Args:
+            person: словарь с данными о пациенте (обязательный):
+                {'lastName': фамилия
+                'firstName': имя
+                'patronymic': отчество
+                }
+            birthDate: дата рождения (необязательный)
+
+        """
         person = kwargs.get('person')
         if person:
             params = AddPatientParameters(
@@ -716,6 +913,14 @@ class ClientKorus30(AbstractClient):
         return {}
 
     def getWorkTimeAndStatus(self, **kwargs):
+        """Возвращает расписание врача на определенную дату
+
+        Args:
+            personId: id врача (обязательный)
+            date: дата, на которую запрашивается расписание (обязательный)
+            hospitalUidFrom: id ЛПУ, из которого производится запрос (необязательный)
+
+        """
         try:
             date = kwargs.get('date', datetime.datetime.now())
             time_tuple = date.timetuple()
@@ -747,6 +952,17 @@ class ClientKorus30(AbstractClient):
         return []
 
     def enqueue(self, **kwargs):
+        """Записывает пациента на приём
+
+        Args:
+            person: словарь с данными о пациенте (обязательный):
+                {'lastName': фамилия
+                'firstName': имя
+                'patronymic': отчество
+                }
+            hospitalUidFrom: id ЛПУ, из которого производится запись (необязательный)
+
+        """
         hospital_uid_from = kwargs.get('hospitalUidFrom')
         person = kwargs.get('person')
         if person is None:

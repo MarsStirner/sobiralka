@@ -18,16 +18,14 @@ from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Sp
 from service_clients import Clients
 from is_exceptions import exception_by_code
 
-from admin.database import Session
+from admin.database import Session, shutdown_session
 
 class DataWorker(object):
-    """
-    Provider class for current DataWorkers
-    """
+    """Provider class for current DataWorkers"""
     @classmethod
     def provider(cls, type):
+        """Вернёт объект для работы с указанным типом данных"""
         type = type.lower()
-
         if type == 'lpu':
             obj = LPUWorker()
         elif type == 'lpu_units':
@@ -39,16 +37,22 @@ class DataWorker(object):
         else:
             obj = None
             raise exceptions.NameError
-
         return obj
 
 
 class LPUWorker(object):
+    """Класс для работы с информацией по ЛПУ"""
     session = Session()
     model = LPU
 
     @classmethod
     def parse_hospital_uid(cls, hospitalUid):
+        """Парсит uid ЛПУ, извлекая id ЛПУ и id подразделения
+
+        Args:
+            hospitalUid: строка или массив строк вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID'
+
+        """
         lpu = []
         lpu_units = []
         if not isinstance(hospitalUid, list):
@@ -59,11 +63,16 @@ class LPUWorker(object):
                 lpu_units.append([int(tmp_list[0]), int(tmp_list[1])])
             else:
                 lpu.append(int(tmp_list[0]))
-        return (lpu, lpu_units)
+        return lpu, lpu_units
 
     def get_list(self, **kwargs):
-        """
-        Get LPU list by parameters
+        """Возвращает список ЛПУ
+
+        Args:
+            id: массив id ЛПУ для фильтрации (необязательный)
+            speciality: врачебная специальность для фильтрации ЛПУ (необязательный)
+            okato_code: код ОКАТО для фильтрации ЛПУ (необязательный)
+
         """
         lpu_ids = kwargs.get('id')
         speciality = kwargs.get('speciality')
@@ -93,12 +102,22 @@ class LPUWorker(object):
         return query_lpu.all()
 
     def get_lpu_by_address(self, **kwargs):
-        """
-        Get LPU list by address parameters
+        """Возвращает список ЛПУ для указанного адреса пациента
+
+        Args:
+            parsedAddress: словарь вида,
+                {'kladrCode': КЛАДР код населенного пункта,
+                 'flat': номер квартиры,
+                 'house': {
+                    'number': номер дома,
+                    'building': литера, корпус, строение, (необязательный)
+                 },
+                }
+
         """
         try:
             if (kwargs['parsedAddress']['kladrCode']
-                and kwargs['parsedAddress']['block']
+#                and kwargs['parsedAddress']['block']
                 and kwargs['parsedAddress']['flat']
     #            and kwargs['parsedAddress']['house']['building']
                 and kwargs['parsedAddress']['house']['number']
@@ -114,7 +133,7 @@ class LPUWorker(object):
         lpu_list = kwargs.get('lpu_list')
         if lpu_list:
             used_proxy = []
-            # Use LPU proxy for searching by Soap
+            # Use LPU proxy for searching by SOAP
             for lpu in lpu_list:
                 proxy = lpu.proxy.split(';')
                 if proxy[0] and proxy[0] not in used_proxy:
@@ -155,8 +174,13 @@ class LPUWorker(object):
         return lpu_list
 
     def get_list_hospitals(self, **kwargs):
-        """
-        Get list of LPUs and LPU_Units
+        """Формирует и возвращает список ЛПУ и подразделений для SOAP
+
+        Args:
+            hospitalUid: строка или массив строк вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (необязательный)
+            speciality: врачебная специальность для фильтрации ЛПУ (необязательный)
+            ocatoCode: код ОКАТО для фильтрации ЛПУ (необязательный)
+
         """
         result = {}
         result['hospitals'] = []
@@ -211,8 +235,11 @@ class LPUWorker(object):
         return result
 
     def get_info(self, **kwargs):
-        """
-        Get info about LPU/LPUs and its Units
+        """Возвращает список ЛПУ и подразделений по переданным параметрам
+
+        Args:
+            hospitalUid: строка или массив строк вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (необязательный)
+
         """
         lpu, lpu_units = [], []
         result = []
@@ -241,17 +268,6 @@ class LPUWorker(object):
                     'schedule': lpu_item.schedule,
                 })
 
-#            result.update({'info':
-#                               {'uid': str(lpu_item.id) + '/0',
-#                                'name': lpu_item.name,
-#                                'type': lpu_item.type,
-#                                'phone': lpu_item.phone,
-#                                'email': lpu_item.email,
-#                                'siteURL': '',
-#                                'schedule': lpu_item.schedule,
-#                                'buildings': units,
-#                                }
-#            })
             result.append({
                 'uid': str(lpu_item.id) + '/0',
                 'name': lpu_item.name,
@@ -262,7 +278,6 @@ class LPUWorker(object):
                 'schedule': lpu_item.schedule,
                 'buildings': units,
             })
-
         return {'info': result}
 
     def get_by_id(self, id):
@@ -288,12 +303,18 @@ class LPUWorker(object):
 
 
 class LPU_UnitsWorker(object):
+    """Класс для работы с информацией по подразделениям"""
     session = Session()
     model = LPU_Units
 
     def get_list(self, **kwargs):
-        """
-        Get LPU_Units list by parameters
+        """Возвращает список подразделений
+
+        Args:
+            uid: массив uid подразделений (необязательный)
+            lpu_id: массив id ЛПУ для фильтрации (необязательный)
+            speciality: врачебная специальность для фильтрации подразделений (необязательный)
+
         """
         lpu_units_ids = kwargs.get('uid')
         speciality = kwargs.get('speciality')
@@ -354,6 +375,15 @@ class EnqueueWorker(object):
     SCHEDULE_DAYS_DELTA = 14
 
     def get_info(self, **kwargs):
+        """Возвращает информацию о расписании
+
+        Args:
+            hospitalUid: uid ЛПУ, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (обязательный)
+            doctorUid: uid врача (обязательный)
+            speciality: наименование врачебной специальности (необязательный)
+            hospitalUidFrom: uid ЛПУ, из которого производилась запись (необязательный)
+
+        """
         result = {}
 
         hospital_uid = kwargs.get('hospitalUid', '').split('/')
@@ -390,18 +420,14 @@ class EnqueueWorker(object):
 
     def __get_dates_period(self, start='', end=''):
         if not start:
-#            start = time.mktime(datetime.datetime.today().timetuple())
             start = datetime.datetime.today()
-
         if not end:
-#            end = time.mktime((datetime.datetime.today() + datetime.timedelta(self.SCHEDULE_DAYS_DELTA)).timetuple())
             end = (datetime.datetime.today() + datetime.timedelta(days=self.SCHEDULE_DAYS_DELTA))
-
         return (start, end)
 
     def __get_tickets_ge_id(self, id, hospital_uid=None):
         tickets = []
-        for item in self.session.query().filter(
+        for item in self.session.query(Enqueue).filter(
             Enqueue.DataType=='0',
             Enqueue.id>id,
             Enqueue.Error=='100 ok',
@@ -417,8 +443,11 @@ class EnqueueWorker(object):
         return tickets
 
     def get_by_id(self, id):
-        """
-        Get Ticket by id and check
+        """Возвращает талончик по id
+
+        Args:
+            id: id талончика
+
         """
         try:
             result = self.session.query(Enqueue).filter(Enqueue.id==int(id)).one()
@@ -426,14 +455,19 @@ class EnqueueWorker(object):
             print e
         else:
             return result
-
         return None
 
     def get_ticket_status(self, **kwargs):
+        """Возвращает статус талончика
+
+        Args:
+            hospitalUid: uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (обязательный)
+            ticketUid: uid талончика (обязательный)
+            lastUid: uid талончика, начиная с которого необходимо сделать выборку информации о талончиках,
+                если передан, то ticketUid игнорируется (необязательный)
+
         """
-        Get tickets' status
-        """
-        result = {}
+        result = dict()
         result['ticketInfo'] = []
         hospital_uid = kwargs.get('hospitalUid', '').split('/')
         ticket_uid = kwargs.get('ticketUid')
@@ -580,14 +614,21 @@ class EnqueueWorker(object):
     def __get_ticket_print(self, **kwargs):
         """
         Return generated pdf for ticket print
+        !NOT USED
         """
         # TODO: выяснить используется ли pdf в принципе. В эл.регестратуре он никак не используется
         # TODO: pdf creator based on Flask templates and xhtml2pdf
         return ""
 
     def enqueue(self, **kwargs):
-        """
-        Запись на приём к врачу
+        """Запись на приём к врачу
+
+        Args:
+            hospitalUid: uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (обязательный)
+            birthday: дата рождения пациента (обязательный)
+            doctorUid: id врача, к которому производится запись (обязательный)
+            hospitalUidFrom: uid ЛПУ, с которого производится запись (необязательный), используется для записи между ЛПУ
+
         """
         hospital_uid = kwargs.get('hospitalUid', '').split('/')
         birthday = kwargs.get('birthday')
@@ -611,7 +652,7 @@ class EnqueueWorker(object):
         result = {}
 
         person_dw = PersonalWorker()
-        doctor_info = person_dw.get_doctor(lpu_unit = hospital_uid, doctor_id = doctor_uid)
+        doctor_info = person_dw.get_doctor(lpu_unit=hospital_uid, doctor_id=doctor_uid)
 
         hospital_uid_from = kwargs.get('hospitalUidFrom', '0')
 
@@ -619,46 +660,49 @@ class EnqueueWorker(object):
             raise exceptions.LookupError
             return {}
 
-        _enqueue = proxy_client.enqueue(**{
-            'serverId': lpu_info.key,
-            'person': person,
-            'omiPolicyNumber': omi_policy_number,
-            'birthday': birthday,
-            'hospitalUid': hospital_uid[1],
-            'hospitalUidFrom': hospital_uid_from,
-            'speciality': doctor_info.speciality.lower(),
-            'doctorUid': doctor_uid,
-            'timeslotStart': timeslot_start
-        })
+        # Отправляет запрос на SOAP КС для записи пациента
+        _enqueue = proxy_client.enqueue(
+            serverId=lpu_info.key,
+            person=person,
+            omiPolicyNumber=omi_policy_number,
+            birthday=birthday,
+            hospitalUid=hospital_uid[1],
+            hospitalUidFrom=hospital_uid_from,
+            speciality=doctor_info.speciality.lower(),
+            doctorUid=doctor_uid,
+            timeslotStart=timeslot_start
+        )
 
         if _enqueue and _enqueue['result'] == True:
-            self.__add_ticket(**{
-                'error': _enqueue['error_code'],
-                'data': json.dumps({
+            self.__add_ticket(
+                error=_enqueue['error_code'],
+                data=json.dumps({
                     'ticketUID': _enqueue.get('ticketUid'),
                     'timeslotStart': timeslot_start.strftime('%Y-%m-%d %H:%M:%S'),
                     'hospitalUid': kwargs.get('hospitalUid'),
                     'doctorUid': doctor_uid,
                 }),
-            })
+            )
             result = {'result': exception_by_code(_enqueue.get('error_code')), 'ticketUid': _enqueue.get('ticketUid')}
         else:
-            enqueue_id = self.__add_ticket(**{
-                'error': _enqueue['error_code'],
-                'data': json.dumps({
+            enqueue_id = self.__add_ticket(
+                error=_enqueue['error_code'],
+                data=json.dumps({
                     'ticketUID': _enqueue.get('ticketUid'),
                     'timeslotStart': timeslot_start.strftime('%Y-%m-%d %H:%M:%S'),
                     'hospitalUid': kwargs.get('hospitalUid'),
                     'doctorUid': doctor_uid,
                     }),
-                })
-            result = {'result': _enqueue.get('result'),
-                      'message': exception_by_code(_enqueue.get('error_code')),
-                      'ticketUid': 'e' + str(enqueue_id)}
-
+            )
+            result = {
+                'result': _enqueue.get('result'),
+                'message': exception_by_code(_enqueue.get('error_code')),
+                'ticketUid': 'e' + str(enqueue_id)
+            }
         return result
 
     def __add_ticket(self, **kwargs):
+        """Добавляет информацию о талончике в БД ИС"""
         try:
             enqueue = Enqueue(**kwargs)
         except exceptions.ValueError, e:
@@ -671,12 +715,18 @@ class EnqueueWorker(object):
 
 
 class PersonalWorker(object):
+    """Класс для работы с информацией по врачам"""
     session = Session()
     model = Personal
 
     def get_list(self, **kwargs):
-        """
-        Get Doctors list by lpu & lpu_units
+        """Формирует и возвращает список врачей для SOAP
+        Если переданы параметры, то фильтрует список врачей для указанных ЛПУ и/или подразделений
+
+        Args:
+            lpu: массив объектов ЛПУ (soap_models.LPU) (необязательный)
+            lpu_units: массив объектов подразделений (soap_models.LPU_Units) (необязательный)
+
         """
         lpu = kwargs.get('lpu')
         lpu_units = kwargs.get('lpu_units')
@@ -738,8 +788,12 @@ class PersonalWorker(object):
         return result
 
     def get_doctor(self, **kwargs):
-        """
-        Get doctor by parameters
+        """Возвращает информацию о враче
+
+        Args:
+            lpu_unit: uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (необязательный)
+            doctor_id: id врача  (обязательный)
+
         """
         lpu_unit = kwargs.get('lpu_unit')
         doctor_id = kwargs.get('doctor_id')
@@ -757,24 +811,29 @@ class PersonalWorker(object):
         return query.one()
 
     def get_list_doctors(self, **kwargs):
-        """
-        Get doctors list by parameters''
+        """Возвращает список врачей по переданным параметрам
+
+        Args:
+            searchScope: словарь вида:
+                {
+                'hospitalUid': uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (необязательный),
+                'address': адрес пациента, для выборки ЛПУ (необязательный),
+                }
+
         """
         lpu, lpu_list, lpu_units, lpu_units_list = [], [], [], []
         search_scope = kwargs.get('searchScope')
-        if search_scope and hasattr(search_scope, 'hospitalUid'):
-            lpu, lpu_units = LPUWorker.parse_hospital_uid(search_scope.hospitalUid)
 
-        lpu_dw = LPUWorker()
-        if lpu:
-            lpu_list = lpu_dw.get_list(id=lpu)
-
-        search_scope = kwargs.get('searchScope')
         if search_scope:
-            address = search_scope.address
-            if address:
+            if hasattr(search_scope, 'hospitalUid'):
+                lpu, lpu_units = LPUWorker.parse_hospital_uid(search_scope.hospitalUid)
+            lpu_dw = LPUWorker()
+            if lpu:
+                lpu_list = lpu_dw.get_list(id=lpu)
+
+            if hasattr(search_scope, 'address') and search_scope.address:
                 # TODO: уточнить используется ли поиск по адресу
-                lpu_list = lpu_dw.get_lpu_by_address(address, lpu_list)
+                lpu_list = lpu_dw.get_lpu_by_address(search_scope.address, lpu_list)
 
         if lpu_units:
             lpu_units_dw = LPU_UnitsWorker()
@@ -784,6 +843,7 @@ class PersonalWorker(object):
 
 
 class UpdateWorker(object):
+    """Класс для импорта данных в ИС из КС"""
     session = Session()
 
     def __init_database(self):
@@ -796,6 +856,7 @@ class UpdateWorker(object):
         return proxy[0]
 
     def __clear_data(self, lpu):
+        """Удаляет данные, по указанным ЛПУ"""
         if lpu.lpu_units:
             for lpu_unit in lpu.lpu_units:
                 self.session.delete(lpu_unit)
@@ -807,6 +868,7 @@ class UpdateWorker(object):
             self.session.delete(doctor)
 
     def __update_lpu_units(self, lpu):
+        """Обновляет информацию о потразделениях"""
         return_units = []
         proxy = self.__get_proxy_address(lpu.proxy)
         if proxy:
@@ -825,9 +887,12 @@ class UpdateWorker(object):
                         self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit['parentId'],ChildId=unit['id']))
             except InvalidRequestError:
                 return False
+            except TypeError:
+                return False
         return return_units
 
     def __update_personal(self, lpu, lpu_units):
+        """Обновляет информацию о врачах"""
         proxy = self.__get_proxy_address(lpu.proxy)
         if proxy and lpu_units:
             proxy_client = Clients.provider(lpu.protocol, proxy)
@@ -868,12 +933,14 @@ class UpdateWorker(object):
         return True
 
     def update_data(self):
-        from admin.database import shutdown_session
+        """Основной метод, который производит вызов внутренних методов обновления данных в БД ИС"""
         self.__init_database()
         # Update data in tables
         lpu_dw = LPUWorker()
         lpu_list = lpu_dw.get_list()
         for lpu in lpu_list:
+#            if lpu.protocol != 'intramed':
+#                continue
             self.__clear_data(lpu)
             try:
                 lpu_units = self.__update_lpu_units(lpu)
