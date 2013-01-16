@@ -62,9 +62,8 @@ class DetailedHospitalInfo(ComplexModel):
     schedule = Unicode()
     schedule.Annotations.doc=(u'Информация о расписании работы объекта, '
                               u'если оно отличается от общего расписания работы ЛПУ')
-    buildings = Array(HospitalAddress)
-    buildings.Annotations.doc=u'Перечень адресов зданий, входящих в состав ЛПУ'
-    servicedDistricts = Array(ServicedDistrict)
+    buildings = HospitalAddress.customize(max_occurs='unbounded', doc=u'Перечень адресов зданий, входящих в состав ЛПУ')
+    servicedDistricts = ServicedDistrict.customize(max_occurs='unbounded')
 
     def __init__(self, **kwargs):
         super(DetailedHospitalInfo, self).__init__(doc = u'Подробная информация о ЛПУ', **kwargs)
@@ -77,8 +76,7 @@ class Hospital(ComplexModel):
 class GetHospitalInfoRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    hospitalUid = String()
-    hospitalUid.Annotations.doc=u'Один или несколько идентификаторов ЛПУ'
+    hospitalUid = String.customize( nillable=True, minOccurs=0, doc=u'Один или несколько идентификаторов ЛПУ')
 
     def __init__(self):
         super(GetHospitalInfoRequest, self).__init__(doc=u'Параметры запроса для получения подробной информация о ЛПУ')
@@ -87,7 +85,7 @@ class GetHospitalInfoRequest(ComplexModel):
 class GetHospitalInfoResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    info = Array(DetailedHospitalInfo)
+    info = DetailedHospitalInfo.customize(max_occurs='unbounded')
 
     def __init__(self):
         super(GetHospitalInfoResponse, self).__init__(doc=u'Подробная информация о запрошенных ЛПУ')
@@ -303,7 +301,7 @@ class ListNewEnqueueRequest(ComplexModel):
 class ListNewEnqueueResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    Enqueue = Array(NewEnqueue)
+    Enqueue = NewEnqueue.customize(max_occurs='unbounded')
 
     def __init__(self):
         super(ListNewEnqueueResponse, self).__init__(doc=u'Результаты поиска услуги по заданным критериям')
@@ -323,7 +321,9 @@ class ListServTypesInfoRequest(ComplexModel):
 class ListServTypesInfoResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    ServTypes = Array(ServTypesInfo, doc=u'Перечень объектов, содержащих информацию о найденных услугах')
+    ServTypes = ServTypesInfo.customize(
+        max_occurs='unbounded', doc=u'Перечень объектов, содержащих информацию о найденных услугах'
+    )
 
     def __init__(self):
         super(ListServTypesInfoResponse, self).__init__(doc=u'Результаты поиска услуги по заданным критериям')
@@ -345,17 +345,22 @@ class ListDoctorsRequest(ComplexModel):
 class ListDoctorsResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    doctors = Array(DoctorInfo)
-    doctors.Annotations.doc=u'Перечень объектов, содержащих информацию о найденных врачах'
-    hospitals = Array(HospitalInfo)
-    hospitals.Annotations.doc=u'Перечень связанных ЛПУ с краткой информацией. ' \
-                              u'Перечень может быть пустым только в том случае, если пуст перечень найденных врачей.'
-    addressVariants = Array(Address)
-    addressVariants.Annotations.doc=u'Возможные варианты адреса, предлагаемые Реестром пользователю для уточнения. ' \
-                                    u'Список генерируется, если запрос содержал критерий поиска "по адресу", ' \
-                                    u'структурированная информация отсутствовала, ' \
-                                    u'а при разборе адреса на стороне Реестра была выявлена неоднозначность ' \
-                                    u'в трактовке входных данных.'
+    doctors = DoctorInfo.customize(
+        nillable=True, minOccurs=0,
+        max_occurs='unbounded', doc=u'Перечень объектов, содержащих информацию о найденных врачах'
+    )
+    hospitals = HospitalInfo.customize(
+        max_occurs='unbounded', doc=u'Перечень связанных ЛПУ с краткой информацией. '
+                                    u'Перечень может быть пустым только в том случае, если пуст перечень найденных врачей.'
+    )
+    addressVariants = Address.customize(
+        max_occurs='unbounded',
+        doc=u'Возможные варианты адреса, предлагаемые Реестром пользователю для уточнения. ' \
+            u'Список генерируется, если запрос содержал критерий поиска "по адресу", ' \
+            u'структурированная информация отсутствовала, ' \
+            u'а при разборе адреса на стороне Реестра была выявлена неоднозначность ' \
+            u'в трактовке входных данных.'
+    )
 
     def __init__(self):
         super(ListDoctorsResponse, self).__init__(doc=u'Результаты поиска врача по заданным критериям')
@@ -376,7 +381,7 @@ class ListSpecialitiesRequest(ComplexModel):
 class ListSpecialitiesResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    speciality = Array(SpecialtyInfo, doc=u'Перечень найденных специальностей')
+    speciality = SpecialtyInfo.customize(max_occurs='unbounded', doc=u'Перечень найденных специальностей')
 
     def __init__(self):
         super(ListSpecialitiesResponse, self).__init__(doc=u'Результаты поиска специальностей по заданным критериям')
@@ -400,8 +405,8 @@ class ListHospitalsRequest(ComplexModel):
 class ListHospitalsResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    hospitals = Array(HospitalInfo, doc=u'Перечень найденных ЛПУ')
-    addressVariants = Array(Address,
+    hospitals = HospitalInfo.customize(max_occurs='unbounded', doc=u'Перечень найденных ЛПУ')
+    addressVariants = Address.customize(max_occurs='unbounded',
         doc=u'Возможные варианты адреса, предлагаемые Реестром пользователю для уточнения. '
             u'Список генерируется, если запрос содержал критерий поиска "по адресу", '
             u'структурированная информация отсутствовала, '
@@ -471,8 +476,7 @@ class Timeslot(ComplexModel):
 class GetScheduleInfoResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    timeslots = Array(Timeslot)
-    timeslots.Annotations.doc=u'Расписание на отдельные дни в заданном интервале'
+    timeslots = Timeslot.customize(max_occurs='unbounded', doc=u'Расписание на отдельные дни в заданном интервале')
 
     def __init__(self):
         super(GetScheduleInfoResponse, self).__init__(doc=u'Информация о расписании врача')
@@ -501,7 +505,9 @@ class Session(ComplexModel):
     sessionStart = DateTime(doc=u'Начало смены')
     sessionEnd = DateTime(doc=u'Окончание смены')
     sessionType = SessionType()
-    timeslots = Array(Timeslot, doc=u'Информация об отдельных элементах расписания (тайм-слотах)')
+    timeslots = Timeslot.customize(
+        max_occurs='unbounded', doc=u'Информация об отдельных элементах расписания (тайм-слотах)'
+    )
     comments = Unicode(doc=u'Дополнительная информация о месте приёма или о замещениях')
 
     def __init__(self):
@@ -666,7 +672,7 @@ class GetTicketStatusRequest(ComplexModel):
 class GetTicketStatusResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    ticketsInfo = Array(TicketInfo, doc=u'Данные о состоянии запрошенных заявок')
+    ticketsInfo = TicketInfo.customize(max_occurs='unbounded', doc=u'Данные о состоянии запрошенных заявок')
 
     def __init__(self):
         super(GetTicketStatusResponse, self).__init__( doc=u'Ответ на запрос о текущем статусе заявки на приём')

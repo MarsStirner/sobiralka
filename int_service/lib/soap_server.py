@@ -38,7 +38,11 @@ class InfoServer(ServiceBase):
     @srpc(soap_models.GetHospitalInfoRequest, _returns=soap_models.GetHospitalInfoResponse)
     def getHospitalInfo(HospitalInfoRequest):
         obj = DataWorker.provider('lpu')
-        return obj.get_info(**vars(HospitalInfoRequest))
+        if HospitalInfoRequest:
+            info = obj.get_info(**vars(HospitalInfoRequest))
+        else:
+            info = obj.get_info()
+        return info
 
     def setDoctorInfo(self):
         pass
@@ -61,7 +65,11 @@ class ListServer(ServiceBase):
     @srpc(soap_models.ListDoctorsRequest, _returns=soap_models.ListDoctorsResponse)
     def listDoctors(DoctorsRequest):
         obj = DataWorker.provider('personal')
-        return obj.get_list_doctors(**vars(DoctorsRequest))
+        if DoctorsRequest:
+            doctors = obj.get_list_doctors(**vars(DoctorsRequest))
+        else:
+            doctors = obj.get_list_doctors()
+        return doctors
 
     def listSpecialities(self):
         pass

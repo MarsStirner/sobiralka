@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Table, Integer, BigInteger, String, Unicode, Text, UnicodeText, Enum, ForeignKey
+from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy.orm import relationship, backref
 
 Base = declarative_base()
@@ -97,6 +98,12 @@ class Personal(Base):
 
     lpu = relationship("LPU", backref=backref('personal', order_by=id))
     lpu_units = relationship("LPU_Units", backref=backref('personal', order_by=id))
+#    ForeignKeyConstraint(
+#        ['personal.orgId', 'personal.lpuId'],
+#        ['lpu_units.orgId', 'lpu_units.lpuId'],
+#        use_alter=True,
+#        name='personal_lpu_units_constraint'
+#    )
 
 
 class Speciality(Base):
