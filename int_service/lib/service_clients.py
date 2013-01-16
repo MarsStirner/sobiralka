@@ -386,9 +386,9 @@ class ClientKorus20(AbstractClient):
 
         patient = self.findPatient(**{
             'serverId': kwargs.get('serverId'),
-            'lastName': person.lastName,
-            'firstName': person.firstName,
-            'patrName': person.patronymic,
+            'lastName': person.get('lastName'),
+            'firstName': person.get('firstName'),
+            'patrName': person.get('patronymic'),
             'omiPolicy': kwargs.get('omiPolicyNumber'),
             'birthDate': kwargs.get('birthday'),
         })
@@ -548,9 +548,10 @@ class ClientIntramed(AbstractClient):
         result['timeslots'] = []
         if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid'] and kwargs['hospital_uid']:
             for i in xrange((kwargs['end'] - kwargs['start']).days):
+                start = (kwargs['start'].date() + datetime.timedelta(days=i))
                 params = {'doctorUid': kwargs['doctor_uid'],
                           'speciality': kwargs['speciality'],
-                          'startDate': (kwargs['start'] + i).strftime('%Y-%m-%d'),
+                          'startDate': start.strftime('%Y-%m-%d'),
                           'hospitalUid': kwargs['hospital_uid'][1],
                           }
 
@@ -661,14 +662,15 @@ class ClientIntramed(AbstractClient):
         """
         self.client = Client(self.url + 'egov.v3.queuePort.CLS?WSDL=1', cache=None)
         try:
+            person = kwargs.get('person')
             params = {
-                'person': kwargs.get('person'),
+                'person': person,
                 'omiPolicyNumber': kwargs.get('omiPolicyNumber'),
                 'birthday': kwargs.get('birthday'),
                 'hospitalUid': kwargs.get('hospitalUid'),
                 'speciality': kwargs.get('speciality'),
                 'doctorUid': kwargs.get('doctorUid'),
-                'timeslotStart': kwargs.get('timeslotStart').strftime('%Y-%m-%d %H:%M:%S') + 'Z',
+                'timeslotStart': kwargs.get('timeslotStart'),
             }
         except:
             raise exceptions.ValueError
@@ -971,9 +973,9 @@ class ClientKorus30(AbstractClient):
 
         patient = self.findPatient(
             serverId = kwargs.get('serverId'),
-            lastName = person.lastName,
-            firstName = person.firstName,
-            patrName = person.patronymic,
+            lastName = person.get('lastName'),
+            firstName = person.get('firstName'),
+            patrName = person.get('patronymic'),
             omiPolicy = kwargs.get('omiPolicyNumber'),
             birthDate = kwargs.get('birthday'),
         )

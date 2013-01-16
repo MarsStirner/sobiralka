@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from exceptions import Exception
+from exceptions import Exception, ValueError
 
 #Define exceptions
 class ISError(Exception): pass
@@ -72,5 +72,9 @@ def exception_by_code(code):
         312: IS_WorkWithSMOPatientsTerminated,
         400: IS_EnqueueDenied,
     }
-    num_code = int(code.split()[0])
-    return exc[num_code].message if num_code in exc else code
+    try:
+        num_code = int(code.split()[0])
+    except ValueError:
+        return code
+    else:
+        return exc[num_code].message if num_code in exc else code

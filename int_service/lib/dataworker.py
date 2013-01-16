@@ -664,7 +664,11 @@ class EnqueueWorker(object):
         # Отправляет запрос на SOAP КС для записи пациента
         _enqueue = proxy_client.enqueue(
             serverId=lpu_info.key,
-            person=person,
+            person={
+                'firstName': person.firstName,
+                'lastName': person.lastName,
+                'patronymic': person.patronymic,
+                },
             omiPolicyNumber=omi_policy_number,
             birthday=birthday,
             hospitalUid=hospital_uid[1],
@@ -687,7 +691,7 @@ class EnqueueWorker(object):
             result = {'result': exception_by_code(_enqueue.get('error_code')), 'ticketUid': _enqueue.get('ticketUid')}
         else:
             enqueue_id = self.__add_ticket(
-                error=_enqueue['error_code'],
+                error=_enqueue.get('error_code'),
                 data=json.dumps({
                     'ticketUID': _enqueue.get('ticketUid'),
                     'timeslotStart': timeslot_start.strftime('%Y-%m-%d %H:%M:%S'),
@@ -897,7 +901,8 @@ class UpdateWorker(object):
             # Необходимо с этим разобраться
             # т.е. первая выборка должна быть без parent_id (т.к. локальный lpu.id из БД ИС никак не связан с id в КС)
             try:
-                for unit in proxy_client.listHospitals(infis_code=lpu.key):
+                units = proxy_client.listHospitals(infis_code=lpu.key)
+                for unit in units:
                     if not 'parentId' in unit or not unit['parentId']:
                         self.session.add(LPU_Units(
                             lpuId=lpu.id, orgId=unit['id'], name=unit['name'], address=unit['address']
@@ -970,8 +975,10 @@ class UpdateWorker(object):
                 else:
                     return self.__failed_update()
                 lpu.LastUpdate = time.mktime(datetime.datetime.now().timetuple())
-            except WebFault:
+            except WebFault, e:
+                print e
                 return self.__failed_update()
-            except exceptions.UserWarning:
+            except exceptions.UserWarning, e:
+                print e
                 return self.__failed_update()
         return self.__success_update()

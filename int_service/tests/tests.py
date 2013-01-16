@@ -192,6 +192,14 @@ class TestListWSDL(unittest.TestCase):
             self.assertIsInstance(hospitals.hospitals, soap_models.ListHospitalsResponse)
             self.assertListEqual(hospitals.hospitals, result)
 
+    def testListHospitalsIntramed(self):
+        okato = "580033"
+        result = []
+        hospitals = self.client.service.listHospitals({'ocatoCode': okato})
+        if hospitals:
+            self.assertIsInstance(hospitals.hospitals, soap_models.ListHospitalsResponse)
+            self.assertListEqual(hospitals.hospitals, result)
+
     def testFindOrgStructureByAddressKorus30(self):
         client = ClientKorus30('http://10.2.1.58:7911')
         hospitals = client.findOrgStructureByAddress(
@@ -400,6 +408,14 @@ class TestListWSDL(unittest.TestCase):
             self.assertIsInstance(doctors.doctors, list)
             self.assertListEqual(doctors.doctors, result)
 
+    def testListDoctorsIntramed(self):
+        hospital_Uid = "11"
+        result = []
+        doctors = self.client.service.listDoctors({'searchScope': {'hospitalUid': hospital_Uid, }})
+        if doctors:
+            self.assertIsInstance(doctors.doctors, list)
+#            self.assertListEqual(doctors.doctors, result)
+
     def testListSpecialities(self):
         pass
 
@@ -436,6 +452,20 @@ class TestInfoWSDL(unittest.TestCase):
                                   },
                                  ],
                    },]
+        info_list = self.client.service.getHospitalInfo({'hospitalUid': hospitalUid})
+        self.assertIsInstance(info_list.info, list)
+        self.assertListEqual(info_list.info, result)
+
+    def testGetHospitalInfoIntramed(self):
+        hospitalUid = '11/0'
+        result = [{
+            'siteURL': None,
+            'uid': "11/0",
+            'schedule': None,
+            'phone': None,
+            'type': None,
+            'name': u"ГБУЗ «Кузнецкая ЦРБ»"
+        }]
         info_list = self.client.service.getHospitalInfo({'hospitalUid': hospitalUid})
         self.assertIsInstance(info_list.info, list)
         self.assertListEqual(info_list.info, result)
@@ -568,6 +598,14 @@ class TestScheduleWSDL(unittest.TestCase):
             self.assertIsInstance(ticket, list)
             self.assertIsNotNone(ticket)
 
+    def testGetScheduleInfoIntramed(self):
+        hospitalUid = '11/0'
+        doctorUid = '19'
+        ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
+        if ticket:
+            self.assertIsInstance(ticket, list)
+            self.assertIsNotNone(ticket)
+
     def testGetTicketStatus(self):
         hospitalUid = 0
         ticketUid = 0
@@ -610,6 +648,34 @@ class TestScheduleWSDL(unittest.TestCase):
         omiPolicyNumber="4106 5801954102020017"
         hospitalUid="17/53"
         doctorUid="344"
+        timeslotStart=(datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") + "T15:00:00"
+        hospitalUidFrom=0
+        birthday="1954-10-20"
+
+        ticket = self.client.service.enqueue({
+            'person': person,
+            'omiPolicyNumber': omiPolicyNumber,
+            'hospitalUid': hospitalUid,
+            'doctorUid': doctorUid,
+            'timeslotStart': timeslotStart,
+            'hospitalUidFrom': hospitalUidFrom,
+            'birthday': birthday
+        })
+
+#        self.assertIsInstance(ticket, dict)
+        if ticket['result'] == 'true':
+            self.assertIn('ticketUid', ticket)
+
+        if ticket['ticketUid'] == "":
+            self.assertNotIn(ticket['result'], ("", "true"))
+
+        # TODO: разобрать варианты с проверкой ограничений по дате рождения и полу
+
+    def testEnqueueIntramed(self):
+        person={'firstName': u"Асия", 'lastName': u"Абаева", 'patronymic': u"Абдуловна", }
+        omiPolicyNumber="4106 5801954102020017"
+        hospitalUid="11/1025801446528"
+        doctorUid="19"
         timeslotStart=(datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") + "T15:00:00"
         hospitalUidFrom=0
         birthday="1954-10-20"
