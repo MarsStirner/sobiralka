@@ -599,12 +599,14 @@ class TestScheduleWSDL(unittest.TestCase):
             self.assertIsNotNone(ticket)
 
     def testGetScheduleInfoIntramed(self):
-        hospitalUid = '11/0'
+        hospitalUid = '11/1025801446528'
         doctorUid = '19'
-        ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
-        if ticket:
-            self.assertIsInstance(ticket, list)
-            self.assertIsNotNone(ticket)
+        speciality = u'Акушер-гинеколог'
+        ticket = self.client.service.getScheduleInfo(
+            {'hospitalUid': hospitalUid, 'doctorUid': doctorUid, 'speciality': speciality}
+        )
+        self.assertIsInstance(ticket.timeslots, list)
+        self.assertIsNotNone(ticket.timeslots)
 
     def testGetTicketStatus(self):
         hospitalUid = 0

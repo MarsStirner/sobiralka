@@ -539,7 +539,7 @@ class ClientIntramed(AbstractClient):
             start: дата начала расписания (обязательный)
             end: дата окончания расписания (обязательный)
             doctor_uid: id врача (обязательный)
-            hospital_uid_from: id ЛПУ, из которого производится запрос (необязательный)
+            hospital_uid: id ЛПУ (обязательный)
 
         """
         self.client = Client(self.url + 'egov.v3.queuePort.CLS?WSDL=1', cache=None)
@@ -547,15 +547,22 @@ class ClientIntramed(AbstractClient):
         result = {}
         result['timeslots'] = []
         if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid'] and kwargs['hospital_uid']:
-            for i in xrange((kwargs['end'] - kwargs['start']).days):
-                start = (kwargs['start'].date() + datetime.timedelta(days=i))
-                params = {'doctorUid': kwargs['doctor_uid'],
-                          'speciality': kwargs['speciality'],
-                          'startDate': start.strftime('%Y-%m-%d'),
-                          'hospitalUid': kwargs['hospital_uid'][1],
-                          }
-
-                result['timeslots'].extend(self.getWorkTimeAndStatus(**params))
+            params = {'doctorUid': kwargs['doctor_uid'],
+                      'speciality': kwargs['speciality'],
+                      'startDate': kwargs['start'],
+                      'endDate': kwargs['end'],
+                      'hospitalUid': kwargs['hospital_uid'][1],
+                      }
+            result['timeslots'].extend(self.getWorkTimeAndStatus(**params))
+#            for i in xrange((kwargs['end'] - kwargs['start']).days):
+#                start = (kwargs['start'].date() + datetime.timedelta(days=i))
+#                params = {'doctorUid': kwargs['doctor_uid'],
+#                          'speciality': kwargs['speciality'],
+#                          'startDate': start.strftime('%Y-%m-%d'),
+#                          'hospitalUid': kwargs['hospital_uid'][1],
+#                          }
+#
+#                result['timeslots'].extend(self.getWorkTimeAndStatus(**params))
         else:
             raise exceptions.ValueError
         return result
@@ -587,17 +594,17 @@ class ClientIntramed(AbstractClient):
         except WebFault, e:
             print e
         else:
-            result = []
-            for key, timeslot in enumerate(schedule.timeslots):
-                result.append({
-                    'start': timeslot.start,
-                    'finish': (schedule.timeslots[key+1].start
-                               if key < (len(schedule.timeslots) - 1)
-                               else schedule.finish),
-                    'status': timeslot.status,
-                    'office': '0',
-                    })
-            return result
+            if schedule:
+                result = []
+                count_timeslots = len(schedule)
+                for key, timeslot in enumerate(schedule):
+                    result.append({
+                        'start': timeslot.start,
+                        'finish': timeslot.finish,
+                        'status': timeslot.status,
+                        'office': '0',
+                        })
+                return result
         return []
 
     def getPatientQueue(self, **kwargs):

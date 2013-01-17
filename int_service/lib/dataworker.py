@@ -423,8 +423,8 @@ class EnqueueWorker(object):
         if not start:
             start = datetime.datetime.today()
         if not end:
-            end = (datetime.datetime.today() + datetime.timedelta(days=self.SCHEDULE_DAYS_DELTA))
-        return (start, end)
+            end = (start + datetime.timedelta(days=self.SCHEDULE_DAYS_DELTA))
+        return start, end
 
     def __get_tickets_ge_id(self, id, hospital_uid=None):
         tickets = []
