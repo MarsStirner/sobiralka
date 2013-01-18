@@ -23,17 +23,24 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print 'Usage: ' + sys.argv[0] + ' [-h host[:port]] [-u url] [-f[ramed]] function [arg1 [arg2...]]'
   print ''
   print 'Functions:'
-  print '   getOrgStructures(i32 parent_id, bool recursive)'
-  print '   findOrgStructureByAddress(FindOrgStructureByAdressParameters params)'
-  print '   getPersonnel(i32 orgStructureId, bool recursive)'
+  print '  Organization getOrganisationInfo(i32 id)'
+  print '   getOrgStructures(i32 parent_id, bool recursive, string infisCode)'
+  print '   getAddresses(i32 orgStructureId, bool recursive)'
+  print '   findOrgStructureByAddress(FindOrgStructureByAddressParameters params)'
+  print '   getPersonnel(i32 orgStructureId, bool recursive, string infisCode)'
+  print '  TicketsAvailability getTotalTicketsAvailability(GetTicketsAvailabilityParameters params)'
+  print '   getTicketsAvailability(GetTicketsAvailabilityParameters params)'
   print '  Amb getWorkTimeAndStatus(GetTimeWorkAndStatusParameters params)'
   print '  PatientStatus addPatient(AddPatientParameters params)'
   print '  PatientStatus findPatient(FindPatientParameters params)'
   print '   findPatients(FindPatientParameters params)'
   print '   getPatientInfo( patientIds)'
+  print '   getPatientContacts(i32 patientId)'
+  print '   getPatientOrgStructures(i32 parentId)'
   print '  EnqueuePatientStatus enqueuePatient(EnqueuePatientParameters params)'
   print '   getPatientQueue(i32 parentId)'
   print '  DequeuePatientStatus dequeuePatient(i32 patientId, i32 queueId)'
+  print '   getSpecialities(string hospitalUidFrom)'
   print ''
   sys.exit(0)
 
@@ -85,11 +92,23 @@ protocol = TBinaryProtocol.TBinaryProtocol(transport)
 client = Communications.Client(protocol)
 transport.open()
 
-if cmd == 'getOrgStructures':
-  if len(args) != 2:
-    print 'getOrgStructures requires 2 args'
+if cmd == 'getOrganisationInfo':
+  if len(args) != 1:
+    print 'getOrganisationInfo requires 1 args'
     sys.exit(1)
-  pp.pprint(client.getOrgStructures(eval(args[0]),eval(args[1]),))
+  pp.pprint(client.getOrganisationInfo(eval(args[0]),))
+
+elif cmd == 'getOrgStructures':
+  if len(args) != 3:
+    print 'getOrgStructures requires 3 args'
+    sys.exit(1)
+  pp.pprint(client.getOrgStructures(eval(args[0]),eval(args[1]),args[2],))
+
+elif cmd == 'getAddresses':
+  if len(args) != 2:
+    print 'getAddresses requires 2 args'
+    sys.exit(1)
+  pp.pprint(client.getAddresses(eval(args[0]),eval(args[1]),))
 
 elif cmd == 'findOrgStructureByAddress':
   if len(args) != 1:
@@ -98,10 +117,22 @@ elif cmd == 'findOrgStructureByAddress':
   pp.pprint(client.findOrgStructureByAddress(eval(args[0]),))
 
 elif cmd == 'getPersonnel':
-  if len(args) != 2:
-    print 'getPersonnel requires 2 args'
+  if len(args) != 3:
+    print 'getPersonnel requires 3 args'
     sys.exit(1)
-  pp.pprint(client.getPersonnel(eval(args[0]),eval(args[1]),))
+  pp.pprint(client.getPersonnel(eval(args[0]),eval(args[1]),args[2],))
+
+elif cmd == 'getTotalTicketsAvailability':
+  if len(args) != 1:
+    print 'getTotalTicketsAvailability requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.getTotalTicketsAvailability(eval(args[0]),))
+
+elif cmd == 'getTicketsAvailability':
+  if len(args) != 1:
+    print 'getTicketsAvailability requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.getTicketsAvailability(eval(args[0]),))
 
 elif cmd == 'getWorkTimeAndStatus':
   if len(args) != 1:
@@ -133,6 +164,18 @@ elif cmd == 'getPatientInfo':
     sys.exit(1)
   pp.pprint(client.getPatientInfo(eval(args[0]),))
 
+elif cmd == 'getPatientContacts':
+  if len(args) != 1:
+    print 'getPatientContacts requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.getPatientContacts(eval(args[0]),))
+
+elif cmd == 'getPatientOrgStructures':
+  if len(args) != 1:
+    print 'getPatientOrgStructures requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.getPatientOrgStructures(eval(args[0]),))
+
 elif cmd == 'enqueuePatient':
   if len(args) != 1:
     print 'enqueuePatient requires 1 args'
@@ -150,6 +193,12 @@ elif cmd == 'dequeuePatient':
     print 'dequeuePatient requires 2 args'
     sys.exit(1)
   pp.pprint(client.dequeuePatient(eval(args[0]),eval(args[1]),))
+
+elif cmd == 'getSpecialities':
+  if len(args) != 1:
+    print 'getSpecialities requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.getSpecialities(args[0],))
 
 else:
   print 'Unrecognized method %s' % cmd

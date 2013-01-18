@@ -15,8 +15,9 @@ from thrift.transport import TTransport, TSocket, THttpClient
 from thrift.protocol import TBinaryProtocol, TProtocol
 from core_services.Communications import Client as Thrift_Client
 from core_services.ttypes import GetTimeWorkAndStatusParameters, EnqueuePatientParameters
-from core_services.ttypes import AddPatientParameters, FindOrgStructureByAdressParameters
+from core_services.ttypes import AddPatientParameters, FindOrgStructureByAddressParameters
 from core_services.ttypes import FindPatientParameters, PatientInfo
+from core_services.ttypes import SQLException
 
 class Clients(object):
     """Class provider for current Clients"""
@@ -25,6 +26,7 @@ class Clients(object):
         logging.basicConfig(level=logging.INFO)
         if settings.DEBUG:
             logging.getLogger('suds.client').setLevel(logging.DEBUG)
+            logging.getLogger('Thrift_Client').setLevel(logging.DEBUG)
 
         type = type.lower()
         if type in ('samson', 'korus20'):
@@ -439,6 +441,11 @@ class ClientKorus20(AbstractClient):
 
 class ClientIntramed(AbstractClient):
     """Класс клиента для работы с Интрамед"""
+
+    class Struct:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
     def __init__(self, url):
         self.url = url
 
@@ -455,11 +462,12 @@ class ClientIntramed(AbstractClient):
                 hospitals = []
                 for hospital in result['hospitals']:
 #                    hospital_info = info_client.service.getHospitalInfo(hospitalUid=hospital.uid)
-                    hospitals.append({
+                    params = {
                         'id': int(hospital.uid),
                         'name': unicode(hospital.title),
                         'address': unicode(hospital.address),
-                        })
+                        }
+                    hospitals.append(self.Struct(**params))
             except exceptions.AttributeError:
                 pass
             else:
@@ -484,13 +492,14 @@ class ClientIntramed(AbstractClient):
         else:
             if 'doctors' in result:
                 for doctor in result.doctors:
-                    doctors.append({
+                    params = {
                         'id': int(doctor.uid),
                         'firstName': doctor.name.firstName,
                         'lastName': doctor.name.lastName,
                         'patrName': doctor.name.patronymic,
                         'speciality': doctor.speciality,
-                    })
+                        }
+                    doctors.append(self.Struct(**params))
         return doctors
 
     def findOrgStructureByAddress(self, **kwargs):
@@ -723,16 +732,14 @@ class ClientKorus30(AbstractClient):
         """
         params = {}
         params['recursive'] = True
-        if 'parent_id' in kwargs and kwargs['parent_id']:
-            params['parent_id'] = kwargs['parent_id']
-        if 'infis_code' in kwargs and kwargs['infis_code']:
-            params['infisCode'] = str(kwargs['infis_code'])
+        params['parent_id'] = kwargs.get('parent_id', 0)
+        params['infisCode'] = str(kwargs.get('infis_code', ""))
         try:
             result = self.client.getOrgStructures(**params)
         except WebFault, e:
             print e
         else:
-            return result['list']
+            return result
         return None
 
     def listDoctors(self, **kwargs):
@@ -744,14 +751,16 @@ class ClientKorus30(AbstractClient):
         """
         params = {}
         params['recursive'] = True
-        if 'hospital_id' in kwargs and kwargs['hospital_id']:
-            params['orgStructureId'] = kwargs['hospital_id']
+        params['orgStructureId'] = kwargs.get('hospital_id')
+        params['infisCode'] = str(kwargs.get('infis_code', ""))
         try:
-            result = self.client.getPersonnel(params)
+            result = self.client.getPersonnel(**params)
+        except SQLException, e:
+            print e.error_msg
         except WebFault, e:
             print e
         else:
-            return result['list']
+            return result
         return None
 
     def findOrgStructureByAddress(self, **kwargs):

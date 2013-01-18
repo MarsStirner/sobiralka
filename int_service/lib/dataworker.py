@@ -909,13 +909,21 @@ class UpdateWorker(object):
             try:
                 units = proxy_client.listHospitals(infis_code=lpu.key)
                 for unit in units:
-                    if not 'parentId' in unit or not unit['parentId']:
-                        self.session.add(LPU_Units(
-                            lpuId=lpu.id, orgId=unit['id'], name=unit['name'], address=unit['address']
-                        ))
-                        return_units.append(unit)
-                    elif unit['parentId']:
-                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit['parentId'],ChildId=unit['id']))
+                    #TODO: после исправления названия поля убрать вариант с adress
+                    address = getattr(unit, 'address', getattr(unit, 'adress', ""))
+                    if address is None:
+                        address = ""
+                    self.session.add(LPU_Units(
+                        lpuId=lpu.id,
+                        orgId=unit.id,
+                        name=unit.name,
+                        address=address
+                    ))
+                    return_units.append(unit)
+                    if hasattr(unit, 'parentId') and unit.parentId:
+                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parentId,ChildId=unit.id))
+                    elif hasattr(unit, 'parent_id') and unit.parent_id:
+                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parent_id,ChildId=unit.id))
             except InvalidRequestError:
                 return False
             except TypeError:
@@ -928,21 +936,24 @@ class UpdateWorker(object):
         if proxy and lpu_units:
             proxy_client = Clients.provider(lpu.protocol, proxy)
             for unit in lpu_units:
-                if unit['id']:
+                if unit.id:
                     try:
-                        for doctor in proxy_client.listDoctors(hospital_id=unit['id']):
-                            self.session.add(Personal(
-                                id=doctor['id'],
-                                lpuId=lpu.id,
-                                orgId=unit['id'],
-                                FirstName=doctor['firstName'],
-                                PatrName=doctor['patrName'],
-                                LastName=doctor['lastName'],
-                                speciality=doctor['speciality'],
-                            ))
-                            self.__update_speciality(lpu_id=lpu.id, speciality=doctor['speciality'])
+                        doctors = proxy_client.listDoctors(hospital_id=unit.id)
                     except InvalidRequestError:
                         return False
+                    else:
+                        if doctors:
+                            for doctor in doctors:
+                                self.session.add(Personal(
+                                    id=doctor.id,
+                                    lpuId=lpu.id,
+                                    orgId=unit.id,
+                                    FirstName=doctor.firstName,
+                                    PatrName=doctor.patrName,
+                                    LastName=doctor.lastName,
+                                    speciality=doctor.speciality,
+                                ))
+                                self.__update_speciality(lpu_id=lpu.id, speciality=doctor.speciality)
         return True
 
     def __update_speciality(self, **kwargs):
@@ -970,7 +981,7 @@ class UpdateWorker(object):
         lpu_dw = LPUWorker()
         lpu_list = lpu_dw.get_list()
         for lpu in lpu_list:
-#            if lpu.protocol != 'intramed':
+#            if lpu.protocol != 'korus30':
 #                continue
             self.__clear_data(lpu)
             try:

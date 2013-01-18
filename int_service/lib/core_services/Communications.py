@@ -18,10 +18,26 @@ except:
 
 
 class Iface:
-  def getOrgStructures(self, parent_id, recursive):
+  def getOrganisationInfo(self, id):
+    """
+    Parameters:
+     - id
+    """
+    pass
+
+  def getOrgStructures(self, parent_id, recursive, infisCode):
     """
     Parameters:
      - parent_id
+     - recursive
+     - infisCode
+    """
+    pass
+
+  def getAddresses(self, orgStructureId, recursive):
+    """
+    Parameters:
+     - orgStructureId
      - recursive
     """
     pass
@@ -33,11 +49,26 @@ class Iface:
     """
     pass
 
-  def getPersonnel(self, orgStructureId, recursive):
+  def getPersonnel(self, orgStructureId, recursive, infisCode):
     """
     Parameters:
      - orgStructureId
      - recursive
+     - infisCode
+    """
+    pass
+
+  def getTotalTicketsAvailability(self, params):
+    """
+    Parameters:
+     - params
+    """
+    pass
+
+  def getTicketsAvailability(self, params):
+    """
+    Parameters:
+     - params
     """
     pass
 
@@ -76,6 +107,20 @@ class Iface:
     """
     pass
 
+  def getPatientContacts(self, patientId):
+    """
+    Parameters:
+     - patientId
+    """
+    pass
+
+  def getPatientOrgStructures(self, parentId):
+    """
+    Parameters:
+     - parentId
+    """
+    pass
+
   def enqueuePatient(self, params):
     """
     Parameters:
@@ -98,6 +143,13 @@ class Iface:
     """
     pass
 
+  def getSpecialities(self, hospitalUidFrom):
+    """
+    Parameters:
+     - hospitalUidFrom
+    """
+    pass
+
 
 class Client(Iface):
   def __init__(self, iprot, oprot=None):
@@ -106,20 +158,54 @@ class Client(Iface):
       self._oprot = oprot
     self._seqid = 0
 
-  def getOrgStructures(self, parent_id, recursive):
+  def getOrganisationInfo(self, id):
+    """
+    Parameters:
+     - id
+    """
+    self.send_getOrganisationInfo(id)
+    return self.recv_getOrganisationInfo()
+
+  def send_getOrganisationInfo(self, id):
+    self._oprot.writeMessageBegin('getOrganisationInfo', TMessageType.CALL, self._seqid)
+    args = getOrganisationInfo_args()
+    args.id = id
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_getOrganisationInfo(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = getOrganisationInfo_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    if result.success is not None:
+      return result.success
+    if result.exc is not None:
+      raise result.exc
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "getOrganisationInfo failed: unknown result");
+
+  def getOrgStructures(self, parent_id, recursive, infisCode):
     """
     Parameters:
      - parent_id
      - recursive
+     - infisCode
     """
-    self.send_getOrgStructures(parent_id, recursive)
+    self.send_getOrgStructures(parent_id, recursive, infisCode)
     return self.recv_getOrgStructures()
 
-  def send_getOrgStructures(self, parent_id, recursive):
+  def send_getOrgStructures(self, parent_id, recursive, infisCode):
     self._oprot.writeMessageBegin('getOrgStructures', TMessageType.CALL, self._seqid)
     args = getOrgStructures_args()
     args.parent_id = parent_id
     args.recursive = recursive
+    args.infisCode = infisCode
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
@@ -141,6 +227,42 @@ class Client(Iface):
     if result.excsql is not None:
       raise result.excsql
     raise TApplicationException(TApplicationException.MISSING_RESULT, "getOrgStructures failed: unknown result");
+
+  def getAddresses(self, orgStructureId, recursive):
+    """
+    Parameters:
+     - orgStructureId
+     - recursive
+    """
+    self.send_getAddresses(orgStructureId, recursive)
+    return self.recv_getAddresses()
+
+  def send_getAddresses(self, orgStructureId, recursive):
+    self._oprot.writeMessageBegin('getAddresses', TMessageType.CALL, self._seqid)
+    args = getAddresses_args()
+    args.orgStructureId = orgStructureId
+    args.recursive = recursive
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_getAddresses(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = getAddresses_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    if result.success is not None:
+      return result.success
+    if result.excsql is not None:
+      raise result.excsql
+    if result.exc is not None:
+      raise result.exc
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "getAddresses failed: unknown result");
 
   def findOrgStructureByAddress(self, params):
     """
@@ -176,20 +298,22 @@ class Client(Iface):
       raise result.excsql
     raise TApplicationException(TApplicationException.MISSING_RESULT, "findOrgStructureByAddress failed: unknown result");
 
-  def getPersonnel(self, orgStructureId, recursive):
+  def getPersonnel(self, orgStructureId, recursive, infisCode):
     """
     Parameters:
      - orgStructureId
      - recursive
+     - infisCode
     """
-    self.send_getPersonnel(orgStructureId, recursive)
+    self.send_getPersonnel(orgStructureId, recursive, infisCode)
     return self.recv_getPersonnel()
 
-  def send_getPersonnel(self, orgStructureId, recursive):
+  def send_getPersonnel(self, orgStructureId, recursive, infisCode):
     self._oprot.writeMessageBegin('getPersonnel', TMessageType.CALL, self._seqid)
     args = getPersonnel_args()
     args.orgStructureId = orgStructureId
     args.recursive = recursive
+    args.infisCode = infisCode
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
@@ -211,6 +335,74 @@ class Client(Iface):
     if result.excsql is not None:
       raise result.excsql
     raise TApplicationException(TApplicationException.MISSING_RESULT, "getPersonnel failed: unknown result");
+
+  def getTotalTicketsAvailability(self, params):
+    """
+    Parameters:
+     - params
+    """
+    self.send_getTotalTicketsAvailability(params)
+    return self.recv_getTotalTicketsAvailability()
+
+  def send_getTotalTicketsAvailability(self, params):
+    self._oprot.writeMessageBegin('getTotalTicketsAvailability', TMessageType.CALL, self._seqid)
+    args = getTotalTicketsAvailability_args()
+    args.params = params
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_getTotalTicketsAvailability(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = getTotalTicketsAvailability_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    if result.success is not None:
+      return result.success
+    if result.exc is not None:
+      raise result.exc
+    if result.excsql is not None:
+      raise result.excsql
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "getTotalTicketsAvailability failed: unknown result");
+
+  def getTicketsAvailability(self, params):
+    """
+    Parameters:
+     - params
+    """
+    self.send_getTicketsAvailability(params)
+    return self.recv_getTicketsAvailability()
+
+  def send_getTicketsAvailability(self, params):
+    self._oprot.writeMessageBegin('getTicketsAvailability', TMessageType.CALL, self._seqid)
+    args = getTicketsAvailability_args()
+    args.params = params
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_getTicketsAvailability(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = getTicketsAvailability_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    if result.success is not None:
+      return result.success
+    if result.exc is not None:
+      raise result.exc
+    if result.excsql is not None:
+      raise result.excsql
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "getTicketsAvailability failed: unknown result");
 
   def getWorkTimeAndStatus(self, params):
     """
@@ -380,6 +572,70 @@ class Client(Iface):
       raise result.excsql
     raise TApplicationException(TApplicationException.MISSING_RESULT, "getPatientInfo failed: unknown result");
 
+  def getPatientContacts(self, patientId):
+    """
+    Parameters:
+     - patientId
+    """
+    self.send_getPatientContacts(patientId)
+    return self.recv_getPatientContacts()
+
+  def send_getPatientContacts(self, patientId):
+    self._oprot.writeMessageBegin('getPatientContacts', TMessageType.CALL, self._seqid)
+    args = getPatientContacts_args()
+    args.patientId = patientId
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_getPatientContacts(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = getPatientContacts_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    if result.success is not None:
+      return result.success
+    if result.exc is not None:
+      raise result.exc
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "getPatientContacts failed: unknown result");
+
+  def getPatientOrgStructures(self, parentId):
+    """
+    Parameters:
+     - parentId
+    """
+    self.send_getPatientOrgStructures(parentId)
+    return self.recv_getPatientOrgStructures()
+
+  def send_getPatientOrgStructures(self, parentId):
+    self._oprot.writeMessageBegin('getPatientOrgStructures', TMessageType.CALL, self._seqid)
+    args = getPatientOrgStructures_args()
+    args.parentId = parentId
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_getPatientOrgStructures(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = getPatientOrgStructures_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    if result.success is not None:
+      return result.success
+    if result.exc is not None:
+      raise result.exc
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "getPatientOrgStructures failed: unknown result");
+
   def enqueuePatient(self, params):
     """
     Parameters:
@@ -484,22 +740,61 @@ class Client(Iface):
       raise result.excsql
     raise TApplicationException(TApplicationException.MISSING_RESULT, "dequeuePatient failed: unknown result");
 
+  def getSpecialities(self, hospitalUidFrom):
+    """
+    Parameters:
+     - hospitalUidFrom
+    """
+    self.send_getSpecialities(hospitalUidFrom)
+    return self.recv_getSpecialities()
+
+  def send_getSpecialities(self, hospitalUidFrom):
+    self._oprot.writeMessageBegin('getSpecialities', TMessageType.CALL, self._seqid)
+    args = getSpecialities_args()
+    args.hospitalUidFrom = hospitalUidFrom
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_getSpecialities(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = getSpecialities_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    if result.success is not None:
+      return result.success
+    if result.exc is not None:
+      raise result.exc
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "getSpecialities failed: unknown result");
+
 
 class Processor(Iface, TProcessor):
   def __init__(self, handler):
     self._handler = handler
     self._processMap = {}
+    self._processMap["getOrganisationInfo"] = Processor.process_getOrganisationInfo
     self._processMap["getOrgStructures"] = Processor.process_getOrgStructures
+    self._processMap["getAddresses"] = Processor.process_getAddresses
     self._processMap["findOrgStructureByAddress"] = Processor.process_findOrgStructureByAddress
     self._processMap["getPersonnel"] = Processor.process_getPersonnel
+    self._processMap["getTotalTicketsAvailability"] = Processor.process_getTotalTicketsAvailability
+    self._processMap["getTicketsAvailability"] = Processor.process_getTicketsAvailability
     self._processMap["getWorkTimeAndStatus"] = Processor.process_getWorkTimeAndStatus
     self._processMap["addPatient"] = Processor.process_addPatient
     self._processMap["findPatient"] = Processor.process_findPatient
     self._processMap["findPatients"] = Processor.process_findPatients
     self._processMap["getPatientInfo"] = Processor.process_getPatientInfo
+    self._processMap["getPatientContacts"] = Processor.process_getPatientContacts
+    self._processMap["getPatientOrgStructures"] = Processor.process_getPatientOrgStructures
     self._processMap["enqueuePatient"] = Processor.process_enqueuePatient
     self._processMap["getPatientQueue"] = Processor.process_getPatientQueue
     self._processMap["dequeuePatient"] = Processor.process_dequeuePatient
+    self._processMap["getSpecialities"] = Processor.process_getSpecialities
 
   def process(self, iprot, oprot):
     (name, type, seqid) = iprot.readMessageBegin()
@@ -516,18 +811,48 @@ class Processor(Iface, TProcessor):
       self._processMap[name](self, seqid, iprot, oprot)
     return True
 
+  def process_getOrganisationInfo(self, seqid, iprot, oprot):
+    args = getOrganisationInfo_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = getOrganisationInfo_result()
+    try:
+      result.success = self._handler.getOrganisationInfo(args.id)
+    except NotFoundException as exc:
+      result.exc = exc
+    oprot.writeMessageBegin("getOrganisationInfo", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
   def process_getOrgStructures(self, seqid, iprot, oprot):
     args = getOrgStructures_args()
     args.read(iprot)
     iprot.readMessageEnd()
     result = getOrgStructures_result()
     try:
-      result.success = self._handler.getOrgStructures(args.parent_id, args.recursive)
+      result.success = self._handler.getOrgStructures(args.parent_id, args.recursive, args.infisCode)
     except NotFoundException as exc:
       result.exc = exc
     except SQLException as excsql:
       result.excsql = excsql
     oprot.writeMessageBegin("getOrgStructures", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_getAddresses(self, seqid, iprot, oprot):
+    args = getAddresses_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = getAddresses_result()
+    try:
+      result.success = self._handler.getAddresses(args.orgStructureId, args.recursive)
+    except SQLException as excsql:
+      result.excsql = excsql
+    except NotFoundException as exc:
+      result.exc = exc
+    oprot.writeMessageBegin("getAddresses", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
@@ -554,12 +879,44 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = getPersonnel_result()
     try:
-      result.success = self._handler.getPersonnel(args.orgStructureId, args.recursive)
+      result.success = self._handler.getPersonnel(args.orgStructureId, args.recursive, args.infisCode)
     except NotFoundException as exc:
       result.exc = exc
     except SQLException as excsql:
       result.excsql = excsql
     oprot.writeMessageBegin("getPersonnel", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_getTotalTicketsAvailability(self, seqid, iprot, oprot):
+    args = getTotalTicketsAvailability_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = getTotalTicketsAvailability_result()
+    try:
+      result.success = self._handler.getTotalTicketsAvailability(args.params)
+    except NotFoundException as exc:
+      result.exc = exc
+    except SQLException as excsql:
+      result.excsql = excsql
+    oprot.writeMessageBegin("getTotalTicketsAvailability", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_getTicketsAvailability(self, seqid, iprot, oprot):
+    args = getTicketsAvailability_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = getTicketsAvailability_result()
+    try:
+      result.success = self._handler.getTicketsAvailability(args.params)
+    except NotFoundException as exc:
+      result.exc = exc
+    except SQLException as excsql:
+      result.excsql = excsql
+    oprot.writeMessageBegin("getTicketsAvailability", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
@@ -642,6 +999,34 @@ class Processor(Iface, TProcessor):
     oprot.writeMessageEnd()
     oprot.trans.flush()
 
+  def process_getPatientContacts(self, seqid, iprot, oprot):
+    args = getPatientContacts_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = getPatientContacts_result()
+    try:
+      result.success = self._handler.getPatientContacts(args.patientId)
+    except NotFoundException as exc:
+      result.exc = exc
+    oprot.writeMessageBegin("getPatientContacts", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_getPatientOrgStructures(self, seqid, iprot, oprot):
+    args = getPatientOrgStructures_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = getPatientOrgStructures_result()
+    try:
+      result.success = self._handler.getPatientOrgStructures(args.parentId)
+    except NotFoundException as exc:
+      result.exc = exc
+    oprot.writeMessageBegin("getPatientOrgStructures", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
   def process_enqueuePatient(self, seqid, iprot, oprot):
     args = enqueuePatient_args()
     args.read(iprot)
@@ -690,25 +1075,175 @@ class Processor(Iface, TProcessor):
     oprot.writeMessageEnd()
     oprot.trans.flush()
 
+  def process_getSpecialities(self, seqid, iprot, oprot):
+    args = getSpecialities_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = getSpecialities_result()
+    try:
+      result.success = self._handler.getSpecialities(args.hospitalUidFrom)
+    except SQLException as exc:
+      result.exc = exc
+    oprot.writeMessageBegin("getSpecialities", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
 
 # HELPER FUNCTIONS AND STRUCTURES
+
+class getOrganisationInfo_args:
+  """
+  Attributes:
+   - id
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'id', None, None, ), # 1
+  )
+
+  def __init__(self, id=None,):
+    self.id = id
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.id = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getOrganisationInfo_args')
+    if self.id is not None:
+      oprot.writeFieldBegin('id', TType.I32, 1)
+      oprot.writeI32(self.id)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getOrganisationInfo_result:
+  """
+  Attributes:
+   - success
+   - exc
+  """
+
+  thrift_spec = (
+    (0, TType.STRUCT, 'success', (Organization, Organization.thrift_spec), None, ), # 0
+    (1, TType.STRUCT, 'exc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
+  )
+
+  def __init__(self, success=None, exc=None,):
+    self.success = success
+    self.exc = exc
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.STRUCT:
+          self.success = Organization()
+          self.success.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 1:
+        if ftype == TType.STRUCT:
+          self.exc = NotFoundException()
+          self.exc.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getOrganisationInfo_result')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.STRUCT, 0)
+      self.success.write(oprot)
+      oprot.writeFieldEnd()
+    if self.exc is not None:
+      oprot.writeFieldBegin('exc', TType.STRUCT, 1)
+      self.exc.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
 
 class getOrgStructures_args:
   """
   Attributes:
    - parent_id
    - recursive
+   - infisCode
   """
 
   thrift_spec = (
     None, # 0
     (1, TType.I32, 'parent_id', None, None, ), # 1
     (2, TType.BOOL, 'recursive', None, None, ), # 2
+    (3, TType.STRING, 'infisCode', None, None, ), # 3
   )
 
-  def __init__(self, parent_id=None, recursive=None,):
+  def __init__(self, parent_id=None, recursive=None, infisCode=None,):
     self.parent_id = parent_id
     self.recursive = recursive
+    self.infisCode = infisCode
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -729,6 +1264,11 @@ class getOrgStructures_args:
           self.recursive = iprot.readBool();
         else:
           iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.infisCode = iprot.readString();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -746,6 +1286,10 @@ class getOrgStructures_args:
     if self.recursive is not None:
       oprot.writeFieldBegin('recursive', TType.BOOL, 2)
       oprot.writeBool(self.recursive)
+      oprot.writeFieldEnd()
+    if self.infisCode is not None:
+      oprot.writeFieldBegin('infisCode', TType.STRING, 3)
+      oprot.writeString(self.infisCode)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -859,6 +1403,172 @@ class getOrgStructures_result:
   def __ne__(self, other):
     return not (self == other)
 
+class getAddresses_args:
+  """
+  Attributes:
+   - orgStructureId
+   - recursive
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'orgStructureId', None, None, ), # 1
+    (2, TType.BOOL, 'recursive', None, None, ), # 2
+  )
+
+  def __init__(self, orgStructureId=None, recursive=None,):
+    self.orgStructureId = orgStructureId
+    self.recursive = recursive
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.orgStructureId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.BOOL:
+          self.recursive = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getAddresses_args')
+    if self.orgStructureId is not None:
+      oprot.writeFieldBegin('orgStructureId', TType.I32, 1)
+      oprot.writeI32(self.orgStructureId)
+      oprot.writeFieldEnd()
+    if self.recursive is not None:
+      oprot.writeFieldBegin('recursive', TType.BOOL, 2)
+      oprot.writeBool(self.recursive)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getAddresses_result:
+  """
+  Attributes:
+   - success
+   - excsql
+   - exc
+  """
+
+  thrift_spec = (
+    (0, TType.LIST, 'success', (TType.STRUCT,(Address, Address.thrift_spec)), None, ), # 0
+    (1, TType.STRUCT, 'excsql', (SQLException, SQLException.thrift_spec), None, ), # 1
+    (2, TType.STRUCT, 'exc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 2
+  )
+
+  def __init__(self, success=None, excsql=None, exc=None,):
+    self.success = success
+    self.excsql = excsql
+    self.exc = exc
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.LIST:
+          self.success = []
+          (_etype17, _size14) = iprot.readListBegin()
+          for _i18 in xrange(_size14):
+            _elem19 = Address()
+            _elem19.read(iprot)
+            self.success.append(_elem19)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 1:
+        if ftype == TType.STRUCT:
+          self.excsql = SQLException()
+          self.excsql.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRUCT:
+          self.exc = NotFoundException()
+          self.exc.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getAddresses_result')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.LIST, 0)
+      oprot.writeListBegin(TType.STRUCT, len(self.success))
+      for iter20 in self.success:
+        iter20.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.excsql is not None:
+      oprot.writeFieldBegin('excsql', TType.STRUCT, 1)
+      self.excsql.write(oprot)
+      oprot.writeFieldEnd()
+    if self.exc is not None:
+      oprot.writeFieldBegin('exc', TType.STRUCT, 2)
+      self.exc.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
 class findOrgStructureByAddress_args:
   """
   Attributes:
@@ -867,7 +1577,7 @@ class findOrgStructureByAddress_args:
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'params', (FindOrgStructureByAdressParameters, FindOrgStructureByAdressParameters.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'params', (FindOrgStructureByAddressParameters, FindOrgStructureByAddressParameters.thrift_spec), None, ), # 1
   )
 
   def __init__(self, params=None,):
@@ -884,7 +1594,7 @@ class findOrgStructureByAddress_args:
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.params = FindOrgStructureByAdressParameters()
+          self.params = FindOrgStructureByAddressParameters()
           self.params.read(iprot)
         else:
           iprot.skip(ftype)
@@ -951,10 +1661,10 @@ class findOrgStructureByAddress_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype17, _size14) = iprot.readListBegin()
-          for _i18 in xrange(_size14):
-            _elem19 = iprot.readI32();
-            self.success.append(_elem19)
+          (_etype24, _size21) = iprot.readListBegin()
+          for _i25 in xrange(_size21):
+            _elem26 = iprot.readI32();
+            self.success.append(_elem26)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -983,8 +1693,8 @@ class findOrgStructureByAddress_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.I32, len(self.success))
-      for iter20 in self.success:
-        oprot.writeI32(iter20)
+      for iter27 in self.success:
+        oprot.writeI32(iter27)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -1018,17 +1728,20 @@ class getPersonnel_args:
   Attributes:
    - orgStructureId
    - recursive
+   - infisCode
   """
 
   thrift_spec = (
     None, # 0
     (1, TType.I32, 'orgStructureId', None, None, ), # 1
     (2, TType.BOOL, 'recursive', None, None, ), # 2
+    (3, TType.STRING, 'infisCode', None, None, ), # 3
   )
 
-  def __init__(self, orgStructureId=None, recursive=None,):
+  def __init__(self, orgStructureId=None, recursive=None, infisCode=None,):
     self.orgStructureId = orgStructureId
     self.recursive = recursive
+    self.infisCode = infisCode
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -1049,6 +1762,11 @@ class getPersonnel_args:
           self.recursive = iprot.readBool();
         else:
           iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.infisCode = iprot.readString();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -1066,6 +1784,10 @@ class getPersonnel_args:
     if self.recursive is not None:
       oprot.writeFieldBegin('recursive', TType.BOOL, 2)
       oprot.writeBool(self.recursive)
+      oprot.writeFieldEnd()
+    if self.infisCode is not None:
+      oprot.writeFieldBegin('infisCode', TType.STRING, 3)
+      oprot.writeString(self.infisCode)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -1116,11 +1838,11 @@ class getPersonnel_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype24, _size21) = iprot.readListBegin()
-          for _i25 in xrange(_size21):
-            _elem26 = Person()
-            _elem26.read(iprot)
-            self.success.append(_elem26)
+          (_etype31, _size28) = iprot.readListBegin()
+          for _i32 in xrange(_size28):
+            _elem33 = Person()
+            _elem33.read(iprot)
+            self.success.append(_elem33)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1149,8 +1871,310 @@ class getPersonnel_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter27 in self.success:
-        iter27.write(oprot)
+      for iter34 in self.success:
+        iter34.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.exc is not None:
+      oprot.writeFieldBegin('exc', TType.STRUCT, 1)
+      self.exc.write(oprot)
+      oprot.writeFieldEnd()
+    if self.excsql is not None:
+      oprot.writeFieldBegin('excsql', TType.STRUCT, 2)
+      self.excsql.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getTotalTicketsAvailability_args:
+  """
+  Attributes:
+   - params
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRUCT, 'params', (GetTicketsAvailabilityParameters, GetTicketsAvailabilityParameters.thrift_spec), None, ), # 1
+  )
+
+  def __init__(self, params=None,):
+    self.params = params
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRUCT:
+          self.params = GetTicketsAvailabilityParameters()
+          self.params.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getTotalTicketsAvailability_args')
+    if self.params is not None:
+      oprot.writeFieldBegin('params', TType.STRUCT, 1)
+      self.params.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getTotalTicketsAvailability_result:
+  """
+  Attributes:
+   - success
+   - exc
+   - excsql
+  """
+
+  thrift_spec = (
+    (0, TType.STRUCT, 'success', (TicketsAvailability, TicketsAvailability.thrift_spec), None, ), # 0
+    (1, TType.STRUCT, 'exc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
+    (2, TType.STRUCT, 'excsql', (SQLException, SQLException.thrift_spec), None, ), # 2
+  )
+
+  def __init__(self, success=None, exc=None, excsql=None,):
+    self.success = success
+    self.exc = exc
+    self.excsql = excsql
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.STRUCT:
+          self.success = TicketsAvailability()
+          self.success.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 1:
+        if ftype == TType.STRUCT:
+          self.exc = NotFoundException()
+          self.exc.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRUCT:
+          self.excsql = SQLException()
+          self.excsql.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getTotalTicketsAvailability_result')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.STRUCT, 0)
+      self.success.write(oprot)
+      oprot.writeFieldEnd()
+    if self.exc is not None:
+      oprot.writeFieldBegin('exc', TType.STRUCT, 1)
+      self.exc.write(oprot)
+      oprot.writeFieldEnd()
+    if self.excsql is not None:
+      oprot.writeFieldBegin('excsql', TType.STRUCT, 2)
+      self.excsql.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getTicketsAvailability_args:
+  """
+  Attributes:
+   - params
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRUCT, 'params', (GetTicketsAvailabilityParameters, GetTicketsAvailabilityParameters.thrift_spec), None, ), # 1
+  )
+
+  def __init__(self, params=None,):
+    self.params = params
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRUCT:
+          self.params = GetTicketsAvailabilityParameters()
+          self.params.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getTicketsAvailability_args')
+    if self.params is not None:
+      oprot.writeFieldBegin('params', TType.STRUCT, 1)
+      self.params.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getTicketsAvailability_result:
+  """
+  Attributes:
+   - success
+   - exc
+   - excsql
+  """
+
+  thrift_spec = (
+    (0, TType.LIST, 'success', (TType.STRUCT,(ExtendedTicketsAvailability, ExtendedTicketsAvailability.thrift_spec)), None, ), # 0
+    (1, TType.STRUCT, 'exc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
+    (2, TType.STRUCT, 'excsql', (SQLException, SQLException.thrift_spec), None, ), # 2
+  )
+
+  def __init__(self, success=None, exc=None, excsql=None,):
+    self.success = success
+    self.exc = exc
+    self.excsql = excsql
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.LIST:
+          self.success = []
+          (_etype38, _size35) = iprot.readListBegin()
+          for _i39 in xrange(_size35):
+            _elem40 = ExtendedTicketsAvailability()
+            _elem40.read(iprot)
+            self.success.append(_elem40)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 1:
+        if ftype == TType.STRUCT:
+          self.exc = NotFoundException()
+          self.exc.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRUCT:
+          self.excsql = SQLException()
+          self.excsql.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getTicketsAvailability_result')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.LIST, 0)
+      oprot.writeListBegin(TType.STRUCT, len(self.success))
+      for iter41 in self.success:
+        iter41.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -1699,10 +2723,10 @@ class findPatients_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype31, _size28) = iprot.readListBegin()
-          for _i32 in xrange(_size28):
-            _elem33 = iprot.readI32();
-            self.success.append(_elem33)
+          (_etype45, _size42) = iprot.readListBegin()
+          for _i46 in xrange(_size42):
+            _elem47 = iprot.readI32();
+            self.success.append(_elem47)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1731,8 +2755,8 @@ class findPatients_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.I32, len(self.success))
-      for iter34 in self.success:
-        oprot.writeI32(iter34)
+      for iter48 in self.success:
+        oprot.writeI32(iter48)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -1787,10 +2811,10 @@ class getPatientInfo_args:
       if fid == 1:
         if ftype == TType.LIST:
           self.patientIds = []
-          (_etype38, _size35) = iprot.readListBegin()
-          for _i39 in xrange(_size35):
-            _elem40 = iprot.readI32();
-            self.patientIds.append(_elem40)
+          (_etype52, _size49) = iprot.readListBegin()
+          for _i53 in xrange(_size49):
+            _elem54 = iprot.readI32();
+            self.patientIds.append(_elem54)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1807,8 +2831,8 @@ class getPatientInfo_args:
     if self.patientIds is not None:
       oprot.writeFieldBegin('patientIds', TType.LIST, 1)
       oprot.writeListBegin(TType.I32, len(self.patientIds))
-      for iter41 in self.patientIds:
-        oprot.writeI32(iter41)
+      for iter55 in self.patientIds:
+        oprot.writeI32(iter55)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -1838,7 +2862,7 @@ class getPatientInfo_result:
   """
 
   thrift_spec = (
-    (0, TType.LIST, 'success', (TType.STRUCT,(PatientInfo, PatientInfo.thrift_spec)), None, ), # 0
+    (0, TType.MAP, 'success', (TType.I32,None,TType.STRUCT,(PatientInfo, PatientInfo.thrift_spec)), None, ), # 0
     (1, TType.STRUCT, 'exc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
     (2, TType.STRUCT, 'excsql', (SQLException, SQLException.thrift_spec), None, ), # 2
   )
@@ -1858,14 +2882,15 @@ class getPatientInfo_result:
       if ftype == TType.STOP:
         break
       if fid == 0:
-        if ftype == TType.LIST:
-          self.success = []
-          (_etype45, _size42) = iprot.readListBegin()
-          for _i46 in xrange(_size42):
-            _elem47 = PatientInfo()
-            _elem47.read(iprot)
-            self.success.append(_elem47)
-          iprot.readListEnd()
+        if ftype == TType.MAP:
+          self.success = {}
+          (_ktype57, _vtype58, _size56 ) = iprot.readMapBegin() 
+          for _i60 in xrange(_size56):
+            _key61 = iprot.readI32();
+            _val62 = PatientInfo()
+            _val62.read(iprot)
+            self.success[_key61] = _val62
+          iprot.readMapEnd()
         else:
           iprot.skip(ftype)
       elif fid == 1:
@@ -1891,11 +2916,12 @@ class getPatientInfo_result:
       return
     oprot.writeStructBegin('getPatientInfo_result')
     if self.success is not None:
-      oprot.writeFieldBegin('success', TType.LIST, 0)
-      oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter48 in self.success:
-        iter48.write(oprot)
-      oprot.writeListEnd()
+      oprot.writeFieldBegin('success', TType.MAP, 0)
+      oprot.writeMapBegin(TType.I32, TType.STRUCT, len(self.success))
+      for kiter63,viter64 in self.success.items():
+        oprot.writeI32(kiter63)
+        viter64.write(oprot)
+      oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
       oprot.writeFieldBegin('exc', TType.STRUCT, 1)
@@ -1904,6 +2930,288 @@ class getPatientInfo_result:
     if self.excsql is not None:
       oprot.writeFieldBegin('excsql', TType.STRUCT, 2)
       self.excsql.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getPatientContacts_args:
+  """
+  Attributes:
+   - patientId
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'patientId', None, None, ), # 1
+  )
+
+  def __init__(self, patientId=None,):
+    self.patientId = patientId
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.patientId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getPatientContacts_args')
+    if self.patientId is not None:
+      oprot.writeFieldBegin('patientId', TType.I32, 1)
+      oprot.writeI32(self.patientId)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getPatientContacts_result:
+  """
+  Attributes:
+   - success
+   - exc
+  """
+
+  thrift_spec = (
+    (0, TType.LIST, 'success', (TType.STRUCT,(Contact, Contact.thrift_spec)), None, ), # 0
+    (1, TType.STRUCT, 'exc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
+  )
+
+  def __init__(self, success=None, exc=None,):
+    self.success = success
+    self.exc = exc
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.LIST:
+          self.success = []
+          (_etype68, _size65) = iprot.readListBegin()
+          for _i69 in xrange(_size65):
+            _elem70 = Contact()
+            _elem70.read(iprot)
+            self.success.append(_elem70)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 1:
+        if ftype == TType.STRUCT:
+          self.exc = NotFoundException()
+          self.exc.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getPatientContacts_result')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.LIST, 0)
+      oprot.writeListBegin(TType.STRUCT, len(self.success))
+      for iter71 in self.success:
+        iter71.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.exc is not None:
+      oprot.writeFieldBegin('exc', TType.STRUCT, 1)
+      self.exc.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getPatientOrgStructures_args:
+  """
+  Attributes:
+   - parentId
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'parentId', None, None, ), # 1
+  )
+
+  def __init__(self, parentId=None,):
+    self.parentId = parentId
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.parentId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getPatientOrgStructures_args')
+    if self.parentId is not None:
+      oprot.writeFieldBegin('parentId', TType.I32, 1)
+      oprot.writeI32(self.parentId)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getPatientOrgStructures_result:
+  """
+  Attributes:
+   - success
+   - exc
+  """
+
+  thrift_spec = (
+    (0, TType.LIST, 'success', (TType.STRUCT,(OrgStructuresProperties, OrgStructuresProperties.thrift_spec)), None, ), # 0
+    (1, TType.STRUCT, 'exc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
+  )
+
+  def __init__(self, success=None, exc=None,):
+    self.success = success
+    self.exc = exc
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.LIST:
+          self.success = []
+          (_etype75, _size72) = iprot.readListBegin()
+          for _i76 in xrange(_size72):
+            _elem77 = OrgStructuresProperties()
+            _elem77.read(iprot)
+            self.success.append(_elem77)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 1:
+        if ftype == TType.STRUCT:
+          self.exc = NotFoundException()
+          self.exc.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getPatientOrgStructures_result')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.LIST, 0)
+      oprot.writeListBegin(TType.STRUCT, len(self.success))
+      for iter78 in self.success:
+        iter78.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.exc is not None:
+      oprot.writeFieldBegin('exc', TType.STRUCT, 1)
+      self.exc.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -2161,11 +3469,11 @@ class getPatientQueue_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype52, _size49) = iprot.readListBegin()
-          for _i53 in xrange(_size49):
-            _elem54 = Queue()
-            _elem54.read(iprot)
-            self.success.append(_elem54)
+          (_etype82, _size79) = iprot.readListBegin()
+          for _i83 in xrange(_size79):
+            _elem84 = Queue()
+            _elem84.read(iprot)
+            self.success.append(_elem84)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -2194,8 +3502,8 @@ class getPatientQueue_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter55 in self.success:
-        iter55.write(oprot)
+      for iter85 in self.success:
+        iter85.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -2363,6 +3671,147 @@ class dequeuePatient_result:
     if self.excsql is not None:
       oprot.writeFieldBegin('excsql', TType.STRUCT, 2)
       self.excsql.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getSpecialities_args:
+  """
+  Attributes:
+   - hospitalUidFrom
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'hospitalUidFrom', None, None, ), # 1
+  )
+
+  def __init__(self, hospitalUidFrom=None,):
+    self.hospitalUidFrom = hospitalUidFrom
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.hospitalUidFrom = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getSpecialities_args')
+    if self.hospitalUidFrom is not None:
+      oprot.writeFieldBegin('hospitalUidFrom', TType.STRING, 1)
+      oprot.writeString(self.hospitalUidFrom)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getSpecialities_result:
+  """
+  Attributes:
+   - success
+   - exc
+  """
+
+  thrift_spec = (
+    (0, TType.LIST, 'success', (TType.STRUCT,(Speciality, Speciality.thrift_spec)), None, ), # 0
+    (1, TType.STRUCT, 'exc', (SQLException, SQLException.thrift_spec), None, ), # 1
+  )
+
+  def __init__(self, success=None, exc=None,):
+    self.success = success
+    self.exc = exc
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.LIST:
+          self.success = []
+          (_etype89, _size86) = iprot.readListBegin()
+          for _i90 in xrange(_size86):
+            _elem91 = Speciality()
+            _elem91.read(iprot)
+            self.success.append(_elem91)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 1:
+        if ftype == TType.STRUCT:
+          self.exc = SQLException()
+          self.exc.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getSpecialities_result')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.LIST, 0)
+      oprot.writeListBegin(TType.STRUCT, len(self.success))
+      for iter92 in self.success:
+        iter92.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.exc is not None:
+      oprot.writeFieldBegin('exc', TType.STRUCT, 1)
+      self.exc.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()

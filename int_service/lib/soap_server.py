@@ -110,10 +110,8 @@ class ScheduleServer(ServiceBase):
 
 class Server(object):
 
-    @classmethod
-    def run(cls):
+    def __init__(self):
         logging.basicConfig()
-        from wsgiref.simple_server import make_server
         info = Application([InfoServer],
             tns=SOAP_NAMESPACE,
             name='InfoService',
@@ -135,14 +133,14 @@ class Server(object):
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
-        root = CustomWsgiMounter({
+        self.applications = CustomWsgiMounter({
             'info': info,
             'list': list,
             'schedule': schedule,
             })
 
-        server = make_server(SOAP_SERVER_HOST, SOAP_SERVER_PORT, root)
-#        server = make_server(SOAP_SERVER_HOST, SOAP_SERVER_PORT, WsgiApplication(list))
+    def run(self):
+        from wsgiref.simple_server import make_server
+        server = make_server(SOAP_SERVER_HOST, SOAP_SERVER_PORT, self.applications)
         logging.info("listening to http://%s:%d" % (SOAP_SERVER_HOST, SOAP_SERVER_PORT))
-
         server.serve_forever()
