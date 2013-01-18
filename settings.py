@@ -7,4 +7,6 @@ SOAP_SERVER_PORT = 9910
 #SOAP_NAMESPACE = 'urn:ru.gov.economy:std.ws'
 SOAP_NAMESPACE = 'tns'
 
+FLASK_SECRET_KEY = ''
+
 from settings_local import *

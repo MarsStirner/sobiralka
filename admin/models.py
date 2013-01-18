@@ -110,7 +110,7 @@ class Speciality(Base):
     """Mapping for speciality table"""
     __tablename__ = 'speciality'
 
-    id = Column(Integer(10), primary_key=True)
+    id = Column(Integer, primary_key=True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'))
     speciality = Column(Unicode(64), nullable=False)
     nameEPGU = Column(Unicode(64))
