@@ -404,7 +404,7 @@ class EnqueueWorker(object):
         speciality = kwargs.get('speciality')
         if not speciality:
             personal_dw = PersonalWorker()
-            doctor = personal_dw.get_doctor(doctor_id=doctor_uid)
+            doctor = personal_dw.get_doctor(doctor_id=doctor_uid, lpu_unit=hospital_uid)
             if doctor:
                 speciality = doctor.speciality
 
@@ -788,7 +788,7 @@ class PersonalWorker(object):
 
         Args:
             doctor_id: id врача  (обязательный)
-            lpu_unit: uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (необязательный)
+            lpu_unit: uid ЛПУ или подразделения, список вида: ['17, 0'], соответствует ['LPU_ID', 'LPU_Unit_ID'] (необязательный)
 
         """
         lpu_unit = kwargs.get('lpu_unit')
