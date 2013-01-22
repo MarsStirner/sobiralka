@@ -909,8 +909,10 @@ class UpdateWorker(object):
             try:
                 units = proxy_client.listHospitals(infis_code=lpu.key)
                 for unit in units:
-                    #TODO: после исправления названия поля убрать вариант с adress
-                    address = getattr(unit, 'address', getattr(unit, 'adress', ""))
+                    if not unit.name:
+                        continue
+
+                    address = getattr(unit, 'address')
                     if address is None:
                         address = ""
                     self.session.add(LPU_Units(
