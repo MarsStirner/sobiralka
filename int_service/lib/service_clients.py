@@ -588,15 +588,13 @@ class ClientIntramed(AbstractClient):
         """
         if self.client is None:
             self.client = Client(self.url + 'egov.v3.queuePort.CLS?WSDL=1', cache=None)
-        # TODO: перепроверить параметры для Intramed
         params = {
             'doctorUid': kwargs.get('doctorUid'),
             'speciality': kwargs.get('speciality'),
             'startDate': kwargs.get('startDate'),
+            'endDate': kwargs.get('endDate'),
             'hospitalUid': kwargs.get('hospitalUid'),
         }
-
-        patient_id = kwargs.get('patientId')
 
         try:
             schedule = self.client.service.getScheduleInfo(**params)
