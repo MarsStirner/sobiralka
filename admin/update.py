@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import os, sys
 
-sys.path.insert(0,os.path.dirname('..'))
+sys.path.insert(0,os.path.dirname(os.path.abspath('..')))
 
 from int_service.lib.dataworker import UpdateWorker
 
