@@ -946,16 +946,17 @@ class UpdateWorker(object):
                     else:
                         if doctors:
                             for doctor in doctors:
-                                self.session.add(Personal(
-                                    id=doctor.id,
-                                    lpuId=lpu.id,
-                                    orgId=unit.id,
-                                    FirstName=doctor.firstName,
-                                    PatrName=doctor.patrName,
-                                    LastName=doctor.lastName,
-                                    speciality=doctor.speciality,
-                                ))
-                                self.__update_speciality(lpu_id=lpu.id, speciality=doctor.speciality)
+                                if doctor.firstName and doctor.lastName and doctor.patrName:
+                                    self.session.add(Personal(
+                                        id=doctor.id,
+                                        lpuId=lpu.id,
+                                        orgId=unit.id,
+                                        FirstName=doctor.firstName,
+                                        PatrName=doctor.patrName,
+                                        LastName=doctor.lastName,
+                                        speciality=doctor.speciality,
+                                    ))
+                                    self.__update_speciality(lpu_id=lpu.id, speciality=doctor.speciality)
         return True
 
     def __update_speciality(self, **kwargs):
