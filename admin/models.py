@@ -16,8 +16,8 @@ class LPU(Base):
     key = Column(UnicodeText, doc='ServerId')
     proxy = Column(UnicodeText, doc=u'Прокси для запросов', nullable=False)
     email = Column(UnicodeText, doc='E-mail')
-    kladr = Column(UnicodeText, doc=u'КЛАДР', nullable=False)
-    OGRN = Column(String(15), doc=u'ОГРН', nullable=False)
+    kladr = Column(UnicodeText, doc=u'КЛАДР', nullable=True)
+    OGRN = Column(String(15), doc=u'ОГРН', nullable=True)
     OKATO = Column(String(15), doc=u'ОКАТО', nullable=False)
     LastUpdate = Column(
         Integer,
