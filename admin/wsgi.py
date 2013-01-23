@@ -2,9 +2,8 @@
 import sys, os
 sys.path.insert(0, os.path.abspath('..'))
 
-from admin import app as application, admin
+from admin import app as application, admin, views
 from admin.database import Session
-import views
 
 
 admin.init_app(application)
