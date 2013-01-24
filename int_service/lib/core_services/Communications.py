@@ -18,10 +18,10 @@ except:
 
 
 class Iface:
-  def getOrganisationInfo(self, id):
+  def getOrganisationInfo(self, infisCode):
     """
     Parameters:
-     - id
+     - infisCode
     """
     pass
 
@@ -158,18 +158,18 @@ class Client(Iface):
       self._oprot = oprot
     self._seqid = 0
 
-  def getOrganisationInfo(self, id):
+  def getOrganisationInfo(self, infisCode):
     """
     Parameters:
-     - id
+     - infisCode
     """
-    self.send_getOrganisationInfo(id)
+    self.send_getOrganisationInfo(infisCode)
     return self.recv_getOrganisationInfo()
 
-  def send_getOrganisationInfo(self, id):
+  def send_getOrganisationInfo(self, infisCode):
     self._oprot.writeMessageBegin('getOrganisationInfo', TMessageType.CALL, self._seqid)
     args = getOrganisationInfo_args()
-    args.id = id
+    args.infisCode = infisCode
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
@@ -817,7 +817,7 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = getOrganisationInfo_result()
     try:
-      result.success = self._handler.getOrganisationInfo(args.id)
+      result.success = self._handler.getOrganisationInfo(args.infisCode)
     except NotFoundException as exc:
       result.exc = exc
     oprot.writeMessageBegin("getOrganisationInfo", TMessageType.REPLY, seqid)
@@ -1095,16 +1095,16 @@ class Processor(Iface, TProcessor):
 class getOrganisationInfo_args:
   """
   Attributes:
-   - id
+   - infisCode
   """
 
   thrift_spec = (
     None, # 0
-    (1, TType.I32, 'id', None, None, ), # 1
+    (1, TType.STRING, 'infisCode', None, None, ), # 1
   )
 
-  def __init__(self, id=None,):
-    self.id = id
+  def __init__(self, infisCode=None,):
+    self.infisCode = infisCode
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -1116,8 +1116,8 @@ class getOrganisationInfo_args:
       if ftype == TType.STOP:
         break
       if fid == 1:
-        if ftype == TType.I32:
-          self.id = iprot.readI32();
+        if ftype == TType.STRING:
+          self.infisCode = iprot.readString();
         else:
           iprot.skip(ftype)
       else:
@@ -1130,9 +1130,9 @@ class getOrganisationInfo_args:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
     oprot.writeStructBegin('getOrganisationInfo_args')
-    if self.id is not None:
-      oprot.writeFieldBegin('id', TType.I32, 1)
-      oprot.writeI32(self.id)
+    if self.infisCode is not None:
+      oprot.writeFieldBegin('infisCode', TType.STRING, 1)
+      oprot.writeString(self.infisCode)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -2701,7 +2701,7 @@ class findPatients_result:
   """
 
   thrift_spec = (
-    (0, TType.LIST, 'success', (TType.I32,None), None, ), # 0
+    (0, TType.LIST, 'success', (TType.STRUCT,(Patient, Patient.thrift_spec)), None, ), # 0
     (1, TType.STRUCT, 'exc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
     (2, TType.STRUCT, 'excsql', (SQLException, SQLException.thrift_spec), None, ), # 2
   )
@@ -2725,7 +2725,8 @@ class findPatients_result:
           self.success = []
           (_etype45, _size42) = iprot.readListBegin()
           for _i46 in xrange(_size42):
-            _elem47 = iprot.readI32();
+            _elem47 = Patient()
+            _elem47.read(iprot)
             self.success.append(_elem47)
           iprot.readListEnd()
         else:
@@ -2754,9 +2755,9 @@ class findPatients_result:
     oprot.writeStructBegin('findPatients_result')
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
-      oprot.writeListBegin(TType.I32, len(self.success))
+      oprot.writeListBegin(TType.STRUCT, len(self.success))
       for iter48 in self.success:
-        oprot.writeI32(iter48)
+        iter48.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:

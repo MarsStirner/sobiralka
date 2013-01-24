@@ -79,6 +79,15 @@ struct PatientInfo{
 5:optional i32 sex;
 }
 
+struct Patient{
+1:required i32 id;
+2:optional string lastName;
+3:optional string firstName;
+4:optional string patrName;
+5:optional timestamp birthDate;
+6:optional i32 sex;
+}
+
 struct OrgStructuresProperties{
 1:required i32 orgStructureId;
 2:optional bool attached;
@@ -163,6 +172,7 @@ struct AddPatientParameters{
 2:optional string firstName;
 3:optional string patrName;
 4:optional timestamp birthDate;
+5:optional i32 sex;
 }
 
 struct EnqueuePatientParameters{
@@ -179,9 +189,10 @@ struct FindPatientParameters{
 3:optional string patrName;
 4:optional timestamp birthDate;
 5:optional i32 sex;
-6:optional i32 identifierType;
-7:required i32 identifier;
-8:optional string omiPolicy;
+6:optional string identifierType;
+7:optional string identifier;
+8:optional string omiPolicySerial;
+9:optional string omiPolicyNumber;
 }
 
 
@@ -200,7 +211,7 @@ service Communications{
 
 //Methods to be generated in this service
 
-Organization getOrganisationInfo(1:i32 id)
+Organization getOrganisationInfo(1:string infisCode)
 throws (1:NotFoundException exc);
 
 list<OrgStructure> getOrgStructures(1:i32 parent_id, 2:bool recursive, 3:string infisCode)
@@ -230,7 +241,7 @@ throws (1:SQLException excsql);
 PatientStatus findPatient(1:FindPatientParameters params)
 throws (1:NotFoundException exc, 2:SQLException excsql);
 
-list<i32> findPatients(1:FindPatientParameters params)
+list<Patient> findPatients(1:FindPatientParameters params)
 throws (1:NotFoundException exc, 2:SQLException excsql);
 
 map<i32,PatientInfo> getPatientInfo(1:list<i32> patientIds)

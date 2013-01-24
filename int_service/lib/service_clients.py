@@ -917,6 +917,7 @@ class ClientKorus30(AbstractClient):
                 patrName = person.patronymic,
                 #omiPolicy = kwargs['omiPolicyNumber'],
                 birthDate = kwargs.get('birthday'),
+                sex = int(kwargs.get('sex', 0)),
             )
             try:
                 result = self.client.addPatient(params)

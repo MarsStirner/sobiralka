@@ -23,7 +23,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print 'Usage: ' + sys.argv[0] + ' [-h host[:port]] [-u url] [-f[ramed]] function [arg1 [arg2...]]'
   print ''
   print 'Functions:'
-  print '  Organization getOrganisationInfo(i32 id)'
+  print '  Organization getOrganisationInfo(string infisCode)'
   print '   getOrgStructures(i32 parent_id, bool recursive, string infisCode)'
   print '   getAddresses(i32 orgStructureId, bool recursive)'
   print '   findOrgStructureByAddress(FindOrgStructureByAddressParameters params)'
@@ -96,7 +96,7 @@ if cmd == 'getOrganisationInfo':
   if len(args) != 1:
     print 'getOrganisationInfo requires 1 args'
     sys.exit(1)
-  pp.pprint(client.getOrganisationInfo(eval(args[0]),))
+  pp.pprint(client.getOrganisationInfo(args[0],))
 
 elif cmd == 'getOrgStructures':
   if len(args) != 3:

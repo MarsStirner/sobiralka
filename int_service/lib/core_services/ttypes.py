@@ -1037,6 +1037,128 @@ class PatientInfo:
   def __ne__(self, other):
     return not (self == other)
 
+class Patient:
+  """
+  Attributes:
+   - id
+   - lastName
+   - firstName
+   - patrName
+   - birthDate
+   - sex
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'id', None, None, ), # 1
+    (2, TType.STRING, 'lastName', None, None, ), # 2
+    (3, TType.STRING, 'firstName', None, None, ), # 3
+    (4, TType.STRING, 'patrName', None, None, ), # 4
+    (5, TType.I64, 'birthDate', None, None, ), # 5
+    (6, TType.I32, 'sex', None, None, ), # 6
+  )
+
+  def __init__(self, id=None, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None,):
+    self.id = id
+    self.lastName = lastName
+    self.firstName = firstName
+    self.patrName = patrName
+    self.birthDate = birthDate
+    self.sex = sex
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.id = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.lastName = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.firstName = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.patrName = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I64:
+          self.birthDate = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.I32:
+          self.sex = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Patient')
+    if self.id is not None:
+      oprot.writeFieldBegin('id', TType.I32, 1)
+      oprot.writeI32(self.id)
+      oprot.writeFieldEnd()
+    if self.lastName is not None:
+      oprot.writeFieldBegin('lastName', TType.STRING, 2)
+      oprot.writeString(self.lastName)
+      oprot.writeFieldEnd()
+    if self.firstName is not None:
+      oprot.writeFieldBegin('firstName', TType.STRING, 3)
+      oprot.writeString(self.firstName)
+      oprot.writeFieldEnd()
+    if self.patrName is not None:
+      oprot.writeFieldBegin('patrName', TType.STRING, 4)
+      oprot.writeString(self.patrName)
+      oprot.writeFieldEnd()
+    if self.birthDate is not None:
+      oprot.writeFieldBegin('birthDate', TType.I64, 5)
+      oprot.writeI64(self.birthDate)
+      oprot.writeFieldEnd()
+    if self.sex is not None:
+      oprot.writeFieldBegin('sex', TType.I32, 6)
+      oprot.writeI32(self.sex)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.id is None:
+      raise TProtocol.TProtocolException(message='Required field id is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
 class OrgStructuresProperties:
   """
   Attributes:
@@ -2096,6 +2218,7 @@ class AddPatientParameters:
    - firstName
    - patrName
    - birthDate
+   - sex
   """
 
   thrift_spec = (
@@ -2104,13 +2227,15 @@ class AddPatientParameters:
     (2, TType.STRING, 'firstName', None, None, ), # 2
     (3, TType.STRING, 'patrName', None, None, ), # 3
     (4, TType.I64, 'birthDate', None, None, ), # 4
+    (5, TType.I32, 'sex', None, None, ), # 5
   )
 
-  def __init__(self, lastName=None, firstName=None, patrName=None, birthDate=None,):
+  def __init__(self, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None,):
     self.lastName = lastName
     self.firstName = firstName
     self.patrName = patrName
     self.birthDate = birthDate
+    self.sex = sex
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -2141,6 +2266,11 @@ class AddPatientParameters:
           self.birthDate = iprot.readI64();
         else:
           iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I32:
+          self.sex = iprot.readI32();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -2166,6 +2296,10 @@ class AddPatientParameters:
     if self.birthDate is not None:
       oprot.writeFieldBegin('birthDate', TType.I64, 4)
       oprot.writeI64(self.birthDate)
+      oprot.writeFieldEnd()
+    if self.sex is not None:
+      oprot.writeFieldBegin('sex', TType.I32, 5)
+      oprot.writeI32(self.sex)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -2307,7 +2441,8 @@ class FindPatientParameters:
    - sex
    - identifierType
    - identifier
-   - omiPolicy
+   - omiPolicySerial
+   - omiPolicyNumber
   """
 
   thrift_spec = (
@@ -2317,12 +2452,13 @@ class FindPatientParameters:
     (3, TType.STRING, 'patrName', None, None, ), # 3
     (4, TType.I64, 'birthDate', None, None, ), # 4
     (5, TType.I32, 'sex', None, None, ), # 5
-    (6, TType.I32, 'identifierType', None, None, ), # 6
-    (7, TType.I32, 'identifier', None, None, ), # 7
-    (8, TType.STRING, 'omiPolicy', None, None, ), # 8
+    (6, TType.STRING, 'identifierType', None, None, ), # 6
+    (7, TType.STRING, 'identifier', None, None, ), # 7
+    (8, TType.STRING, 'omiPolicySerial', None, None, ), # 8
+    (9, TType.STRING, 'omiPolicyNumber', None, None, ), # 9
   )
 
-  def __init__(self, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None, identifierType=None, identifier=None, omiPolicy=None,):
+  def __init__(self, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None, identifierType=None, identifier=None, omiPolicySerial=None, omiPolicyNumber=None,):
     self.lastName = lastName
     self.firstName = firstName
     self.patrName = patrName
@@ -2330,7 +2466,8 @@ class FindPatientParameters:
     self.sex = sex
     self.identifierType = identifierType
     self.identifier = identifier
-    self.omiPolicy = omiPolicy
+    self.omiPolicySerial = omiPolicySerial
+    self.omiPolicyNumber = omiPolicyNumber
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -2367,18 +2504,23 @@ class FindPatientParameters:
         else:
           iprot.skip(ftype)
       elif fid == 6:
-        if ftype == TType.I32:
-          self.identifierType = iprot.readI32();
+        if ftype == TType.STRING:
+          self.identifierType = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 7:
-        if ftype == TType.I32:
-          self.identifier = iprot.readI32();
+        if ftype == TType.STRING:
+          self.identifier = iprot.readString();
         else:
           iprot.skip(ftype)
       elif fid == 8:
         if ftype == TType.STRING:
-          self.omiPolicy = iprot.readString();
+          self.omiPolicySerial = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 9:
+        if ftype == TType.STRING:
+          self.omiPolicyNumber = iprot.readString();
         else:
           iprot.skip(ftype)
       else:
@@ -2412,23 +2554,25 @@ class FindPatientParameters:
       oprot.writeI32(self.sex)
       oprot.writeFieldEnd()
     if self.identifierType is not None:
-      oprot.writeFieldBegin('identifierType', TType.I32, 6)
-      oprot.writeI32(self.identifierType)
+      oprot.writeFieldBegin('identifierType', TType.STRING, 6)
+      oprot.writeString(self.identifierType)
       oprot.writeFieldEnd()
     if self.identifier is not None:
-      oprot.writeFieldBegin('identifier', TType.I32, 7)
-      oprot.writeI32(self.identifier)
+      oprot.writeFieldBegin('identifier', TType.STRING, 7)
+      oprot.writeString(self.identifier)
       oprot.writeFieldEnd()
-    if self.omiPolicy is not None:
-      oprot.writeFieldBegin('omiPolicy', TType.STRING, 8)
-      oprot.writeString(self.omiPolicy)
+    if self.omiPolicySerial is not None:
+      oprot.writeFieldBegin('omiPolicySerial', TType.STRING, 8)
+      oprot.writeString(self.omiPolicySerial)
+      oprot.writeFieldEnd()
+    if self.omiPolicyNumber is not None:
+      oprot.writeFieldBegin('omiPolicyNumber', TType.STRING, 9)
+      oprot.writeString(self.omiPolicyNumber)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 
   def validate(self):
-    if self.identifier is None:
-      raise TProtocol.TProtocolException(message='Required field identifier is unset!')
     return
 
 

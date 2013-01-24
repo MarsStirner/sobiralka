@@ -983,22 +983,23 @@ class UpdateWorker(object):
         # Update data in tables
         lpu_dw = LPUWorker()
         lpu_list = lpu_dw.get_list()
-        for lpu in lpu_list:
-#            if lpu.protocol != 'korus30':
-#                continue
-            self.__clear_data(lpu)
-            try:
-                lpu_units = self.__update_lpu_units(lpu)
-                if lpu_units:
-                    if not self.__update_personal(lpu, lpu_units):
+        if lpu_list:
+            for lpu in lpu_list:
+    #            if lpu.protocol != 'korus30':
+    #                continue
+                self.__clear_data(lpu)
+                try:
+                    lpu_units = self.__update_lpu_units(lpu)
+                    if lpu_units:
+                        if not self.__update_personal(lpu, lpu_units):
+                            return self.__failed_update()
+                    else:
                         return self.__failed_update()
-                else:
+                    lpu.LastUpdate = time.mktime(datetime.datetime.now().timetuple())
+                except WebFault, e:
+                    print e
                     return self.__failed_update()
-                lpu.LastUpdate = time.mktime(datetime.datetime.now().timetuple())
-            except WebFault, e:
-                print e
-                return self.__failed_update()
-            except exceptions.UserWarning, e:
-                print e
-                return self.__failed_update()
+                except exceptions.UserWarning, e:
+                    print e
+                    return self.__failed_update()
         return self.__success_update()
