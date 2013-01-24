@@ -41,14 +41,14 @@ def create_system_user():
 def configure_webserver():
     #Создаём конфиги apache на основе имеющихся шаблонов и заданыых настроек
     with lcd(project_dir_path):
-        is_config_file = open('fabric_inc/int_server.config', 'r')
+        is_config_file = open('%s/fabric_inc/int_server.config' % project_dir_path, 'r')
         is_config = _parse_config(is_config_file.read())
         is_config_file.close(is_config_file)
         apache_is_config_file = open('/etc/httpd2/conf/sites-available/%s' % project_dir_name, 'w')
         apache_is_config_file.write(is_config)
         apache_is_config_file.close()
 
-        admin_is_config_file = open('fabric_inc/admin_int_server.config', 'r')
+        admin_is_config_file = open('%sfabric_inc/admin_int_server.config' % project_dir_path, 'r')
         admin_is_config = _parse_config(admin_is_config_file.read())
         admin_is_config_file.close(admin_is_config_file)
         apache_admin_is_config_file = open('/etc/httpd2/conf/sites-available/admin_%s' % project_dir_name, 'w')
@@ -91,3 +91,5 @@ def deploy():
     configure_webserver()
     activate_web_config()
     restore_database()
+
+deploy()
