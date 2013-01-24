@@ -19,21 +19,28 @@ def prepare_virtual_env():
 
 def configure_db():
     #Создаём БД
+    queries = []
     user = operations.prompt("Please specify MySQL admin user: ")
 #    password = getpass.getpass("Please specify MySQL admin password: ")
-    local('echo "CREATE DATABASE %s;" | mysql -h %s -u %s -p' % (DB_NAME, DB_HOST, user))
+    queries.append( "CREATE DATABASE %s;" % DB_NAME)
+#    local('echo "CREATE DATABASE %s;" | mysql -h %s -u %s -p' % (DB_NAME, DB_HOST, user))
     #Создаём пользователя для работы с БД
     if DB_USER != 'root':
-        local(
-            '''echo "CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" | mysql -h %s  -u %s''' %
-            (DB_USER, DB_HOST, DB_PASSWORD, DB_HOST, user)
-        )
+        queries.append("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (DB_USER, DB_HOST, DB_PASSWORD))
+#        local(
+#            '''echo "CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" | mysql -h %s -u %s -p''' %
+#            (DB_USER, DB_HOST, DB_PASSWORD, DB_HOST, user)
+#        )
     #Выдаём пользователю привелегии на работу с БД
-    local(
-        '''echo "GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s';" | mysql -h %s  -u %s''' %
-        (DB_NAME, DB_USER, DB_HOST, DB_HOST, user)
-    )
-    local('echo "FLUSH PRIVILEGES;" | mysql -h %s -u %s' % (DB_HOST, user))
+    queries.append("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s';" % (DB_NAME, DB_USER, DB_HOST))
+#    local(
+#        '''echo "GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s';" | mysql -h %s -u %s -p''' %
+#        (DB_NAME, DB_USER, DB_HOST, DB_HOST, user)
+#    )
+    queries.append("FLUSH PRIVILEGES;")
+#    local('echo "FLUSH PRIVILEGES;" | mysql -h %s -u %s -p' % (DB_HOST, user))
+    local('echo "%s" | mysql -h %s -u %s -p' % (' '.join(queries), DB_HOST, user))
+
 
 def prepare_directories():
     with lcd(project_dir_path):
