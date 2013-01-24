@@ -23,32 +23,20 @@ def configure_db():
     user = operations.prompt("Please specify MySQL admin user: ")
 #    password = getpass.getpass("Please specify MySQL admin password: ")
     queries.append( "CREATE DATABASE %s;" % DB_NAME)
-#    local('echo "CREATE DATABASE %s;" | mysql -h %s -u %s -p' % (DB_NAME, DB_HOST, user))
     #Создаём пользователя для работы с БД
     db_user_host = DB_HOST
     if db_user_host not in ('localhost', '127.0.0.1'):
         db_user_host = '%'
     if DB_USER != 'root':
-#        queries.append("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (DB_USER, db_user_host, DB_PASSWORD))
-        queries.append(
-            '''GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES
-            ON %s.* TO '%s'@'%s' IDENTIFIED BY '%s';'''
-            % (DB_NAME, DB_USER, db_user_host, DB_PASSWORD)
-        )
-#        local(
-#            '''echo "CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" | mysql -h %s -u %s -p''' %
-#            (DB_USER, DB_HOST, DB_PASSWORD, DB_HOST, user)
+        queries.append("CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" % (DB_USER, db_user_host, DB_PASSWORD))
+#        queries.append(
+#            '''GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, LOCK TABLES ON %s.* TO '%s'@'%s' IDENTIFIED BY '%s';''' %
+#            (DB_NAME, DB_USER, db_user_host, DB_PASSWORD)
 #        )
     #Выдаём пользователю привелегии на работу с БД
-#    queries.append("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s';" % (DB_NAME, DB_USER, db_user_host))
-#    local(
-#        '''echo "GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s';" | mysql -h %s -u %s -p''' %
-#        (DB_NAME, DB_USER, DB_HOST, DB_HOST, user)
-#    )
+    queries.append("GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s';" % (DB_NAME, DB_USER, db_user_host))
     queries.append("FLUSH PRIVILEGES;")
-#    local('echo "FLUSH PRIVILEGES;" | mysql -h %s -u %s -p' % (DB_HOST, user))
     local('echo "%s" | mysql -h %s -u %s -p' % (' '.join(queries), DB_HOST, user))
-
 
 def prepare_directories():
     with lcd(project_dir_path):
