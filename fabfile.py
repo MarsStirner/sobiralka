@@ -19,13 +19,13 @@ def prepare_virtual_env():
 
 def configure_db():
     #Создаём БД
-    local('echo "CREATE DATABASE %s;" | mysql -u root' % DB_NAME)
+    local('echo "CREATE DATABASE %s;" | mysql -h %s -u root' % (DB_NAME, DB_HOST))
     #Создаём пользователя для работы с БД
     if DB_USER != 'root':
-        local('''echo "CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" | mysql -u root''' % (DB_USER, DB_HOST, DB_PASSWORD))
+        local('''echo "CREATE USER '%s'@'%s' IDENTIFIED BY '%s';" | mysql -h %s -u root''' % (DB_USER, DB_HOST, DB_PASSWORD, DB_HOST))
     #Выдаём пользователю привелегии на работу с БД
-    local('''echo "GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s';" | mysql -u root''' % (DB_NAME, DB_USER, DB_HOST))
-    local('echo "FLUSH PRIVILEGES;" | mysql -u root')
+    local('''echo "GRANT ALL PRIVILEGES ON %s.* TO '%s'@'%s';" | mysql -h %s -u root''' % (DB_NAME, DB_USER, DB_HOST, DB_HOST))
+    local('echo "FLUSH PRIVILEGES;" | mysql -h %s -u root' % DB_HOST)
 
 def prepare_directories():
     with lcd(project_dir_path):
