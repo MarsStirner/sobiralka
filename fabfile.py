@@ -14,8 +14,8 @@ def prepare_virtual_env():
     local('easy_install virtualenv pip')
     #Создаём и активируем виртульное окружение для проекта
     with lcd(project_dir_path):
-        local('virtualenv virtualenv')
-        local('source virtualenv/bin/activate')
+        local('virtualenv .virtualenv')
+        local('source .virtualenv/bin/activate')
 
 def configure_db():
     #Создаём БД
