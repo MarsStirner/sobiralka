@@ -80,8 +80,8 @@ def _parse_config(s):
 
 def activate_web_config():
     #Активируем конфигурации и перезапускаем apache
-    local('a2ensite %s', project_dir_name)
-    local('a2ensite admin_%s', project_dir_name)
+    local('a2ensite %s' % project_dir_name)
+    local('a2ensite admin_%s' % project_dir_name)
     local('service httpd2 restart')
 
 def install_requirements():
