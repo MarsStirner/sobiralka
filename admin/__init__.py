@@ -1,7 +1,13 @@
+# -*- coding: utf-8 -*-
 from flask import Flask
 from flask.ext.admin import Admin
 from settings_local import FLASK_SECRET_KEY
+from admin.database import Session
+from admin import views
 
 app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY
-admin = Admin()
+admin = Admin(app)
+admin.locale_selector(lambda: 'ru')
+
+admin.add_view(views.LPUAdmin(Session, name=u'Список ЛПУ'))
