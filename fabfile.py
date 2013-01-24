@@ -5,9 +5,9 @@ from fabric.contrib.console import confirm
 
 from settings import *
 
-project_dir_path = os.path.abspath('../..')
-project_dir_name = os.path.basename(os.path.abspath('../..'))
-code_dir = os.path.basename(os.path.abspath('..'))
+project_dir_path = os.path.abspath('..')
+project_dir_name = os.path.basename(os.path.abspath('..'))
+code_dir = os.path.basename(os.path.abspath('.'))
 
 def prepare_virtual_env():
     #Установка виртуального окружения и инструмента работы с пакетами Python
