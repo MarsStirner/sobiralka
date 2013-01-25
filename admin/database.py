@@ -15,6 +15,7 @@ def init_db():
     # you will have to import them first before calling init_db()
     import admin.models
     Base.metadata.create_all(bind=engine)
+    Session.commit()
 
 def shutdown_session(exception=None):
     Session.remove()
