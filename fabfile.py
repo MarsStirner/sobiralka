@@ -100,7 +100,8 @@ def install_requirements():
 def restore_database():
     #Создаём таблицы в БД на основе модели
     with lcd(code_dir_path):
-        local('python admin/update.py')
+        with prefix('source %s/%s/bin/activate' % (project_dir_path, virtualenv)):
+            local('python admin/update.py')
 
 def deploy():
     prepare_virtual_env()
@@ -111,3 +112,8 @@ def deploy():
     activate_web_config()
     install_requirements()
     restore_database()
+    print u'Установка прошла успешно!'
+
+def update_db():
+    restore_database()
+    print u'Обновление базы данных прошло успешно!'
