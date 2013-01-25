@@ -14,6 +14,7 @@ def prepare_virtual_env():
     local('easy_install virtualenv pip')
     #Создаём и активируем виртульное окружение для проекта
     with lcd(project_dir_path):
+        local('rm -R .virtualenv')
         local('virtualenv .virtualenv')
         local('source .virtualenv/bin/activate')
 
@@ -80,8 +81,8 @@ def _parse_config(s):
 
 def activate_web_config():
     #Активируем конфигурации и перезапускаем apache
-    local('a2ensite %s' % project_dir_name)
-    local('a2ensite admin_%s' % project_dir_name)
+    local('ln -s /etc/httpd2/conf/sites-available/%s /etc/httpd2/conf/sites-enabled/%s' % (project_dir_name, project_dir_name))
+    local('ln -s /etc/httpd2/conf/sites-available/admin_%s /etc/httpd2/conf/sites-enabled/admin_%s' % (project_dir_name, project_dir_name))
     local('service httpd2 restart')
 
 def install_requirements():
