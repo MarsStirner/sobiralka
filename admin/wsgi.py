@@ -2,5 +2,5 @@
 import sys, os
 sys.path.insert(0, os.path.abspath('..'))
 
-from admin import app
+from admin.app import app
 application = app
