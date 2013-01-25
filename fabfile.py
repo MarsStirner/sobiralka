@@ -21,7 +21,7 @@ def prepare_virtual_env():
 def configure_db():
     #Создаём БД
     queries = []
-    user = operations.prompt("Please specify MySQL admin user:")
+    user = operations.prompt("Specify MySQL admin user:")
 #    password = getpass.getpass("Please specify MySQL admin password: ")
     queries.append( "CREATE DATABASE IF NOT EXISTS %s;" % DB_NAME)
     #Создаём пользователя для работы с БД
@@ -90,7 +90,7 @@ def install_requirements():
     #Устанавливаем необходимые модули python
     with settings(warn_only=True):
         local('apt-get install python-mysqldb python-module-mysqldb')
-    with lcd(project_dir_path):
+    with lcd(code_dir_path):
         local('pip install -r requirements.txt')
 
 def restore_database():
