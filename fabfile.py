@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 import sys, os, getpass
 from fabric.api import local, settings, abort, lcd
+from fabric.context_managers import prefix
 from fabric import operations
 
 from settings import *
@@ -9,14 +10,16 @@ project_dir_path = os.path.abspath('..')
 project_dir_name = os.path.basename(os.path.abspath('..'))
 code_dir_path = os.path.abspath('.')
 
+virtualenv = '.virtualenv'
+
 def prepare_virtual_env():
     #Установка виртуального окружения и инструмента работы с пакетами Python
     local('easy_install virtualenv pip')
     #Создаём и активируем виртульное окружение для проекта
     with lcd(project_dir_path):
         local('rm -R .virtualenv')
-        local('virtualenv .virtualenv')
-        local('source .virtualenv/bin/activate')
+        local('virtualenv %s' % virtualenv)
+        local('source %s/bin/activate' % virtualenv)
 
 def configure_db():
     #Создаём БД
@@ -91,7 +94,8 @@ def install_requirements():
     with settings(warn_only=True):
         local('apt-get install python-mysqldb python-module-mysqldb')
     with lcd(code_dir_path):
-        local('pip install -r requirements.txt')
+        with prefix('workon %s' % virtualenv):
+            local('pip install -r requirements.txt')
 
 def restore_database():
     #Создаём таблицы в БД на основе модели
