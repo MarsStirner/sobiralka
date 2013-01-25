@@ -28,7 +28,7 @@ class LPU(Base):
     phone = Column(String(20), doc=u'Телефон', nullable=False)
     schedule = Column(Unicode(256), doc=u'Расписание работы')
     type = Column(Unicode(32), doc=u'Тип ЛПУ: (Поликлиника)')
-    protocol = Column(Enum(['samson', 'intramed', 'korus20', 'korus30']), nullable=False, default='korus30')
+    protocol = Column(Enum('samson', 'intramed', 'korus20', 'korus30'), nullable=False, default='korus30')
     token = Column(String(45), doc=u'Токен')
 
 
@@ -88,7 +88,8 @@ class Personal(Base):
 
     id = Column(BigInteger, primary_key=True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'), primary_key=True)
-    orgId = Column(BigInteger, ForeignKey('lpu_units.orgId'), primary_key=True)
+    orgId = Column(BigInteger, primary_key=True)
+#    orgId = Column(BigInteger, ForeignKey('lpu_units.orgId'), primary_key=True)
     FirstName = Column(Unicode(32), nullable=False)
     LastName = Column(Unicode(32), nullable=False)
     PatrName = Column(Unicode(32), nullable=False)
@@ -97,7 +98,7 @@ class Personal(Base):
     keyEPGU = Column(String(45))
 
     lpu = relationship("LPU", backref=backref('personal', order_by=id))
-    lpu_units = relationship("LPU_Units", backref=backref('personal', order_by=id))
+#    lpu_units = relationship("LPU_Units", backref=backref('personal', order_by=id))
 #    ForeignKeyConstraint(
 #        ['personal.orgId', 'personal.lpuId'],
 #        ['lpu_units.orgId', 'lpu_units.lpuId'],

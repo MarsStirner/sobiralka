@@ -15,7 +15,7 @@ def init_db():
     # they will be registered properly on the metadata.  Otherwise
     # you will have to import them first before calling init_db()
     from admin.models import LPU, LPU_Units, Enqueue, Personal, Speciality, UnitsParentForId
-    Base.metadata.create_all(bind=engine, tables=[LPU, LPU_Units, Enqueue, Personal, Speciality, UnitsParentForId])
+    Base.metadata.create_all(bind=engine)
     Session.commit()
 
 def shutdown_session(exception=None):

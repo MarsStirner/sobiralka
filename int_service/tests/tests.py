@@ -591,8 +591,8 @@ class TestScheduleWSDL(unittest.TestCase):
         self.assertGreater(ticket.timeslots, 0)
 
     def testGetScheduleInfoKorus30(self):
-        hospitalUid = '41/0'
-        doctorUid = '293'
+        hospitalUid = '41/42'
+        doctorUid = '294'
         ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
         if ticket:
             self.assertIsInstance(ticket, list)

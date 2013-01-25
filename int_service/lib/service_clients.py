@@ -17,7 +17,7 @@ from core_services.Communications import Client as Thrift_Client
 from core_services.ttypes import GetTimeWorkAndStatusParameters, EnqueuePatientParameters
 from core_services.ttypes import AddPatientParameters, FindOrgStructureByAddressParameters
 from core_services.ttypes import FindPatientParameters, PatientInfo
-from core_services.ttypes import SQLException
+from core_services.ttypes import SQLException, NotFoundException
 
 class Clients(object):
     """Class provider for current Clients"""
@@ -779,7 +779,7 @@ class ClientKorus30(AbstractClient):
             'number' in kwargs and
             'flat' in kwargs
         ):
-            params = FindOrgStructureByAdressParameters(
+            params = FindOrgStructureByAddressParameters(
 #                serverId = kwargs['serverId'],
                 number = kwargs['number'],
                 corpus = kwargs.get('corpus'),
@@ -791,6 +791,8 @@ class ClientKorus30(AbstractClient):
                 result = self.client.findOrgStructureByAddress(params)
             except WebFault, e:
                 print e
+            except NotFoundException:
+                return []
             else:
                 return result
         else:
