@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import Flask
 from flask.ext.admin import Admin
-from settings_local import FLASK_SECRET_KEY
+from settings import FLASK_SECRET_KEY
 from admin.database import Session
 from admin import views
 
