@@ -76,6 +76,7 @@ def _parse_config(s):
     edits = [('%SOAP_SERVER_HOST%', SOAP_SERVER_HOST),
              ('%PROJECT_ROOT%', project_dir_path),
              ('%PROJECT_NAME%', project_dir_name),
+             ('%PROJECT_CODE_ROOT%', code_dir_path),
              ('%SYSTEM_USER%', SYSTEM_USER),
              ('%SOAP_ADMIN_HOST%', SOAP_ADMIN_HOST)]
     for search, replace in edits:
@@ -85,8 +86,8 @@ def _parse_config(s):
 def activate_web_config():
     #Активируем конфигурации и перезапускаем apache
     with settings(warn_only=True):
-        local('ln -s /etc/httpd2/conf/sites-available/%s /etc/httpd2/conf/sites-enabled/%s' % (project_dir_name, project_dir_name))
-        local('ln -s /etc/httpd2/conf/sites-available/admin_%s /etc/httpd2/conf/sites-enabled/admin_%s' % (project_dir_name, project_dir_name))
+        local('ln -s /etc/httpd2/conf/sites-available/%s.conf /etc/httpd2/conf/sites-enabled/%s.conf' % (project_dir_name, project_dir_name))
+        local('ln -s /etc/httpd2/conf/sites-available/admin_%s.conf /etc/httpd2/conf/sites-enabled/admin_%s.conf' % (project_dir_name, project_dir_name))
     local('service httpd2 restart')
 
 def install_requirements():
