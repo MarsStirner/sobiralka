@@ -21,7 +21,7 @@ def prepare_virtual_env():
 def configure_db():
     #Создаём БД
     queries = []
-    user = operations.prompt("Please specify MySQL admin user: ")
+    user = operations.prompt("Please specify MySQL admin user:")
 #    password = getpass.getpass("Please specify MySQL admin password: ")
     queries.append( "CREATE DATABASE IF NOT EXISTS %s;" % DB_NAME)
     #Создаём пользователя для работы с БД
@@ -81,8 +81,9 @@ def _parse_config(s):
 
 def activate_web_config():
     #Активируем конфигурации и перезапускаем apache
-    local('ln -s /etc/httpd2/conf/sites-available/%s /etc/httpd2/conf/sites-enabled/%s' % (project_dir_name, project_dir_name))
-    local('ln -s /etc/httpd2/conf/sites-available/admin_%s /etc/httpd2/conf/sites-enabled/admin_%s' % (project_dir_name, project_dir_name))
+    with settings(warn_only=True):
+        local('ln -s /etc/httpd2/conf/sites-available/%s /etc/httpd2/conf/sites-enabled/%s' % (project_dir_name, project_dir_name))
+        local('ln -s /etc/httpd2/conf/sites-available/admin_%s /etc/httpd2/conf/sites-enabled/admin_%s' % (project_dir_name, project_dir_name))
     local('service httpd2 restart')
 
 def install_requirements():
