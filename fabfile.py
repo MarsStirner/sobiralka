@@ -94,7 +94,7 @@ def install_requirements():
 
 def restore_database():
     #Создаём таблицы в БД на основе модели
-    with lcd(project_dir_path):
+    with lcd(code_dir_path):
         local('python admin/update.py')
 
 def deploy():
@@ -104,4 +104,5 @@ def deploy():
     create_system_user()
     configure_webserver()
     activate_web_config()
+    install_requirements()
     restore_database()
