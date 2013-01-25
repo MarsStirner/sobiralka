@@ -74,7 +74,7 @@ def configure_webserver():
 def _parse_config(s):
     #Заменяем в шаблонах конфигов апача метки переменных на значения, заданные в settings
     edits = [('%SOAP_SERVER_HOST%', SOAP_SERVER_HOST),
-             ('%SOAP_SERVER_PORT%', SOAP_SERVER_PORT),
+             ('%SOAP_SERVER_PORT%', str(SOAP_SERVER_PORT)),
              ('%PROJECT_ROOT%', project_dir_path),
              ('%PROJECT_NAME%', project_dir_name),
              ('%PROJECT_CODE_ROOT%', code_dir_path),
