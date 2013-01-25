@@ -8,6 +8,7 @@ from admin import views
 app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY
 admin = Admin(app)
+#admin.init_app(app)
 admin.locale_selector(lambda: 'ru')
 
 admin.add_view(views.LPUAdmin(Session, name=u'Список ЛПУ'))
