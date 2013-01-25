@@ -94,7 +94,7 @@ def install_requirements():
     with settings(warn_only=True):
         local('apt-get install python-mysqldb python-module-mysqldb')
     with lcd(code_dir_path):
-        with prefix('workon %s' % virtualenv):
+        with prefix('source %s/%s/bin/activate' % (project_dir_path, virtualenv)):
             local('pip install -r requirements.txt')
 
 def restore_database():
