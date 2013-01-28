@@ -50,7 +50,6 @@ class LPU_Units(Base):
 units_parents = Table("units_parents", Base.metadata,
     Column("lpuid", BigInteger, ForeignKey("lpu.id")),
     Column("orgid", BigInteger, ForeignKey("lpu.id")),
-    __table_args__ = {'mysql_engine':'InnoDB'},
 )
 class UnitsParentForId(Base):
     """Mapping for UnitsParentForId table"""
