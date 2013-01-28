@@ -12,7 +12,7 @@ http://SOAP_SERVER_HOST:SOAP_SERVER_PORT/list/?wsdl (например, http://10
 **Сервис реализует следующие методы:**
 
 ```
-**listHospitals**
+listHospitals
     Формирует и возвращает список ЛПУ и подразделений
 
     Args:
@@ -25,26 +25,26 @@ http://SOAP_SERVER_HOST:SOAP_SERVER_PORT/list/?wsdl (например, http://10
     Return:
         Структура с атрибутом hospitals, содержащим список ЛПУ:
         Struct.hospitals =
-            [{'uid': , Уникальный идентификатор ЛПУ в рамка ИС, вида: 'LPU_ID/LPU_Unit_ID',
-              'name': , Наименование ЛПУ,
-              'phone': , Номер телефона ЛПУ,
-              'address': , Адрес ЛПУ,
-              'token': , Токен ЛПУ,
-              'key': , Инфис-код ЛПУ
+            [{'uid': Уникальный идентификатор ЛПУ в рамка ИС, вида: 'LPU_ID/LPU_Unit_ID',
+              'name': Наименование ЛПУ,
+              'phone': Номер телефона ЛПУ,
+              'address': Адрес ЛПУ,
+              'token': Токен ЛПУ,
+              'key': Инфис-код ЛПУ
               },
             ...
-            {'uid': , Уникальный идентификатор ЛПУ в рамка ИС, вида: 'LPU_ID/LPU_Unit_ID',
-             'name': , Наименование ЛПУ,
-             'phone': , Номер телефона ЛПУ,
-             'address': , Адрес ЛПУ,
-             'token': , Токен ЛПУ,
-             'key': , Инфис-код ЛПУ
+            {'uid': Уникальный идентификатор ЛПУ в рамка ИС, вида: 'LPU_ID/LPU_Unit_ID',
+             'name': Наименование ЛПУ,
+             'phone': Номер телефона ЛПУ,
+             'address': Адрес ЛПУ,
+             'token': Токен ЛПУ,
+             'key': Инфис-код ЛПУ
              },
             ]
 ```
 
 ```
-**listDoctors**
+listDoctors
     Формирует и возвращает список врачей
 
     Args:
@@ -121,7 +121,7 @@ http://SOAP_SERVER_HOST:SOAP_SERVER_PORT/info/?wsdl (например, http://10
 **Сервис реализует следующие методы:**
 
 ```
-**getHospitalInfo**
+getHospitalInfo
     Возвращает список ЛПУ и подразделений по переданным параметрам
 
     Args:
@@ -193,7 +193,7 @@ http://SOAP_SERVER_HOST:SOAP_SERVER_PORT/schedule/?wsdl (например, http:
 **Сервис реализует следующие методы:**
 
 ```
-**getScheduleInfo**
+getScheduleInfo
     Возвращает расписание врача на указанный диапазон дат
 
     Args:
@@ -226,7 +226,7 @@ http://SOAP_SERVER_HOST:SOAP_SERVER_PORT/schedule/?wsdl (например, http:
 ```
 
 ```
-**getTicketStatus**
+getTicketStatus
     Возвращает статус талончиков
 
     Args:
@@ -265,7 +265,7 @@ http://SOAP_SERVER_HOST:SOAP_SERVER_PORT/schedule/?wsdl (например, http:
 ```
 
 ```
-**enqueue**
+enqueue
     Запись на приём
 
     Args:
