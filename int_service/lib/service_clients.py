@@ -377,6 +377,7 @@ class ClientKorus20(AbstractClient):
                 'firstName': имя
                 'patronymic': отчество
                 }
+            timeslotStart: Желаемое время начала приёма (обязательный)
             hospitalUidFrom: id ЛПУ, из которого производится запись (необязательный)
 
         """

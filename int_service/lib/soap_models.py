@@ -176,7 +176,7 @@ class HospitalInfo(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     uid = String()
-    uid.Annotations.doc=u'Уникальный идентификатор ЛПУ (ОГРН)'
+    uid.Annotations.doc=u'Уникальный идентификатор ЛПУ'
     name = Unicode()
     name.Annotations.doc=u'Наименование ЛПУ'
     phone = String()

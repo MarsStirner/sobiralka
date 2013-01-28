@@ -469,8 +469,8 @@ class EnqueueWorker(object):
 
         Args:
             hospitalUid: uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (обязательный)
-            ticketUid: uid талончика (обязательный)
-            lastUid: uid талончика, начиная с которого необходимо сделать выборку информации о талончиках,
+            ticketUid: uid талончика (обязательный), строка вида 'ticket_id/patient_id'
+            lastUid: id талончика, начиная с которого необходимо сделать выборку информации о талончиках,
                 если передан, то ticketUid игнорируется (необязательный)
 
         """
@@ -566,8 +566,8 @@ class EnqueueWorker(object):
                                     'personId': ticket_info['personId'],
                                     'date': ticket_info['enqueueDate'],
                                 })
-                                if work_time:
-                                    office = work_time[0].get('office')
+                                if work_times:
+                                    office = work_times[0].get('office')
 
                             _ticket_date = datetime.datetime.strptime(
                                 ticket_info['date'] + ticket_info['time'], '%Y-%m-%d %H:%M:%S'
@@ -631,9 +631,16 @@ class EnqueueWorker(object):
         """Запись на приём к врачу
 
         Args:
+            person: { ФИО пациента (обязательный)
+                'firstName'
+                'lastName'
+                'patronymic'
+            }
             hospitalUid: uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (обязательный)
             birthday: дата рождения пациента (обязательный)
             doctorUid: id врача, к которому производится запись (обязательный)
+            omiPolicyNumber: номер полиса мед. страхования (обязательный)
+            timeslotStart: время записи на приём (обязательный)
             hospitalUidFrom: uid ЛПУ, с которого производится запись (необязательный), используется для записи между ЛПУ
 
         """
@@ -686,7 +693,7 @@ class EnqueueWorker(object):
 
         if _enqueue and _enqueue['result'] == True:
             self.__add_ticket(
-                error=_enqueue['error_code'],
+                error=_enqueue.get('error_code'),
                 data=json.dumps({
                     'ticketUID': _enqueue.get('ticketUid'),
                     'timeslotStart': timeslot_start.strftime('%Y-%m-%d %H:%M:%S'),
@@ -694,7 +701,10 @@ class EnqueueWorker(object):
                     'doctorUid': doctor_uid,
                 }),
             )
-            result = {'result': exception_by_code(_enqueue.get('error_code')), 'ticketUid': _enqueue.get('ticketUid')}
+            result = {'result': _enqueue.get('result'),
+                      'message': exception_by_code(_enqueue.get('error_code')),
+                      'ticketUid': _enqueue.get('ticketUid')
+            }
         else:
             enqueue_id = self.__add_ticket(
                 error=_enqueue.get('error_code'),
@@ -810,11 +820,25 @@ class PersonalWorker(object):
         """Формирует и возвращает список врачей для SOAP
 
         Args:
-            searchScope: словарь вида:
+            {'searchScope':
                 {
                 'hospitalUid': uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (необязательный),
                 'address': адрес пациента, для выборки ЛПУ (необязательный),
+                    {'parsedAddress':
+                        {'flat': номер квартиры,
+                        'house':{
+                            'number': Номер дома
+                            'building': Указание на литеру, корпус, строение
+                        }
+                        'block': Номер квартала (для муниципальных образований,
+                            в которых адресация зданий производится с помощью кварталов, а не улиц)
+                        'kladrCode': Идентификатор по классификатору КЛАДР
+                        }
+                    }
                 }
+            'speciality': специальность врача (необязательный),
+            'lastName': фамилия врача (необязательный),
+            }
 
         """
         lpu, lpu_list, lpu_units, lpu_units_list = [], [], [], []
@@ -885,6 +909,14 @@ class UpdateWorker(object):
         proxy = proxy.split(';')
         return proxy[0]
 
+    def __backup_epgu(self, lpu_id):
+#        TODO: Сделать сохранение ключей ЕПГУ для Personal и Speciality через временные таблицы
+        pass
+
+    def __restore_epgu(self, lpu_id):
+#        TODO: Сделать восстановление ключей ЕПГУ для Personal и Speciality из временных таблиц
+        pass
+
     def __clear_data(self, lpu):
         """Удаляет данные, по указанным ЛПУ"""
         if lpu.lpu_units:
@@ -892,6 +924,9 @@ class UpdateWorker(object):
                 self.session.delete(lpu_unit)
         for unit_parent in self.session.query(UnitsParentForId).filter(UnitsParentForId.LpuId==lpu.id).all():
             self.session.delete(unit_parent)
+
+        self.__backup_epgu(lpu.id)
+
         for speciality in self.session.query(Speciality).filter(Speciality.lpuId==lpu.id).all():
             self.session.delete(speciality)
         for doctor in self.session.query(Personal).filter(Personal.lpuId==lpu.id).all():
@@ -923,9 +958,9 @@ class UpdateWorker(object):
                     ))
                     return_units.append(unit)
                     if hasattr(unit, 'parentId') and unit.parentId:
-                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parentId,ChildId=unit.id))
+                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parentId, ChildId=unit.id))
                     elif hasattr(unit, 'parent_id') and unit.parent_id:
-                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parent_id,ChildId=unit.id))
+                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parent_id, ChildId=unit.id))
             except InvalidRequestError:
                 return False
             except TypeError:
@@ -957,6 +992,7 @@ class UpdateWorker(object):
                                         speciality=doctor.speciality,
                                     ))
                                     self.__update_speciality(lpu_id=lpu.id, speciality=doctor.speciality)
+        self.__restore_epgu(lpu.id)
         return True
 
     def __update_speciality(self, **kwargs):

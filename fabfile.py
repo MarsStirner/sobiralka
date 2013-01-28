@@ -26,7 +26,7 @@ def configure_db():
     queries = []
     user = operations.prompt("Specify MySQL admin login:")
 #    password = getpass.getpass("Please specify MySQL admin password: ")
-    queries.append( "CREATE DATABASE IF NOT EXISTS %s;" % DB_NAME)
+    queries.append( "CREATE DATABASE IF NOT EXISTS %s DEFAULT CHARACTER SET utf8;" % DB_NAME)
     #Создаём пользователя для работы с БД
     db_user_host = DB_HOST
     if db_user_host not in ('localhost', '127.0.0.1'):
