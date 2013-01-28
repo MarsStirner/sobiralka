@@ -47,7 +47,7 @@ class LPU_Units(Base):
     lpu = relationship("LPU", backref=backref('lpu_units', order_by=id))
 
 
-units_parents = Table("units_parents", Base.metadata,
+units_parents = Table("units_parents", Base.metadata, __table_args__ = {'mysql_engine':'InnoDB'},
     Column("lpuid", BigInteger, ForeignKey("lpu.id")),
     Column("orgid", BigInteger, ForeignKey("lpu.id")),
 )
