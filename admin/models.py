@@ -9,6 +9,7 @@ Base = declarative_base()
 class LPU(Base):
     """Mapping for LPU table"""
     __tablename__ = 'lpu'
+    __table_args__ = {'mysql_engine':'InnoDB'}
 
     id = Column(BigInteger, primary_key=True)
     name = Column(UnicodeText, nullable=False)
@@ -35,6 +36,7 @@ class LPU(Base):
 class LPU_Units(Base):
     """Mapping for lpu_units table"""
     __tablename__ = 'lpu_units'
+    __table_args__ = {'mysql_engine':'InnoDB'}
 
     id = Column(BigInteger, primary_key = True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'))
@@ -52,6 +54,7 @@ units_parents = Table("units_parents", Base.metadata,
 class UnitsParentForId(Base):
     """Mapping for UnitsParentForId table"""
     __tablename__ = 'UnitsParentForId'
+    __table_args__ = {'mysql_engine':'InnoDB'}
 
     id = Column(Integer, primary_key = True)
     LpuId = Column(BigInteger, ForeignKey('lpu.id'))
@@ -72,6 +75,7 @@ class UnitsParentForId(Base):
 class Enqueue(Base):
     """Mapping for enqueue table"""
     __tablename__ = 'enqueue'
+    __table_args__ = {'mysql_engine':'InnoDB'}
 
     id = Column(BigInteger, primary_key=True)
     Error = Column(String(64))
@@ -85,6 +89,7 @@ class Enqueue(Base):
 class Personal(Base):
     """Mapping for personal table"""
     __tablename__ = 'personal'
+    __table_args__ = {'mysql_engine':'InnoDB'}
 
     id = Column(BigInteger, primary_key=True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'), primary_key=True)
@@ -110,6 +115,7 @@ class Personal(Base):
 class Speciality(Base):
     """Mapping for speciality table"""
     __tablename__ = 'speciality'
+    __table_args__ = {'mysql_engine':'InnoDB'}
 
     id = Column(Integer, primary_key=True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'))
