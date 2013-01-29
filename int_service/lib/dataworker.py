@@ -99,9 +99,7 @@ class LPUWorker(object):
         if okato_code:
             query_lpu = query_lpu.filter(LPU.OKATO.like('%' + okato_code + '%'))
 
-        result = query_lpu.all()
-        shutdown_session()
-        return result
+        return query_lpu.all()
 
     def get_lpu_by_address(self, **kwargs):
         """Возвращает список ЛПУ для указанного адреса пациента
@@ -235,6 +233,7 @@ class LPUWorker(object):
                     'key': item.lpu.key,
                     }
                 )
+        shutdown_session()
         return result
 
     def get_info(self, **kwargs):
