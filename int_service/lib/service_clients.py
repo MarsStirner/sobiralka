@@ -947,26 +947,29 @@ class ClientKorus30(AbstractClient):
             parameters = GetTimeWorkAndStatusParameters(
                 hospitalUidFrom=kwargs.get('hospitalUidFrom'),
                 personId=kwargs.get('personId'),
-                date=time.mktime(time_tuple)
+                date=time.mktime(time_tuple)*1000
             )
             schedule = self.client.getWorkTimeAndStatus(parameters)
         except WebFault, e:
             print e
+        except NotFoundException, e:
+            print e
         else:
             if schedule and hasattr(schedule, 'tickets') and schedule.tickets:
                 result = []
+                date_time_by_date = datetime.datetime(kwargs['date'].year, kwargs['date'].month, kwargs['date'].day)
                 for key, timeslot in enumerate(schedule.tickets):
+                    if key < (len(schedule.tickets) - 1):
+                        finish = date_time_by_date + datetime.timedelta(seconds=schedule.tickets[key+1].time/1000)
+                    else:
+                        finish = date_time_by_date + datetime.timedelta(seconds=schedule.endTime/1000)
                     result.append({
-                        'start': datetime.datetime.combine(kwargs['date'], timeslot.time),
-                        'finish': (
-                            datetime.datetime.combine(kwargs['date'], schedule.tickets[key+1].time)
-                            if key < (len(schedule.tickets) - 1)
-                            else datetime.datetime.combine(kwargs['date'], schedule.endTime)
-                            ),
+                        'start': date_time_by_date + datetime.timedelta(seconds=timeslot.time/1000),
+                        'finish': finish,
                         'status': 'free' if timeslot.free else 'locked',
                         'office': str(schedule.office),
-                        'patientId': timeslot.patientId,
-                        'patientInfo': timeslot.patientInfo,
+                        'patientId': timeslot.patientId if hasattr(timeslot, 'patientId') else None,
+                        'patientInfo': timeslot.patientInfo if hasattr(timeslot, 'patientInfo') else None,
                         })
                 return result
         return []
