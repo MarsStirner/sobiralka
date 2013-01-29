@@ -99,7 +99,9 @@ class LPUWorker(object):
         if okato_code:
             query_lpu = query_lpu.filter(LPU.OKATO.like('%' + okato_code + '%'))
 
-        return query_lpu.all()
+        result = query_lpu.all()
+        shutdown_session()
+        return result
 
     def get_lpu_by_address(self, **kwargs):
         """Возвращает список ЛПУ для указанного адреса пациента
@@ -423,6 +425,7 @@ class EnqueueWorker(object):
         }
         result = proxy_client.getScheduleInfo(**params)
 
+        shutdown_session()
         return result
 
     def __get_dates_period(self, start='', end=''):
@@ -616,6 +619,7 @@ class EnqueueWorker(object):
                                 }
                                 })
 
+        shutdown_session()
         return result
 
     def __get_ticket_print(self, **kwargs):
@@ -720,6 +724,8 @@ class EnqueueWorker(object):
                 'message': exception_by_code(_enqueue.get('error_code')),
                 'ticketUid': 'e' + str(enqueue_id)
             }
+
+        shutdown_session()
         return result
 
     def __add_ticket(self, **kwargs):
@@ -893,6 +899,7 @@ class PersonalWorker(object):
                 'key': value.key,
                 })
 
+        shutdown_session()
         return result
 
 
@@ -1037,5 +1044,7 @@ class UpdateWorker(object):
                     return self.__failed_update()
                 except exceptions.UserWarning, e:
                     print e
+                    return self.__failed_update()
+                except:
                     return self.__failed_update()
         return self.__success_update()
