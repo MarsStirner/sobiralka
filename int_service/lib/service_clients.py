@@ -882,13 +882,21 @@ class ClientKorus30(AbstractClient):
 
         """
         try:
-            params = FindPatientParameters(
-                lastName=kwargs.get('lastName'),
-                firstName=kwargs.get('firstName'),
-                patrName=kwargs.get('patrName'),
-                birthDate=kwargs.get('birthDate'),
-                omiPolicy=kwargs.get('omiPolicy'),
-            )
+            kwargs = {
+                'lastName': kwargs.get('lastName'),
+                'firstName': kwargs.get('firstName'),
+                'patrName': kwargs.get('patrName'),
+                'birthDate': kwargs.get('birthDate'),
+                'omiPolicyNumber': omiPolicyNumber,
+                }
+            omiPolicy=kwargs.get('omiPolicy').split(' ')
+            if len(omiPolicy)==2 and omiPolicy[1]:
+                kwargs['omiPolicySerial'] = omiPolicy[0]
+                kwargs['omiPolicyNumber'] = omiPolicy[1]
+            else:
+                kwargs['omiPolicyNumber'] = omiPolicy
+
+            params = FindPatientParameters(**kwargs)
         except exceptions.KeyError:
             pass
         else:
@@ -1010,9 +1018,7 @@ class ClientKorus30(AbstractClient):
             return {'result': False, 'error_code': patient.message,}
 
         try:
-            date_time = kwargs.get('timeslotStart')
-            if not date_time:
-                date_time = datetime.datetime.now()
+            date_time = kwargs.get('timeslotStart', datetime.datetime.now())
             params = EnqueuePatientParameters(
 #                serverId = kwargs.get('serverId'),
                 patientId = int(patient_id),

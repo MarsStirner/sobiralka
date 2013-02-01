@@ -457,6 +457,8 @@ class Ticket:
    - time
    - free
    - available
+   - patientId
+   - patientInfo
   """
 
   thrift_spec = (
@@ -464,12 +466,16 @@ class Ticket:
     (1, TType.I64, 'time', None, None, ), # 1
     (2, TType.I32, 'free', None, None, ), # 2
     (3, TType.I32, 'available', None, None, ), # 3
+    (4, TType.I32, 'patientId', None, None, ), # 4
+    (5, TType.STRING, 'patientInfo', None, None, ), # 5
   )
 
-  def __init__(self, time=None, free=None, available=None,):
+  def __init__(self, time=None, free=None, available=None, patientId=None, patientInfo=None,):
     self.time = time
     self.free = free
     self.available = available
+    self.patientId = patientId
+    self.patientInfo = patientInfo
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -495,6 +501,16 @@ class Ticket:
           self.available = iprot.readI32();
         else:
           iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.I32:
+          self.patientId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.STRING:
+          self.patientInfo = iprot.readString();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -516,6 +532,14 @@ class Ticket:
     if self.available is not None:
       oprot.writeFieldBegin('available', TType.I32, 3)
       oprot.writeI32(self.available)
+      oprot.writeFieldEnd()
+    if self.patientId is not None:
+      oprot.writeFieldBegin('patientId', TType.I32, 4)
+      oprot.writeI32(self.patientId)
+      oprot.writeFieldEnd()
+    if self.patientInfo is not None:
+      oprot.writeFieldBegin('patientInfo', TType.STRING, 5)
+      oprot.writeString(self.patientInfo)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -730,7 +754,7 @@ class Amb:
     (1, TType.I64, 'begTime', None, None, ), # 1
     (2, TType.I64, 'endTime', None, None, ), # 2
     (3, TType.STRING, 'office', None, None, ), # 3
-    (4, TType.STRING, 'plan', None, None, ), # 4
+    (4, TType.I32, 'plan', None, None, ), # 4
     (5, TType.LIST, 'tickets', (TType.STRUCT,(Ticket, Ticket.thrift_spec)), None, ), # 5
     (6, TType.I32, 'available', None, None, ), # 6
   )
@@ -768,8 +792,8 @@ class Amb:
         else:
           iprot.skip(ftype)
       elif fid == 4:
-        if ftype == TType.STRING:
-          self.plan = iprot.readString();
+        if ftype == TType.I32:
+          self.plan = iprot.readI32();
         else:
           iprot.skip(ftype)
       elif fid == 5:
@@ -811,8 +835,8 @@ class Amb:
       oprot.writeString(self.office)
       oprot.writeFieldEnd()
     if self.plan is not None:
-      oprot.writeFieldBegin('plan', TType.STRING, 4)
-      oprot.writeString(self.plan)
+      oprot.writeFieldBegin('plan', TType.I32, 4)
+      oprot.writeI32(self.plan)
       oprot.writeFieldEnd()
     if self.tickets is not None:
       oprot.writeFieldBegin('tickets', TType.LIST, 5)

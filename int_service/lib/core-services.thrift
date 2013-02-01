@@ -42,6 +42,8 @@ struct Ticket{
 1:optional timestamp time;
 2:optional i32 free;
 3:optional i32 available;
+4:optional i32 patientId;
+5:optional string patientInfo;
 }
 
 struct TicketsAvailability{
@@ -60,7 +62,7 @@ struct Amb{
 1:optional timestamp begTime;
 2:optional timestamp endTime;
 3:optional string office;
-4:optional string plan;
+4:optional i32 plan;
 5:optional list<Ticket> tickets;
 6:optional i32 available;
 }
