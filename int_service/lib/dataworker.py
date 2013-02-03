@@ -280,6 +280,7 @@ class LPUWorker(object):
                 'schedule': lpu_item.schedule,
                 'buildings': units,
             })
+        shutdown_session()
         return {'info': result}
 
     def get_by_id(self, id):
@@ -423,7 +424,6 @@ class EnqueueWorker(object):
             'server_id': lpu.key
         }
         result = proxy_client.getScheduleInfo(**params)
-
         shutdown_session()
         return result
 
