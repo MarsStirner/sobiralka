@@ -19,4 +19,5 @@ def init_db():
     Session.commit()
 
 def shutdown_session(exception=None):
+    Session.close()
     Session.remove()
