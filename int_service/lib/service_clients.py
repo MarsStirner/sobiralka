@@ -1006,7 +1006,7 @@ class ClientKorus30(AbstractClient):
                           'lastName': person.get('lastName').encode('utf-8'),
                           'firstName': person.get('firstName').encode('utf-8'),
                           'patrName': person.get('patronymic').encode('utf-8'),
-                          'omiPolicy': kwargs.get('omiPolicyNumber'),
+                          'omiPolicy': kwargs.get('omiPolicyNumber').encode('utf-8'),
                           'sex': kwargs.get('sex', 0),
                           'birthDate': time.mktime(kwargs.get('birthday').timetuple())*1000,
                           }
