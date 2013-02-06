@@ -25,7 +25,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print 'Functions:'
   print '  Organization getOrganisationInfo(string infisCode)'
   print '   getOrgStructures(i32 parent_id, bool recursive, string infisCode)'
-  print '   getAddresses(i32 orgStructureId, bool recursive)'
+  print '   getAddresses(i32 orgStructureId, bool recursive, string infisCode)'
   print '   findOrgStructureByAddress(FindOrgStructureByAddressParameters params)'
   print '   getPersonnel(i32 orgStructureId, bool recursive, string infisCode)'
   print '  TicketsAvailability getTotalTicketsAvailability(GetTicketsAvailabilityParameters params)'
@@ -105,10 +105,10 @@ elif cmd == 'getOrgStructures':
   pp.pprint(client.getOrgStructures(eval(args[0]),eval(args[1]),args[2],))
 
 elif cmd == 'getAddresses':
-  if len(args) != 2:
-    print 'getAddresses requires 2 args'
+  if len(args) != 3:
+    print 'getAddresses requires 3 args'
     sys.exit(1)
-  pp.pprint(client.getAddresses(eval(args[0]),eval(args[1]),))
+  pp.pprint(client.getAddresses(eval(args[0]),eval(args[1]),args[2],))
 
 elif cmd == 'findOrgStructureByAddress':
   if len(args) != 1:

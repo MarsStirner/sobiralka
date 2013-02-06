@@ -17,7 +17,7 @@ from core_services.Communications import Client as Thrift_Client
 from core_services.ttypes import GetTimeWorkAndStatusParameters, EnqueuePatientParameters
 from core_services.ttypes import AddPatientParameters, FindOrgStructureByAddressParameters
 from core_services.ttypes import FindPatientParameters, PatientInfo
-from core_services.ttypes import SQLException, NotFoundException
+from core_services.ttypes import SQLException, NotFoundException, TException
 
 class Clients(object):
     """Class provider for current Clients"""
@@ -735,6 +735,8 @@ class ClientKorus30(AbstractClient):
         params['infisCode'] = str(kwargs.get('infis_code', ""))
         try:
             result = self.client.getOrgStructures(**params)
+        except NotFoundException, e:
+            print e.error_msg
         except WebFault, e:
             print e
         else:
@@ -755,6 +757,8 @@ class ClientKorus30(AbstractClient):
         try:
             result = self.client.getPersonnel(**params)
         except SQLException, e:
+            print e.error_msg
+        except NotFoundException, e:
             print e.error_msg
         except WebFault, e:
             print e
@@ -814,14 +818,19 @@ class ClientKorus30(AbstractClient):
         if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid']:
             for i in xrange((kwargs['end'] - kwargs['start']).days):
                 start = (kwargs['start'].date() + datetime.timedelta(days=i))
-                timeslot = self.getWorkTimeAndStatus(
-                    serverId = kwargs.get('server_id'),
-                    personId =  kwargs.get('doctor_uid'),
-                    date = start,
-                    hospitalUidFrom = kwargs.get('hospital_uid_from', '0'),
-                )
-                if timeslot:
-                    result.extend(timeslot)
+                try:
+                    timeslot = self.getWorkTimeAndStatus(
+                        serverId = kwargs.get('server_id'),
+                        personId =  kwargs.get('doctor_uid'),
+                        date = start,
+                        hospitalUidFrom = kwargs.get('hospital_uid_from', '0'),
+                    )
+                except NotFoundException, e:
+                    print e.error_msg
+                    continue
+                else:
+                    if timeslot:
+                        result.extend(timeslot)
         else:
             raise exceptions.ValueError
         return {'timeslots': result}
@@ -840,6 +849,8 @@ class ClientKorus30(AbstractClient):
             params = PatientInfo(infisCode = server_id, patientId = patient_id,)
             try:
                 result = self.client.getPatientQueue(params)
+            except SQLException, e:
+                print e.error_msg
             except WebFault, e:
                 print e
             else:
@@ -881,31 +892,26 @@ class ClientKorus30(AbstractClient):
             omiPolicy: номер полиса ОМС (обязательный)
 
         """
-        try:
-            kwargs = {
-                'lastName': kwargs.get('lastName'),
-                'firstName': kwargs.get('firstName'),
-                'patrName': kwargs.get('patrName'),
-                'birthDate': kwargs.get('birthDate'),
-                'omiPolicyNumber': omiPolicyNumber,
-                }
-            omiPolicy=kwargs.get('omiPolicy').split(' ')
-            if len(omiPolicy)==2 and omiPolicy[1]:
-                kwargs['omiPolicySerial'] = omiPolicy[0]
-                kwargs['omiPolicyNumber'] = omiPolicy[1]
-            else:
-                kwargs['omiPolicyNumber'] = omiPolicy
-
-            params = FindPatientParameters(**kwargs)
-        except exceptions.KeyError:
-            pass
+        params = {
+            'lastName': kwargs.get('lastName'),
+            'firstName': kwargs.get('firstName'),
+            'patrName': kwargs.get('patrName'),
+            'birthDate': kwargs.get('birthDate'),
+            }
+        omiPolicy=kwargs.get('omiPolicy').split(' ')
+        if len(omiPolicy)==2 and omiPolicy[1]:
+            params['omiPolicySerial'] = omiPolicy[0]
+            params['omiPolicyNumber'] = omiPolicy[1]
         else:
-            try:
-                result = self.client.findPatient(params)
-            except WebFault, e:
-                print e
-            else:
-                return result
+            params['omiPolicyNumber'] = omiPolicy
+        try:
+            result = self.client.findPatient(FindPatientParameters(**params))
+        except TException, e:
+            print e
+        except WebFault, e:
+            print e
+        else:
+            return result
         return None
 
     def addPatient(self, **kwargs):
@@ -920,24 +926,20 @@ class ClientKorus30(AbstractClient):
             birthDate: дата рождения (необязательный)
 
         """
-        person = kwargs.get('person')
-        if person:
-            params = AddPatientParameters(
-                lastName = person.lastName,
-                firstName = person.firstName,
-                patrName = person.patronymic,
-                #omiPolicy = kwargs['omiPolicyNumber'],
-                birthDate = kwargs.get('birthday'),
-                sex = int(kwargs.get('sex', 0)),
-            )
-            try:
-                result = self.client.addPatient(params)
-            except WebFault, e:
-                print e
-            else:
-                return result
+        params = AddPatientParameters(
+            lastName = kwargs.get('lastName'),
+            firstName = kwargs.get('firstName'),
+            patrName = kwargs.get('patronymic'),
+            #omiPolicy = kwargs['omiPolicyNumber'],
+            birthDate = kwargs.get('birthday'),
+            sex = int(kwargs.get('sex', 0)),
+        )
+        try:
+            result = self.client.addPatient(params)
+        except WebFault, e:
+            print e
         else:
-            raise exceptions.AttributeError
+            return result
         return {}
 
     def getWorkTimeAndStatus(self, **kwargs):
@@ -1000,16 +1002,17 @@ class ClientKorus30(AbstractClient):
             raise exceptions.AttributeError
             return {}
 
-        patient = self.findPatient(
-            serverId = kwargs.get('serverId'),
-            lastName = person.get('lastName'),
-            firstName = person.get('firstName'),
-            patrName = person.get('patronymic'),
-            omiPolicy = kwargs.get('omiPolicyNumber'),
-            birthDate = kwargs.get('birthday'),
-        )
+        patient_params = {'serverId': kwargs.get('serverId'),
+                          'lastName': person.get('lastName').encode('utf-8'),
+                          'firstName': person.get('firstName').encode('utf-8'),
+                          'patrName': person.get('patronymic').encode('utf-8'),
+                          'omiPolicy': kwargs.get('omiPolicyNumber'),
+                          'sex': kwargs.get('sex', 0),
+                          'birthDate': time.mktime(kwargs.get('birthday').timetuple())*1000,
+                          }
+        patient = self.findPatient(**patient_params)
         if not patient.success and hospital_uid_from and hospital_uid_from != '0':
-            patient = self.addPatient(**kwargs)
+            patient = self.addPatient(**patient_params)
 
         if patient.success and patient.patientId:
             patient_id = patient.patientId
@@ -1023,28 +1026,28 @@ class ClientKorus30(AbstractClient):
 #                serverId = kwargs.get('serverId'),
                 patientId = int(patient_id),
                 personId = int(kwargs.get('doctorUid')),
-                dateTime = time.mktime(date_time.date().timetuple()),
+                dateTime = time.mktime(date_time.timetuple())*1000,
                 note = kwargs.get('E-mail', 'E-mail'),
-                hospitalUidFrom = kwargs.get('hospitalUidFrom'),
+                hospitalUidFrom = int(kwargs.get('hospitalUidFrom')),
             )
         except:
             raise exceptions.ValueError
         else:
             try:
-                result = self.client.enqueuePatient(**params)
+                result = self.client.enqueuePatient(params)
             except WebFault, e:
                 print e
             else:
                 if result.success:
                     return {
                         'result': True,
-                        'error_code': result.message,
+                        'error_code': result.message.decode('utf-8'),
                         'ticketUid': str(result.queueId) + '/' + str(patient_id),
                         }
                 else:
                     return {
                         'result': False,
-                        'error_code': result.message,
+                        'error_code': result.message.decode('utf-8'),
                         'ticketUid': '',
                         }
         return None

@@ -34,11 +34,12 @@ class Iface:
     """
     pass
 
-  def getAddresses(self, orgStructureId, recursive):
+  def getAddresses(self, orgStructureId, recursive, infisCode):
     """
     Parameters:
      - orgStructureId
      - recursive
+     - infisCode
     """
     pass
 
@@ -228,20 +229,22 @@ class Client(Iface):
       raise result.excsql
     raise TApplicationException(TApplicationException.MISSING_RESULT, "getOrgStructures failed: unknown result");
 
-  def getAddresses(self, orgStructureId, recursive):
+  def getAddresses(self, orgStructureId, recursive, infisCode):
     """
     Parameters:
      - orgStructureId
      - recursive
+     - infisCode
     """
-    self.send_getAddresses(orgStructureId, recursive)
+    self.send_getAddresses(orgStructureId, recursive, infisCode)
     return self.recv_getAddresses()
 
-  def send_getAddresses(self, orgStructureId, recursive):
+  def send_getAddresses(self, orgStructureId, recursive, infisCode):
     self._oprot.writeMessageBegin('getAddresses', TMessageType.CALL, self._seqid)
     args = getAddresses_args()
     args.orgStructureId = orgStructureId
     args.recursive = recursive
+    args.infisCode = infisCode
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
@@ -847,7 +850,7 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = getAddresses_result()
     try:
-      result.success = self._handler.getAddresses(args.orgStructureId, args.recursive)
+      result.success = self._handler.getAddresses(args.orgStructureId, args.recursive, args.infisCode)
     except SQLException as excsql:
       result.excsql = excsql
     except NotFoundException as exc:
@@ -1408,17 +1411,20 @@ class getAddresses_args:
   Attributes:
    - orgStructureId
    - recursive
+   - infisCode
   """
 
   thrift_spec = (
     None, # 0
     (1, TType.I32, 'orgStructureId', None, None, ), # 1
     (2, TType.BOOL, 'recursive', None, None, ), # 2
+    (3, TType.STRING, 'infisCode', None, None, ), # 3
   )
 
-  def __init__(self, orgStructureId=None, recursive=None,):
+  def __init__(self, orgStructureId=None, recursive=None, infisCode=None,):
     self.orgStructureId = orgStructureId
     self.recursive = recursive
+    self.infisCode = infisCode
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -1439,6 +1445,11 @@ class getAddresses_args:
           self.recursive = iprot.readBool();
         else:
           iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.infisCode = iprot.readString();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -1456,6 +1467,10 @@ class getAddresses_args:
     if self.recursive is not None:
       oprot.writeFieldBegin('recursive', TType.BOOL, 2)
       oprot.writeBool(self.recursive)
+      oprot.writeFieldEnd()
+    if self.infisCode is not None:
+      oprot.writeFieldBegin('infisCode', TType.STRING, 3)
+      oprot.writeString(self.infisCode)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()

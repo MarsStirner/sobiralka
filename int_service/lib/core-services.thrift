@@ -219,7 +219,7 @@ throws (1:NotFoundException exc);
 list<OrgStructure> getOrgStructures(1:i32 parent_id, 2:bool recursive, 3:string infisCode)
 throws (1:NotFoundException exc, 2:SQLException excsql);
 
-list<Address> getAddresses(1:i32 orgStructureId, 2:bool recursive)
+list<Address> getAddresses(1:i32 orgStructureId, 2:bool recursive, 3:string infisCode)
 throws (1:SQLException excsql, 2:NotFoundException exc);
 
 list<i32> findOrgStructureByAddress(1:FindOrgStructureByAddressParameters params)

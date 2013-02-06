@@ -588,7 +588,7 @@ class TestScheduleWSDL(unittest.TestCase):
         ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
         if hasattr(ticket, 'timeslots'):
             self.assertIsInstance(ticket.timeslots, list)
-        self.assertGreater(ticket.timeslots, 0)
+            self.assertGreater(ticket.timeslots, 0)
 
     def testGetScheduleInfoKorus30(self):
         hospitalUid = '41/3'
@@ -597,7 +597,7 @@ class TestScheduleWSDL(unittest.TestCase):
         if ticket:
             self.assertIsInstance(ticket, list)
             self.assertIsNotNone(ticket)
-#
+
     def testGetScheduleInfoIntramed(self):
         hospitalUid = '11/1025801446528'
         doctorUid = '19'
@@ -648,10 +648,10 @@ class TestScheduleWSDL(unittest.TestCase):
     def testEnqueueKorus30(self):
         person={'firstName': u"Асия", 'lastName': u"Абаева", 'patronymic': u"Абдуловна", }
         omiPolicyNumber="4106 5801954102020017"
-        hospitalUid="17/53"
-        doctorUid="344"
+        hospitalUid="41/3"
+        doctorUid="242"
         timeslotStart=(datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") + "T15:00:00"
-        hospitalUidFrom=0
+        hospitalUidFrom=12
         birthday="1954-10-20"
 
         ticket = self.client.service.enqueue({
@@ -672,7 +672,7 @@ class TestScheduleWSDL(unittest.TestCase):
             self.assertNotIn(ticket['result'], ("", "true"))
 
         # TODO: разобрать варианты с проверкой ограничений по дате рождения и полу
-
+#
     def testEnqueueIntramed(self):
         person={'firstName': u"Асия", 'lastName': u"Абаева", 'patronymic': u"Абдуловна", }
         omiPolicyNumber="4106 5801954102020017"
