@@ -906,8 +906,10 @@ class ClientKorus30(AbstractClient):
             params['omiPolicyNumber'] = omiPolicy
         try:
             result = self.client.findPatient(FindPatientParameters(**params))
+        except NotFoundException, e:
+            raise e
         except TException, e:
-            print e
+            raise e
         except WebFault, e:
             print e
         else:
@@ -963,7 +965,7 @@ class ClientKorus30(AbstractClient):
         except WebFault, e:
             print e
         except NotFoundException, e:
-            print e
+            print e.error_msg
         else:
             if schedule and hasattr(schedule, 'tickets') and schedule.tickets:
                 result = []
@@ -973,10 +975,17 @@ class ClientKorus30(AbstractClient):
                         finish = date_time_by_date + datetime.timedelta(seconds=schedule.tickets[key+1].time/1000)
                     else:
                         finish = date_time_by_date + datetime.timedelta(seconds=schedule.endTime/1000)
+
+                    if timeslot.free and timeslot.available:
+                        status = 'free'
+                    elif timeslot.free:
+                        status = 'disabled'
+                    else:
+                        status = 'locked'
                     result.append({
                         'start': date_time_by_date + datetime.timedelta(seconds=timeslot.time/1000),
                         'finish': finish,
-                        'status': 'free' if timeslot.free else 'locked',
+                        'status': status,
                         'office': str(schedule.office),
                         'patientId': timeslot.patientId if hasattr(timeslot, 'patientId') else None,
                         'patientInfo': timeslot.patientInfo if hasattr(timeslot, 'patientInfo') else None,
@@ -1008,13 +1017,21 @@ class ClientKorus30(AbstractClient):
                           'patrName': person.get('patronymic').encode('utf-8'),
                           'omiPolicy': kwargs.get('omiPolicyNumber').encode('utf-8'),
                           'sex': kwargs.get('sex', 0),
-                          'birthDate': time.mktime(kwargs.get('birthday').timetuple())*1000,
+                          'birthDate': int(time.mktime(kwargs.get('birthday').timetuple())*1000),
                           }
-        patient = self.findPatient(**patient_params)
+
+        try:
+            patient = self.findPatient(**patient_params)
+        except NotFoundException, e:
+            print e.error_msg
+            return {'result': False, 'error_code': e.error_msg,}
+        except TException, e:
+            print e
+            return {'result': False, 'error_code': e.message,}
         if not patient.success and hospital_uid_from and hospital_uid_from != '0':
             patient = self.addPatient(**patient_params)
 
-        if patient.success and patient.patientId:
+        if patient and patient.success and patient.patientId:
             patient_id = patient.patientId
         else:
         #            raise exceptions.LookupError
@@ -1026,7 +1043,7 @@ class ClientKorus30(AbstractClient):
 #                serverId = kwargs.get('serverId'),
                 patientId = int(patient_id),
                 personId = int(kwargs.get('doctorUid')),
-                dateTime = time.mktime(date_time.timetuple())*1000,
+                dateTime = int(time.mktime(date_time.timetuple())*1000),
                 note = kwargs.get('E-mail', 'E-mail'),
                 hospitalUidFrom = int(kwargs.get('hospitalUidFrom')),
             )

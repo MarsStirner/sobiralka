@@ -5,7 +5,7 @@ from admin.models import Base
 
 from settings import DB_CONNECT_STRING
 
-engine = create_engine(DB_CONNECT_STRING, convert_unicode=True)
+engine = create_engine(DB_CONNECT_STRING, convert_unicode=True, pool_recycle=3600)
 Session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=engine))
 #Base = declarative_base()
 Base.query = Session.query_property()

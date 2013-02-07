@@ -394,12 +394,14 @@ class EnqueueWorker(object):
             lpu_dw = LPUWorker()
             lpu = lpu_dw.get_by_id(hospital_uid[0])
         else:
+            shutdown_session()
             raise exceptions.ValueError
             return {}
 
         if 'doctorUid' in kwargs:
             doctor_uid = int(kwargs.get('doctorUid'))
         else:
+            shutdown_session()
             raise exceptions.KeyError
             return {}
 
@@ -499,9 +501,11 @@ class EnqueueWorker(object):
                     proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
                     server_id = lpu_info.key
             else:
+                shutdown_session()
 #                raise exceptions.AttributeError
                 return {}
         else:
+            shutdown_session()
             raise exceptions.KeyError
             return {}
 
@@ -660,9 +664,11 @@ class EnqueueWorker(object):
                 lpu_info = dw.get_by_id(hospital_uid[0])
                 proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
             else:
+                shutdown_session()
                 raise exceptions.ValueError
                 return {}
         else:
+            shutdown_session()
             raise exceptions.ValueError
             return {}
 
@@ -674,6 +680,7 @@ class EnqueueWorker(object):
         hospital_uid_from = kwargs.get('hospitalUidFrom', '0')
 
         if not doctor_info:
+            shutdown_session()
             raise exceptions.LookupError
             return {}
 

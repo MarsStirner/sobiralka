@@ -650,7 +650,7 @@ class TestScheduleWSDL(unittest.TestCase):
         omiPolicyNumber="4106 5801954102020017"
         hospitalUid="41/3"
         doctorUid="242"
-        timeslotStart=(datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") + "T15:00:00"
+        timeslotStart=(datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") + "T14:00:00"
         hospitalUidFrom=12
         birthday="1954-10-20"
 
