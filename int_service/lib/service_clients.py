@@ -20,21 +20,22 @@ from core_services.ttypes import AddPatientParameters, FindOrgStructureByAddress
 from core_services.ttypes import FindPatientParameters, PatientInfo
 from core_services.ttypes import SQLException, NotFoundException, TException
 
+
 class Clients(object):
     """Class provider for current Clients"""
     @classmethod
-    def provider(cls, type, proxy_url):
+    def provider(cls, client_type, proxy_url):
         logging.basicConfig(level=logging.INFO)
         if settings.DEBUG:
             logging.getLogger('suds.client').setLevel(logging.DEBUG)
             logging.getLogger('Thrift_Client').setLevel(logging.DEBUG)
 
-        type = type.lower()
-        if type in ('samson', 'korus20'):
+        client_type = client_type.lower()
+        if client_type in ('samson', 'korus20'):
             obj = ClientKorus20(proxy_url)
-        elif type == 'intramed':
+        elif client_type == 'intramed':
             obj = ClientIntramed(proxy_url)
-        elif type in ('core', 'korus30'):
+        elif client_type in ('core', 'korus30'):
             obj = ClientKorus30(proxy_url)
         else:
             obj = None
@@ -43,7 +44,7 @@ class Clients(object):
 
 
 class AbstractClient(object):
-    __metaclass__=ABCMeta
+    __metaclass__ = ABCMeta
 
     @abstractmethod
     def findOrgStructureByAddress(self):
@@ -116,7 +117,7 @@ class ClientKorus20(AbstractClient):
              },]
 
         """
-        params = {}
+        params = dict()
         params['recursive'] = True
         if 'parent_id' in kwargs and kwargs['parent_id']:
             params['parentId'] = kwargs['parent_id']
@@ -155,7 +156,7 @@ class ClientKorus20(AbstractClient):
              },]
 
         """
-        params = {}
+        params = dict()
         params['recursive'] = True
         if 'hospital_id' in kwargs and kwargs['hospital_id']:
             params['orgStructureId'] = kwargs['hospital_id']
@@ -431,13 +432,13 @@ class ClientKorus20(AbstractClient):
                         'result': True,
                         'error_code': result.message,
                         'ticketUid': str(result.queueId) + '/' + str(patient_id),
-                        }
+                    }
                 else:
                     return {
                         'result': False,
                         'error_code': result.message,
                         'ticketUid': '',
-                        }
+                    }
         return None
 
 
@@ -484,6 +485,7 @@ class ClientIntramed(AbstractClient):
 
         """
         doctors = []
+        params = dict()
         list_client = Client(self.url + 'egov.v3.listPort.CLS?WSDL=1', cache=None)
         if 'hospital_id' and kwargs['hospital_id']:
             params = {'searchScope': {'hospitalUid': str(kwargs['hospital_id'])}}
@@ -500,7 +502,7 @@ class ClientIntramed(AbstractClient):
                         'lastName': doctor.name.lastName,
                         'patrName': doctor.name.patronymic,
                         'speciality': doctor.speciality,
-                        }
+                    }
                     doctors.append(self.Struct(**params))
         return doctors
 
@@ -517,7 +519,7 @@ class ClientIntramed(AbstractClient):
 
         """
         self.client = Client(self.url + 'egov.v3.listPort.CLS?WSDL=1', cache=None)
-
+        params = dict()
         if (kwargs['serverId']
             and kwargs['number']
 #            and kwargs['corpus']
@@ -555,7 +557,7 @@ class ClientIntramed(AbstractClient):
         """
         self.client = Client(self.url + 'egov.v3.queuePort.CLS?WSDL=1', cache=None)
 
-        result = {}
+        result = dict()
         result['timeslots'] = []
         if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid'] and kwargs['hospital_uid']:
             params = {'doctorUid': kwargs['doctor_uid'],
@@ -612,7 +614,7 @@ class ClientIntramed(AbstractClient):
                         'finish': timeslot.finish,
                         'status': timeslot.status,
                         'office': '0',
-                        })
+                    })
                 return result
         return []
 
@@ -730,7 +732,7 @@ class ClientKorus30(AbstractClient):
             infis_code: infis_code ЛПУ, для которого необходимо получить подразделения (необязательный)
 
         """
-        params = {}
+        params = dict()
         params['recursive'] = True
         params['parent_id'] = kwargs.get('parent_id', 0)
         params['infisCode'] = str(kwargs.get('infis_code', ""))
@@ -751,7 +753,7 @@ class ClientKorus30(AbstractClient):
             hospital_id: id ЛПУ, для которого необходимо получить список врачей (необязательный)
 
         """
-        params = {}
+        params = dict()
         params['recursive'] = True
         params['orgStructureId'] = kwargs.get('hospital_id')
         params['infisCode'] = str(kwargs.get('infis_code', ""))
@@ -898,8 +900,8 @@ class ClientKorus30(AbstractClient):
             'firstName': kwargs.get('firstName'),
             'patrName': kwargs.get('patrName'),
             'birthDate': kwargs.get('birthDate'),
-            }
-        omiPolicy=kwargs.get('omiPolicy').split(' ')
+        }
+        omiPolicy = kwargs.get('omiPolicy').split(' ')
         if len(omiPolicy)==2 and omiPolicy[1]:
             params['omiPolicySerial'] = omiPolicy[0]
             params['omiPolicyNumber'] = omiPolicy[1]
@@ -930,12 +932,12 @@ class ClientKorus30(AbstractClient):
 
         """
         params = AddPatientParameters(
-            lastName = kwargs.get('lastName'),
-            firstName = kwargs.get('firstName'),
-            patrName = kwargs.get('patronymic'),
+            lastName=kwargs.get('lastName'),
+            firstName=kwargs.get('firstName'),
+            patrName=kwargs.get('patronymic'),
             #omiPolicy = kwargs['omiPolicyNumber'],
-            birthDate = kwargs.get('birthday'),
-            sex = int(kwargs.get('sex', 0)),
+            birthDate=kwargs.get('birthday'),
+            sex=int(kwargs.get('sex', 0)),
         )
         try:
             result = self.client.addPatient(params)
@@ -960,7 +962,7 @@ class ClientKorus30(AbstractClient):
             parameters = GetTimeWorkAndStatusParameters(
                 hospitalUidFrom=kwargs.get('hospitalUidFrom'),
                 personId=kwargs.get('personId'),
-                date=time.mktime(time_tuple)*1000
+                date=time.mktime(time_tuple) * 1000
             )
             schedule = self.client.getWorkTimeAndStatus(parameters)
         except WebFault, e:
@@ -1030,10 +1032,10 @@ class ClientKorus30(AbstractClient):
             patient = self.findPatient(**patient_params)
         except NotFoundException, e:
             print e.error_msg
-            return {'result': False, 'error_code': e.error_msg,}
+            return {'result': False, 'error_code': e.error_msg, }
         except TException, e:
             print e
-            return {'result': False, 'error_code': e.message,}
+            return {'result': False, 'error_code': e.message, }
         if not patient.success and hospital_uid_from and hospital_uid_from != '0':
             patient = self.addPatient(**patient_params)
 
@@ -1041,17 +1043,17 @@ class ClientKorus30(AbstractClient):
             patient_id = patient.patientId
         else:
         #            raise exceptions.LookupError
-            return {'result': False, 'error_code': patient.message,}
+            return {'result': False, 'error_code': patient.message, }
 
         try:
             date_time = kwargs.get('timeslotStart', datetime.datetime.now())
             params = EnqueuePatientParameters(
 #                serverId = kwargs.get('serverId'),
-                patientId = int(patient_id),
-                personId = int(kwargs.get('doctorUid')),
-                dateTime = int(time.mktime(date_time.timetuple())*1000),
-                note = kwargs.get('E-mail', 'E-mail'),
-                hospitalUidFrom = int(kwargs.get('hospitalUidFrom')),
+                patientId=int(patient_id),
+                personId=int(kwargs.get('doctorUid')),
+                dateTime=int(time.mktime(date_time.timetuple()) * 1000),
+                note=kwargs.get('E-mail', 'E-mail'),
+                hospitalUidFrom=int(kwargs.get('hospitalUidFrom')),
             )
         except:
             raise exceptions.ValueError
@@ -1066,11 +1068,11 @@ class ClientKorus30(AbstractClient):
                         'result': True,
                         'error_code': result.message.decode('utf-8'),
                         'ticketUid': str(result.queueId) + '/' + str(patient_id),
-                        }
+                    }
                 else:
                     return {
                         'result': False,
                         'error_code': result.message.decode('utf-8'),
                         'ticketUid': '',
-                        }
+                    }
         return None
