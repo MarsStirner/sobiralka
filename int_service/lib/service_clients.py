@@ -820,10 +820,10 @@ class ClientKorus30(AbstractClient):
                 start = (kwargs['start'].date() + datetime.timedelta(days=i))
                 try:
                     timeslot = self.getWorkTimeAndStatus(
-                        serverId = kwargs.get('server_id'),
-                        personId =  kwargs.get('doctor_uid'),
-                        date = start,
-                        hospitalUidFrom = kwargs.get('hospital_uid_from', '0'),
+                        serverId=kwargs.get('server_id'),
+                        personId=kwargs.get('doctor_uid'),
+                        date=start,
+                        hospitalUidFrom=kwargs.get('hospital_uid_from', '0'),
                     )
                 except NotFoundException, e:
                     print e.error_msg
@@ -982,14 +982,19 @@ class ClientKorus30(AbstractClient):
                         status = 'disabled'
                     else:
                         status = 'locked'
+
                     result.append({
                         'start': date_time_by_date + datetime.timedelta(seconds=timeslot.time/1000),
                         'finish': finish,
                         'status': status,
                         'office': str(schedule.office),
                         'patientId': timeslot.patientId if hasattr(timeslot, 'patientId') else None,
-                        'patientInfo': timeslot.patientInfo if hasattr(timeslot, 'patientInfo') else None,
-                        })
+                        'patientInfo': (
+                            timeslot.patientInfo.decode('utf-8')
+                            if hasattr(timeslot, 'patientInfo') and timeslot.patientInfo
+                            else None
+                        ),
+                    })
                 return result
         return []
 
