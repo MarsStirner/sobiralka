@@ -647,6 +647,7 @@ class EnqueueWorker(object):
             birthday: дата рождения пациента (обязательный)
             doctorUid: id врача, к которому производится запись (обязательный)
             omiPolicyNumber: номер полиса мед. страхования (обязательный)
+            sex: пол (необязательный)
             timeslotStart: время записи на приём (обязательный)
             hospitalUidFrom: uid ЛПУ, с которого производится запись (необязательный), используется для записи между ЛПУ
 
@@ -655,11 +656,12 @@ class EnqueueWorker(object):
         birthday = kwargs.get('birthday')
         doctor_uid = kwargs.get('doctorUid')
         person = kwargs.get('person')
+        sex = kwargs.get('sex')
         omi_policy_number = kwargs.get('omiPolicyNumber').strip()
         timeslot_start = kwargs.get('timeslotStart', '')
 
         if hospital_uid and birthday and doctor_uid and person and omi_policy_number:
-            if len(hospital_uid)==2:
+            if len(hospital_uid) == 2:
                 dw = LPUWorker()
                 lpu_info = dw.get_by_id(hospital_uid[0])
                 proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
@@ -691,9 +693,10 @@ class EnqueueWorker(object):
                 'firstName': person.firstName,
                 'lastName': person.lastName,
                 'patronymic': person.patronymic,
-                },
+            },
             omiPolicyNumber=omi_policy_number,
             birthday=birthday,
+            sex=sex,
             hospitalUid=hospital_uid[1],
             hospitalUidFrom=hospital_uid_from,
             speciality=doctor_info.speciality.lower(),
@@ -723,7 +726,7 @@ class EnqueueWorker(object):
                     'timeslotStart': timeslot_start.strftime('%Y-%m-%d %H:%M:%S'),
                     'hospitalUid': kwargs.get('hospitalUid'),
                     'doctorUid': doctor_uid,
-                    }),
+                }),
             )
             result = {
                 'result': _enqueue.get('result'),

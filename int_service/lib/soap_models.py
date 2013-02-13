@@ -545,6 +545,8 @@ class EnqueueRequest(ComplexModel):
 #    omiPolicyNumber.Annotations.doc=u'Номер и серия полиса ОМС пациента (пользователя)'
     birthday = Date
 #    birthday.Annotations.doc=u'Дата рождения пациента (пользователя)'
+    sex = Integer
+    #    sex.Annotations.doc=u'Пол пациента (пользователя)'
     hospitalUid = Unicode
 #    hospitalUid.Annotations.doc=u'Уникальный идентификатор ЛПУ'
     speciality = Unicode

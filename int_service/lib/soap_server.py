@@ -112,21 +112,24 @@ class Server(object):
 
     def __init__(self):
         logging.basicConfig()
-        info = Application([InfoServer],
+        info = Application(
+            [InfoServer],
             tns=SOAP_NAMESPACE,
             name='InfoService',
             interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
-        list = Application([ListServer],
+        list = Application(
+            [ListServer],
             tns=SOAP_NAMESPACE,
             name='ListService',
             interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
-        schedule = Application([ScheduleServer],
+        schedule = Application(
+            [ScheduleServer],
             tns=SOAP_NAMESPACE,
             name='ScheduleService',
             interface=Wsdl11(),
@@ -137,7 +140,7 @@ class Server(object):
             'info': info,
             'list': list,
             'schedule': schedule,
-            })
+        })
 
     def run(self):
         from wsgiref.simple_server import make_server

@@ -307,6 +307,15 @@ class ClientKorus20(AbstractClient):
             raise exceptions.ValueError
         return None
 
+    def __sex_parse(self, code):
+        if code == 1:
+            name = u'М'
+        elif code == 2:
+            name = u'Ж'
+        else:
+            name = ''
+        return name
+
     def findPatient(self, **kwargs):
         """Получает id пациента по параметрам
 
@@ -325,6 +334,7 @@ class ClientKorus20(AbstractClient):
                 'firstName': kwargs['firstName'],
                 'patrName': kwargs['patrName'],
                 'birthDate': kwargs['birthDate'],
+                'sex': self.__sex_parse(kwargs['sex']),
                 'omiPolicy': kwargs['omiPolicy'],
                 }
         except exceptions.KeyError:
@@ -359,7 +369,7 @@ class ClientKorus20(AbstractClient):
                 'patrName': person.patronymic,
 #                'omiPolicy': kwargs['omiPolicyNumber'],
                 'birthDate': kwargs.get('birthday'),
-                }
+            }
             try:
                 result = self.client.service.addPatient(**params)
             except WebFault, e:
@@ -395,6 +405,7 @@ class ClientKorus20(AbstractClient):
             'firstName': person.get('firstName'),
             'patrName': person.get('patronymic'),
             'omiPolicy': kwargs.get('omiPolicyNumber'),
+            'sex': kwargs.get('sex', 0),
             'birthDate': kwargs.get('birthday'),
         })
         if not patient.success and hospital_uid_from and hospital_uid_from != '0':
@@ -418,7 +429,7 @@ class ClientKorus20(AbstractClient):
                 'time': date_time.time(),
                 'note': kwargs.get('E-mail', 'E-mail'),
                 'hospitalUidFrom': kwargs.get('hospitalUidFrom'),
-                }
+            }
         except:
             raise exceptions.ValueError
         else:
@@ -789,11 +800,11 @@ class ClientKorus30(AbstractClient):
         ):
             params = FindOrgStructureByAddressParameters(
 #                serverId = kwargs['serverId'],
-                number = kwargs['number'],
-                corpus = kwargs.get('corpus'),
-                pointKLADR = kwargs['pointKLADR'],
-                streetKLADR = kwargs['streetKLADR'],
-                flat = kwargs['flat'],
+                number=kwargs['number'],
+                corpus=kwargs.get('corpus'),
+                pointKLADR=kwargs['pointKLADR'],
+                streetKLADR=kwargs['streetKLADR'],
+                flat=kwargs['flat'],
             )
             try:
                 result = self.client.findOrgStructureByAddress(params)
