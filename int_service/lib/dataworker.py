@@ -675,7 +675,7 @@ class EnqueueWorker(object):
             omi_policy_number = omi_policy_number.strip()
         timeslot_start = kwargs.get('timeslotStart', '')
 
-        if hospital_uid and birthday and doctor_uid and person and omi_policy_number:
+        if hospital_uid and birthday and doctor_uid and person:
             if len(hospital_uid) == 2:
                 dw = LPUWorker()
                 lpu_info = dw.get_by_id(hospital_uid[0])
