@@ -419,7 +419,7 @@ class TestListWSDL(unittest.TestCase):
 
 
     def testListSpecialities(self):
-        specialities = self.client.service.listSpecialities({'hospitalUid': '17/0', 'hospitalUidFrom': '500'})
+        specialities = self.client.service.listSpecialities({'hospitalUid': '17/53', 'hospitalUidFrom': '500'})
         self.assertIsInstance(specialities.speciality, list)
 
     def testListServTypesInfo(self):
@@ -706,7 +706,6 @@ class TestScheduleWSDL(unittest.TestCase):
         if ticket['ticketUid'] == "":
             self.assertNotIn(ticket['result'], ("", "true"))
         # TODO: разобрать варианты с проверкой ограничений по дате рождения и полу
-
 
     def testCancel(self):
         pass

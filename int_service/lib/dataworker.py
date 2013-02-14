@@ -788,6 +788,7 @@ class PersonalWorker(object):
             for item in lpu_units:
                 or_list.append(and_(Personal.lpuId == item.lpuId, Personal.orgId == item.orgId))
 #         else:
+                #TODO: по-хорошему бы расскоментить, чтоб при пустых параметрах была пустота, но сначала нужно изменить код НТК
 # #            raise exceptions.AttributeError
 #             return []
 
@@ -960,10 +961,11 @@ class PersonalWorker(object):
                 })
 
         if hospital_uid_from:
-            if lpu_list:
+            if len(lpu_list):
                 proxy_client = Clients.provider(lpu_list[0].protocol, lpu_list[0].proxy.split(';')[0])
-            elif lpu_units_list:
-                proxy_client = Clients.provider(lpu_list[0].lpu.protocol, lpu_list[0].lpu.proxy.split(';')[0])
+            elif len(lpu_units_list):
+                proxy_client = Clients.provider(lpu_units_list[0].lpu.protocol, 
+                                                lpu_units_list[0].lpu.proxy.split(';')[0])
             if proxy_client:
                 lpu_specialities = proxy_client.getSpecialities(hospital_uid_from)
                 if lpu_specialities:
@@ -977,7 +979,6 @@ class PersonalWorker(object):
                                 'nameEPGU': speciality.nameEPGU,
                             })
         return result
-
 
 
 class UpdateWorker(object):
