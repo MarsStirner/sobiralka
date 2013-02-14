@@ -940,7 +940,7 @@ class ClientKorus30(AbstractClient):
             'birthDate': kwargs.get('birthDate'),
         }
         omiPolicy = kwargs.get('omiPolicy').split(' ')
-        if len(omiPolicy)==2 and omiPolicy[1]:
+        if len(omiPolicy) == 2 and omiPolicy[1]:
             params['omiPolicySerial'] = omiPolicy[0]
             params['omiPolicyNumber'] = omiPolicy[1]
         else:

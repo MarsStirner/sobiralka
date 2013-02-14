@@ -671,6 +671,7 @@ class EnqueueWorker(object):
         person = kwargs.get('person')
         sex = kwargs.get('sex')
         omi_policy_number = kwargs.get('omiPolicyNumber').strip()
+        document = kwargs.get('document')
         timeslot_start = kwargs.get('timeslotStart', '')
 
         if hospital_uid and birthday and doctor_uid and person and omi_policy_number:
@@ -708,6 +709,7 @@ class EnqueueWorker(object):
                 'patronymic': person.patronymic,
             },
             omiPolicyNumber=omi_policy_number,
+            document=document,
             birthday=birthday,
             sex=sex,
             hospitalUid=hospital_uid[1],

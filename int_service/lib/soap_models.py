@@ -535,6 +535,19 @@ class TicketStatus(ComplexModel):
         super(TicketStatus, self).__init__(doc=u'Состояние заявки на приём у врача', **kwargs)
 
 
+class PatientDocument(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    policy_type = Integer
+    document_code = String
+    client_id = Integer
+    series = String
+    number = String
+
+    def __init__(self, **kwargs):
+        super(PatientDocument, self).__init__(doc=u'Документ пациента', **kwargs)
+
+
 class EnqueueRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
@@ -542,6 +555,7 @@ class EnqueueRequest(ComplexModel):
 #    person.Annotations.doc=u'ФИО пациента (пользователя)'
     omiPolicyNumber = Unicode
 #    omiPolicyNumber.Annotations.doc=u'Номер и серия полиса ОМС пациента (пользователя)'
+    document = PatientDocument
     birthday = Date
 #    birthday.Annotations.doc=u'Дата рождения пациента (пользователя)'
     sex = Integer
