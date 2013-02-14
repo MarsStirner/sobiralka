@@ -19,6 +19,7 @@ from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, SOAP_NAMESPACE
 from dataworker import DataWorker
 import soap_models
 
+
 class CustomWsgiMounter(WsgiMounter):
     """
     Customized WsgiMounter for bug fix of location address in wsdl:
@@ -47,8 +48,10 @@ class InfoServer(ServiceBase):
     def setDoctorInfo(self):
         pass
 
-    def getHospitalUid(self):
-        pass
+    @srpc(soap_models.GetHospitalUidRequest, _returns=soap_models.GetHospitalUidResponse)
+    def getHospitalUid(HospitalUidRequest):
+        obj = DataWorker.provider('lpu')
+        return obj.get_uid_by_code(code=HospitalUidRequest.hospitalCode)
 
 
 class ListServer(ServiceBase):
@@ -71,8 +74,10 @@ class ListServer(ServiceBase):
             doctors = obj.get_list_doctors()
         return doctors
 
-    def listSpecialities(self):
-        pass
+    @srpc(soap_models.ListSpecialitiesRequest, _returns=soap_models.ListSpecialitiesResponse)
+    def listSpecialities(SpecialitiesRequest):
+        obj = DataWorker.provider('personal')
+        return obj.get_list_specialities(**vars(SpecialitiesRequest))
 
     def listServTypesInfo(self):
         pass
@@ -112,7 +117,7 @@ class Server(object):
 
     def __init__(self):
         logging.basicConfig()
-        info = Application(
+        info_app = Application(
             [InfoServer],
             tns=SOAP_NAMESPACE,
             name='InfoService',
@@ -120,7 +125,7 @@ class Server(object):
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
-        list = Application(
+        list_app = Application(
             [ListServer],
             tns=SOAP_NAMESPACE,
             name='ListService',
@@ -128,7 +133,7 @@ class Server(object):
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
-        schedule = Application(
+        schedule_app = Application(
             [ScheduleServer],
             tns=SOAP_NAMESPACE,
             name='ScheduleService',
@@ -137,9 +142,9 @@ class Server(object):
             out_protocol=Soap11()
         )
         self.applications = CustomWsgiMounter({
-            'info': info,
-            'list': list,
-            'schedule': schedule,
+            'info': info_app,
+            'list': list_app,
+            'schedule': schedule_app,
         })
 
     def run(self):

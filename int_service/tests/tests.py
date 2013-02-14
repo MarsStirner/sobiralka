@@ -12,6 +12,7 @@ logging.basicConfig()
 logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 IS = "http://127.0.0.1:9910/%s/?wsdl"
+# IS = "http://10.1.2.107:9910/%s/?wsdl"
 
 class TestListWSDL(unittest.TestCase):
     client = Client(IS % "list", cache=None)
@@ -401,7 +402,7 @@ class TestListWSDL(unittest.TestCase):
         self.assertListEqual(doctors.doctors, result)
 
     def testListDoctorsKorus20_6(self):
-        hospital_Uid = "11111"
+        # hospital_Uid = "11111"
         result = []
         doctors = self.client.service.listDoctors()
         if doctors:
@@ -416,8 +417,10 @@ class TestListWSDL(unittest.TestCase):
             self.assertIsInstance(doctors.doctors, list)
 #            self.assertListEqual(doctors.doctors, result)
 
+
     def testListSpecialities(self):
-        pass
+        specialities = self.client.service.listSpecialities({'hospitalUid': '17/0', 'hospitalUidFrom': '500'})
+        self.assertIsInstance(specialities.speciality, list)
 
     def testListServTypesInfo(self):
         pass
@@ -569,8 +572,12 @@ class TestInfoWSDL(unittest.TestCase):
     def testGetDoctorInfo(self):
         pass
 
-    def testGetHospitalUid(self):
-        pass
+    def testGetHospitalUidKorus20(self):
+        code = '580064'
+        result = 17
+        id = self.client.service.getHospitalUid({'hospitalCode': code})
+        if id:
+            self.assertEqual(id.hospitalUid, result)
 
 
 class TestScheduleWSDL(unittest.TestCase):
@@ -698,7 +705,6 @@ class TestScheduleWSDL(unittest.TestCase):
 
         if ticket['ticketUid'] == "":
             self.assertNotIn(ticket['result'], ("", "true"))
-
         # TODO: разобрать варианты с проверкой ограничений по дате рождения и полу
 
 

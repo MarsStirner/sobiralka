@@ -56,10 +56,10 @@ class LPUWorker(object):
         lpu = []
         lpu_units = []
         if not isinstance(hospitalUid, list):
-            hospitalUid = [hospitalUid,]
+            hospitalUid = [hospitalUid, ]
         for i in hospitalUid:
             tmp_list = i.split('/')
-            if len(tmp_list)==2 and int(tmp_list[1]):
+            if len(tmp_list) == 2 and int(tmp_list[1]):
                 lpu_units.append([int(tmp_list[0]), int(tmp_list[1])])
             else:
                 lpu.append(int(tmp_list[0]))
@@ -91,7 +91,7 @@ class LPUWorker(object):
 
         if speciality and isinstance(speciality, unicode):
             query_lpu = query_lpu.join(Personal)
-            query_lpu = query_lpu.filter(Personal.speciality==speciality)
+            query_lpu = query_lpu.filter(Personal.speciality == speciality)
 
         if lpu_ids and len(lpu_ids):
             query_lpu = query_lpu.filter(LPU.id.in_(lpu_ids))
@@ -182,7 +182,7 @@ class LPUWorker(object):
             ocatoCode: код ОКАТО для фильтрации ЛПУ (необязательный)
 
         """
-        result = {}
+        result = dict()
         result['hospitals'] = []
         lpu = []
         lpu_units = []
@@ -288,7 +288,7 @@ class LPUWorker(object):
         Get LPU by id and check if proxy url is available
         """
         try:
-            result = self.session.query(LPU).filter(LPU.id==int(id)).one()
+            result = self.session.query(LPU).filter(LPU.id == int(id)).one()
         except NoResultFound, e:
             print e
         else:
@@ -301,7 +301,20 @@ class LPUWorker(object):
                     raise WebFault
             else:
                 return result
+        return None
 
+    def get_uid_by_code(self, code):
+        """
+        Get LPU.uid by code
+        """
+        try:
+            result = self.session.query(LPU.id).filter(LPU.key == code).one()
+        except NoResultFound, e:
+            print e
+        except MultipleResultsFound, e:
+            print e
+        else:
+            return result
         return None
 
 
@@ -347,14 +360,14 @@ class LPU_UnitsWorker(object):
 
         if len(lpu_units_ids):
             for unit in lpu_units_ids:
-                or_list.append(and_(LPU_Units.lpuId==unit[0], LPU_Units.orgId==unit[1]))
+                or_list.append(and_(LPU_Units.lpuId == unit[0], LPU_Units.orgId == unit[1]))
             query_lpu_units = query_lpu_units.filter(or_(*or_list))
 
         if speciality and isinstance(speciality, unicode):
-            query_lpu_units = query_lpu_units.filter(Personal.speciality==speciality)
+            query_lpu_units = query_lpu_units.filter(Personal.speciality == speciality)
 
         if lpu_id:
-            query_lpu_units = query_lpu_units.filter(LPU_Units.lpuId==lpu_id)
+            query_lpu_units = query_lpu_units.filter(LPU_Units.lpuId == lpu_id)
 
         return query_lpu_units.group_by(LPU_Units.id).all()
 
@@ -674,7 +687,7 @@ class EnqueueWorker(object):
             raise exceptions.ValueError
             return {}
 
-        result = {}
+        result = dict()
 
         person_dw = PersonalWorker()
         doctor_info = person_dw.get_doctor(lpu_unit=hospital_uid, doctor_id=doctor_uid)
@@ -745,7 +758,7 @@ class EnqueueWorker(object):
             print e
         else:
             self.session.add(enqueue)
-            self.session.commit()
+            # self.session.commit()
             return enqueue.id
         return None
 
@@ -771,12 +784,12 @@ class PersonalWorker(object):
         or_list = []
         if lpu or lpu_units:
             for item in lpu:
-                or_list.append(and_(Personal.lpuId==item.id,))
+                or_list.append(and_(Personal.lpuId == item.id,))
             for item in lpu_units:
-                or_list.append(and_(Personal.lpuId==item.lpuId, Personal.orgId==item.orgId))
-        else:
-#            raise exceptions.AttributeError
-            return []
+                or_list.append(and_(Personal.lpuId == item.lpuId, Personal.orgId == item.orgId))
+#         else:
+# #            raise exceptions.AttributeError
+#             return []
 
         query = self.session.query(
             Personal.FirstName,
@@ -796,12 +809,12 @@ class PersonalWorker(object):
         )
 
         query = query.outerjoin(LPU)
-        query = query.outerjoin(LPU_Units, Personal.orgId==LPU_Units.orgId).filter(Personal.lpuId==LPU_Units.lpuId)
+        query = query.outerjoin(LPU_Units, Personal.orgId == LPU_Units.orgId).filter(Personal.lpuId == LPU_Units.lpuId)
 
         if speciality:
-            query = query.filter(Personal.speciality==speciality)
+            query = query.filter(Personal.speciality == speciality)
         if lastName:
-            query = query.filter(Personal.lastName==lastName)
+            query = query.filter(Personal.lastName == lastName)
 
         query = query.filter(or_(*or_list))
         query = query.order_by(Personal.LastName, Personal.FirstName, Personal.PatrName)
@@ -823,11 +836,11 @@ class PersonalWorker(object):
 
         if lpu_unit:
             if int(lpu_unit[1]):
-                query = query.filter(Personal.lpuId==int(lpu_unit[0]), Personal.orgId==int(lpu_unit[1]))
+                query = query.filter(Personal.lpuId == int(lpu_unit[0]), Personal.orgId == int(lpu_unit[1]))
             else:
-                query = query.filter(Personal.lpuId==int(lpu_unit[0]))
+                query = query.filter(Personal.lpuId == int(lpu_unit[0]))
         if doctor_id:
-            query = query.filter(Personal.id==int(doctor_id))
+            query = query.filter(Personal.id == int(doctor_id))
 
         return query.one()
 
@@ -892,11 +905,11 @@ class PersonalWorker(object):
                     'firstName': value.FirstName,
                     'patronymic': value.PatrName,
                     'lastName': value.LastName,
-                    },
+                },
                 'hospitalUid': str(value.lpuId) + '/' + str(value.orgId),
                 'speciality': value.speciality,
                 'keyEPGU': value.keyEPGU,
-                })
+            })
 
             result['hospitals'].append({
                 'uid': str(value.lpuId) + '/' + str(value.orgId),
@@ -906,10 +919,65 @@ class PersonalWorker(object):
                 'wsdlURL': 'http://' + SOAP_SERVER_HOST + ':' + str(SOAP_SERVER_PORT) + '/schedule/?wsdl',
                 'token': '',
                 'key': value.key,
-                })
+            })
 
         shutdown_session()
         return result
+
+    def get_list_specialities(self, **kwargs):
+        hospital_uid_from = kwargs.get('hospitalUidFrom')
+        hospital_uid = kwargs.get('hospitalUid')
+
+        lpu, lpu_list, lpu_units, lpu_units_list = [], [], [], []
+
+        lpu, lpu_units = LPUWorker.parse_hospital_uid(hospital_uid)
+        lpu_dw = LPUWorker()
+        if lpu:
+            lpu_list = lpu_dw.get_list(id=lpu)
+
+        if lpu_units:
+            lpu_units_dw = LPU_UnitsWorker()
+            lpu_units_list = lpu_units_dw.get_list(uid=lpu_units)
+
+        query_result = self.get_list(
+            lpu=lpu_list,
+            lpu_units=lpu_units_list,
+            speciality=kwargs.get('speciality'),
+            lastName=kwargs.get('lastName')
+        )
+        result = dict()
+        result['speciality'] = []
+        specialities = []
+
+        for value in query_result:
+            if value.speciality not in specialities:
+                specialities.append(value.speciality)
+                result['speciality'].append({
+                    'speciality': value.speciality,
+                    'ticketsPerMonths': '-1',
+                    'ticketsAvailable': '-1',
+                    'nameEPGU': "",
+                })
+
+        if hospital_uid_from:
+            if lpu_list:
+                proxy_client = Clients.provider(lpu_list[0].protocol, lpu_list[0].proxy.split(';')[0])
+            elif lpu_units_list:
+                proxy_client = Clients.provider(lpu_list[0].lpu.protocol, lpu_list[0].lpu.proxy.split(';')[0])
+            if proxy_client:
+                lpu_specialities = proxy_client.getSpecialities(hospital_uid_from)
+                if lpu_specialities:
+                    result['speciality'] = []
+                    for speciality in lpu_specialities:
+                        if speciality in specialities:
+                            result['speciality'].append({
+                                'speciality': speciality.speciality,
+                                'ticketsPerMonths': speciality.ticketsPerMonths,
+                                'ticketsAvailable': speciality.ticketsAvailable,
+                                'nameEPGU': speciality.nameEPGU,
+                            })
+        return result
+
 
 
 class UpdateWorker(object):
@@ -1007,6 +1075,7 @@ class UpdateWorker(object):
                                         LastName=doctor.lastName,
                                         speciality=doctor.speciality,
                                     ))
+                                    #TODO: заменить Personal.speciality на FK(Speciality.id)
                                     self.__update_speciality(lpu_id=lpu.id, speciality=doctor.speciality)
         self.__restore_epgu(lpu.id)
         return True

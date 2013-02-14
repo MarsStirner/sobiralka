@@ -168,6 +168,15 @@ class ClientKorus20(AbstractClient):
             return result
         return None
 
+    def getSpecialities(self, hospital_uid_from):
+        try:
+            result = self.client.service.getSpecialities(hospitalUidFrom=hospital_uid_from)
+        except WebFault, e:
+            print e
+        else:
+            return result
+        return None
+
     def findOrgStructureByAddress(self, **kwargs):
         """Получает подразделение по адресу пациента
 
@@ -517,6 +526,15 @@ class ClientIntramed(AbstractClient):
                     doctors.append(self.Struct(**params))
         return doctors
 
+    def getSpecialities(self, hospital_uid_from):
+        try:
+            result = self.client.service.getSpecialities({'hospitalUidFrom': hospital_uid_from})
+        except WebFault, e:
+            print e
+        else:
+            return result
+        return None
+
     def findOrgStructureByAddress(self, **kwargs):
         """Получает подразделение по адресу пациента
 
@@ -774,6 +792,15 @@ class ClientKorus30(AbstractClient):
             print e.error_msg
         except NotFoundException, e:
             print e.error_msg
+        except WebFault, e:
+            print e
+        else:
+            return result
+        return None
+
+    def getSpecialities(self, hospital_uid_from):
+        try:
+            result = self.client.getSpecialities({'hospitalUidFrom': hospital_uid_from})
         except WebFault, e:
             print e
         else:

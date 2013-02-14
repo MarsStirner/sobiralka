@@ -76,7 +76,7 @@ class Hospital(ComplexModel):
 class GetHospitalInfoRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    hospitalUid = String.customize( nillable=True, minOccurs=0, doc=u'Один или несколько идентификаторов ЛПУ')
+    hospitalUid = String.customize(nillable=True, minOccurs=0, doc=u'Один или несколько идентификаторов ЛПУ')
 
     def __init__(self):
         super(GetHospitalInfoRequest, self).__init__(doc=u'Параметры запроса для получения подробной информация о ЛПУ')
@@ -121,8 +121,7 @@ class SetDoctorInfoResponse(ComplexModel):
 class GetHospitalUidRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    hospitalCode = String()
-    hospitalCode.Annotations.doc=u'Один или несколько идентификаторов ЛПУ'
+    hospitalCode = String(doc=u'Один или несколько идентификаторов ЛПУ')
 
     def __init__(self):
         super(GetHospitalUidRequest, self).__init__(
@@ -133,8 +132,8 @@ class GetHospitalUidRequest(ComplexModel):
 class GetHospitalUidResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    hospitalUid = String()
-    hospitalUid.Annotations.doc=u'Идентификатор ЛПУ'
+    hospitalUid = Integer()
+    hospitalUid.Annotations.doc = u'Идентификатор ЛПУ'
 
     def __init__(self):
         super(GetHospitalUidResponse, self).__init__(doc=u'Идентификатор ЛПУ')

@@ -14,7 +14,7 @@ class LPU(Base):
     id = Column(BigInteger, primary_key=True)
     name = Column(UnicodeText, nullable=False)
     address = Column(UnicodeText, nullable=False)
-    key = Column(UnicodeText, doc='ServerId')
+    key = Column(Text, doc=u'ИНФИС код ЛПУ')
     proxy = Column(UnicodeText, doc=u'Прокси для запросов', nullable=False)
     email = Column(UnicodeText, doc='E-mail')
     kladr = Column(UnicodeText, doc=u'КЛАДР', nullable=True)
@@ -38,7 +38,7 @@ class LPU_Units(Base):
     __tablename__ = 'lpu_units'
     __table_args__ = {'mysql_engine':'InnoDB'}
 
-    id = Column(BigInteger, primary_key = True)
+    id = Column(BigInteger, primary_key=True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'))
     orgId = Column(BigInteger)
     name = Column(Unicode(256))
@@ -89,7 +89,7 @@ class Enqueue(Base):
 class Personal(Base):
     """Mapping for personal table"""
     __tablename__ = 'personal'
-    __table_args__ = {'mysql_engine':'InnoDB'}
+    __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(BigInteger, primary_key=True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'), primary_key=True)
