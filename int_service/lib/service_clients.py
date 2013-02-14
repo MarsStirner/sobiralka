@@ -344,8 +344,9 @@ class ClientKorus20(AbstractClient):
                 'patrName': kwargs['patrName'],
                 'birthDate': kwargs['birthDate'],
                 'sex': self.__sex_parse(kwargs['sex']),
-                'omiPolicy': kwargs['omiPolicy'],
-                }
+                # 'omiPolicy': kwargs['omiPolicy'],
+                'document': kwargs.get('document'),
+            }
         except exceptions.KeyError:
             pass
         else:
@@ -413,7 +414,8 @@ class ClientKorus20(AbstractClient):
             'lastName': person.get('lastName'),
             'firstName': person.get('firstName'),
             'patrName': person.get('patronymic'),
-            'omiPolicy': kwargs.get('omiPolicyNumber'),
+            # 'omiPolicy': kwargs.get('omiPolicyNumber'),
+            'document': kwargs.get('document'),
             'sex': kwargs.get('sex', 0),
             'birthDate': kwargs.get('birthday'),
         })
@@ -938,13 +940,16 @@ class ClientKorus30(AbstractClient):
             'firstName': kwargs.get('firstName'),
             'patrName': kwargs.get('patrName'),
             'birthDate': kwargs.get('birthDate'),
+            'document': kwargs.get('document'),
         }
-        omiPolicy = kwargs.get('omiPolicy').split(' ')
-        if len(omiPolicy) == 2 and omiPolicy[1]:
-            params['omiPolicySerial'] = omiPolicy[0]
-            params['omiPolicyNumber'] = omiPolicy[1]
-        else:
-            params['omiPolicyNumber'] = omiPolicy
+
+#        omiPolicy = kwargs.get('omiPolicy').split(' ')
+#        if len(omiPolicy) == 2 and omiPolicy[1]:
+#            params['omiPolicySerial'] = omiPolicy[0]
+#            params['omiPolicyNumber'] = omiPolicy[1]
+#        else:
+#            params['omiPolicyNumber'] = omiPolicy
+
         try:
             result = self.client.findPatient(FindPatientParameters(**params))
         except NotFoundException, e:

@@ -670,11 +670,12 @@ class EnqueueWorker(object):
         doctor_uid = kwargs.get('doctorUid')
         person = kwargs.get('person')
         sex = kwargs.get('sex')
-        omi_policy_number = kwargs.get('omiPolicyNumber').strip()
+        omi_policy_number = kwargs.get('omiPolicyNumber', '')
+        omi_policy_number = omi_policy_number.strip()
         document = kwargs.get('document')
         timeslot_start = kwargs.get('timeslotStart', '')
 
-        if hospital_uid and birthday and doctor_uid and person and omi_policy_number:
+        if hospital_uid and birthday and doctor_uid and person:
             if len(hospital_uid) == 2:
                 dw = LPUWorker()
                 lpu_info = dw.get_by_id(hospital_uid[0])
