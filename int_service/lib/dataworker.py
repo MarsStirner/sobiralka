@@ -670,7 +670,9 @@ class EnqueueWorker(object):
         doctor_uid = kwargs.get('doctorUid')
         person = kwargs.get('person')
         sex = kwargs.get('sex')
-        omi_policy_number = kwargs.get('omiPolicyNumber').strip()
+        omi_policy_number = kwargs.get('omiPolicyNumber')
+        if omi_policy_number:
+            omi_policy_number = omi_policy_number.strip()
         timeslot_start = kwargs.get('timeslotStart', '')
 
         if hospital_uid and birthday and doctor_uid and person and omi_policy_number:
