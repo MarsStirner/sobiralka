@@ -673,7 +673,20 @@ class EnqueueWorker(object):
         omi_policy_number = kwargs.get('omiPolicyNumber')
         if omi_policy_number:
             omi_policy_number = omi_policy_number.strip()
-        document = kwargs.get('document')
+        document_obj = kwargs.get('document')
+        document = dict()
+        if document_obj:
+            if document_obj.client_id:
+                document['client_id'] = document_obj.client_id
+            if document_obj.policy_type:
+                document['policy_type'] = document_obj.policy_type
+            if document_obj.document_code:
+                document['document_code'] = document_obj.document_code
+            if document_obj.series:
+                document['series'] = document_obj.series
+            if document_obj.number:
+                document['number'] = document_obj.number
+
         timeslot_start = kwargs.get('timeslotStart', '')
 
         if hospital_uid and birthday and doctor_uid and person:
@@ -721,7 +734,7 @@ class EnqueueWorker(object):
             timeslotStart=timeslot_start
         )
 
-        if _enqueue and _enqueue['result'] == True:
+        if _enqueue and _enqueue['result'] is True:
             self.__add_ticket(
                 error=_enqueue.get('error_code'),
                 data=json.dumps({
@@ -733,8 +746,7 @@ class EnqueueWorker(object):
             )
             result = {'result': _enqueue.get('result'),
                       'message': exception_by_code(_enqueue.get('error_code')),
-                      'ticketUid': _enqueue.get('ticketUid')
-            }
+                      'ticketUid': _enqueue.get('ticketUid')}
         else:
             enqueue_id = self.__add_ticket(
                 error=_enqueue.get('error_code'),
