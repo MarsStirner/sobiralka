@@ -373,9 +373,9 @@ class ClientKorus20(AbstractClient):
         if person:
             params = {
 #                'serverId': kwargs.get('serverId'),
-                'lastName': person.lastName,
-                'firstName': person.firstName,
-                'patrName': person.patronymic,
+                'lastName': person.get('lastName'),
+                'firstName': person.get('firstName'),
+                'patrName': person.get('patronymic'),
 #                'omiPolicy': kwargs['omiPolicyNumber'],
                 'birthDate': kwargs.get('birthday'),
             }
