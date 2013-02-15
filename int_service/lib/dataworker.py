@@ -206,8 +206,7 @@ class LPUWorker(object):
                 'wsdlURL': "http://" + SOAP_SERVER_HOST + ":" + str(SOAP_SERVER_PORT) + '/schedule/?wsdl',
                 'token': item.token,
                 'key': item.key,
-                }
-            )
+            })
 
         if not okato_code:
             units_dw = LPU_UnitsWorker()
@@ -231,8 +230,7 @@ class LPUWorker(object):
                     'wsdlURL': "http://" + SOAP_SERVER_HOST + ":" + str(SOAP_SERVER_PORT) + '/schedule/?wsdl',
                     'token': item.lpu.token,
                     'key': item.lpu.key,
-                    }
-                )
+                })
         shutdown_session()
         return result
 
@@ -403,20 +401,20 @@ class EnqueueWorker(object):
         result = {}
 
         hospital_uid = kwargs.get('hospitalUid', '').split('/')
-        if isinstance(hospital_uid, list) and len(hospital_uid)==2:
+        if isinstance(hospital_uid, list) and len(hospital_uid) == 2:
             lpu_dw = LPUWorker()
             lpu = lpu_dw.get_by_id(hospital_uid[0])
         else:
             shutdown_session()
             raise exceptions.ValueError
-            return {}
+            return {'timeslots': []}
 
         if 'doctorUid' in kwargs:
             doctor_uid = int(kwargs.get('doctorUid'))
         else:
             shutdown_session()
             raise exceptions.KeyError
-            return {}
+            return {'timeslots': []}
 
         speciality = kwargs.get('speciality')
         if not speciality:
@@ -496,7 +494,7 @@ class EnqueueWorker(object):
         hospital_uid = kwargs.get('hospitalUid', '').split('/')
         ticket_uid = kwargs.get('ticketUid')
         if hospital_uid and ticket_uid:
-            if len(hospital_uid)==2:
+            if len(hospital_uid) == 2:
                 if hospital_uid[1]:
                     # It's lpu_unit, work with LPU_UnitsWorker
                     dw = LPU_UnitsWorker()
@@ -516,7 +514,7 @@ class EnqueueWorker(object):
             else:
                 shutdown_session()
 #                raise exceptions.AttributeError
-                return {}
+                return result
         else:
             shutdown_session()
             raise exceptions.KeyError

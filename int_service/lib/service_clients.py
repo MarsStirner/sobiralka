@@ -232,7 +232,7 @@ class ClientKorus20(AbstractClient):
                     'personId': kwargs.get('doctor_uid'),
                     'date': start,
                     'hospitalUidFrom': kwargs.get('hospital_uid_from', '0'),
-                    }
+                }
                 timeslot = self.getWorkTimeAndStatus(**params)
                 if timeslot:
                     result.extend(timeslot)
@@ -438,7 +438,7 @@ class ClientKorus20(AbstractClient):
                 'personId': int(kwargs.get('doctorUid')),
                 'date': date_time.date(),
                 'time': date_time.time(),
-                'note': kwargs.get('E-mail', 'E-mail'),
+                'note': kwargs.get('email', 'E-mail'),
                 'hospitalUidFrom': kwargs.get('hospitalUidFrom'),
             }
         except:
