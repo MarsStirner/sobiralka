@@ -539,10 +539,10 @@ class PatientDocument(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     policy_type = Integer
-    document_code = String
+    document_code = Unicode
     client_id = Integer
-    series = String
-    number = String
+    series = Unicode
+    number = Unicode
 
     def __init__(self, **kwargs):
         super(PatientDocument, self).__init__(doc=u'Документ пациента', **kwargs)
