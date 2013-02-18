@@ -18,6 +18,7 @@ from spyne.model.complex import Array, Iterable, ComplexModel
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, SOAP_NAMESPACE
 from dataworker import DataWorker
 import soap_models
+import version
 
 
 class CustomWsgiMounter(WsgiMounter):
@@ -53,10 +54,15 @@ class InfoServer(ServiceBase):
         obj = DataWorker.provider('lpu')
         return obj.get_uid_by_code(code=HospitalUidRequest.hospitalCode)
 
+    @rpc(_returns=soap_models.GetVersionResponse)
+    def getVersion(self):
+        # return {'version': version.version, 'last_update': version.last_change_date}
+        return {'version': version.version, 'last_update': version.last_change_date}
+
 
 class ListServer(ServiceBase):
 
-    @rpc(None, _returns=soap_models.ListRegionsResponse)
+    @rpc(_returns=soap_models.ListRegionsResponse)
     def listRegions(self):
         obj = DataWorker.provider('regions')
         return {'regions': obj.get_list()}

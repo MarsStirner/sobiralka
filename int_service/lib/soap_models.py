@@ -711,3 +711,13 @@ class ListRegionsResponse(ComplexModel):
 
     def __init__(self):
         super(ListRegionsResponse, self).__init__(doc=u'Получение списка регионов, с которыми работает ИС')
+
+
+class GetVersionResponse(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    version = Unicode
+    last_update = Unicode
+
+    def __init__(self):
+        super(GetVersionResponse, self).__init__(doc=u'Получение версии ИС')
