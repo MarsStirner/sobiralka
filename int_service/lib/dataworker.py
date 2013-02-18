@@ -46,16 +46,18 @@ class DataWorker(object):
 class RegionsWorker(object):
     """Класс для работы с информацией по регионам"""
     session = Session()
+    session.autocommit = True
     model = Regions
 
     def get_list(self):
         """Возвращает список регионов"""
-        return self.session.query(Regions).filter(Regions.is_active == 1).order_by(Regions.name).all()
+        return self.session.query(Regions).filter(Regions.is_active == True).order_by(Regions.name).all()
 
 
 class LPUWorker(object):
     """Класс для работы с информацией по ЛПУ"""
     session = Session()
+    session.autocommit = True
     model = LPU
 
     @classmethod
@@ -331,6 +333,7 @@ class LPUWorker(object):
 class LPU_UnitsWorker(object):
     """Класс для работы с информацией по подразделениям"""
     session = Session()
+    session.autocommit = True
     model = LPU_Units
 
     def get_list(self, **kwargs):
@@ -397,6 +400,7 @@ class LPU_UnitsWorker(object):
 
 class EnqueueWorker(object):
     session = Session()
+    session.autocommit = True
     model = Enqueue
     SCHEDULE_DAYS_DELTA = 14
 
@@ -792,6 +796,7 @@ class EnqueueWorker(object):
 class PersonalWorker(object):
     """Класс для работы с информацией по врачам"""
     session = Session()
+    session.autocommit = True
     model = Personal
 
     def get_list(self, **kwargs):

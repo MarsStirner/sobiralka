@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Table, Integer, BigInteger, String, Unicode, Text, UnicodeText, Enum, ForeignKey
+from sqlalchemy import Column, Table, Integer, BigInteger, String, Unicode, Text, UnicodeText, Enum, ForeignKey, Boolean
 from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy.orm import relationship, backref
 
@@ -131,4 +131,4 @@ class Regions(Base):
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(64), nullable=False)
     code = Column(BigInteger, nullable=False)
-    is_active = Column(Integer(1), default=0)
+    is_active = Column(Boolean, default=True)

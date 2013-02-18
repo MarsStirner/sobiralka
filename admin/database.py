@@ -6,7 +6,7 @@ from admin.models import Base
 from settings import DB_CONNECT_STRING
 
 engine = create_engine(DB_CONNECT_STRING, convert_unicode=True, pool_recycle=300)
-Session = scoped_session(sessionmaker(bind=engine, autocommit=True))
+Session = scoped_session(sessionmaker(bind=engine))
 #Base = declarative_base()
 Base.query = Session.query_property()
 
@@ -16,6 +16,7 @@ def init_db():
     # they will be registered properly on the metadata.  Otherwise
     # you will have to import them first before calling init_db()
     from admin.models import LPU, LPU_Units, Enqueue, Personal, Speciality, UnitsParentForId
+    Session.begin()
     Base.metadata.create_all(bind=engine)
     Session.commit()
 
