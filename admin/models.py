@@ -9,7 +9,7 @@ Base = declarative_base()
 class LPU(Base):
     """Mapping for LPU table"""
     __tablename__ = 'lpu'
-    __table_args__ = {'mysql_engine':'InnoDB'}
+    __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(BigInteger, primary_key=True)
     name = Column(UnicodeText, nullable=False)
@@ -36,7 +36,7 @@ class LPU(Base):
 class LPU_Units(Base):
     """Mapping for lpu_units table"""
     __tablename__ = 'lpu_units'
-    __table_args__ = {'mysql_engine':'InnoDB'}
+    __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(BigInteger, primary_key=True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'))
@@ -54,9 +54,9 @@ units_parents = Table("units_parents", Base.metadata,
 class UnitsParentForId(Base):
     """Mapping for UnitsParentForId table"""
     __tablename__ = 'UnitsParentForId'
-    __table_args__ = {'mysql_engine':'InnoDB'}
+    __table_args__ = {'mysql_engine': 'InnoDB'}
 
-    id = Column(Integer, primary_key = True)
+    id = Column(Integer, primary_key=True)
     LpuId = Column(BigInteger, ForeignKey('lpu.id'))
     OrgId = Column(BigInteger, ForeignKey('lpu.id'))
     ChildId = Column(BigInteger)
@@ -75,7 +75,7 @@ class UnitsParentForId(Base):
 class Enqueue(Base):
     """Mapping for enqueue table"""
     __tablename__ = 'enqueue'
-    __table_args__ = {'mysql_engine':'InnoDB'}
+    __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(BigInteger, primary_key=True)
     Error = Column(String(64))
@@ -115,9 +115,20 @@ class Personal(Base):
 class Speciality(Base):
     """Mapping for speciality table"""
     __tablename__ = 'speciality'
-    __table_args__ = {'mysql_engine':'InnoDB'}
+    __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(Integer, primary_key=True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'))
     speciality = Column(Unicode(64), nullable=False)
     nameEPGU = Column(Unicode(64))
+
+
+class Regions(Base):
+    """Mapping for regions table"""
+    __tablename__ = 'regions'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(64), nullable=False)
+    code = Column(BigInteger, nullable=False)
+    is_active = Column(Integer(1), default=0)

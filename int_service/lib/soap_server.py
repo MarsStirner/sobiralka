@@ -56,6 +56,11 @@ class InfoServer(ServiceBase):
 
 class ListServer(ServiceBase):
 
+    @rpc(None, _returns=soap_models.ListRegionsResponse)
+    def listRegions(self):
+        obj = DataWorker.provider('regions')
+        return {'regions': obj.get_list()}
+
     @srpc(soap_models.ListHospitalsRequest, _returns=soap_models.ListHospitalsResponse)
     def listHospitals(HospitalsRequest):
         obj = DataWorker.provider('lpu')

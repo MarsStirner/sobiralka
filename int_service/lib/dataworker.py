@@ -14,11 +14,12 @@ from sqlalchemy.exc import InvalidRequestError
 from suds import WebFault
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
-from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality
+from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality, Regions
 from service_clients import Clients
 from is_exceptions import exception_by_code
 
 from admin.database import Session, shutdown_session
+
 
 class DataWorker(object):
     """Provider class for current DataWorkers"""
@@ -26,7 +27,9 @@ class DataWorker(object):
     def provider(cls, type):
         """Вернёт объект для работы с указанным типом данных"""
         type = type.lower()
-        if type == 'lpu':
+        if type == 'regions':
+            obj = RegionsWorker()
+        elif type == 'lpu':
             obj = LPUWorker()
         elif type == 'lpu_units':
             obj = LPU_UnitsWorker()
@@ -38,6 +41,16 @@ class DataWorker(object):
             obj = None
             raise exceptions.NameError
         return obj
+
+
+class RegionsWorker(object):
+    """Класс для работы с информацией по регионам"""
+    session = Session()
+    model = Regions
+
+    def get_list(self):
+        """Возвращает список регионов"""
+        return self.session.query(Regions).filter(Regions.is_active == 1).order_by(Regions.name).all()
 
 
 class LPUWorker(object):
@@ -117,11 +130,10 @@ class LPUWorker(object):
         """
         try:
             if (kwargs['parsedAddress']['kladrCode']
-#                and kwargs['parsedAddress']['block']
+                #and kwargs['parsedAddress']['block']
                 and kwargs['parsedAddress']['flat']
-    #            and kwargs['parsedAddress']['house']['building']
-                and kwargs['parsedAddress']['house']['number']
-                ):
+                #and kwargs['parsedAddress']['house']['building']
+                and kwargs['parsedAddress']['house']['number']):
                     # Prepare search parameters
                     streetKLADR = kwargs.get('parsedAddress', {}).get('kladrCode')
                     pointKLADR = kwargs.get('parsedAddress').get('kladrCode')[0:5].ljust(15, '0')
@@ -160,9 +172,9 @@ class LPUWorker(object):
         """
         for key, item in lpu_list:
             query = (self.session.query(UnitsParentForId.OrgId, LPU.id)
-                     .filter(UnitsParentForId.LpuId==LPU.id)
-                     .filter(LPU.key==item['serverId'])
-                     .filter(UnitsParentForId.ChildId==int(item['orgStructureId'])))
+                     .filter(UnitsParentForId.LpuId == LPU.id)
+                     .filter(LPU.key == item['serverId'])
+                     .filter(UnitsParentForId.ChildId == int(item['orgStructureId'])))
             try:
                 lpu_ids = query.one()
             except MultipleResultsFound, e:

@@ -175,19 +175,19 @@ class HospitalInfo(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     uid = String()
-    uid.Annotations.doc=u'Уникальный идентификатор ЛПУ'
+    uid.Annotations.doc = u'Уникальный идентификатор ЛПУ'
     name = Unicode()
-    name.Annotations.doc=u'Наименование ЛПУ'
+    name.Annotations.doc = u'Наименование ЛПУ'
     phone = String()
-    phone.Annotations.doc=u'Номер телефона ЛПУ'
+    phone.Annotations.doc = u'Номер телефона ЛПУ'
     address = Unicode()
-    address.Annotations.doc=u'Адрес ЛПУ'
+    address.Annotations.doc = u'Адрес ЛПУ'
     wsdlURL = String()
-    wsdlURL.Annotations.doc=u'URL веб-сервиса МИС, предоставляющего возможность записи на приём'
+    wsdlURL.Annotations.doc = u'URL веб-сервиса МИС, предоставляющего возможность записи на приём'
     token = String()
-    token.Annotations.doc=u'Токен ЛПУ'
+    token.Annotations.doc = u'Токен ЛПУ'
     key = String()
-    key.Annotations.doc=u'Key ЛПУ'
+    key.Annotations.doc = u'Key ЛПУ'
 
     def __init__(self, **kwargs):
         super(HospitalInfo, self).__init__(doc=u'Основная информация об ЛПУ', **kwargs)
@@ -489,6 +489,7 @@ SessionStatuses = Enum(
     type_name="SessionStatuses"
 )
 
+
 class SessionType(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
@@ -690,6 +691,23 @@ class GetTicketStatusResponse(ComplexModel):
     ticketsInfo = TicketInfo.customize(max_occurs='unbounded', doc=u'Данные о состоянии запрошенных заявок')
 
     def __init__(self):
-        super(GetTicketStatusResponse, self).__init__( doc=u'Ответ на запрос о текущем статусе заявки на приём')
+        super(GetTicketStatusResponse, self).__init__(doc=u'Ответ на запрос о текущем статусе заявки на приём')
 
 
+class Region(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    name = Unicode(doc=u'Название региона')
+    code = Integer(doc=u'Код региона')
+
+    def __init__(self):
+        super(Region, self).__init__(doc=u'Регион')
+
+
+class ListRegionsResponse(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    regions = Region.customize(max_occurs='unbounded', doc=u'Перечень найденных регионов')
+
+    def __init__(self):
+        super(ListRegionsResponse, self).__init__(doc=u'Получение списка регионов, с которыми работает ИС')

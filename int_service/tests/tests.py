@@ -14,8 +14,13 @@ logging.getLogger('suds.client').setLevel(logging.DEBUG)
 IS = "http://127.0.0.1:9910/%s/?wsdl"
 # IS = "http://10.1.2.107:9910/%s/?wsdl"
 
+
 class TestListWSDL(unittest.TestCase):
     client = Client(IS % "list", cache=None)
+
+    def testListRegions(self):
+        regions = self.client.service.listRegions()
+        self.assertIsInstance(regions.regions, list)
 
     def testListHospitalsKorus20_0(self):
         okato = "56401000000"
