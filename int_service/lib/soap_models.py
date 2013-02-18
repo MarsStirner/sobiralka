@@ -121,7 +121,7 @@ class SetDoctorInfoResponse(ComplexModel):
 class GetHospitalUidRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    hospitalCode = String(doc=u'Один или несколько идентификаторов ЛПУ')
+    hospitalCode = String(doc=u'ИНФИС код ЛПУ')
 
     def __init__(self):
         super(GetHospitalUidRequest, self).__init__(
@@ -717,7 +717,7 @@ class GetVersionResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     version = Unicode
-    last_update = Unicode
+    last_update = DateTime
 
     def __init__(self):
         super(GetVersionResponse, self).__init__(doc=u'Получение версии ИС')

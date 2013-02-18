@@ -56,7 +56,6 @@ class InfoServer(ServiceBase):
 
     @rpc(_returns=soap_models.GetVersionResponse)
     def getVersion(self):
-        # return {'version': version.version, 'last_update': version.last_change_date}
         return {'version': version.version, 'last_update': version.last_change_date}
 
 

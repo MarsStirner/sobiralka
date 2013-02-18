@@ -436,7 +436,7 @@ class TestInfoWSDL(unittest.TestCase):
 
     def testGetVersion(self):
         version = self.client.service.getVersion()
-        self.assertEqual(dict(version), dict(version="2.0.0", last_update="2013-02-18 19:00:00 +0400"))
+        self.assertEqual(dict(version), dict(version="2.0.0", last_update="2013-02-18T19:00:00 +0400"))
 
     def testGetHospitalInfoKorus20(self):
         hospitalUid = '17/0'
