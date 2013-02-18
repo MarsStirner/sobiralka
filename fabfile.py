@@ -1,5 +1,7 @@
 #-*- coding: utf-8 -*-
-import sys, os, getpass
+import sys
+import os
+import getpass
 from fabric.api import local, settings, abort, lcd
 from fabric.context_managers import prefix
 from fabric import operations
@@ -12,21 +14,24 @@ code_dir_path = os.path.abspath('.')
 
 virtualenv = '.virtualenv'
 
+
 def prepare_virtual_env():
     #Установка виртуального окружения и инструмента работы с пакетами Python
     local('easy_install virtualenv pip')
     #Создаём и активируем виртульное окружение для проекта
     with lcd(project_dir_path):
-        local('rm -R .virtualenv')
+        with settings(warn_only=True):
+            local('rm -R  %s' % virtualenv)
         local('virtualenv %s' % virtualenv)
         local('source %s/bin/activate' % virtualenv)
+
 
 def configure_db():
     #Создаём БД
     queries = []
     user = operations.prompt("Specify MySQL admin login:")
 #    password = getpass.getpass("Please specify MySQL admin password: ")
-    queries.append( "CREATE DATABASE IF NOT EXISTS %s DEFAULT CHARACTER SET utf8;" % DB_NAME)
+    queries.append("CREATE DATABASE IF NOT EXISTS %s DEFAULT CHARACTER SET utf8;" % DB_NAME)
     #Создаём пользователя для работы с БД
     db_user_host = DB_HOST
     if db_user_host not in ('localhost', '127.0.0.1'):
@@ -40,17 +45,21 @@ def configure_db():
     queries.append("FLUSH PRIVILEGES;")
     local('echo "%s" | mysql -h %s -u %s -p' % (' '.join(queries), DB_HOST, user))
 
+
 def prepare_directories():
     with lcd(project_dir_path):
         local('mkdir -p logs')
         local('mkdir -p run/eggs')
 
+
 def create_system_user():
     #Создаём системного пользователя
     with settings(warn_only=True):
-        local('/usr/sbin/useradd --system --no-create-home --home-dir %s --user-group %s' % (project_dir_path, SYSTEM_USER))
+        local('/usr/sbin/useradd --system --no-create-home --home-dir %s --user-group %s' %
+              (project_dir_path, SYSTEM_USER))
     local('chsh -s /bin/bash %s' % SYSTEM_USER)
     local('chown -R %s:%s %s' % (SYSTEM_USER, SYSTEM_USER, project_dir_path))
+
 
 def configure_webserver():
     #Создаём конфиги apache на основе имеющихся шаблонов и заданыых настроек
@@ -69,6 +78,7 @@ def configure_webserver():
         apache_admin_is_config_file.write(admin_is_config)
         apache_admin_is_config_file.close()
 
+
 def _parse_config(s):
     #Заменяем в шаблонах конфигов апача метки переменных на значения, заданные в settings
     edits = [('%SOAP_SERVER_HOST%', SOAP_SERVER_HOST),
@@ -82,12 +92,16 @@ def _parse_config(s):
         s = s.replace(search, replace)
     return s
 
+
 def activate_web_config():
     #Активируем конфигурации и перезапускаем apache
     with settings(warn_only=True):
-        local('ln -s /etc/httpd2/conf/sites-available/%s.conf /etc/httpd2/conf/sites-enabled/%s.conf' % (project_dir_name, project_dir_name))
-        local('ln -s /etc/httpd2/conf/sites-available/admin_%s.conf /etc/httpd2/conf/sites-enabled/admin_%s.conf' % (project_dir_name, project_dir_name))
+        local('ln -s /etc/httpd2/conf/sites-available/%s.conf /etc/httpd2/conf/sites-enabled/%s.conf' %
+              (project_dir_name, project_dir_name))
+        local('ln -s /etc/httpd2/conf/sites-available/admin_%s.conf /etc/httpd2/conf/sites-enabled/admin_%s.conf' %
+              (project_dir_name, project_dir_name))
     local('service httpd2 restart')
+
 
 def install_requirements():
     #Устанавливаем необходимые модули python
@@ -97,11 +111,13 @@ def install_requirements():
         with prefix('source %s/%s/bin/activate' % (project_dir_path, virtualenv)):
             local('pip install -r requirements.txt')
 
+
 def restore_database():
     #Создаём таблицы в БД на основе модели
     with lcd(code_dir_path):
         with prefix('source %s/%s/bin/activate' % (project_dir_path, virtualenv)):
             local('python admin/update.py')
+
 
 def deploy():
     prepare_virtual_env()
@@ -113,6 +129,7 @@ def deploy():
     install_requirements()
     restore_database()
     print u'Установка прошла успешно!'
+
 
 def update_db():
     restore_database()
