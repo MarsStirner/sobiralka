@@ -132,3 +132,5 @@ class Regions(Base):
     name = Column(Unicode(64), nullable=False)
     code = Column(BigInteger, nullable=False)
     is_active = Column(Boolean, default=True)
+
+    __mapper_args__ = {'order_by': name}
