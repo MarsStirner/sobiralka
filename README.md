@@ -30,7 +30,6 @@ apt-get upgrade
 
 ```
 apt-get -y install mysql-client python python-dev python-setuptools
-easy_install virtualenv pip
 ```
 
 **Установка fabric для автоматического разворачивания проекта**
