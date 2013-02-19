@@ -182,18 +182,19 @@ struct EnqueuePatientParameters{
 2:required i32 personId;
 3:optional timestamp dateTime;
 4:optional string note;
-5:optional i32 hospitalUidFrom;
+5:optional string hospitalUidFrom;
 }
 
 struct FindPatientParameters{
-1:required string lastName;
-2:required string firstName;
-3:required string patrName;
-4:required timestamp birthDate;
-5:required i32 sex;
+1:optional string lastName;
+2:optional string firstName;
+3:optional string patrName;
+4:optional timestamp birthDate;
+5:optional i32 sex;
 6:optional string identifierType;
 7:optional string identifier;
-8:required map<string, string> document;
+8:optional string omiPolicySerial;
+9:optional string omiPolicyNumber;
 }
 
 

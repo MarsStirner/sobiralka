@@ -2359,7 +2359,7 @@ class EnqueuePatientParameters:
     (2, TType.I32, 'personId', None, None, ), # 2
     (3, TType.I64, 'dateTime', None, None, ), # 3
     (4, TType.STRING, 'note', None, None, ), # 4
-    (5, TType.I32, 'hospitalUidFrom', None, None, ), # 5
+    (5, TType.STRING, 'hospitalUidFrom', None, None, ), # 5
   )
 
   def __init__(self, patientId=None, personId=None, dateTime=None, note=None, hospitalUidFrom=None,):
@@ -2399,8 +2399,8 @@ class EnqueuePatientParameters:
         else:
           iprot.skip(ftype)
       elif fid == 5:
-        if ftype == TType.I32:
-          self.hospitalUidFrom = iprot.readI32();
+        if ftype == TType.STRING:
+          self.hospitalUidFrom = iprot.readString();
         else:
           iprot.skip(ftype)
       else:
@@ -2430,8 +2430,8 @@ class EnqueuePatientParameters:
       oprot.writeString(self.note)
       oprot.writeFieldEnd()
     if self.hospitalUidFrom is not None:
-      oprot.writeFieldBegin('hospitalUidFrom', TType.I32, 5)
-      oprot.writeI32(self.hospitalUidFrom)
+      oprot.writeFieldBegin('hospitalUidFrom', TType.STRING, 5)
+      oprot.writeString(self.hospitalUidFrom)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -2465,7 +2465,8 @@ class FindPatientParameters:
    - sex
    - identifierType
    - identifier
-   - document
+   - omiPolicySerial
+   - omiPolicyNumber
   """
 
   thrift_spec = (
@@ -2477,10 +2478,11 @@ class FindPatientParameters:
     (5, TType.I32, 'sex', None, None, ), # 5
     (6, TType.STRING, 'identifierType', None, None, ), # 6
     (7, TType.STRING, 'identifier', None, None, ), # 7
-    (8, TType.MAP, 'document', (TType.STRING,None,TType.STRING,None), None, ), # 8
+    (8, TType.STRING, 'omiPolicySerial', None, None, ), # 8
+    (9, TType.STRING, 'omiPolicyNumber', None, None, ), # 9
   )
 
-  def __init__(self, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None, identifierType=None, identifier=None, document=None,):
+  def __init__(self, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None, identifierType=None, identifier=None, omiPolicySerial=None, omiPolicyNumber=None,):
     self.lastName = lastName
     self.firstName = firstName
     self.patrName = patrName
@@ -2488,7 +2490,8 @@ class FindPatientParameters:
     self.sex = sex
     self.identifierType = identifierType
     self.identifier = identifier
-    self.document = document
+    self.omiPolicySerial = omiPolicySerial
+    self.omiPolicyNumber = omiPolicyNumber
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -2535,14 +2538,13 @@ class FindPatientParameters:
         else:
           iprot.skip(ftype)
       elif fid == 8:
-        if ftype == TType.MAP:
-          self.document = {}
-          (_ktype8, _vtype9, _size7 ) = iprot.readMapBegin() 
-          for _i11 in xrange(_size7):
-            _key12 = iprot.readString();
-            _val13 = iprot.readString();
-            self.document[_key12] = _val13
-          iprot.readMapEnd()
+        if ftype == TType.STRING:
+          self.omiPolicySerial = iprot.readString();
+        else:
+          iprot.skip(ftype)
+      elif fid == 9:
+        if ftype == TType.STRING:
+          self.omiPolicyNumber = iprot.readString();
         else:
           iprot.skip(ftype)
       else:
@@ -2583,30 +2585,18 @@ class FindPatientParameters:
       oprot.writeFieldBegin('identifier', TType.STRING, 7)
       oprot.writeString(self.identifier)
       oprot.writeFieldEnd()
-    if self.document is not None:
-      oprot.writeFieldBegin('document', TType.MAP, 8)
-      oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.document))
-      for kiter14,viter15 in self.document.items():
-        oprot.writeString(kiter14)
-        oprot.writeString(viter15)
-      oprot.writeMapEnd()
+    if self.omiPolicySerial is not None:
+      oprot.writeFieldBegin('omiPolicySerial', TType.STRING, 8)
+      oprot.writeString(self.omiPolicySerial)
+      oprot.writeFieldEnd()
+    if self.omiPolicyNumber is not None:
+      oprot.writeFieldBegin('omiPolicyNumber', TType.STRING, 9)
+      oprot.writeString(self.omiPolicyNumber)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 
   def validate(self):
-    if self.lastName is None:
-      raise TProtocol.TProtocolException(message='Required field lastName is unset!')
-    if self.firstName is None:
-      raise TProtocol.TProtocolException(message='Required field firstName is unset!')
-    if self.patrName is None:
-      raise TProtocol.TProtocolException(message='Required field patrName is unset!')
-    if self.birthDate is None:
-      raise TProtocol.TProtocolException(message='Required field birthDate is unset!')
-    if self.sex is None:
-      raise TProtocol.TProtocolException(message='Required field sex is unset!')
-    if self.document is None:
-      raise TProtocol.TProtocolException(message='Required field document is unset!')
     return
 
 

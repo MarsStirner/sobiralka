@@ -671,7 +671,7 @@ class TicketInfo(ComplexModel):
     printableDocument = PrintableDocument()
 
     def __init__(self):
-        super(TicketInfo, self).__init__( doc=u'Данные о текущем статусе заявки на приём')
+        super(TicketInfo, self).__init__(doc=u'Данные о текущем статусе заявки на приём')
 
 
 class GetTicketStatusRequest(ComplexModel):

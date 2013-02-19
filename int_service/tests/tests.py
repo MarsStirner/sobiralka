@@ -19,8 +19,9 @@ class TestListWSDL(unittest.TestCase):
     client = Client(IS % "list", cache=None)
 
     def testListRegions(self):
-        regions = self.client.listRegions()
-        self.assertIsInstance(regions.regions, list)
+        regions = self.client.service.listRegions()
+        if regions:
+            self.assertIsInstance(regions.regions, list)
 
     def testListHospitalsKorus20_0(self):
         okato = "56401000000"

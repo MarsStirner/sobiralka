@@ -1096,7 +1096,7 @@ class ClientKorus30(AbstractClient):
                 personId=int(kwargs.get('doctorUid')),
                 dateTime=int(time.mktime(date_time.timetuple()) * 1000),
                 note=kwargs.get('E-mail', 'E-mail'),
-                hospitalUidFrom=int(kwargs.get('hospitalUidFrom')),
+                hospitalUidFrom=kwargs.get('hospitalUidFrom'),
             )
         except:
             raise exceptions.ValueError
