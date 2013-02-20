@@ -5,6 +5,7 @@ import getpass
 from fabric.api import local, settings, abort, lcd
 from fabric.context_managers import prefix
 from fabric import operations
+from fabric.colors import yellow, red, green
 
 from settings import *
 
@@ -29,7 +30,7 @@ def prepare_virtual_env():
 def configure_db():
     #Создаём БД
     queries = []
-    user = operations.prompt("Specify MySQL admin login:")
+    user = operations.prompt(yellow("Specify MySQL admin login:"))
 #    password = getpass.getpass("Please specify MySQL admin password: ")
     queries.append("CREATE DATABASE IF NOT EXISTS %s DEFAULT CHARACTER SET utf8;" % DB_NAME)
     #Создаём пользователя для работы с БД
@@ -61,22 +62,46 @@ def create_system_user():
     local('chown -R %s:%s %s' % (SYSTEM_USER, SYSTEM_USER, project_dir_path))
 
 
+def _get_apache_config_dir():
+    for _dir in ('/etc/httpd2/conf/sites-available', '/etc/http/conf.d'):
+        if os.path.isdir(_dir):
+            return _dir
+    _dir = operations.prompt(yellow("Specify Apache configs dir:"))
+    while not os.path.isdir(_dir):
+        print red("Directory doesn't exists. Try again.")
+        _dir = operations.prompt(yellow("Please, specify Apache configs dir:"))
+    return _dir
+
+
+def _enable_configs(config_dir, project_dir_name):
+    if config_dir.find('sites-available') > -1:
+        enable_config_dir = config_dir.replace('sites-available', 'sites-enabled')
+        local('ln -s %s/%s.conf %s/%s.conf' % (config_dir, enable_config_dir, project_dir_name, project_dir_name))
+        local('ln -s %s/admin_%s.conf /%s/admin_%s.conf' %
+              (config_dir, enable_config_dir, project_dir_name, project_dir_name))
+
+
 def configure_webserver():
     #Создаём конфиги apache на основе имеющихся шаблонов и заданыых настроек
     with lcd(project_dir_path):
+
+        apache_configs_dir = _get_apache_config_dir()
+
         is_config_file = open('%s/fabric_inc/int_server.conf' % code_dir_path, 'r')
         is_config = _parse_config(is_config_file.read())
         is_config_file.close()
-        apache_is_config_file = open('/etc/httpd2/conf/sites-available/%s.conf' % project_dir_name, 'w')
+        apache_is_config_file = open('%s/%s.conf' % (apache_configs_dir, project_dir_name), 'w')
         apache_is_config_file.write(is_config)
         apache_is_config_file.close()
 
         admin_is_config_file = open('%s/fabric_inc/admin_int_server.conf' % code_dir_path, 'r')
         admin_is_config = _parse_config(admin_is_config_file.read())
         admin_is_config_file.close()
-        apache_admin_is_config_file = open('/etc/httpd2/conf/sites-available/admin_%s.conf' % project_dir_name, 'w')
+        apache_admin_is_config_file = open('%s/admin_%s.conf' % (apache_configs_dir, project_dir_name), 'w')
         apache_admin_is_config_file.write(admin_is_config)
         apache_admin_is_config_file.close()
+
+        _enable_configs(apache_configs_dir, project_dir_name)
 
 
 def _parse_config(s):
@@ -96,11 +121,11 @@ def _parse_config(s):
 def activate_web_config():
     #Активируем конфигурации и перезапускаем apache
     with settings(warn_only=True):
-        local('ln -s /etc/httpd2/conf/sites-available/%s.conf /etc/httpd2/conf/sites-enabled/%s.conf' %
-              (project_dir_name, project_dir_name))
-        local('ln -s /etc/httpd2/conf/sites-available/admin_%s.conf /etc/httpd2/conf/sites-enabled/admin_%s.conf' %
-              (project_dir_name, project_dir_name))
-    local('service httpd2 restart')
+        out = local('service httpd2 restart')
+        if out.failed:
+            out = local('service httpd restart')
+            if out.failed:
+                print red('''!Couldn't restart Apache service. Please do it manually.''')
 
 
 def install_requirements():
@@ -128,9 +153,9 @@ def deploy():
     activate_web_config()
     install_requirements()
     restore_database()
-    print u'Установка прошла успешно!'
+    print green(u'Установка прошла успешно!')
 
 
 def update_db():
     restore_database()
-    print u'Обновление базы данных прошло успешно!'
+    print green(u'Обновление базы данных прошло успешно!')
