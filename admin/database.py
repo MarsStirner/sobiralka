@@ -22,5 +22,4 @@ def init_db():
 
 
 def shutdown_session(exception=None):
-    Session.close()
     Session.remove()

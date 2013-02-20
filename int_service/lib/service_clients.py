@@ -226,7 +226,7 @@ class ClientKorus20(AbstractClient):
         result = []
         if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid']:
             for i in xrange((kwargs['end'] - kwargs['start']).days):
-                start = (kwargs['start'].date() + datetime.timedelta(days=i))
+                start = (kwargs['start'] + datetime.timedelta(days=i))
                 params = {
                     'serverId': kwargs.get('server_id'),
                     'personId': kwargs.get('doctor_uid'),

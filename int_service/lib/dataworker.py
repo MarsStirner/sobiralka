@@ -46,8 +46,11 @@ class DataWorker(object):
 class RegionsWorker(object):
     """Класс для работы с информацией по регионам"""
     session = Session()
-    session.autocommit = True
+    # session.autocommit = True
     model = Regions
+
+    def __del__(self):
+        self.session.close()
 
     def get_list(self):
         """Возвращает список регионов"""
@@ -57,8 +60,11 @@ class RegionsWorker(object):
 class LPUWorker(object):
     """Класс для работы с информацией по ЛПУ"""
     session = Session()
-    session.autocommit = True
+    # session.autocommit = True
     model = LPU
+
+    def __del__(self):
+        self.session.close()
 
     @classmethod
     def parse_hospital_uid(cls, hospitalUid):
@@ -333,8 +339,11 @@ class LPUWorker(object):
 class LPU_UnitsWorker(object):
     """Класс для работы с информацией по подразделениям"""
     session = Session()
-    session.autocommit = True
+    # session.autocommit = True
     model = LPU_Units
+
+    def __del__(self):
+        self.session.close()
 
     def get_list(self, **kwargs):
         """Возвращает список подразделений
@@ -400,9 +409,12 @@ class LPU_UnitsWorker(object):
 
 class EnqueueWorker(object):
     session = Session()
-    session.autocommit = True
+    # session.autocommit = True
     model = Enqueue
     SCHEDULE_DAYS_DELTA = 14
+
+    def __del__(self):
+        self.session.close()
 
     def get_info(self, **kwargs):
         """Возвращает информацию о расписании
@@ -440,7 +452,7 @@ class EnqueueWorker(object):
                 speciality = doctor.speciality
 
         hospital_uid_from = kwargs.get('hospitalUidFrom', 0)
-        start, end = self.__get_dates_period(kwargs.get('startDate', ''), kwargs.get('endDate', ''))
+        start, end = self.__get_dates_period(kwargs.get('startDate'), kwargs.get('endDate'))
 
         proxy_client = Clients.provider(lpu.protocol, lpu.proxy.split(';')[0])
         params = {
@@ -456,9 +468,9 @@ class EnqueueWorker(object):
         shutdown_session()
         return result
 
-    def __get_dates_period(self, start='', end=''):
+    def __get_dates_period(self, start, end):
         if not start:
-            start = datetime.datetime.today()
+            start = datetime.date.today()
         if not end:
             end = (start + datetime.timedelta(days=self.SCHEDULE_DAYS_DELTA))
         return start, end
@@ -466,13 +478,13 @@ class EnqueueWorker(object):
     def __get_tickets_ge_id(self, id, hospital_uid=None):
         tickets = []
         for item in self.session.query(Enqueue).filter(
-            Enqueue.DataType=='0',
-            Enqueue.id>id,
-            Enqueue.Error=='100 ok',
-            Enqueue.status==0
+            Enqueue.DataType == '0',
+            Enqueue.id > id,
+            Enqueue.Error == '100 ok',
+            Enqueue.status == 0
         ):
             data = json.load(item.Data)
-            if hospital_uid and hospital_uid==data['hospitalUid'] or hospital_uid is None:
+            if hospital_uid and hospital_uid == data['hospitalUid'] or hospital_uid is None:
                 tickets.append({
                     'id': item.id,
                     'data': data,
@@ -786,9 +798,10 @@ class EnqueueWorker(object):
             enqueue = Enqueue(**kwargs)
         except exceptions.ValueError, e:
             print e
+            self.session.rollback()
         else:
             self.session.add(enqueue)
-            # self.session.commit()
+            self.session.commit()
             return enqueue.id
         return None
 
@@ -796,8 +809,11 @@ class EnqueueWorker(object):
 class PersonalWorker(object):
     """Класс для работы с информацией по врачам"""
     session = Session()
-    session.autocommit = True
+    # session.autocommit = True
     model = Personal
+
+    def __del__(self):
+        self.session.close()
 
     def get_list(self, **kwargs):
         """Возвращает список врачей по переданным параметрам
@@ -1009,12 +1025,17 @@ class PersonalWorker(object):
                                 'ticketsAvailable': speciality.ticketsAvailable,
                                 'nameEPGU': speciality.nameEPGU,
                             })
+
+        shutdown_session()
         return result
 
 
 class UpdateWorker(object):
     """Класс для импорта данных в ИС из КС"""
     session = Session()
+
+    def __del__(self):
+        self.session.close()
 
     def __init_database(self):
         """Create tables from models if not exists"""
