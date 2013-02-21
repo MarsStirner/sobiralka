@@ -425,7 +425,7 @@ class TestListWSDL(unittest.TestCase):
 
 
     def testListSpecialities(self):
-        specialities = self.client.service.listSpecialities({'hospitalUid': '17/53', 'hospitalUidFrom': '500'})
+        specialities = self.client.service.listSpecialities({'hospitalUid': '17/54', 'hospitalUidFrom': '500'})
         self.assertIsInstance(specialities.speciality, list)
 
     def testListServTypesInfo(self):

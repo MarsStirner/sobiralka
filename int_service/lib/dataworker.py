@@ -995,17 +995,7 @@ class PersonalWorker(object):
         )
         result = dict()
         result['speciality'] = []
-        specialities = []
-
-        for value in query_result:
-            if value.speciality not in specialities:
-                specialities.append(value.speciality)
-                result['speciality'].append({
-                    'speciality': value.speciality,
-                    'ticketsPerMonths': '-1',
-                    'ticketsAvailable': '-1',
-                    'nameEPGU': "",
-                })
+        specialities, lpu_specialities = [], []
 
         if hospital_uid_from:
             if len(lpu_list):
@@ -1015,16 +1005,26 @@ class PersonalWorker(object):
                                                 lpu_units_list[0].lpu.proxy.split(';')[0])
             if proxy_client:
                 lpu_specialities = proxy_client.getSpecialities(hospital_uid_from)
+
+        for value in query_result:
+            if value.speciality not in specialities:
+                specialities.append(value.speciality)
+                speciality = {'speciality': value.speciality,
+                              'ticketsPerMonths': '-1',
+                              'ticketsAvailable': '-1',
+                              'nameEPGU': "",  # TODO: получать из Speciality, для этого JOIN Personal and Speciality
+                              }
+
                 if lpu_specialities:
-                    result['speciality'] = []
-                    for speciality in lpu_specialities:
-                        if speciality in specialities:
-                            result['speciality'].append({
-                                'speciality': speciality.speciality,
-                                'ticketsPerMonths': speciality.ticketsPerMonths,
-                                'ticketsAvailable': speciality.ticketsAvailable,
-                                'nameEPGU': speciality.nameEPGU,
-                            })
+                    for speciality_quoted in lpu_specialities:
+                        if value.speciality == speciality_quoted.speciality:
+                            speciality = {'speciality': speciality_quoted.speciality,
+                                          'ticketsPerMonths': speciality_quoted.ticketsPerMonths,
+                                          'ticketsAvailable': speciality_quoted.ticketsAvailable,
+                                          'nameEPGU': speciality_quoted.nameEPGU,
+                                          }
+
+                result['speciality'].append(speciality)
 
         shutdown_session()
         return result
