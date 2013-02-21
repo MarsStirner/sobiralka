@@ -1010,8 +1010,8 @@ class PersonalWorker(object):
             if value.speciality not in specialities:
                 specialities.append(value.speciality)
                 speciality = {'speciality': value.speciality,
-                              'ticketsPerMonths': '-1',
-                              'ticketsAvailable': '-1',
+                              'ticketsPerMonths': -1,
+                              'ticketsAvailable': -1,
                               'nameEPGU': "",  # TODO: получать из Speciality, для этого JOIN Personal and Speciality
                               }
 
@@ -1019,8 +1019,8 @@ class PersonalWorker(object):
                     for speciality_quoted in lpu_specialities:
                         if value.speciality == speciality_quoted.speciality:
                             speciality = {'speciality': speciality_quoted.speciality,
-                                          'ticketsPerMonths': speciality_quoted.ticketsPerMonths,
-                                          'ticketsAvailable': speciality_quoted.ticketsAvailable,
+                                          'ticketsPerMonths': int(speciality_quoted.ticketsPerMonths),
+                                          'ticketsAvailable': int(speciality_quoted.ticketsAvailable),
                                           'nameEPGU': speciality_quoted.nameEPGU,
                                           }
 

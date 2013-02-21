@@ -222,8 +222,8 @@ class SpecialtyInfo(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     speciality = Unicode(doc=u'Наименований специальности')
-    ticketsPerMonths = String(doc=u'Количество талончиков на месяц')
-    ticketsAvailable = String(doc=u'Количество доступных талончиков')
+    ticketsPerMonths = Integer(doc=u'Количество талончиков на месяц')
+    ticketsAvailable = Integer(doc=u'Количество доступных талончиков')
     nameEPGU = String(doc=u'на EPGU')
 
     def __init__(self, **kwargs):
