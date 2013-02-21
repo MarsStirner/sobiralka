@@ -27,7 +27,7 @@ class LPU(Base):
         default=0
     )
     phone = Column(String(20), doc=u'Телефон', nullable=False)
-    schedule = Column(Unicode(256), doc=u'Расписание работы')
+    schedule = Column(Unicode(256), doc=u'Расписание работы', nullable=False, default=u'')
     type = Column(Unicode(32), doc=u'Тип ЛПУ: (Поликлиника)')
     protocol = Column(Enum('samson', 'intramed', 'korus20', 'korus30'), nullable=False, default='korus30')
     token = Column(String(45), doc=u'Токен')
@@ -39,7 +39,7 @@ class LPU_Units(Base):
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(BigInteger, primary_key=True)
-    lpuId = Column(BigInteger, ForeignKey('lpu.id'))
+    lpuId = Column(BigInteger, ForeignKey('lpu.id'), index=True)
     orgId = Column(BigInteger)
     name = Column(Unicode(256))
     address = Column(Unicode(256))
@@ -57,8 +57,8 @@ class UnitsParentForId(Base):
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(Integer, primary_key=True)
-    LpuId = Column(BigInteger, ForeignKey('lpu.id'))
-    OrgId = Column(BigInteger, ForeignKey('lpu.id'))
+    LpuId = Column(BigInteger, ForeignKey('lpu.id'), index=True)
+    OrgId = Column(BigInteger, ForeignKey('lpu.id'), index=True)
     ChildId = Column(BigInteger)
 
     lpu = relationship("LPU", backref=backref('lpu', order_by=id), foreign_keys=LpuId, primaryjoin=LPU.id==LpuId,)
@@ -118,7 +118,7 @@ class Speciality(Base):
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(Integer, primary_key=True)
-    lpuId = Column(BigInteger, ForeignKey('lpu.id'))
+    lpuId = Column(BigInteger, ForeignKey('lpu.id'), index=True)
     speciality = Column(Unicode(64), nullable=False)
     nameEPGU = Column(Unicode(64))
 

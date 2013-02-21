@@ -1153,7 +1153,7 @@ class UpdateWorker(object):
 
     def update_data(self):
         """Основной метод, который производит вызов внутренних методов обновления данных в БД ИС"""
-        self.session.begin()
+        # self.session.begin()
         self.__init_database()
         # Update data in tables
         lpu_dw = LPUWorker()

@@ -15,7 +15,7 @@ class LPUAdmin(ModelView):
                          kladr=u'КЛАДР',
                          OGRN=u'ОГРН',
                          OKATO=u'ОКАТО',
-                         type=u'Тип ЛПу',
+                         type=u'Тип ЛПУ',
                          phone=u'Телефон',
                          protocol=u'Протокол',
                          token=u'Токен')

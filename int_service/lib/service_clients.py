@@ -8,6 +8,7 @@ import logging
 from urlparse import urlparse
 from abc import ABCMeta, abstractmethod, abstractproperty
 from suds.client import Client
+from suds.cache import DocumentCache
 from suds import WebFault
 import is_exceptions
 import settings
@@ -25,10 +26,13 @@ class Clients(object):
     """Class provider for current Clients"""
     @classmethod
     def provider(cls, client_type, proxy_url):
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.CRITICAL)
         if settings.DEBUG:
-            logging.getLogger('suds.client').setLevel(logging.DEBUG)
+            logging.getLogger('suds.client').setLevel(logging.CRITICAL)
             logging.getLogger('Thrift_Client').setLevel(logging.DEBUG)
+        else:
+            logging.getLogger('suds.client').setLevel(logging.CRITICAL)
+            logging.getLogger('Thrift_Client').setLevel(logging.CRITICAL)
 
         client_type = client_type.lower()
         if client_type in ('samson', 'korus20'):
@@ -83,7 +87,10 @@ class ClientKorus20(AbstractClient):
             url: URL-адрес WSDL старой КС
 
         """
-        self.client = Client(url, cache=None)
+        if settings.DEBUG:
+            self.client = Client(url, cache=None)
+        else:
+            self.client = Client(url)
 
     def listHospitals(self, **kwargs):
         """Получает список подразделений
