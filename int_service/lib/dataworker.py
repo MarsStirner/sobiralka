@@ -80,7 +80,7 @@ class LPUWorker(object):
             hospitalUid = [hospitalUid, ]
         for i in hospitalUid:
             tmp_list = i.split('/')
-            if len(tmp_list) == 2 and int(tmp_list[1]):
+            if len(tmp_list) > 1 and int(tmp_list[1]):
                 lpu_units.append([int(tmp_list[0]), int(tmp_list[1])])
             else:
                 lpu.append(int(tmp_list[0]))
@@ -233,7 +233,7 @@ class LPUWorker(object):
             lpu_units_list = units_dw.get_list(uid=lpu_units, speciality=speciality)
             # Append LPU_Units to result
             for item in lpu_units_list:
-                uid = str(item.lpuId) + str(item.orgId)
+                uid = str(item.lpuId) + '/' + str(item.orgId)
                 # TODO: проверить работоспособность item.parent
                 if item.parent:
                     uid += '/' + str(item.parent.id)
@@ -392,7 +392,6 @@ class LPU_UnitsWorker(object):
             query_lpu_units = query_lpu_units.filter(LPU_Units.lpuId == lpu_id)
 
         return query_lpu_units.group_by(LPU_Units.id).all()
-
 
     def get_by_id(self, id):
         """
