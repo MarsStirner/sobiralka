@@ -121,9 +121,10 @@ struct DequeuePatientStatus{
 }
 
 struct Speciality{
-1:optional i32 ticketsPerMonths;
-2:optional i32 ticketsAvailable;
-3:optional string speciality;
+1:required i32 id;
+2:optional i32 ticketsPerMonths;
+3:optional i32 ticketsAvailable;
+4:optional string speciality;
 }
 
 struct Address{
@@ -164,7 +165,7 @@ struct GetTicketsAvailabilityParameters{
 }
 
 struct GetTimeWorkAndStatusParameters{
-1:optional i32 hospitalUidFrom;
+1:optional string hospitalUidFrom;
 2:required i32 personId;
 3:optional timestamp date;
 }
@@ -186,6 +187,17 @@ struct EnqueuePatientParameters{
 }
 
 struct FindPatientParameters{
+1:required string lastName;
+2:required string firstName;
+3:required string patrName;
+4:required timestamp birthDate;
+5:required i32 sex;
+6:optional string identifierType;
+7:optional string identifier;
+8:required map<string, string> document;
+}
+
+struct FindMultiplePatientsParameters{
 1:optional string lastName;
 2:optional string firstName;
 3:optional string patrName;
@@ -193,10 +205,8 @@ struct FindPatientParameters{
 5:optional i32 sex;
 6:optional string identifierType;
 7:optional string identifier;
-8:optional string omiPolicySerial;
-9:optional string omiPolicyNumber;
+8:optional map<string, string> document;
 }
-
 
 //Exceptions
 exception NotFoundException {
@@ -243,7 +253,7 @@ throws (1:SQLException excsql);
 PatientStatus findPatient(1:FindPatientParameters params)
 throws (1:NotFoundException exc, 2:SQLException excsql);
 
-list<Patient> findPatients(1:FindPatientParameters params)
+list<Patient> findPatients(1:FindMultiplePatientsParameters params)
 throws (1:NotFoundException exc, 2:SQLException excsql);
 
 map<i32,PatientInfo> getPatientInfo(1:list<i32> patientIds)

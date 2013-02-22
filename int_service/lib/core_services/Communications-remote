@@ -33,7 +33,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print '  Amb getWorkTimeAndStatus(GetTimeWorkAndStatusParameters params)'
   print '  PatientStatus addPatient(AddPatientParameters params)'
   print '  PatientStatus findPatient(FindPatientParameters params)'
-  print '   findPatients(FindPatientParameters params)'
+  print '   findPatients(FindMultiplePatientsParameters params)'
   print '   getPatientInfo( patientIds)'
   print '   getPatientContacts(i32 patientId)'
   print '   getPatientOrgStructures(i32 parentId)'

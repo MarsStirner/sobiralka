@@ -1343,11 +1343,11 @@ class getOrgStructures_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype10, _size7) = iprot.readListBegin()
-          for _i11 in xrange(_size7):
-            _elem12 = OrgStructure()
-            _elem12.read(iprot)
-            self.success.append(_elem12)
+          (_etype28, _size25) = iprot.readListBegin()
+          for _i29 in xrange(_size25):
+            _elem30 = OrgStructure()
+            _elem30.read(iprot)
+            self.success.append(_elem30)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1376,8 +1376,8 @@ class getOrgStructures_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter13 in self.success:
-        iter13.write(oprot)
+      for iter31 in self.success:
+        iter31.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -1521,11 +1521,11 @@ class getAddresses_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype17, _size14) = iprot.readListBegin()
-          for _i18 in xrange(_size14):
-            _elem19 = Address()
-            _elem19.read(iprot)
-            self.success.append(_elem19)
+          (_etype35, _size32) = iprot.readListBegin()
+          for _i36 in xrange(_size32):
+            _elem37 = Address()
+            _elem37.read(iprot)
+            self.success.append(_elem37)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1554,8 +1554,8 @@ class getAddresses_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter20 in self.success:
-        iter20.write(oprot)
+      for iter38 in self.success:
+        iter38.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.excsql is not None:
@@ -1676,10 +1676,10 @@ class findOrgStructureByAddress_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype24, _size21) = iprot.readListBegin()
-          for _i25 in xrange(_size21):
-            _elem26 = iprot.readI32();
-            self.success.append(_elem26)
+          (_etype42, _size39) = iprot.readListBegin()
+          for _i43 in xrange(_size39):
+            _elem44 = iprot.readI32();
+            self.success.append(_elem44)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1708,8 +1708,8 @@ class findOrgStructureByAddress_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.I32, len(self.success))
-      for iter27 in self.success:
-        oprot.writeI32(iter27)
+      for iter45 in self.success:
+        oprot.writeI32(iter45)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -1853,11 +1853,11 @@ class getPersonnel_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype31, _size28) = iprot.readListBegin()
-          for _i32 in xrange(_size28):
-            _elem33 = Person()
-            _elem33.read(iprot)
-            self.success.append(_elem33)
+          (_etype49, _size46) = iprot.readListBegin()
+          for _i50 in xrange(_size46):
+            _elem51 = Person()
+            _elem51.read(iprot)
+            self.success.append(_elem51)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1886,8 +1886,8 @@ class getPersonnel_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter34 in self.success:
-        iter34.write(oprot)
+      for iter52 in self.success:
+        iter52.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -2155,11 +2155,11 @@ class getTicketsAvailability_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype38, _size35) = iprot.readListBegin()
-          for _i39 in xrange(_size35):
-            _elem40 = ExtendedTicketsAvailability()
-            _elem40.read(iprot)
-            self.success.append(_elem40)
+          (_etype56, _size53) = iprot.readListBegin()
+          for _i57 in xrange(_size53):
+            _elem58 = ExtendedTicketsAvailability()
+            _elem58.read(iprot)
+            self.success.append(_elem58)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -2188,8 +2188,8 @@ class getTicketsAvailability_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter41 in self.success:
-        iter41.write(oprot)
+      for iter59 in self.success:
+        iter59.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -2654,7 +2654,7 @@ class findPatients_args:
 
   thrift_spec = (
     None, # 0
-    (1, TType.STRUCT, 'params', (FindPatientParameters, FindPatientParameters.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'params', (FindMultiplePatientsParameters, FindMultiplePatientsParameters.thrift_spec), None, ), # 1
   )
 
   def __init__(self, params=None,):
@@ -2671,7 +2671,7 @@ class findPatients_args:
         break
       if fid == 1:
         if ftype == TType.STRUCT:
-          self.params = FindPatientParameters()
+          self.params = FindMultiplePatientsParameters()
           self.params.read(iprot)
         else:
           iprot.skip(ftype)
@@ -2738,11 +2738,11 @@ class findPatients_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype45, _size42) = iprot.readListBegin()
-          for _i46 in xrange(_size42):
-            _elem47 = Patient()
-            _elem47.read(iprot)
-            self.success.append(_elem47)
+          (_etype63, _size60) = iprot.readListBegin()
+          for _i64 in xrange(_size60):
+            _elem65 = Patient()
+            _elem65.read(iprot)
+            self.success.append(_elem65)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -2771,8 +2771,8 @@ class findPatients_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter48 in self.success:
-        iter48.write(oprot)
+      for iter66 in self.success:
+        iter66.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -2827,10 +2827,10 @@ class getPatientInfo_args:
       if fid == 1:
         if ftype == TType.LIST:
           self.patientIds = []
-          (_etype52, _size49) = iprot.readListBegin()
-          for _i53 in xrange(_size49):
-            _elem54 = iprot.readI32();
-            self.patientIds.append(_elem54)
+          (_etype70, _size67) = iprot.readListBegin()
+          for _i71 in xrange(_size67):
+            _elem72 = iprot.readI32();
+            self.patientIds.append(_elem72)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -2847,8 +2847,8 @@ class getPatientInfo_args:
     if self.patientIds is not None:
       oprot.writeFieldBegin('patientIds', TType.LIST, 1)
       oprot.writeListBegin(TType.I32, len(self.patientIds))
-      for iter55 in self.patientIds:
-        oprot.writeI32(iter55)
+      for iter73 in self.patientIds:
+        oprot.writeI32(iter73)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -2900,12 +2900,12 @@ class getPatientInfo_result:
       if fid == 0:
         if ftype == TType.MAP:
           self.success = {}
-          (_ktype57, _vtype58, _size56 ) = iprot.readMapBegin() 
-          for _i60 in xrange(_size56):
-            _key61 = iprot.readI32();
-            _val62 = PatientInfo()
-            _val62.read(iprot)
-            self.success[_key61] = _val62
+          (_ktype75, _vtype76, _size74 ) = iprot.readMapBegin() 
+          for _i78 in xrange(_size74):
+            _key79 = iprot.readI32();
+            _val80 = PatientInfo()
+            _val80.read(iprot)
+            self.success[_key79] = _val80
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -2934,9 +2934,9 @@ class getPatientInfo_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.MAP, 0)
       oprot.writeMapBegin(TType.I32, TType.STRUCT, len(self.success))
-      for kiter63,viter64 in self.success.items():
-        oprot.writeI32(kiter63)
-        viter64.write(oprot)
+      for kiter81,viter82 in self.success.items():
+        oprot.writeI32(kiter81)
+        viter82.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -3053,11 +3053,11 @@ class getPatientContacts_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype68, _size65) = iprot.readListBegin()
-          for _i69 in xrange(_size65):
-            _elem70 = Contact()
-            _elem70.read(iprot)
-            self.success.append(_elem70)
+          (_etype86, _size83) = iprot.readListBegin()
+          for _i87 in xrange(_size83):
+            _elem88 = Contact()
+            _elem88.read(iprot)
+            self.success.append(_elem88)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -3080,8 +3080,8 @@ class getPatientContacts_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter71 in self.success:
-        iter71.write(oprot)
+      for iter89 in self.success:
+        iter89.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -3194,11 +3194,11 @@ class getPatientOrgStructures_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype75, _size72) = iprot.readListBegin()
-          for _i76 in xrange(_size72):
-            _elem77 = OrgStructuresProperties()
-            _elem77.read(iprot)
-            self.success.append(_elem77)
+          (_etype93, _size90) = iprot.readListBegin()
+          for _i94 in xrange(_size90):
+            _elem95 = OrgStructuresProperties()
+            _elem95.read(iprot)
+            self.success.append(_elem95)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -3221,8 +3221,8 @@ class getPatientOrgStructures_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter78 in self.success:
-        iter78.write(oprot)
+      for iter96 in self.success:
+        iter96.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -3485,11 +3485,11 @@ class getPatientQueue_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype82, _size79) = iprot.readListBegin()
-          for _i83 in xrange(_size79):
-            _elem84 = Queue()
-            _elem84.read(iprot)
-            self.success.append(_elem84)
+          (_etype100, _size97) = iprot.readListBegin()
+          for _i101 in xrange(_size97):
+            _elem102 = Queue()
+            _elem102.read(iprot)
+            self.success.append(_elem102)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -3518,8 +3518,8 @@ class getPatientQueue_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter85 in self.success:
-        iter85.write(oprot)
+      for iter103 in self.success:
+        iter103.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -3794,11 +3794,11 @@ class getSpecialities_result:
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype89, _size86) = iprot.readListBegin()
-          for _i90 in xrange(_size86):
-            _elem91 = Speciality()
-            _elem91.read(iprot)
-            self.success.append(_elem91)
+          (_etype107, _size104) = iprot.readListBegin()
+          for _i108 in xrange(_size104):
+            _elem109 = Speciality()
+            _elem109.read(iprot)
+            self.success.append(_elem109)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -3821,8 +3821,8 @@ class getSpecialities_result:
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter92 in self.success:
-        iter92.write(oprot)
+      for iter110 in self.success:
+        iter110.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
