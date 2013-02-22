@@ -428,7 +428,7 @@ class EnqueueWorker(object):
         result = {}
 
         hospital_uid = kwargs.get('hospitalUid', '').split('/')
-        if isinstance(hospital_uid, list) and len(hospital_uid) == 2:
+        if isinstance(hospital_uid, list) and len(hospital_uid) > 1:
             lpu_dw = LPUWorker()
             lpu = lpu_dw.get_by_id(hospital_uid[0])
         else:
@@ -521,7 +521,7 @@ class EnqueueWorker(object):
         hospital_uid = kwargs.get('hospitalUid', '').split('/')
         ticket_uid = kwargs.get('ticketUid')
         if hospital_uid and ticket_uid:
-            if len(hospital_uid) == 2:
+            if len(hospital_uid) > 1:
                 if hospital_uid[1]:
                     # It's lpu_unit, work with LPU_UnitsWorker
                     dw = LPU_UnitsWorker()
@@ -715,7 +715,7 @@ class EnqueueWorker(object):
         timeslot_start = kwargs.get('timeslotStart', '')
 
         if hospital_uid and birthday and doctor_uid and person:
-            if len(hospital_uid) == 2:
+            if len(hospital_uid) > 1:
                 dw = LPUWorker()
                 lpu_info = dw.get_by_id(hospital_uid[0])
                 proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
