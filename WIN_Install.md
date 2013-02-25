@@ -9,6 +9,7 @@
 
 * Python 2.7 (http://www.python.org/download/)
 * MySQL 5 (http://dev.mysql.com/downloads/installer/)
+* Python-connector to MySQL (http://dev.mysql.com/downloads/connector/python/#downloads)
 * Web-Server Apache2.2 (http://www.sai.msu.su/apache/dist/httpd/binaries/win32/) + mod_wsgi (http://code.google.com/p/modwsgi/wiki/DownloadTheSoftware)
 * git (http://git-scm.com/download/win)
 
@@ -36,6 +37,7 @@ LoadModule mod_wsgi modules/mod_wsgi.so
 ```
 set PATH=%PATH%;D:\Python27;D:\Python27\Scripts
 ```
+* Установить Python-connector к MySQL (http://dev.mysql.com/downloads/connector/python/#downloads)
 
 * Установить setup_tools (https://pypi.python.org/pypi/setuptools/0.6c11#downloads)
 
@@ -153,3 +155,4 @@ SOAP_SERVER_PORT = 9910
 SOAP_SERVER_HOST и SOAP_SERVER_PORT - должны соответствовать %SOAP_SERVER_HOST% и %SOAP_SERVER_PORT%, указанным в конфиге апача
 
 * Перезапустить Apache для того, чтобы конфиг вступил в силу
+
