@@ -2,7 +2,7 @@
 import sys
 import os
 import getpass
-from fabric.api import local, settings, abort, lcd
+from fabric.api import local, settings, abort, lcd, env, run
 from fabric.context_managers import prefix
 from fabric import operations
 from fabric.colors import yellow, red, green
@@ -14,17 +14,18 @@ project_dir_name = os.path.basename(os.path.abspath('..'))
 code_dir_path = os.path.abspath('.')
 
 virtualenv = '.virtualenv'
+virtualenv_bin_path = os.path.join(project_dir_path, virtualenv, 'bin')
 
 
 def prepare_virtual_env():
     #Установка виртуального окружения и инструмента работы с пакетами Python
-    local('easy_install virtualenv pip')
+    #local('easy_install virtualenv pip')
     #Создаём и активируем виртульное окружение для проекта
     with lcd(project_dir_path):
         with settings(warn_only=True):
             local('rm -R  %s' % virtualenv)
         local('virtualenv %s' % virtualenv)
-        local('source %s/bin/activate' % virtualenv)
+        local(os.path.join(virtualenv_bin_path, 'activate'))
 
 
 def configure_db():
@@ -133,15 +134,13 @@ def install_requirements():
     with settings(warn_only=True):
         local('apt-get install python-mysqldb python-module-mysqldb')
     with lcd(code_dir_path):
-        with prefix('source %s/%s/bin/activate' % (project_dir_path, virtualenv)):
-            local('pip install -r requirements.txt')
+        local('%s install -r requirements.txt' % os.path.join(virtualenv_bin_path, 'pip'))
 
 
 def restore_database():
     #Создаём таблицы в БД на основе модели
     with lcd(code_dir_path):
-        with prefix('source %s/%s/bin/activate' % (project_dir_path, virtualenv)):
-            local('python admin/update.py')
+        local('%s admin/update.py' % os.path.join(virtualenv_bin_path, 'python'))
 
 
 def deploy():
