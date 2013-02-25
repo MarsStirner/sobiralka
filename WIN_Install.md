@@ -12,6 +12,8 @@
 * Web-Server Apache (http://httpd.apache.org/download.cgi) + mod_wsgi (http://code.google.com/p/modwsgi/wiki/DownloadTheSoftware)
 * git (http://git-scm.com/download/win)
 
+Под windows используются только 32-bit версии
+
 Установка
 -----------
 * Установить MySQL
@@ -35,11 +37,7 @@ LoadModule mod_wsgi modules/mod_wsgi.so
 set PATH=%PATH%;D:\Python27;D:\Python27\Scripts
 ```
 
-* Установить setup_tools (http://peak.telecommunity.com/dist/ez_setup.py)
-
-```
-python \путь\до\ez_setup.py
-```
+* Установить setup_tools (https://pypi.python.org/pypi/setuptools/0.6c11#downloads)
 
 * Установить pip
 
