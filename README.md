@@ -29,7 +29,7 @@ apt-get upgrade
 **Установка виртуального окружения и инструмента работы с пакетами Python**
 
 ```
-apt-get -y install mysql-client python python-dev python-setuptools
+apt-get -y install mysql-client libmysqlclient-dev python python-dev python-setuptools
 ```
 
 **Установка fabric для автоматического разворачивания проекта**
