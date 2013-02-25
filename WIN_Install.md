@@ -76,7 +76,7 @@ pip install -r code\requirements.txt
 Настройка серверного окружения
 -----------
 
-* Конфигурирование Apache (Apache2/conf/httpd.conf), секция Virtual Hosts:
+* Конфигурирование Apache (Apache2/conf/httpd.conf), секция Virtual Hosts, добавить следующие конфигурации:
 
 Конфигурирация для ИС:
 
@@ -89,8 +89,8 @@ Listen %SOAP_SERVER_HOST%:%SOAP_SERVER_PORT%
     ErrorLog logs/%PROJECT_NAME%-error.log
     CustomLog logs/%PROJECT_NAME%-access.log common
     LogLevel warn
-
-    WSGIProcessGroup %PROJECT_NAME%
+    
+    WSGIPythonHome %PROJECT_ROOT%/venv/
     WSGIScriptAlias / "%PROJECT_CODE_ROOT%/wsgi.py"
 
     <Directory "%PROJECT_ROOT%/">
@@ -107,15 +107,16 @@ WSGIPythonOptimize 2
 Конфигурация для административного интерфейса ИС:
 
 ```
-Listen %SOAP_SERVER_HOST%:%SOAP_SERVER_PORT%
-<VirtualHost %SOAP_SERVER_HOST%:%SOAP_SERVER_PORT%>
-        ServerName %SOAP_ADMIN_HOST%:%SOAP_SERVER_PORT%
+Listen %SOAP_ADMIN_HOST%:%SOAP_ADMIN_PORT%
+<VirtualHost %SOAP_ADMIN_HOST%:%SOAP_ADMIN_PORT%>
+        ServerName %SOAP_ADMIN_HOST%:%SOAP_ADMIN_PORT%
         DocumentRoot "%PROJECT_ROOT%"
         
         ErrorLog logs/admin.%PROJECT_NAME%-error.log
         CustomLog logs/admin.%PROJECT_NAME%-access.log common
         LogLevel warn
-
+        
+        WSGIPythonHome %PROJECT_ROOT%/venv/
         WSGIScriptAlias / "%PROJECT_CODE_ROOT%/admin/wsgi.py"
 </VirtualHost>
 ```
@@ -124,11 +125,33 @@ Listen %SOAP_SERVER_HOST%:%SOAP_SERVER_PORT%
 
 ```
 %SOAP_SERVER_HOST% - хост, по которому будет вестись обращение к ИС (как вариант - IP сервера)
-%SOAP_SERVER_PORT% - порт, по которому будет вестись обращение к ИС (например, 80)
+%SOAP_SERVER_PORT% - порт, по которому будет вестись обращение к ИС (например, 9910)
 %PROJECT_ROOT% - директория, где располагаются файлы проекта (в нашем примере, D:/projects/int_server)
 %PROJECT_NAME% - название проекта (например, int_server)
 %PROJECT_CODE_ROOT% - директория, где располагается код проекта (в нашем примере, D:/projects/int_server/code)
 ```
 
+* Настройка конфига ИС
 
+Необходимо переопределить константы в файле settings_local.py в корне ИС:
 
+```
+#Параметры подключения к БД
+DB_HOST = 'localhost'
+DB_PORT = 3306
+DB_USER = 'soap_user'
+DB_PASSWORD = 'q1w2e3r4t5'
+DB_NAME = 'soap'
+
+#Системный пользователь, от которого будет запускаться вэб-сервер
+SYSTEM_USER = 'is_user'
+
+#Хост и порт, по которым будет доступен ИС
+SOAP_SERVER_HOST = '127.0.0.1'
+SOAP_SERVER_PORT = 9910
+```
+Параметры подключения к БД соответствуют параметрам, установленным при создании БД для ИС.
+
+SOAP_SERVER_HOST и SOAP_SERVER_PORT - должны соответствовать %SOAP_SERVER_HOST% и %SOAP_SERVER_PORT%, указанным в конфиге апача
+
+* Перезапустить Apache для того, чтобы конфиг вступил в силу
