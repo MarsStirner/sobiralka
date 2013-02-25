@@ -10,6 +10,7 @@
 * Python 2.7 (http://www.python.org/download/)
 * MySQL 5 (http://dev.mysql.com/downloads/installer/)
 * Python-connector to MySQL (http://dev.mysql.com/downloads/connector/python/#downloads)
+* MySQL-Python (http://sourceforge.net/projects/mysql-python/files/mysql-python/)
 * Web-Server Apache2.2 (http://www.sai.msu.su/apache/dist/httpd/binaries/win32/) + mod_wsgi (http://code.google.com/p/modwsgi/wiki/DownloadTheSoftware)
 * git (http://git-scm.com/download/win)
 * Twisted (http://twistedmatrix.com/Releases/Twisted/12.3/Twisted-12.3.0.win32-py2.7.msi)
@@ -39,6 +40,7 @@ LoadModule mod_wsgi modules/mod_wsgi.so
 set PATH=%PATH%;D:\Python27;D:\Python27\Scripts
 ```
 * Установить Python-connector к MySQL (http://dev.mysql.com/downloads/connector/python/#downloads)
+* Установить MySQL-Python (http://sourceforge.net/projects/mysql-python/files/mysql-python/)
 * Установить Twisted (http://twistedmatrix.com/Releases/Twisted/12.3/Twisted-12.3.0.win32-py2.7.msi)
 
 * Установить setup_tools (https://pypi.python.org/pypi/setuptools/0.6c11#downloads)
@@ -157,4 +159,17 @@ SOAP_SERVER_PORT = 9910
 SOAP_SERVER_HOST и SOAP_SERVER_PORT - должны соответствовать %SOAP_SERVER_HOST% и %SOAP_SERVER_PORT%, указанным в конфиге апача
 
 * Перезапустить Apache для того, чтобы конфиг вступил в силу
+* Создать таблицы БД, выполнив:
 
+```
+cd code
+python admin\update.py
+```
+
+* Открыть в бразуере административный интерфейс ИС (http://%SOAP_ADMIN_HOST%:%SOAP_ADMIN_PORT%/admin/) и настроить список регионов и КС, с которыми будет работать ИС.
+* Проапдейтить таблицы БД данными из указанных КС, выполнив:
+
+```
+cd code
+python admin\update.py
+```
