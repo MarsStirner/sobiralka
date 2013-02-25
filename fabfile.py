@@ -25,7 +25,7 @@ def prepare_virtual_env():
         with settings(warn_only=True):
             local('rm -R  %s' % virtualenv)
         local('virtualenv %s' % virtualenv)
-        local(os.path.join(virtualenv_bin_path, 'activate'))
+        # local(os.path.join(virtualenv_bin_path, 'activate'))
 
 
 def configure_db():
