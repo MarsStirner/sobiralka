@@ -9,7 +9,7 @@
 
 * Python 2.7 (http://www.python.org/download/)
 * MySQL 5 (http://dev.mysql.com/downloads/installer/)
-* Web-Server Apache (http://httpd.apache.org/download.cgi) + mod_wsgi (http://code.google.com/p/modwsgi/wiki/DownloadTheSoftware)
+* Web-Server Apache2.2 (http://www.sai.msu.su/apache/dist/httpd/binaries/win32/) + mod_wsgi (http://code.google.com/p/modwsgi/wiki/DownloadTheSoftware)
 * git (http://git-scm.com/download/win)
 
 Под windows используются только 32-bit версии
@@ -25,7 +25,7 @@ lower_case_table_names=2
 ```
 * Создать новую БД, например с именем: soap.
 * Установить Apache
-* Скачать модуль mod_wsgi, скопиррвать в директорию модулей Apache2/modules, подключить модуль в конфиге Apache2/conf/httpd.conf:
+* Скачать модуль mod_wsgi, скопиррвать в директорию модулей Apache2.2/modules, подключить модуль в конфиге Apache2.2/conf/httpd.conf:
 
 ```
 LoadModule mod_wsgi modules/mod_wsgi.so
@@ -74,7 +74,7 @@ pip install -r code\requirements.txt
 Настройка серверного окружения
 -----------
 
-* Конфигурирование Apache (Apache2/conf/httpd.conf), секция Virtual Hosts, добавить следующие конфигурации:
+* Конфигурирование виртуальных хостов Apache (Apache2.2/conf/extra/httpd-vhosts.conf), секция Virtual Hosts, добавить следующие конфигурации:
 
 Конфигурирация для ИС:
 
