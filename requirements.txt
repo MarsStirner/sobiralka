@@ -8,6 +8,6 @@ SQLAlchemy
 suds
 #xhtml2pdf
 simplejson
-twisted
 thrift
+twisted
 mysql-python
