@@ -170,6 +170,5 @@ python admin\update.py
 * Проапдейтить таблицы БД данными из указанных КС, выполнив:
 
 ```
-cd code
 python admin\update.py
 ```
