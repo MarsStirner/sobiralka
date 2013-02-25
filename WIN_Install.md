@@ -12,6 +12,7 @@
 * Python-connector to MySQL (http://dev.mysql.com/downloads/connector/python/#downloads)
 * Web-Server Apache2.2 (http://www.sai.msu.su/apache/dist/httpd/binaries/win32/) + mod_wsgi (http://code.google.com/p/modwsgi/wiki/DownloadTheSoftware)
 * git (http://git-scm.com/download/win)
+* Twisted (http://twistedmatrix.com/Releases/Twisted/12.3/Twisted-12.3.0.win32-py2.7.msi)
 
 Под windows используются только 32-bit версии
 
@@ -38,6 +39,7 @@ LoadModule mod_wsgi modules/mod_wsgi.so
 set PATH=%PATH%;D:\Python27;D:\Python27\Scripts
 ```
 * Установить Python-connector к MySQL (http://dev.mysql.com/downloads/connector/python/#downloads)
+* Установить Twisted (http://twistedmatrix.com/Releases/Twisted/12.3/Twisted-12.3.0.win32-py2.7.msi)
 
 * Установить setup_tools (https://pypi.python.org/pypi/setuptools/0.6c11#downloads)
 
