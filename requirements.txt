@@ -1,4 +1,5 @@
 Flask
+wtforms
 Flask-WTF
 Flask-Admin
 #Flask-Login
