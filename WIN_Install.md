@@ -62,12 +62,6 @@ virtualenv venv
 venv\Scripts\activate
 ```
 
-* Добавить путь до виртуального окружения в path:
-
-```
-set PATH=%PATH%;D:\projects\int_server\venv
-```
-
 * Установить Python-connector к MySQL (http://dev.mysql.com/downloads/connector/python/#downloads), при установке указав путь виртуальному окружению, чтобы коннектор работал с питоном из окружения (D:\projects\int_server\venv)
 * Клонировать репозиторий из git, для этого в директории проекта вызвать из контекстного меню Git Bash и выполнить команду:
 
@@ -98,7 +92,6 @@ Listen %SOAP_SERVER_HOST%:%SOAP_SERVER_PORT%
     CustomLog logs/%PROJECT_NAME%-access.log common
     LogLevel warn
     
-    WSGIPythonHome %PROJECT_ROOT%/venv/
     WSGIScriptAlias / "%PROJECT_CODE_ROOT%/wsgi.py"
 
     <Directory "%PROJECT_ROOT%/">
@@ -124,7 +117,6 @@ Listen %SOAP_ADMIN_HOST%:%SOAP_ADMIN_PORT%
         CustomLog logs/admin.%PROJECT_NAME%-access.log common
         LogLevel warn
         
-        WSGIPythonHome %PROJECT_ROOT%/venv/
         WSGIScriptAlias / "%PROJECT_CODE_ROOT%/admin/wsgi.py"
 </VirtualHost>
 ```
@@ -175,4 +167,12 @@ python admin\update.py
 
 ```
 python admin\update.py
+```
+
+* Добавить активацию виртуального окружения в начало файлов wsgi.py и в admin\wsgi.py:
+
+```
+# -*- coding: utf-8 -*-
+activate_this = 'D:/projects/int_server/venv/Scripts/activate_this.py'
+execfile(activate_this, dict(__file__=activate_this))
 ```
