@@ -10,7 +10,6 @@
 * Python 2.7 (http://www.python.org/download/)
 * MySQL 5 (http://dev.mysql.com/downloads/installer/)
 * Python-connector to MySQL (http://dev.mysql.com/downloads/connector/python/#downloads)
-* MySQL-Python (http://sourceforge.net/projects/mysql-python/files/mysql-python/)
 * Web-Server Apache2.2 (http://www.sai.msu.su/apache/dist/httpd/binaries/win32/) + mod_wsgi (http://code.google.com/p/modwsgi/wiki/DownloadTheSoftware)
 * git (http://git-scm.com/download/win)
 * Twisted (http://twistedmatrix.com/Releases/Twisted/12.3/Twisted-12.3.0.win32-py2.7.msi)
@@ -39,8 +38,6 @@ LoadModule mod_wsgi modules/mod_wsgi.so
 ```
 set PATH=%PATH%;D:\Python27;D:\Python27\Scripts
 ```
-* Установить Python-connector к MySQL (http://dev.mysql.com/downloads/connector/python/#downloads)
-* Установить MySQL-Python (http://sourceforge.net/projects/mysql-python/files/mysql-python/)
 * Установить Twisted (http://twistedmatrix.com/Releases/Twisted/12.3/Twisted-12.3.0.win32-py2.7.msi)
 
 * Установить setup_tools (https://pypi.python.org/pypi/setuptools/0.6c11#downloads)
@@ -65,6 +62,7 @@ virtualenv venv
 venv\Scripts\activate
 ```
 
+* Установить Python-connector к MySQL (http://dev.mysql.com/downloads/connector/python/#downloads), при установке указав путь виртуальному окружению, чтобы коннектор работал с питоном из окружения (D:\projects\int_server\venv)
 * Клонировать репозиторий из git, для этого в директории проекта вызвать из контекстного меню Git Bash и выполнить команду:
 
 ```
