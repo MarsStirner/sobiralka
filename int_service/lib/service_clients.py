@@ -1040,7 +1040,7 @@ class ClientKorus30(AbstractClient):
                         'start': date_time_by_date + datetime.timedelta(seconds=timeslot.time/1000),
                         'finish': finish,
                         'status': status,
-                        'office': str(schedule.office),
+                        'office': str(schedule.office).decode('utf-8'),
                         'patientId': timeslot.patientId if hasattr(timeslot, 'patientId') else None,
                         'patientInfo': (
                             timeslot.patientInfo.decode('utf-8')
