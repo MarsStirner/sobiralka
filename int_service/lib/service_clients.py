@@ -809,7 +809,7 @@ class ClientKorus30(AbstractClient):
 
     def getSpecialities(self, hospital_uid_from):
         try:
-            result = self.client.getSpecialities({'hospitalUidFrom': hospital_uid_from})
+            result = self.client.getSpecialities(hospital_uid_from)
         except WebFault, e:
             print e
         else:
