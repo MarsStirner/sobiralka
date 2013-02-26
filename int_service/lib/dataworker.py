@@ -1017,10 +1017,13 @@ class PersonalWorker(object):
                 if lpu_specialities:
                     for speciality_quoted in lpu_specialities:
                         if value.speciality == speciality_quoted.speciality:
+                            nameEPGU = ""
+                            if hasattr(speciality, 'nameEPGU'):
+                                nameEPGU = speciality_quoted.nameEPGU
                             speciality = {'speciality': speciality_quoted.speciality,
                                           'ticketsPerMonths': int(speciality_quoted.ticketsPerMonths),
                                           'ticketsAvailable': int(speciality_quoted.ticketsAvailable),
-                                          'nameEPGU': speciality_quoted.nameEPGU,
+                                          'nameEPGU': nameEPGU,
                                           }
 
                 result['speciality'].append(speciality)
