@@ -62,6 +62,12 @@ virtualenv venv
 venv\Scripts\activate
 ```
 
+* Добавить путь до виртуального окружения в path:
+
+```
+set PATH=%PATH%;D:\projects\int_server\venv
+```
+
 * Установить Python-connector к MySQL (http://dev.mysql.com/downloads/connector/python/#downloads), при установке указав путь виртуальному окружению, чтобы коннектор работал с питоном из окружения (D:\projects\int_server\venv)
 * Клонировать репозиторий из git, для этого в директории проекта вызвать из контекстного меню Git Bash и выполнить команду:
 
