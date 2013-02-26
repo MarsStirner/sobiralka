@@ -176,3 +176,8 @@ python admin\update.py
 activate_this = 'D:/projects/int_server/venv/Scripts/activate_this.py'
 execfile(activate_this, dict(__file__=activate_this))
 ```
+
+* Настроить Регионы и КС ЛПУ, с которыми будет работать ИС через административный интерфейс:
+
+http://%SOAP_ADMIN_HOST%:%SOAP_ADMIN_PORT%/admin/
+
