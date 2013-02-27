@@ -173,7 +173,7 @@ python admin\update.py
 
 ```
 # -*- coding: utf-8 -*-
-activate_this = 'D:/projects/int_server/venv/Scripts/activate_this.py'
+activate_this = '%PROJECT_ROOT%/venv/Scripts/activate_this.py'
 execfile(activate_this, dict(__file__=activate_this))
 ```
 
