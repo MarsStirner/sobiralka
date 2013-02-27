@@ -35,7 +35,8 @@ LoadModule mod_wsgi modules/mod_wsgi.so
 * Установить Python и прописать его в системный путь (например, через cmd):
 
 ```
-set PATH=%PATH%;D:\Python27;D:\Python27\Scripts
+set PYTHONPATH=%PYTHONPATH%;D:\Python27;D:\Python27\Scripts
+set PATH=%PATH%;%PYTHONPATH%
 ```
 * Установить Twisted (http://twistedmatrix.com/Releases/Twisted/12.3/Twisted-12.3.0.win32-py2.7.msi)
 
