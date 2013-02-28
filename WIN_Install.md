@@ -7,6 +7,7 @@
 Системные требования
 -----------
 
+* ОС Windows
 * Python 2.7 (http://www.python.org/download/)
 * MySQL 5 (http://dev.mysql.com/downloads/installer/)
 * Web-Server Apache2.2 (http://www.sai.msu.su/apache/dist/httpd/binaries/win32/) + mod_wsgi (http://code.google.com/p/modwsgi/wiki/DownloadTheSoftware)
