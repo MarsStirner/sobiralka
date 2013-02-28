@@ -6,6 +6,7 @@ Flask-Admin
 spyne==2.9.3
 SQLAlchemy
 #Flask-SQLAlchemy
+pytz
 suds
 #xhtml2pdf
 simplejson
