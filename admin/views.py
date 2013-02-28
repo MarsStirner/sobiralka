@@ -31,7 +31,7 @@ class LPUAdmin(ModelView):
 
 class RegionsAdmin(ModelView):
     form_overrides = dict(is_active=BooleanField)
-    column_labels = dict(name=u'Название региона', code=u'Инфис-код', is_active=u'Активен')
+    column_labels = dict(name=u'Название региона', code=u'ОКАТО', is_active=u'Активен')
     column_sortable_list = ('name',)
 
     def __init__(self, session, **kwargs):
