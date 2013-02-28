@@ -26,7 +26,7 @@ class LPU(Base):
         nullable=False,
         default=0
     )
-    phone = Column(String(20), doc=u'Телефон', nullable=False, default=u'')
+    phone = Column(String(20), doc=u'Телефон', nullable=True)
     schedule = Column(Unicode(256), doc=u'Расписание работы', nullable=False, default=u'')
     type = Column(Unicode(32), doc=u'Тип ЛПУ: (Поликлиника)')
     protocol = Column(Enum('samson', 'intramed', 'korus20', 'korus30'), nullable=False, default='korus30')
