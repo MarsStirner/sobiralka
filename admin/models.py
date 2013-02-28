@@ -40,7 +40,7 @@ class LPU_Units(Base):
 
     id = Column(BigInteger, primary_key=True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id'), index=True)
-    orgId = Column(BigInteger)
+    orgId = Column(BigInteger, index=True)
     name = Column(Unicode(256))
     address = Column(Unicode(256))
 
