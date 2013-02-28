@@ -7,9 +7,9 @@
 Системные требования
 -----------
 
+* ОС Windows
 * Python 2.7 (http://www.python.org/download/)
 * MySQL 5 (http://dev.mysql.com/downloads/installer/)
-* Python-connector to MySQL (http://dev.mysql.com/downloads/connector/python/#downloads)
 * Web-Server Apache2.2 (http://www.sai.msu.su/apache/dist/httpd/binaries/win32/) + mod_wsgi (http://code.google.com/p/modwsgi/wiki/DownloadTheSoftware)
 * git (http://git-scm.com/download/win)
 * Twisted (http://twistedmatrix.com/Releases/Twisted/12.3/Twisted-12.3.0.win32-py2.7.msi)
@@ -36,7 +36,8 @@ LoadModule mod_wsgi modules/mod_wsgi.so
 * Установить Python и прописать его в системный путь (например, через cmd):
 
 ```
-set PATH=%PATH%;D:\Python27;D:\Python27\Scripts
+set PYTHONPATH=%PYTHONPATH%;D:\Python27;D:\Python27\Scripts
+set PATH=%PATH%;%PYTHONPATH%
 ```
 * Установить Twisted (http://twistedmatrix.com/Releases/Twisted/12.3/Twisted-12.3.0.win32-py2.7.msi)
 
@@ -62,7 +63,14 @@ virtualenv venv
 venv\Scripts\activate
 ```
 
-* Установить Python-connector к MySQL (http://dev.mysql.com/downloads/connector/python/#downloads), при установке указав путь виртуальному окружению, чтобы коннектор работал с питоном из окружения (D:\projects\int_server\venv)
+* Установить MySQL-python 
+
+```
+ easy_install MySQL-python
+```
+
+* Установить lxml (http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml)
+ 
 * Клонировать репозиторий из git, для этого в директории проекта вызвать из контекстного меню Git Bash и выполнить команду:
 
 ```
@@ -162,8 +170,8 @@ cd code
 python admin\update.py
 ```
 
-* Открыть в бразуере административный интерфейс ИС (http://%SOAP_ADMIN_HOST%:%SOAP_ADMIN_PORT%/admin/) и настроить список регионов и КС, с которыми будет работать ИС.
-* Проапдейтить таблицы БД данными из указанных КС, выполнив:
+* Открыть в браузере административный интерфейс ИС (http://%SOAP_ADMIN_HOST%:%SOAP_ADMIN_PORT%/admin/) и настроить список регионов и КС, с которыми будет работать ИС.
+* Создать таблицы БД, выполнив:
 
 ```
 python admin\update.py
@@ -173,7 +181,7 @@ python admin\update.py
 
 ```
 # -*- coding: utf-8 -*-
-activate_this = 'D:/projects/int_server/venv/Scripts/activate_this.py'
+activate_this = '%PROJECT_ROOT%/venv/Scripts/activate_this.py'
 execfile(activate_this, dict(__file__=activate_this))
 ```
 
@@ -181,3 +189,8 @@ execfile(activate_this, dict(__file__=activate_this))
 
 http://%SOAP_ADMIN_HOST%:%SOAP_ADMIN_PORT%/admin/
 
+* Проапдейтить таблицы БД данными из указанных КС, выполнив:
+
+```
+python admin\update.py
+```
