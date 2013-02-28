@@ -51,6 +51,8 @@ units_parents = Table("units_parents", Base.metadata,
     Column("lpuid", BigInteger, ForeignKey("lpu.id")),
     Column("orgid", BigInteger, ForeignKey("lpu.id")),
 )
+
+
 class UnitsParentForId(Base):
     """Mapping for UnitsParentForId table"""
     __tablename__ = 'UnitsParentForId'
@@ -62,13 +64,16 @@ class UnitsParentForId(Base):
     ChildId = Column(BigInteger)
 
     lpu = relationship("LPU", backref=backref('lpu', order_by=id), foreign_keys=LpuId, primaryjoin=LPU.id==LpuId,)
-    org = relationship("LPU", backref=backref('org', order_by=id), foreign_keys=OrgId, primaryjoin=LPU.id==OrgId,)
+    org = relationship("LPU_Units",
+                       backref=backref('org', order_by=id),
+                       foreign_keys=OrgId,
+                       primaryjoin=LPU_Units.orgId==OrgId,)
 
     #TODO: проверка выборки parent
     child = relationship("LPU_Units",
         backref=backref('parent', order_by=id),
         foreign_keys=ChildId,
-        primaryjoin="and_(LPU_Units.orgId==UnitsParentForId.ChildId, LPU_Units.lpuId==UnitsParentForId.OrgId)"
+        primaryjoin="and_(LPU_Units.orgId==UnitsParentForId.ChildId, LPU_Units.lpuId==UnitsParentForId.LpuId)"
     )
 
 
