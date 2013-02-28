@@ -68,6 +68,8 @@ venv\Scripts\activate
 ```
  easy_install MySQL-python
 ```
+
+* Установить lxml (http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml)
  
 * Клонировать репозиторий из git, для этого в директории проекта вызвать из контекстного меню Git Bash и выполнить команду:
 
