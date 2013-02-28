@@ -171,7 +171,7 @@ python admin\update.py
 ```
 
 * Открыть в бразуере административный интерфейс ИС (http://%SOAP_ADMIN_HOST%:%SOAP_ADMIN_PORT%/admin/) и настроить список регионов и КС, с которыми будет работать ИС.
-* Проапдейтить таблицы БД данными из указанных КС, выполнив:
+* Создать таблицы БД, выполнив:
 
 ```
 python admin\update.py
@@ -189,3 +189,8 @@ execfile(activate_this, dict(__file__=activate_this))
 
 http://%SOAP_ADMIN_HOST%:%SOAP_ADMIN_PORT%/admin/
 
+* Проапдейтить таблицы БД данными из указанных КС, выполнив:
+
+```
+python admin\update.py
+```
