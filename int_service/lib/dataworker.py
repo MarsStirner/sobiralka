@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import exceptions
-import urllib
+import urllib2
 import datetime, time
 try:
     import json
@@ -313,7 +313,7 @@ class LPUWorker(object):
             result.proxy = result.proxy.split(';')[0]
             if result.protocol in ('intramed', 'samson', 'korus20'):
                 # Проверка для soap-сервисов на доступность, неактуально для thrift (т.е. для korus30)
-                if urllib.urlopen(result.proxy).getcode() == 200:
+                if urllib2.urlopen(result.proxy).getcode() == 200:
                     return result
                 else:
                     raise WebFault
@@ -1048,6 +1048,11 @@ class UpdateWorker(object):
         proxy = proxy.split(';')
         return proxy[0]
 
+    def __check_proxy(self, proxy):
+        if urllib2.urlopen(proxy).getcode() == 200:
+            return True
+        raise urllib2.URLError
+
     def __backup_epgu(self, lpu_id):
 #        TODO: Сделать сохранение ключей ЕПГУ для Personal и Speciality через временные таблицы
         pass
@@ -1075,7 +1080,7 @@ class UpdateWorker(object):
         """Обновляет информацию о потразделениях"""
         return_units = []
         proxy = self.__get_proxy_address(lpu.proxy)
-        if proxy:
+        if proxy and self.__check_proxy(proxy):
             proxy_client = Clients.provider(lpu.protocol, proxy)
             # В Samson КС предполагается, что сначала выбираются ЛПУ Верхнего уровня и они идут в табл lpu_units, а их дети идут в UnitsParentForId
             # Необходимо с этим разобраться
@@ -1109,7 +1114,7 @@ class UpdateWorker(object):
     def __update_personal(self, lpu, lpu_units):
         """Обновляет информацию о врачах"""
         proxy = self.__get_proxy_address(lpu.proxy)
-        if proxy and lpu_units:
+        if proxy and self.__check_proxy(proxy) and lpu_units:
             proxy_client = Clients.provider(lpu.protocol, proxy)
             for unit in lpu_units:
                 if unit.id:
@@ -1179,6 +1184,10 @@ class UpdateWorker(object):
                 except exceptions.UserWarning, e:
                     print e
                     return self.__failed_update()
-                except:
+                except urllib2.URLError, e:
+                    print e
+                    continue
+                except Exception, e:
+                    print e
                     return self.__failed_update()
         return self.__success_update()
