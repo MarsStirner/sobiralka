@@ -71,7 +71,7 @@ class UnitsParentForId(Base):
 
     #TODO: проверка выборки parent
     child = relationship("LPU_Units",
-        backref=backref('parent', order_by=id),
+        backref=backref('parent', order_by=id, uselist=False),
         foreign_keys=ChildId,
         primaryjoin="and_(LPU_Units.orgId==UnitsParentForId.ChildId, LPU_Units.lpuId==UnitsParentForId.LpuId)"
     )

@@ -1082,7 +1082,8 @@ class UpdateWorker(object):
         proxy = self.__get_proxy_address(lpu.proxy)
         if proxy and self.__check_proxy(proxy):
             proxy_client = Clients.provider(lpu.protocol, proxy)
-            # В Samson КС предполагается, что сначала выбираются ЛПУ Верхнего уровня и они идут в табл lpu_units, а их дети идут в UnitsParentForId
+            # В Samson КС предполагается, что сначала выбираются ЛПУ Верхнего уровня и они идут в табл lpu_units,
+            # а их дети идут в UnitsParentForId
             # Необходимо с этим разобраться
             # т.е. первая выборка должна быть без parent_id (т.к. локальный lpu.id из БД ИС никак не связан с id в КС)
             try:
