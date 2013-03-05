@@ -1166,7 +1166,7 @@ class UpdateWorker(object):
         self.session.rollback()
         # shutdown_session()
         if error:
-            self.__log(u'Ошибка обновления: %s' % error)
+            self.__log(u'Ошибка обновления: %s' % unicode(error))
             self.__log('----------------------------')
         return False
 
@@ -1204,7 +1204,7 @@ class UpdateWorker(object):
                     self.__failed_update(e)
                 except urllib2.URLError, e:
                     print e
-                    self.__failed_update()
+                    self.__failed_update(e)
                     continue
                 except Exception, e:
                     print e
