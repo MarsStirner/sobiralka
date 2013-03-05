@@ -1129,6 +1129,7 @@ class UpdateWorker(object):
                     try:
                         doctors = proxy_client.listDoctors(hospital_id=unit.id)
                     except InvalidRequestError:
+                        self.__log(u'Ошибка при получении списка врачей')
                         return False
                     else:
                         if doctors:
@@ -1163,9 +1164,10 @@ class UpdateWorker(object):
 
     def __failed_update(self, error=""):
         self.session.rollback()
-        shutdown_session()
+        # shutdown_session()
         if error:
             self.__log(u'Ошибка обновления: %s' % error)
+            self.__log('----------------------------')
         return False
 
     def __success_update(self):
@@ -1182,30 +1184,31 @@ class UpdateWorker(object):
         lpu_list = lpu_dw.get_list()
         if lpu_list:
             for lpu in lpu_list:
-    #            if lpu.protocol != 'korus30':
-    #                continue
                 self.__clear_data(lpu)
                 self.__log(u'Обновление ЛПУ: %s' % lpu.name)
                 try:
                     lpu_units = self.__update_lpu_units(lpu)
                     if lpu_units:
                         if not self.__update_personal(lpu, lpu_units):
-                            return self.__failed_update()
+                            self.__failed_update()
+                            continue
                     else:
-                        return self.__failed_update()
+                        self.__failed_update(u'Не обнаружено подразделений')
+                        continue
                     lpu.LastUpdate = time.mktime(datetime.datetime.now().timetuple())
                 except WebFault, e:
                     print e
-                    return self.__failed_update(e)
+                    self.__failed_update(e)
                 except exceptions.UserWarning, e:
                     print e
-                    return self.__failed_update(e)
+                    self.__failed_update(e)
                 except urllib2.URLError, e:
                     print e
+                    self.__failed_update(e)
                     continue
                 except Exception, e:
                     print e
-                    return self.__failed_update(e)
+                    self.__failed_update(e)
                 self.__log(u'Обновление прошло успешно!')
                 self.__log('----------------------------')
         return self.__success_update()
