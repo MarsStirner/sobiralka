@@ -1172,7 +1172,7 @@ class UpdateWorker(object):
 
     def __success_update(self):
         self.session.commit()
-        shutdown_session()
+        # shutdown_session()
         return True
 
     def update_data(self):
@@ -1209,6 +1209,8 @@ class UpdateWorker(object):
                 except Exception, e:
                     print e
                     self.__failed_update(e)
-                self.__log(u'Обновление прошло успешно!')
-                self.__log('----------------------------')
-        return self.__success_update()
+                else:
+                    self.__success_update()
+                    self.__log(u'Обновление прошло успешно!')
+                    self.__log('----------------------------')
+        return shutdown_session()
