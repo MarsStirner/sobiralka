@@ -1051,7 +1051,12 @@ class UpdateWorker(object):
 
     def __get_proxy_address(self, proxy):
         proxy = proxy.split(';')
-        return proxy[0]
+        try:
+            self.__check_proxy(proxy)
+        except urllib2.HTTPError:
+            raise urllib2.HTTPError
+        else:
+            return proxy[0]
 
     def __check_proxy(self, proxy):
         if urllib2.urlopen(proxy).getcode() == 200:
@@ -1085,7 +1090,7 @@ class UpdateWorker(object):
         """Обновляет информацию о потразделениях"""
         return_units = []
         proxy = self.__get_proxy_address(lpu.proxy)
-        if proxy and self.__check_proxy(proxy):
+        if proxy:
             proxy_client = Clients.provider(lpu.protocol, proxy)
             # В Samson КС предполагается, что сначала выбираются ЛПУ Верхнего уровня и они идут в табл lpu_units,
             # а их дети идут в UnitsParentForId
@@ -1122,7 +1127,8 @@ class UpdateWorker(object):
     def __update_personal(self, lpu, lpu_units):
         """Обновляет информацию о врачах"""
         proxy = self.__get_proxy_address(lpu.proxy)
-        if proxy and self.__check_proxy(proxy) and lpu_units:
+
+        if proxy and lpu_units:
             proxy_client = Clients.provider(lpu.protocol, proxy)
             for unit in lpu_units:
                 if unit.id:
