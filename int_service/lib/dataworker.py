@@ -1056,7 +1056,7 @@ class UpdateWorker(object):
     def __check_proxy(self, proxy):
         if urllib2.urlopen(proxy).getcode() == 200:
             return True
-        raise urllib2.URLError
+        raise urllib2.HTTPError
 
     def __backup_epgu(self, lpu_id):
 #        TODO: Сделать сохранение ключей ЕПГУ для Personal и Speciality через временные таблицы
@@ -1166,7 +1166,7 @@ class UpdateWorker(object):
         self.session.rollback()
         # shutdown_session()
         if error:
-            self.__log('Ошибка обновления: %s' % error)
+            self.__log(u'Ошибка обновления: %s' % error)
             self.__log('----------------------------')
         return False
 
@@ -1202,7 +1202,7 @@ class UpdateWorker(object):
                 except exceptions.UserWarning, e:
                     print e
                     self.__failed_update(e)
-                except urllib2.URLError, e:
+                except urllib2.HTTPError, e:
                     print e
                     self.__failed_update(e)
                     continue
