@@ -1208,7 +1208,7 @@ class UpdateWorker(object):
                     continue
                 except Exception, e:
                     print e
-                    self.__failed_update(e)
+                    self.__failed_update(e.message)
                 else:
                     self.__success_update()
                     self.__log(u'Обновление прошло успешно!')
