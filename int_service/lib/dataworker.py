@@ -16,7 +16,7 @@ from suds import WebFault
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
 from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality, Regions
 from service_clients import Clients
-from is_exceptions import exception_by_code
+from is_exceptions import exception_by_code, IS_ConnectionError
 
 from admin.database import Session, shutdown_session
 
@@ -1051,17 +1051,13 @@ class UpdateWorker(object):
 
     def __get_proxy_address(self, proxy):
         proxy = proxy.split(';')
-        try:
-            self.__check_proxy(proxy[0])
-        except urllib2.HTTPError:
-            raise urllib2.HTTPError
-        else:
+        if self.__check_proxy(proxy[0]):
             return proxy[0]
 
     def __check_proxy(self, proxy):
         if urllib2.urlopen(proxy).getcode() == 200:
             return True
-        raise urllib2.HTTPError
+        return False
 
     def __backup_epgu(self, lpu_id):
 #        TODO: Сделать сохранение ключей ЕПГУ для Personal и Speciality через временные таблицы
@@ -1122,6 +1118,8 @@ class UpdateWorker(object):
                 return False
             except TypeError:
                 return False
+            except Exception, e:
+                print e
         return return_units
 
     def __update_personal(self, lpu, lpu_units):
