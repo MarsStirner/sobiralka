@@ -1052,7 +1052,7 @@ class UpdateWorker(object):
     def __get_proxy_address(self, proxy):
         proxy = proxy.split(';')
         try:
-            self.__check_proxy(proxy)
+            self.__check_proxy(proxy[0])
         except urllib2.HTTPError:
             raise urllib2.HTTPError
         else:
@@ -1104,12 +1104,12 @@ class UpdateWorker(object):
 
                     address = getattr(unit, 'address')
                     if address is None:
-                        address = ""
+                        address = ''
                     self.session.add(LPU_Units(
                         lpuId=lpu.id,
                         orgId=unit.id,
-                        name=unit.name,
-                        address=address
+                        name=unicode(unit.name),
+                        address=unicode(address)
                     ))
                     return_units.append(unit)
                     if hasattr(unit, 'parentId') and unit.parentId:
