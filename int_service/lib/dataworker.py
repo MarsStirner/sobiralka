@@ -1035,9 +1035,14 @@ class PersonalWorker(object):
 class UpdateWorker(object):
     """Класс для импорта данных в ИС из КС"""
     session = Session()
+    msg = []
 
     def __del__(self):
         self.session.close()
+
+    def __log(self, msg):
+        if msg:
+            self.msg.append(msg)
 
     def __init_database(self):
         """Create tables from models if not exists"""
@@ -1106,6 +1111,8 @@ class UpdateWorker(object):
                         self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parentId, ChildId=unit.id))
                     elif hasattr(unit, 'parent_id') and unit.parent_id:
                         self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parent_id, ChildId=unit.id))
+
+                    self.__log('%s: %s' % (unit.id, unit.name))
             except InvalidRequestError:
                 return False
             except TypeError:
@@ -1138,6 +1145,11 @@ class UpdateWorker(object):
                                     ))
                                     #TODO: заменить Personal.speciality на FK(Speciality.id)
                                     self.__update_speciality(lpu_id=lpu.id, speciality=doctor.speciality)
+                                    self.__log('%s: %s %s %s (%s)' % (doctor.id,
+                                                                      doctor.firstName,
+                                                                      doctor.lastName,
+                                                                      doctor.patrName,
+                                                                      doctor.speciality))
         self.__restore_epgu(lpu.id)
         return True
 
@@ -1149,9 +1161,11 @@ class UpdateWorker(object):
         else:
             return True
 
-    def __failed_update(self):
+    def __failed_update(self, error=""):
         self.session.rollback()
         shutdown_session()
+        if error:
+            self.__log(u'Ошибка обновления: %s' % error)
         return False
 
     def __success_update(self):
@@ -1171,6 +1185,7 @@ class UpdateWorker(object):
     #            if lpu.protocol != 'korus30':
     #                continue
                 self.__clear_data(lpu)
+                self.__log(u'Обновление ЛПУ: %s' % lpu.name)
                 try:
                     lpu_units = self.__update_lpu_units(lpu)
                     if lpu_units:
@@ -1181,14 +1196,16 @@ class UpdateWorker(object):
                     lpu.LastUpdate = time.mktime(datetime.datetime.now().timetuple())
                 except WebFault, e:
                     print e
-                    return self.__failed_update()
+                    return self.__failed_update(e)
                 except exceptions.UserWarning, e:
                     print e
-                    return self.__failed_update()
+                    return self.__failed_update(e)
                 except urllib2.URLError, e:
                     print e
                     continue
                 except Exception, e:
                     print e
-                    return self.__failed_update()
+                    return self.__failed_update(e)
+                self.__log(u'Обновление прошло успешно!')
+                self.__log('----------------------------')
         return self.__success_update()

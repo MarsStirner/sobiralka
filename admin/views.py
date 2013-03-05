@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from flask import request
 from flask.ext.admin.contrib.sqlamodel import ModelView
+from flask.ext.admin.base import expose, BaseView
 from wtforms.fields import SelectField, BooleanField
 
 from admin.models import LPU, Regions
+from int_service.lib.dataworker import UpdateWorker
 
 
 class LPUAdmin(ModelView):
@@ -36,3 +39,19 @@ class RegionsAdmin(ModelView):
 
     def __init__(self, session, **kwargs):
         super(RegionsAdmin, self).__init__(Regions, session, **kwargs)
+
+
+class UpdateAdmin(BaseView):
+    @expose('/')
+    def index(self):
+        return self.render('update.html')
+
+    @expose('/process/', methods=('POST',))
+    def process(self):
+        if request.form['do_update']:
+            data_worker = UpdateWorker()
+            data_worker.update_data()
+            msg = data_worker.msg
+        else:
+            msg = [u'Ошибка обновления БД']
+        return self.render('update_process.html', result_msg = msg)

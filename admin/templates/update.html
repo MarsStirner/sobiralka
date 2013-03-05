@@ -1,0 +1,39 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+<h3>Обновление БД ИС</h3>
+<form id="update_form" method="POST">
+    <div class="control-group">
+        <div class="controls">
+            <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
+            <a href="/admin/" class="btn">Отмена</a>
+        </div>
+    </div>
+</form>
+<div class="loader"></div>
+<div id="result"></div>
+<script type=text/javascript src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        $("body").on({
+            ajaxStart: function() {
+                $(this).addClass("loading");
+            },
+            ajaxStop: function() {
+                $(this).removeClass("loading");
+            }
+        });
+        $('#update_form').submit(function(){
+            $(this).hide();
+            var data = {};
+            $(this).find('input').each(function(){
+                data[$(this).attr('name')] = $(this).val();
+            });
+            $.post("{{ url_for('.process') }}", data, function(res) {
+                $('#result').html(res);
+            });
+            return false;
+        });
+    });
+</script>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/style.css') }}">
+{% endblock %}
