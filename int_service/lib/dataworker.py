@@ -1166,7 +1166,7 @@ class UpdateWorker(object):
         self.session.rollback()
         # shutdown_session()
         if error:
-            self.__log(u'Ошибка обновления: %s' % unicode(error))
+            self.__log(u'Ошибка обновления: %s' % str(error))
             self.__log('----------------------------')
         return False
 
