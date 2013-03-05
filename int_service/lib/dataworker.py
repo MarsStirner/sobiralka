@@ -1204,7 +1204,7 @@ class UpdateWorker(object):
                     self.__failed_update(e)
                 except urllib2.URLError, e:
                     print e
-                    self.__failed_update(e)
+                    self.__failed_update()
                     continue
                 except Exception, e:
                     print e
