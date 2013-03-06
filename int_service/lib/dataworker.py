@@ -275,7 +275,7 @@ class LPUWorker(object):
             for lpu_units_item in lpu_units_dw.get_list(uid=lpu_units, lpu_id=lpu_item.id):
                 uid = str(lpu_units_item.lpuId) + '/' + str(lpu_units_item.orgId)
                 if lpu_units_item.parent:
-                    uid += '/' + str(lpu_units_item.parent.LpuId)
+                    uid += '/' + str(lpu_units_item.parent.OrgId)
                 else:
                     uid += '/0'
 
@@ -1094,6 +1094,17 @@ class UpdateWorker(object):
             # т.е. первая выборка должна быть без parent_id (т.к. локальный lpu.id из БД ИС никак не связан с id в КС)
             try:
                 units = proxy_client.listHospitals(infis_code=lpu.key)
+            except InvalidRequestError, e:
+                self.__log('Ошибка: %s' % e)
+                print e
+                return False
+            except TypeError, e:
+                print e
+                return False
+            # except Exception, e:
+            #     print e
+            #     self.__log('Ошибка: %s' % e)
+            else:
                 for unit in units:
                     if not unit.name:
                         continue
@@ -1108,23 +1119,23 @@ class UpdateWorker(object):
                         address=unicode(address)
                     ))
                     return_units.append(unit)
-                    if hasattr(unit, 'parentId') and unit.parentId:
-                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parentId, ChildId=unit.id))
-                    elif hasattr(unit, 'parent_id') and unit.parent_id:
-                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parent_id, ChildId=unit.id))
+                    try:
+                        if hasattr(unit, 'parentId') and unit.parentId:
+                            self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parentId, ChildId=unit.id))
+                        elif hasattr(unit, 'parent_id') and unit.parent_id:
+                            self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parent_id, ChildId=unit.id))
+                    except Exception, e:
+                        print e
+                        self.__log('Ошибка при добавлении в UnitsParentForId: %s' % e)
 
                     self.__log('%s: %s' % (unit.id, unit.name))
-            except InvalidRequestError:
-                return False
-            except TypeError:
-                return False
-            except Exception, e:
-                print e
+
         return return_units
 
     def __update_personal(self, lpu, lpu_units):
         """Обновляет информацию о врачах"""
         proxy = self.__get_proxy_address(lpu.proxy)
+        result = False
 
         if proxy and lpu_units:
             proxy_client = Clients.provider(lpu.protocol, proxy)
@@ -1133,10 +1144,11 @@ class UpdateWorker(object):
                     try:
                         doctors = proxy_client.listDoctors(hospital_id=unit.id)
                     except InvalidRequestError:
-                        self.__log(u'Ошибка при получении списка врачей')
-                        return False
+                        self.__log(u'Ошибка при получении списка врачей для %s: %s' % (unit.id, unit.name))
+                        continue
                     else:
                         if doctors:
+                            result = True
                             for doctor in doctors:
                                 if doctor.firstName and doctor.lastName and doctor.patrName:
                                     self.session.add(Personal(
@@ -1156,7 +1168,7 @@ class UpdateWorker(object):
                                                                       doctor.patrName,
                                                                       doctor.speciality))
         self.__restore_epgu(lpu.id)
-        return True
+        return result
 
     def __update_speciality(self, **kwargs):
         try:
@@ -1194,7 +1206,7 @@ class UpdateWorker(object):
                     lpu_units = self.__update_lpu_units(lpu)
                     if lpu_units:
                         if not self.__update_personal(lpu, lpu_units):
-                            self.__failed_update()
+                            self.__failed_update(u'Пустой список врачей')
                             continue
                     else:
                         self.__failed_update(u'Не обнаружено подразделений')
@@ -1210,9 +1222,9 @@ class UpdateWorker(object):
                     print e
                     self.__failed_update(e)
                     continue
-                except Exception, e:
-                    print e
-                    self.__failed_update(e.message)
+                # except Exception, e:
+                #     print e
+                #     self.__failed_update(e.message)
                 else:
                     self.__success_update()
                     self.__log(u'Обновление прошло успешно!')
