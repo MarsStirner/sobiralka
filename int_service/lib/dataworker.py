@@ -1097,16 +1097,18 @@ class UpdateWorker(object):
             # т.е. первая выборка должна быть без parent_id (т.к. локальный lpu.id из БД ИС никак не связан с id в КС)
             try:
                 units = proxy_client.listHospitals(infis_code=lpu.key)
-            except InvalidRequestError, e:
-                self.__log('Ошибка: %s' % e)
+            except WebFault, e:
                 print e
+                self.__log('Ошибка: %s' % e)
                 return False
             except TypeError, e:
                 print e
+                self.__log('Ошибка: %s' % e)
                 return False
             except Exception, e:
                 print e
                 self.__log('Ошибка: %s' % e)
+                return False
             else:
                 for unit in units:
                     if not unit.name:
@@ -1146,8 +1148,11 @@ class UpdateWorker(object):
                 if unit.id:
                     try:
                         doctors = proxy_client.listDoctors(hospital_id=unit.id)
-                    except InvalidRequestError:
-                        self.__log(u'Ошибка при получении списка врачей для %s: %s' % (unit.id, unit.name))
+                    except WebFault, e:
+                        self.__log(u'Ошибка при получении списка врачей для %s: %s (%s)' % (unit.id, unit.name, e))
+                        continue
+                    except Exception, e:
+                        self.__log(u'Ошибка при получении списка врачей для %s: %s (%s)' % (unit.id, unit.name, e))
                         continue
                     else:
                         if doctors:
