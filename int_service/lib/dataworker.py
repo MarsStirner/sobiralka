@@ -1055,8 +1055,11 @@ class UpdateWorker(object):
             return proxy[0]
 
     def __check_proxy(self, proxy):
-        if urllib2.urlopen(proxy).getcode() == 200:
-            return True
+        try:
+            if urllib2.urlopen(proxy).getcode() == 200:
+                return True
+        except urllib2.URLError:
+            raise IS_ConnectionError(host=proxy)
         return False
 
     def __backup_epgu(self, lpu_id):
@@ -1222,9 +1225,9 @@ class UpdateWorker(object):
                     print e
                     self.__failed_update(e)
                     continue
-                except urllib2.URLError, e:
+                except IS_ConnectionError, e:
                     print e
-                    self.__failed_update(e)
+                    self.__failed_update(e.message)
                     continue
                 except Exception, e:
                     print e

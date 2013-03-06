@@ -12,7 +12,11 @@ class ISInvalidInputParametersError(ISError):
 
 
 class IS_ConnectionError(ISError):
-    message = u'Ошибка связи'
+    message = u'Ошибка связи.'
+
+    def __init__(self, host=None):
+        if host:
+            self.message += u' Хост: %s' % host
 
 
 class IS_PatientNotRegistered(ISError):
