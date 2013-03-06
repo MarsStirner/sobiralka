@@ -1131,7 +1131,7 @@ class UpdateWorker(object):
                             self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parent_id, ChildId=unit.id))
                     except Exception, e:
                         print e
-                        self.__log('Ошибка при добавлении в UnitsParentForId: %s' % e)
+                        self.__log(u'Ошибка при добавлении в UnitsParentForId: %s' % e)
 
                     self.__log('%s: %s' % (unit.id, unit.name))
 
