@@ -61,7 +61,7 @@ class UnitsParentForId(Base):
     id = Column(Integer, primary_key=True)
     LpuId = Column(BigInteger, ForeignKey('lpu.id'), index=True)
     OrgId = Column(BigInteger, ForeignKey('lpu_units.orgId'), index=True)
-    ChildId = Column(BigInteger, ForeignKey('lpu_units.orgId'), index=True)
+    ChildId = Column(BigInteger, index=True)
 
     lpu = relationship("LPU", backref=backref('lpu', order_by=id), foreign_keys=LpuId, primaryjoin=LPU.id==LpuId,)
     org = relationship("LPU_Units",
