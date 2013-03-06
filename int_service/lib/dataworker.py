@@ -1101,9 +1101,9 @@ class UpdateWorker(object):
             except TypeError, e:
                 print e
                 return False
-            # except Exception, e:
-            #     print e
-            #     self.__log('Ошибка: %s' % e)
+            except Exception, e:
+                print e
+                self.__log('Ошибка: %s' % e)
             else:
                 for unit in units:
                     if not unit.name:
@@ -1222,9 +1222,13 @@ class UpdateWorker(object):
                     print e
                     self.__failed_update(e)
                     continue
-                # except Exception, e:
-                #     print e
-                #     self.__failed_update(e.message)
+                except urllib2.URLError, e:
+                    print e
+                    self.__failed_update(e)
+                    continue
+                except Exception, e:
+                    print e
+                    self.__failed_update(e.message)
                 else:
                     self.__success_update()
                     self.__log(u'Обновление прошло успешно!')
