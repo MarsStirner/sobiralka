@@ -6,6 +6,7 @@ from sqlalchemy.orm import relationship, backref
 
 Base = declarative_base()
 
+
 class LPU(Base):
     """Mapping for LPU table"""
     __tablename__ = 'lpu'
@@ -31,6 +32,7 @@ class LPU(Base):
     type = Column(Unicode(32), doc=u'Тип ЛПУ: (Поликлиника)')
     protocol = Column(Enum('samson', 'intramed', 'korus20', 'korus30'), nullable=False, default='korus30')
     token = Column(String(45), doc=u'Токен')
+    EGIZToken = Column(String(21), doc=u'Токен ЕПГУ')
 
 
 class LPU_Units(Base):
