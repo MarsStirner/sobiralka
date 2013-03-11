@@ -132,7 +132,9 @@ def activate_web_config():
 def install_requirements():
     #Устанавливаем необходимые модули python
     with settings(warn_only=True):
-        local('apt-get install python-mysqldb python-module-mysqldb')
+        local('apt-get install python-mysqldb')
+    with settings(warn_only=True):
+        local('apt-get install python-module-mysqldb')
     with lcd(code_dir_path):
         local('%s install -r requirements.txt' % os.path.join(virtualenv_bin_path, 'pip'))
 
