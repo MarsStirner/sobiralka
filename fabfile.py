@@ -64,7 +64,7 @@ def create_system_user():
 
 
 def _get_apache_config_dir():
-    for _dir in ('/etc/httpd2/conf/sites-available', '/etc/http/conf.d'):
+    for _dir in ('/etc/httpd2/conf/sites-available', '/etc/apache2/sites-available', '/etc/http/conf.d'):
         if os.path.isdir(_dir):
             return _dir
     _dir = operations.prompt(yellow("Specify Apache configs dir:"))
