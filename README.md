@@ -35,7 +35,7 @@ apt-get -y install mysql-client libmysqlclient-dev python python-dev python-setu
 **Установка fabric для автоматического разворачивания проекта**
 
 ```
-pip install fabric
+easy_install fabric
 ```
 
 **Перенос исходников ИС на сервер**

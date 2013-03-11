@@ -1049,10 +1049,14 @@ class UpdateWorker(object):
         from admin.database import init_db
         init_db()
 
-    def __get_proxy_address(self, proxy):
+    def __get_proxy_address(self, proxy, protocol):
         proxy = proxy.split(';')
-        if self.__check_proxy(proxy[0]):
+        if protocol == 'korus30':
+            # не делаем проверку для Thrift, т.к. urllib2.urlopen(proxy) для него не работает
             return proxy[0]
+        else:
+            if self.__check_proxy(proxy[0]):
+                return proxy[0]
 
     def __check_proxy(self, proxy):
         try:
@@ -1088,7 +1092,7 @@ class UpdateWorker(object):
     def __update_lpu_units(self, lpu):
         """Обновляет информацию о потразделениях"""
         return_units = []
-        proxy = self.__get_proxy_address(lpu.proxy)
+        proxy = self.__get_proxy_address(lpu.proxy, lpu.protocol)
         if proxy:
             proxy_client = Clients.provider(lpu.protocol, proxy)
             # В Samson КС предполагается, что сначала выбираются ЛПУ Верхнего уровня и они идут в табл lpu_units,
@@ -1139,7 +1143,7 @@ class UpdateWorker(object):
 
     def __update_personal(self, lpu, lpu_units):
         """Обновляет информацию о врачах"""
-        proxy = self.__get_proxy_address(lpu.proxy)
+        proxy = self.__get_proxy_address(lpu.proxy, lpu.protocol)
         result = False
 
         if proxy and lpu_units:
