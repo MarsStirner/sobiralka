@@ -2,7 +2,8 @@
 
 import exceptions
 import urllib2
-import datetime, time
+import datetime
+import time
 try:
     import json
 except ImportError:
@@ -14,7 +15,7 @@ from sqlalchemy.exc import InvalidRequestError
 from suds import WebFault
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
-from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality, Regions
+from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality, Regions, LPU_Specialities
 from service_clients import Clients
 from is_exceptions import exception_by_code, IS_ConnectionError
 
@@ -24,18 +25,18 @@ from admin.database import Session, shutdown_session
 class DataWorker(object):
     """Provider class for current DataWorkers"""
     @classmethod
-    def provider(cls, type):
+    def provider(cls, data_type):
         """Вернёт объект для работы с указанным типом данных"""
-        type = type.lower()
-        if type == 'regions':
+        data_type = data_type.lower()
+        if data_type == 'regions':
             obj = RegionsWorker()
-        elif type == 'lpu':
+        elif data_type == 'lpu':
             obj = LPUWorker()
-        elif type == 'lpu_units':
+        elif data_type == 'lpu_units':
             obj = LPU_UnitsWorker()
-        elif type == 'enqueue':
+        elif data_type == 'enqueue':
             obj = EnqueueWorker()
-        elif type == 'personal':
+        elif data_type == 'personal':
             obj = PersonalWorker()
         else:
             obj = None
@@ -398,7 +399,7 @@ class LPU_UnitsWorker(object):
         Get LPU_Unit by id
         """
         try:
-            result = self.session.query(LPU_Units).filter(LPU_Units.id==int(id)).one()
+            result = self.session.query(LPU_Units).filter(LPU_Units.id == int(id)).one()
         except NoResultFound, e:
             print e
         else:
@@ -448,7 +449,7 @@ class EnqueueWorker(object):
             personal_dw = PersonalWorker()
             doctor = personal_dw.get_doctor(doctor_id=doctor_uid, lpu_unit=hospital_uid)
             if doctor:
-                speciality = doctor.speciality
+                speciality = doctor.speciality.name
 
         hospital_uid_from = kwargs.get('hospitalUidFrom', 0)
         start, end = self.__get_dates_period(kwargs.get('startDate'), kwargs.get('endDate'))
@@ -499,7 +500,7 @@ class EnqueueWorker(object):
 
         """
         try:
-            result = self.session.query(Enqueue).filter(Enqueue.id==int(id)).one()
+            result = self.session.query(Enqueue).filter(Enqueue.id == int(id)).one()
         except NoResultFound, e:
             print e
         else:
@@ -555,7 +556,7 @@ class EnqueueWorker(object):
             if isinstance(ticket_uid, list):
                 tickets = ticket_uid
             else:
-                tickets = [ticket_uid,]
+                tickets = [ticket_uid, ]
 
         doctor_dw = PersonalWorker()
         if tickets:
@@ -624,13 +625,13 @@ class EnqueueWorker(object):
                                     patient_info['lastName'],
                                     patient_info['firstName'][0:1] + '.',
                                     patient_info['patrName'][0:1] + '.'
-                                    )),
+                                )),
                                 'person': ' '.join((
                                     doctor.get('lastName', ''),
                                     doctor.get('firstName', ''),
                                     doctor.get('patronymic', '')
-                                    )),
-                                'date_time':_ticket_date,
+                                )),
+                                'date_time': _ticket_date,
                                 'office': office,
                             })
 
@@ -643,12 +644,12 @@ class EnqueueWorker(object):
                                     'firstName': doctor.get('firstName', ''),
                                     'patronymic': doctor.get('patronymic', ''),
                                     'lastName': doctor.get('lastName', ''),
-                                    },
+                                },
                                 'person': {
                                     'firstName': patient_info.get('firstName'),
                                     'patronymic': patient_info.get('patrName'),
                                     'lastName': patient_info.get('lastName'),
-                                    },
+                                },
                                 'status': 'accepted',
                                 'timeslotStart': _ticket_date,
 #                                'comment': exception_by_code(ticket_info.Error),
@@ -658,7 +659,7 @@ class EnqueueWorker(object):
                                     'printableVersion': document.encode('base64'),
                                     'printableVersionMimeType': 'application/pdf',
                                 }
-                                })
+                            })
 
         shutdown_session()
         return result
@@ -681,7 +682,8 @@ class EnqueueWorker(object):
                 'lastName'
                 'patronymic'
             }
-            hospitalUid: uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (обязательный)
+            hospitalUid:
+                uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (обязательный)
             birthday: дата рождения пациента (обязательный)
             doctorUid: id врача, к которому производится запись (обязательный)
             omiPolicyNumber: номер полиса мед. страхования (обязательный)
@@ -754,7 +756,7 @@ class EnqueueWorker(object):
             sex=sex,
             hospitalUid=hospital_uid[1],
             hospitalUidFrom=hospital_uid_from,
-            speciality=doctor_info.speciality.lower(),
+            speciality=doctor_info.speciality.name.lower(),
             doctorUid=doctor_uid,
             timeslotStart=timeslot_start
         )
@@ -842,7 +844,7 @@ class PersonalWorker(object):
             Personal.FirstName,
             Personal.PatrName,
             Personal.LastName,
-            Personal.speciality,
+            Speciality.name.label('speciality'),
             Personal.id,
             Personal.lpuId,
             Personal.orgId,
@@ -855,11 +857,12 @@ class PersonalWorker(object):
             LPU.key,
         )
 
+        query = query.join(Speciality)
         query = query.outerjoin(LPU)
         query = query.outerjoin(LPU_Units, Personal.orgId == LPU_Units.orgId).filter(Personal.lpuId == LPU_Units.lpuId)
 
         if speciality:
-            query = query.filter(Personal.speciality == speciality)
+            query = query.filter(Speciality.name == speciality)
         if lastName:
             query = query.filter(Personal.lastName == lastName)
 
@@ -873,7 +876,8 @@ class PersonalWorker(object):
 
         Args:
             doctor_id: id врача  (обязательный)
-            lpu_unit: uid ЛПУ или подразделения, список вида: ['17, 0'], соответствует ['LPU_ID', 'LPU_Unit_ID'] (необязательный)
+            lpu_unit: uid ЛПУ или подразделения, список вида: ['17, 0'],
+                соответствует ['LPU_ID', 'LPU_Unit_ID'] (необязательный)
 
         """
         lpu_unit = kwargs.get('lpu_unit')
@@ -897,7 +901,8 @@ class PersonalWorker(object):
         Args:
             {'searchScope':
                 {
-                'hospitalUid': uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (необязательный),
+                'hospitalUid': uid ЛПУ или подразделения, строка вида: '17/0',
+                    соответствует 'LPU_ID/LPU_Unit_ID' (необязательный),
                 'address': адрес пациента, для выборки ЛПУ (необязательный),
                     {'parsedAddress':
                         {'flat': номер квартиры,
@@ -954,7 +959,7 @@ class PersonalWorker(object):
                     'lastName': value.LastName,
                 },
                 'hospitalUid': str(value.lpuId) + '/' + str(value.orgId),
-                'speciality': value.speciality,
+                'speciality': value.speciality.name,
                 'keyEPGU': value.keyEPGU,
             })
 
@@ -1006,17 +1011,18 @@ class PersonalWorker(object):
                 lpu_specialities = proxy_client.getSpecialities(hospital_uid_from)
 
         for value in query_result:
-            if value.speciality not in specialities:
-                specialities.append(value.speciality)
-                speciality = {'speciality': value.speciality,
+            _speciality = value.speciality
+            if _speciality.id not in specialities:
+                specialities.append(_speciality.id)
+                speciality = {'speciality': _speciality.name,
                               'ticketsPerMonths': -1,
                               'ticketsAvailable': -1,
-                              'nameEPGU': "",  # TODO: получать из Speciality, для этого JOIN Personal and Speciality
+                              'nameEPGU': _speciality.nameEPGU,
                               }
 
                 if lpu_specialities:
                     for speciality_quoted in lpu_specialities:
-                        if value.speciality == speciality_quoted.speciality:
+                        if _speciality.name == speciality_quoted.speciality:
                             nameEPGU = ""
                             if hasattr(speciality, 'nameEPGU'):
                                 nameEPGU = speciality_quoted.nameEPGU
@@ -1079,14 +1085,14 @@ class UpdateWorker(object):
         if lpu.lpu_units:
             for lpu_unit in lpu.lpu_units:
                 self.session.delete(lpu_unit)
-        for unit_parent in self.session.query(UnitsParentForId).filter(UnitsParentForId.LpuId==lpu.id).all():
+        for unit_parent in self.session.query(UnitsParentForId).filter(UnitsParentForId.LpuId == lpu.id).all():
             self.session.delete(unit_parent)
 
         self.__backup_epgu(lpu.id)
 
-        for speciality in self.session.query(Speciality).filter(Speciality.lpuId==lpu.id).all():
-            self.session.delete(speciality)
-        for doctor in self.session.query(Personal).filter(Personal.lpuId==lpu.id).all():
+        for lpu_speciality in self.session.query(LPU_Specialities).filter(LPU_Specialities.lpu_id == lpu.id).all():
+            self.session.delete(lpu_speciality)
+        for doctor in self.session.query(Personal).filter(Personal.lpuId == lpu.id).all():
             self.session.delete(doctor)
 
     def __update_lpu_units(self, lpu):
@@ -1163,6 +1169,14 @@ class UpdateWorker(object):
                             result = True
                             for doctor in doctors:
                                 if doctor.firstName and doctor.lastName and doctor.patrName:
+                                    #TODO: заменить Personal.speciality на FK(Speciality.id)
+                                    speciality = self.__update_speciality(
+                                        lpu_id=lpu.id,
+                                        speciality=doctor.speciality.strip()
+                                    )
+                                    if not speciality:
+                                        continue
+
                                     self.session.add(Personal(
                                         id=doctor.id,
                                         lpuId=lpu.id,
@@ -1170,10 +1184,8 @@ class UpdateWorker(object):
                                         FirstName=doctor.firstName,
                                         PatrName=doctor.patrName,
                                         LastName=doctor.lastName,
-                                        speciality=doctor.speciality,
+                                        speciality=speciality,
                                     ))
-                                    #TODO: заменить Personal.speciality на FK(Speciality.id)
-                                    self.__update_speciality(lpu_id=lpu.id, speciality=doctor.speciality)
                                     self.__log('%s: %s %s %s (%s)' % (doctor.id,
                                                                       doctor.firstName,
                                                                       doctor.lastName,
@@ -1183,12 +1195,28 @@ class UpdateWorker(object):
         return result
 
     def __update_speciality(self, **kwargs):
-        try:
-            self.session.add(Speciality(lpuId=kwargs['lpu_id'], speciality=kwargs['speciality']))
-        except InvalidRequestError:
-            return False
-        else:
-            return True
+        speciality = self.session.query(Speciality).filter(Speciality.name == kwargs.get('speciality')).first()
+        if not speciality:
+            try:
+                speciality = Speciality(name=kwargs.get('speciality'))
+            except InvalidRequestError, e:
+                print e
+                self.__failed_update(e)
+                return False
+            else:
+                self.session.add(speciality)
+                self.session.commit()
+        self.__add_lpu_speciality(speciality_id=speciality.id, lpu_id=kwargs.get('lpu_id'))
+        return speciality
+
+    def __add_lpu_speciality(self, **kwargs):
+        if not self.session.query(LPU_Specialities).filter_by(**kwargs).first():
+            try:
+                self.session.add(LPU_Specialities(**kwargs))
+                self.session.commit()
+            except InvalidRequestError:
+                return False
+        return True
 
     def __failed_update(self, error=""):
         self.session.rollback()
