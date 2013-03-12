@@ -1128,3 +1128,49 @@ class ClientKorus30(AbstractClient):
                         'ticketUid': '',
                     }
         return None
+
+
+class ClientEPGU():
+    """Класс клиента для взаимодействия с ЕПГУ"""
+    url = settings.EPGU_SERVICE_URL
+
+    def __init__(self):
+        """
+        Args:
+            url: URL-адрес WSDL с ЕПГУ
+
+        """
+        if settings.DEBUG:
+            self.client = Client(self.url, cache=None)
+        else:
+            self.client = Client(self.url)
+
+    def GetMedicalSpecialization(self):
+        pass
+
+    def GetReservationTypes(self):
+        pass
+
+    def GetPaymentMethods(self):
+        pass
+
+    def GetServiceType(self):
+        pass
+
+    def GetPlace(self):
+        pass
+
+    def GetLocations(self):
+        pass
+
+    def DeleteEditLocation(self):
+        pass
+
+    def PostLocations(self):
+        pass
+
+    def PostRules(self):
+        pass
+
+    def PutLocationSchedule(self):
+        pass

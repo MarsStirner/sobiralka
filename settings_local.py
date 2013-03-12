@@ -19,4 +19,6 @@ SOAP_SERVER_PORT = 9910
 #Хост, по которому будет доступен административный интерфейс ИСа
 SOAP_ADMIN_HOST = '127.0.0.1'
 
+EPGU_SERVICE_URL = 'http://adapter-er.rosminzdrav.ru/soap2RestAdapterService/ws/Soap2RestAdapterService?wsdl'
+
 FLASK_SECRET_KEY = 'ohp%)%6vyq05mr2sc#rb$oe@we&$un534**tb04#^z99iq)(y='

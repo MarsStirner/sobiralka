@@ -31,8 +31,7 @@ class LPU(Base):
     schedule = Column(Unicode(256), doc=u'Расписание работы', nullable=False, default=u'')
     type = Column(Unicode(32), doc=u'Тип ЛПУ: (Поликлиника)')
     protocol = Column(Enum('samson', 'intramed', 'korus20', 'korus30'), nullable=False, default='korus30')
-    token = Column(String(45), doc=u'Токен')
-    EGIZToken = Column(String(21), doc=u'Токен ЕПГУ')
+    token = Column(String(45), doc=u'Токен ЕПГУ')
 
 
 class LPU_Units(Base):
