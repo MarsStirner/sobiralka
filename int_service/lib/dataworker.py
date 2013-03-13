@@ -1072,28 +1072,18 @@ class UpdateWorker(object):
             raise IS_ConnectionError(host=proxy)
         return False
 
-    def __backup_epgu(self, lpu_id):
-#        TODO: Сделать сохранение ключей ЕПГУ для Personal и Speciality через временные таблицы
-        pass
-
-    def __restore_epgu(self, lpu_id):
-#        TODO: Сделать восстановление ключей ЕПГУ для Personal и Speciality из временных таблиц
-        pass
-
     def __clear_data(self, lpu):
         """Удаляет данные, по указанным ЛПУ"""
+        self.session.query(UnitsParentForId).filter(UnitsParentForId.LpuId == lpu.id).delete()
+
         if lpu.lpu_units:
-            for lpu_unit in lpu.lpu_units:
-                self.session.delete(lpu_unit)
-        for unit_parent in self.session.query(UnitsParentForId).filter(UnitsParentForId.LpuId == lpu.id).all():
-            self.session.delete(unit_parent)
+            [self.session.delete(lpu_unit) for lpu_unit in lpu.lpu_units]
 
-        self.__backup_epgu(lpu.id)
+        self.session.query(LPU_Specialities).filter(LPU_Specialities.lpu_id == lpu.id).delete()
 
-        for lpu_speciality in self.session.query(LPU_Specialities).filter(LPU_Specialities.lpu_id == lpu.id).all():
-            self.session.delete(lpu_speciality)
-        for doctor in self.session.query(Personal).filter(Personal.lpuId == lpu.id).all():
-            self.session.delete(doctor)
+        self.session.query(Personal).filter(Personal.lpuId == lpu.id).delete()
+
+        self.session.commit()
 
     def __update_lpu_units(self, lpu):
         """Обновляет информацию о потразделениях"""
@@ -1191,7 +1181,6 @@ class UpdateWorker(object):
                                                                       doctor.lastName,
                                                                       doctor.patrName,
                                                                       doctor.speciality))
-        self.__restore_epgu(lpu.id)
         return result
 
     def __update_speciality(self, **kwargs):

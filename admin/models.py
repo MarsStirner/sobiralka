@@ -40,7 +40,7 @@ class LPU_Units(Base):
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(BigInteger, primary_key=True)
-    lpuId = Column(BigInteger, ForeignKey('lpu.id'))
+    lpuId = Column(BigInteger, ForeignKey('lpu.id', ondelete='CASCADE'))
     orgId = Column(BigInteger, index=True)
     name = Column(Unicode(256))
     address = Column(Unicode(256))
@@ -59,21 +59,21 @@ class UnitsParentForId(Base):
     __tablename__ = 'UnitsParentForId'
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
-    id = Column(Integer, primary_key=True)
-    LpuId = Column(BigInteger, ForeignKey('lpu.id'), index=True)
-    OrgId = Column(BigInteger, ForeignKey('lpu_units.orgId'), index=True)
-    ChildId = Column(BigInteger, index=True)
+    # id = Column(Integer, primary_key=True)
+    LpuId = Column(BigInteger, ForeignKey('lpu.id', ondelete='CASCADE'), primary_key=True)
+    OrgId = Column(BigInteger, ForeignKey('lpu_units.orgId', ondelete='CASCADE'), primary_key=True)
+    ChildId = Column(BigInteger, primary_key=True)
 
-    lpu = relationship("LPU", backref=backref('lpu', order_by=id), foreign_keys=LpuId, primaryjoin=LPU.id == LpuId,)
+    lpu = relationship("LPU", backref=backref('lpu'), foreign_keys=LpuId, primaryjoin=LPU.id == LpuId,)
     org = relationship("LPU_Units",
-                       backref=backref('org', order_by=id),
+                       backref=backref('org'),
                        foreign_keys=OrgId,
                        primaryjoin=LPU_Units.orgId == OrgId,)
 
     #TODO: проверка выборки parent
     child = relationship(
         "LPU_Units",
-        backref=backref('parent', order_by=id, uselist=False),
+        backref=backref('parent', uselist=False),
         foreign_keys=ChildId,
         primaryjoin="and_(LPU_Units.orgId==UnitsParentForId.ChildId, LPU_Units.lpuId==UnitsParentForId.LpuId)"
     )
@@ -115,7 +115,6 @@ class Personal(Base):
     FirstName = Column(Unicode(32), nullable=False)
     LastName = Column(Unicode(32), nullable=False)
     PatrName = Column(Unicode(32), nullable=False)
-#    TODO: replace to relationship on speciality_id=speciality.id
     speciality_id = Column(Integer, ForeignKey(Speciality.id), nullable=False, index=True)
     # speciality = Column(Unicode(64))
     speciality = relationship(Speciality)
@@ -137,8 +136,8 @@ class LPU_Specialities(Base):
     __tablename__ = 'lpu_speciality'
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
-    lpu_id = Column(BigInteger, ForeignKey(LPU.id), primary_key=True)
-    speciality_id = Column(Integer, ForeignKey(Speciality.id), primary_key=True)
+    lpu_id = Column(BigInteger, ForeignKey(LPU.id, ondelete='CASCADE'), primary_key=True)
+    speciality_id = Column(Integer, ForeignKey(Speciality.id, ondelete='CASCADE'), primary_key=True)
 
     UniqueConstraint(lpu_id, speciality_id)
 
