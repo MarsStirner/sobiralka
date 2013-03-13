@@ -60,19 +60,19 @@ class TestListWSDL(unittest.TestCase):
         self.assertIsInstance(hospitals.hospitals, list)
         self.assertListEqual(hospitals.hospitals, result)
 
-#     def testListHospitalsKorus30(self):
-#         okato = "45293578000"
-# #        result = [ {'uid': "11/0",
-# #                    'title': u"ГБУЗ «Кузнецкая ЦРБ»",
-# #                    'phone': "(841-57) 2-05-99",
-# #                    'address': u"Пензенская обл., г. Кузнецк, ул. Сызранская, 142",
-# #                    'wsdlURL': IS + "schedule",
-# #                    'token': "None",
-# #                    'key': "580033"
-# #                   },]
-#         hospitals = self.client.service.listHospitals({'ocatoCode': okato})
-#         self.assertIsInstance(hospitals.hospitals, list)
-# #        self.assertListEqual(list(hospitals), result)
+    def testListHospitalsKorus30(self):
+        okato = "45293578000"
+#        result = [ {'uid': "11/0",
+#                    'title': u"ГБУЗ «Кузнецкая ЦРБ»",
+#                    'phone': "(841-57) 2-05-99",
+#                    'address': u"Пензенская обл., г. Кузнецк, ул. Сызранская, 142",
+#                    'wsdlURL': IS + "schedule",
+#                    'token': "None",
+#                    'key': "580033"
+#                   },]
+        hospitals = self.client.service.listHospitals({'ocatoCode': okato})
+        self.assertIsInstance(hospitals.hospitals, list)
+#        self.assertListEqual(list(hospitals), result)
 
     def testListHospitalsKorus20_2(self):
         okato = "56203000000"
@@ -198,24 +198,24 @@ class TestListWSDL(unittest.TestCase):
         if hospitals:
             self.assertIsInstance(hospitals.hospitals, soap_models.ListHospitalsResponse)
             self.assertListEqual(hospitals.hospitals, result)
-    #
-    # def testListHospitalsIntramed(self):
-    #     okato = "580033"
-    #     result = []
-    #     hospitals = self.client.service.listHospitals({'ocatoCode': okato})
-    #     if hospitals:
-    #         self.assertIsInstance(hospitals.hospitals, soap_models.ListHospitalsResponse)
-    #         self.assertListEqual(hospitals.hospitals, result)
-    #
-    # def testFindOrgStructureByAddressKorus30(self):
-    #     client = ClientKorus30('http://10.2.1.58:7911')
-    #     hospitals = client.findOrgStructureByAddress(
-    #         pointKLADR = '4800000100000',
-    #         streetKLADR = '48000001000030800',
-    #         number = '43',
-    #         flat = 0
-    #     )
-    #     self.assertIsInstance(hospitals, list)
+
+    def testListHospitalsIntramed(self):
+        okato = "580033"
+        result = []
+        hospitals = self.client.service.listHospitals({'ocatoCode': okato})
+        if hospitals:
+            self.assertIsInstance(hospitals.hospitals, soap_models.ListHospitalsResponse)
+            self.assertListEqual(hospitals.hospitals, result)
+
+    def testFindOrgStructureByAddressKorus30(self):
+        client = ClientKorus30('http://10.2.1.58:7911')
+        hospitals = client.findOrgStructureByAddress(
+            pointKLADR = '4800000100000',
+            streetKLADR = '48000001000030800',
+            number = '43',
+            flat = 0
+        )
+        self.assertIsInstance(hospitals, list)
 
     def testListDoctorsKorus20(self):
         hospital_Uid = '17/52'
@@ -414,14 +414,14 @@ class TestListWSDL(unittest.TestCase):
         if doctors:
             self.assertIsInstance(doctors.doctors, list)
             self.assertListEqual(doctors.doctors, result)
-#
-#     def testListDoctorsIntramed(self):
-#         hospital_Uid = "11"
-#         result = []
-#         doctors = self.client.service.listDoctors({'searchScope': {'hospitalUid': hospital_Uid, }})
-#         if doctors:
-#             self.assertIsInstance(doctors.doctors, list)
-# #            self.assertListEqual(doctors.doctors, result)
+
+    def testListDoctorsIntramed(self):
+        hospital_Uid = "11"
+        result = []
+        doctors = self.client.service.listDoctors({'searchScope': {'hospitalUid': hospital_Uid, }})
+        if doctors:
+            self.assertIsInstance(doctors.doctors, list)
+#            self.assertListEqual(doctors.doctors, result)
 
 
     def testListSpecialities(self):
@@ -434,10 +434,10 @@ class TestListWSDL(unittest.TestCase):
 
 class TestInfoWSDL(unittest.TestCase):
     client = Client(IS % "info", cache=None)
-    #
-    # def testGetVersion(self):
-    #     version = self.client.service.getVersion()
-    #     self.assertEqual(dict(version), dict(version="2.0.0", last_update="2013-02-18T19:00:00 +0400"))
+
+    def testGetVersion(self):
+        version = self.client.service.getVersion()
+        self.assertEqual(dict(version), dict(version="2.0.0", last_update="2013-02-18T19:00:00 +0400"))
 
     def testGetHospitalInfoKorus20(self):
         hospitalUid = '17/0'
@@ -469,33 +469,33 @@ class TestInfoWSDL(unittest.TestCase):
         self.assertIsInstance(info_list.info, list)
         self.assertListEqual(info_list.info, result)
 
-    # def testGetHospitalInfoIntramed(self):
-    #     hospitalUid = '11/0'
-    #     result = [{
-    #         'siteURL': None,
-    #         'uid': "11/0",
-    #         'schedule': None,
-    #         'phone': None,
-    #         'type': None,
-    #         'name': u"ГБУЗ «Кузнецкая ЦРБ»"
-    #     }]
-    #     info_list = self.client.service.getHospitalInfo({'hospitalUid': hospitalUid})
-    #     self.assertIsInstance(info_list.info, list)
-    #     self.assertListEqual(info_list.info, result)
-    #
-    # def testGetHospitalInfoKorus30(self):
-    #     hospitalUid = '41/0'
-    #     result = [{
-    #         'siteURL': None,
-    #         'uid': "41/0",
-    #         'schedule': None,
-    #         'phone': None,
-    #         'type': None,
-    #         'name': u"ФГБУ «ФНКЦ ДГОИ им. Дмитрия Рогачева» Минздрава России"
-    #     }]
-    #     info_list = self.client.service.getHospitalInfo({'hospitalUid': hospitalUid})
-    #     self.assertIsInstance(info_list.info, list)
-    #     self.assertListEqual(info_list.info, result)
+    def testGetHospitalInfoIntramed(self):
+        hospitalUid = '11/0'
+        result = [{
+            'siteURL': None,
+            'uid': "11/0",
+            'schedule': None,
+            'phone': None,
+            'type': None,
+            'name': u"ГБУЗ «Кузнецкая ЦРБ»"
+        }]
+        info_list = self.client.service.getHospitalInfo({'hospitalUid': hospitalUid})
+        self.assertIsInstance(info_list.info, list)
+        self.assertListEqual(info_list.info, result)
+
+    def testGetHospitalInfoKorus30(self):
+        hospitalUid = '41/0'
+        result = [{
+            'siteURL': None,
+            'uid': "41/0",
+            'schedule': None,
+            'phone': None,
+            'type': None,
+            'name': u"ФГБУ «ФНКЦ ДГОИ им. Дмитрия Рогачева» Минздрава России"
+        }]
+        info_list = self.client.service.getHospitalInfo({'hospitalUid': hospitalUid})
+        self.assertIsInstance(info_list.info, list)
+        self.assertListEqual(info_list.info, result)
 
     def testGetHospitalInfo(self):
         result = [{'uid': "5/0",
@@ -590,136 +590,136 @@ class TestInfoWSDL(unittest.TestCase):
             self.assertEqual(id.hospitalUid, result)
 
 
-# class TestScheduleWSDL(unittest.TestCase):
-#     client = Client(IS % "schedule", cache=None)
+class TestScheduleWSDL(unittest.TestCase):
+    client = Client(IS % "schedule", cache=None)
+
+    def testGetScheduleInfoKorus20(self):
+#        hospitalUid = '17/53'
+#        doctorUid = '344'
+#        ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
+#        self.assertIsInstance(ticket, soap_models.GetScheduleInfoResponse)
+#        self.assertGreater(len(ticket), 0)
+
+        hospitalUid = '19/44'
+        doctorUid = '293'
+        ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
+        if hasattr(ticket, 'timeslots'):
+            self.assertIsInstance(ticket.timeslots, list)
+            self.assertGreater(ticket.timeslots, 0)
+
+    def testGetScheduleInfoKorus30(self):
+        hospitalUid = '41/3'
+        doctorUid = '242'
+        ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
+        if ticket:
+            self.assertIsInstance(ticket, list)
+            self.assertIsNotNone(ticket)
+
+    def testGetScheduleInfoIntramed(self):
+        hospitalUid = '11/1025801446528'
+        doctorUid = '19'
+        speciality = u'Акушер-гинеколог'
+        ticket = self.client.service.getScheduleInfo(
+            {'hospitalUid': hospitalUid, 'doctorUid': doctorUid, 'speciality': speciality}
+        )
+        self.assertIsInstance(ticket.timeslots, list)
+        self.assertIsNotNone(ticket.timeslots)
+
+    def testGetTicketStatus(self):
+        hospitalUid = 0
+        ticketUid = 0
+        ticket = self.client.service.getTicketStatus({'hospitalUid':hospitalUid, 'ticketUid': ticketUid})
+        self.assertIsNone(ticket)
+
+    def testSetTicketReadStatus(self):
+        pass
+
+    def testEnqueueKorus20(self):
+        person={'firstName': u"Асия", 'lastName': u"Абаева", 'patronymic': u"Абдуловна", }
+        omiPolicyNumber="4106 5801954102020017"
+        hospitalUid="17/53"
+        doctorUid="344"
+        timeslotStart=(datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") + "T15:00:00"
+        hospitalUidFrom=0
+        birthday="1954-10-20"
+
+        ticket = self.client.service.enqueue({
+            'person': person,
+            'omiPolicyNumber': omiPolicyNumber,
+            'hospitalUid': hospitalUid,
+            'doctorUid': doctorUid,
+            'timeslotStart': timeslotStart,
+            'hospitalUidFrom': hospitalUidFrom,
+            'birthday': birthday
+        })
+
+#        self.assertIsInstance(ticket, soap_models.EnqueueResponse)
+        if ticket['result'] == 'true':
+            self.assertIn('ticketUid', ticket)
+
+        if ticket['ticketUid'] == "":
+            self.assertNotIn(ticket['result'], ("", "true"))
+
+        # TODO: разобрать варианты с проверкой ограничений по дате рождения и полу
+
+    def testEnqueueKorus30(self):
+        person={'firstName': u"Асия", 'lastName': u"Абаева", 'patronymic': u"Абдуловна", }
+        omiPolicyNumber="4106 5801954102020017"
+        hospitalUid="41/3"
+        doctorUid="242"
+        timeslotStart=(datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") + "T14:00:00"
+        hospitalUidFrom=12
+        birthday="1954-10-20"
+
+        ticket = self.client.service.enqueue({
+            'person': person,
+            'omiPolicyNumber': omiPolicyNumber,
+            'hospitalUid': hospitalUid,
+            'doctorUid': doctorUid,
+            'timeslotStart': timeslotStart,
+            'hospitalUidFrom': hospitalUidFrom,
+            'birthday': birthday
+        })
+
+#        self.assertIsInstance(ticket, dict)
+        if ticket['result'] == 'true':
+            self.assertIn('ticketUid', ticket)
+
+        if ticket['ticketUid'] == "":
+            self.assertNotIn(ticket['result'], ("", "true"))
+
+        # TODO: разобрать варианты с проверкой ограничений по дате рождения и полу
 #
-#     def testGetScheduleInfoKorus20(self):
-# #        hospitalUid = '17/53'
-# #        doctorUid = '344'
-# #        ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
-# #        self.assertIsInstance(ticket, soap_models.GetScheduleInfoResponse)
-# #        self.assertGreater(len(ticket), 0)
-#
-#         hospitalUid = '19/44'
-#         doctorUid = '293'
-#         ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
-#         if hasattr(ticket, 'timeslots'):
-#             self.assertIsInstance(ticket.timeslots, list)
-#             self.assertGreater(ticket.timeslots, 0)
-#
-#     def testGetScheduleInfoKorus30(self):
-#         hospitalUid = '41/3'
-#         doctorUid = '242'
-#         ticket = self.client.service.getScheduleInfo({'hospitalUid': hospitalUid, 'doctorUid': doctorUid})
-#         if ticket:
-#             self.assertIsInstance(ticket, list)
-#             self.assertIsNotNone(ticket)
-#
-#     def testGetScheduleInfoIntramed(self):
-#         hospitalUid = '11/1025801446528'
-#         doctorUid = '19'
-#         speciality = u'Акушер-гинеколог'
-#         ticket = self.client.service.getScheduleInfo(
-#             {'hospitalUid': hospitalUid, 'doctorUid': doctorUid, 'speciality': speciality}
-#         )
-#         self.assertIsInstance(ticket.timeslots, list)
-#         self.assertIsNotNone(ticket.timeslots)
-#
-#     def testGetTicketStatus(self):
-#         hospitalUid = 0
-#         ticketUid = 0
-#         ticket = self.client.service.getTicketStatus({'hospitalUid':hospitalUid, 'ticketUid': ticketUid})
-#         self.assertIsNone(ticket)
-#
-#     def testSetTicketReadStatus(self):
-#         pass
-#
-#     def testEnqueueKorus20(self):
-#         person={'firstName': u"Асия", 'lastName': u"Абаева", 'patronymic': u"Абдуловна", }
-#         omiPolicyNumber="4106 5801954102020017"
-#         hospitalUid="17/53"
-#         doctorUid="344"
-#         timeslotStart=(datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") + "T15:00:00"
-#         hospitalUidFrom=0
-#         birthday="1954-10-20"
-#
-#         ticket = self.client.service.enqueue({
-#             'person': person,
-#             'omiPolicyNumber': omiPolicyNumber,
-#             'hospitalUid': hospitalUid,
-#             'doctorUid': doctorUid,
-#             'timeslotStart': timeslotStart,
-#             'hospitalUidFrom': hospitalUidFrom,
-#             'birthday': birthday
-#         })
-#
-# #        self.assertIsInstance(ticket, soap_models.EnqueueResponse)
-#         if ticket['result'] == 'true':
-#             self.assertIn('ticketUid', ticket)
-#
-#         if ticket['ticketUid'] == "":
-#             self.assertNotIn(ticket['result'], ("", "true"))
-#
-#         # TODO: разобрать варианты с проверкой ограничений по дате рождения и полу
-#
-#     def testEnqueueKorus30(self):
-#         person={'firstName': u"Асия", 'lastName': u"Абаева", 'patronymic': u"Абдуловна", }
-#         omiPolicyNumber="4106 5801954102020017"
-#         hospitalUid="41/3"
-#         doctorUid="242"
-#         timeslotStart=(datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") + "T14:00:00"
-#         hospitalUidFrom=12
-#         birthday="1954-10-20"
-#
-#         ticket = self.client.service.enqueue({
-#             'person': person,
-#             'omiPolicyNumber': omiPolicyNumber,
-#             'hospitalUid': hospitalUid,
-#             'doctorUid': doctorUid,
-#             'timeslotStart': timeslotStart,
-#             'hospitalUidFrom': hospitalUidFrom,
-#             'birthday': birthday
-#         })
-#
-# #        self.assertIsInstance(ticket, dict)
-#         if ticket['result'] == 'true':
-#             self.assertIn('ticketUid', ticket)
-#
-#         if ticket['ticketUid'] == "":
-#             self.assertNotIn(ticket['result'], ("", "true"))
-#
-#         # TODO: разобрать варианты с проверкой ограничений по дате рождения и полу
-# #
-#     def testEnqueueIntramed(self):
-#         person={'firstName': u"Асия", 'lastName': u"Абаева", 'patronymic': u"Абдуловна", }
-#         omiPolicyNumber="4106 5801954102020017"
-#         hospitalUid="11/1025801446528"
-#         doctorUid="19"
-#         timeslotStart=(datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") + "T15:00:00"
-#         hospitalUidFrom=0
-#         birthday="1954-10-20"
-#
-#         ticket = self.client.service.enqueue({
-#             'person': person,
-#             'omiPolicyNumber': omiPolicyNumber,
-#             'hospitalUid': hospitalUid,
-#             'doctorUid': doctorUid,
-#             'timeslotStart': timeslotStart,
-#             'hospitalUidFrom': hospitalUidFrom,
-#             'birthday': birthday
-#         })
-#
-# #        self.assertIsInstance(ticket, dict)
-#         if ticket['result'] == 'true':
-#             self.assertIn('ticketUid', ticket)
-#
-#         if ticket['ticketUid'] == "":
-#             self.assertNotIn(ticket['result'], ("", "true"))
-#         # TODO: разобрать варианты с проверкой ограничений по дате рождения и полу
-#
-#     def testCancel(self):
-#         pass
-#
+    def testEnqueueIntramed(self):
+        person={'firstName': u"Асия", 'lastName': u"Абаева", 'patronymic': u"Абдуловна", }
+        omiPolicyNumber="4106 5801954102020017"
+        hospitalUid="11/1025801446528"
+        doctorUid="19"
+        timeslotStart=(datetime.date.today() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") + "T15:00:00"
+        hospitalUidFrom=0
+        birthday="1954-10-20"
+
+        ticket = self.client.service.enqueue({
+            'person': person,
+            'omiPolicyNumber': omiPolicyNumber,
+            'hospitalUid': hospitalUid,
+            'doctorUid': doctorUid,
+            'timeslotStart': timeslotStart,
+            'hospitalUidFrom': hospitalUidFrom,
+            'birthday': birthday
+        })
+
+#        self.assertIsInstance(ticket, dict)
+        if ticket['result'] == 'true':
+            self.assertIn('ticketUid', ticket)
+
+        if ticket['ticketUid'] == "":
+            self.assertNotIn(ticket['result'], ("", "true"))
+        # TODO: разобрать варианты с проверкой ограничений по дате рождения и полу
+
+    def testCancel(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()
