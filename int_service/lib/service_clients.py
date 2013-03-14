@@ -26,10 +26,10 @@ class Clients(object):
     """Class provider for current Clients"""
     @classmethod
     def provider(cls, client_type, proxy_url):
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.INFO)
         if settings.DEBUG:
-            logging.getLogger('suds.client').setLevel(logging.DEBUG)
-            logging.getLogger('Thrift_Client').setLevel(logging.DEBUG)
+            logging.getLogger('suds.client').setLevel(logging.INFO)
+            logging.getLogger('Thrift_Client').setLevel(logging.INFO)
         else:
             logging.getLogger('suds.client').setLevel(logging.CRITICAL)
             logging.getLogger('Thrift_Client').setLevel(logging.CRITICAL)
