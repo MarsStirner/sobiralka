@@ -958,12 +958,15 @@ class ClientKorus30(AbstractClient):
             sex: пол пациента (обязательный)
 
         """
+        document = kwargs.get('document')
+        if not document:
+            document = dict()
         params = {
             'lastName': kwargs.get('lastName'),
             'firstName': kwargs.get('firstName'),
             'patrName': kwargs.get('patrName'),
             'birthDate': kwargs.get('birthDate'),
-            'document': kwargs.get('document'),
+            'document': document,
             'sex': kwargs.get('sex'),
         }
 
