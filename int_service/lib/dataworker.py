@@ -112,8 +112,8 @@ class LPUWorker(object):
         query_lpu = self.session.query(*fields)
 
         if speciality and isinstance(speciality, unicode):
-            query_lpu = query_lpu.join(Personal)
-            query_lpu = query_lpu.filter(Personal.speciality == speciality)
+            query_lpu = query_lpu.join(LPU_Specialities).join(Speciality)
+            query_lpu = query_lpu.filter(Speciality.name == speciality)
 
         if lpu_ids and len(lpu_ids):
             query_lpu = query_lpu.filter(LPU.id.in_(lpu_ids))
@@ -235,9 +235,8 @@ class LPUWorker(object):
             # Append LPU_Units to result
             for item in lpu_units_list:
                 uid = str(item.lpuId) + '/' + str(item.orgId)
-                # TODO: проверить работоспособность item.parent
                 if item.parent:
-                    uid += '/' + str(item.parent.id)
+                    uid += '/' + str(item.parent.OrgId)
                 else:
                     uid += '/0'
 
@@ -370,6 +369,7 @@ class LPU_UnitsWorker(object):
         if speciality and isinstance(speciality, unicode):
             fields.append(Personal.speciality)
             _join.append(Personal)
+            _join.append(Speciality)
 
         query_lpu_units = self.session.query(*fields)
 
@@ -387,7 +387,7 @@ class LPU_UnitsWorker(object):
             query_lpu_units = query_lpu_units.filter(or_(*or_list))
 
         if speciality and isinstance(speciality, unicode):
-            query_lpu_units = query_lpu_units.filter(Personal.speciality == speciality)
+            query_lpu_units = query_lpu_units.filter(Speciality.name == speciality)
 
         if lpu_id:
             query_lpu_units = query_lpu_units.filter(LPU_Units.lpuId == lpu_id)
@@ -841,14 +841,7 @@ class PersonalWorker(object):
 #             return []
 
         query = self.session.query(
-            Personal.FirstName,
-            Personal.PatrName,
-            Personal.LastName,
-            Speciality.name.label('speciality'),
-            Personal.id,
-            Personal.lpuId,
-            Personal.orgId,
-            Personal.keyEPGU,
+            Personal,
             LPU.name.label('lpu_name'),
             LPU_Units.name.label('lpu_units_name'),
             LPU.address.label('lpu_address'),
@@ -868,7 +861,6 @@ class PersonalWorker(object):
 
         query = query.filter(or_(*or_list))
         query = query.order_by(Personal.LastName, Personal.FirstName, Personal.PatrName)
-
         return query.all()
 
     def get_doctor(self, **kwargs):
@@ -951,20 +943,21 @@ class PersonalWorker(object):
         )
 
         for value in query_result:
+            person = value.Personal
             result['doctors'].append({
-                'uid': value.id,
+                'uid': person.id,
                 'name': {
-                    'firstName': value.FirstName,
-                    'patronymic': value.PatrName,
-                    'lastName': value.LastName,
+                    'firstName': person.FirstName,
+                    'patronymic': person.PatrName,
+                    'lastName': person.LastName,
                 },
-                'hospitalUid': str(value.lpuId) + '/' + str(value.orgId),
-                'speciality': value.speciality.name,
-                'keyEPGU': value.keyEPGU,
+                'hospitalUid': str(person.lpuId) + '/' + str(person.orgId),
+                'speciality': person.speciality.name,
+                'keyEPGU': person.keyEPGU,
             })
 
             result['hospitals'].append({
-                'uid': str(value.lpuId) + '/' + str(value.orgId),
+                'uid': str(person.lpuId) + '/' + str(person.orgId),
                 'name': (unicode(value.lpu_name) + " " + unicode(value.lpu_units_name)).strip(),
                 'address': (unicode(value.lpu_address) + " " + unicode(value.lpu_units_address)).strip(),
                 # TODO: выяснить используется ли wsdlURL и верно ли указан
@@ -1011,7 +1004,7 @@ class PersonalWorker(object):
                 lpu_specialities = proxy_client.getSpecialities(hospital_uid_from)
 
         for value in query_result:
-            _speciality = value.speciality
+            _speciality = value.Personal.speciality
             if _speciality.id not in specialities:
                 specialities.append(_speciality.id)
                 speciality = {'speciality': _speciality.name,
@@ -1072,28 +1065,19 @@ class UpdateWorker(object):
             raise IS_ConnectionError(host=proxy)
         return False
 
-    def __backup_epgu(self, lpu_id):
-#        TODO: Сделать сохранение ключей ЕПГУ для Personal и Speciality через временные таблицы
-        pass
-
-    def __restore_epgu(self, lpu_id):
-#        TODO: Сделать восстановление ключей ЕПГУ для Personal и Speciality из временных таблиц
-        pass
-
     def __clear_data(self, lpu):
         """Удаляет данные, по указанным ЛПУ"""
+
+        self.session.query(UnitsParentForId).filter(UnitsParentForId.LpuId == lpu.id).delete()
+
         if lpu.lpu_units:
-            for lpu_unit in lpu.lpu_units:
-                self.session.delete(lpu_unit)
-        for unit_parent in self.session.query(UnitsParentForId).filter(UnitsParentForId.LpuId == lpu.id).all():
-            self.session.delete(unit_parent)
+            [self.session.delete(lpu_unit) for lpu_unit in lpu.lpu_units]
 
-        self.__backup_epgu(lpu.id)
+        self.session.query(LPU_Specialities).filter(LPU_Specialities.lpu_id == lpu.id).delete()
 
-        for lpu_speciality in self.session.query(LPU_Specialities).filter(LPU_Specialities.lpu_id == lpu.id).all():
-            self.session.delete(lpu_speciality)
-        for doctor in self.session.query(Personal).filter(Personal.lpuId == lpu.id).all():
-            self.session.delete(doctor)
+        self.session.query(Personal).filter(Personal.lpuId == lpu.id).delete()
+
+        self.session.commit()
 
     def __update_lpu_units(self, lpu):
         """Обновляет информацию о потразделениях"""
@@ -1191,7 +1175,6 @@ class UpdateWorker(object):
                                                                       doctor.lastName,
                                                                       doctor.patrName,
                                                                       doctor.speciality))
-        self.__restore_epgu(lpu.id)
         return result
 
     def __update_speciality(self, **kwargs):

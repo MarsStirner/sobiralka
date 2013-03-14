@@ -762,6 +762,13 @@ class ClientKorus30(AbstractClient):
         self.client = Thrift_Client(protocol)
         transport.open()
 
+    def __unicode_result(self, data):
+        for element in data:
+            for attr, value in element.__dict__.iteritems():
+                if isinstance(value, basestring):
+                    setattr(element, attr, value.strip().decode('utf8'))
+        return data
+
     def listHospitals(self, **kwargs):
         """Получает список подразделений
 
@@ -781,7 +788,7 @@ class ClientKorus30(AbstractClient):
         except WebFault, e:
             print e
         else:
-            return result
+            return self.__unicode_result(result)
         return None
 
     def listDoctors(self, **kwargs):
@@ -804,7 +811,7 @@ class ClientKorus30(AbstractClient):
         except WebFault, e:
             print e
         else:
-            return result
+            return self.__unicode_result(result)
         return None
 
     def getSpecialities(self, hospital_uid_from):
@@ -813,7 +820,7 @@ class ClientKorus30(AbstractClient):
         except WebFault, e:
             print e
         else:
-            return result
+            return self.__unicode_result(result)
         return None
 
     def findOrgStructureByAddress(self, **kwargs):
@@ -849,7 +856,7 @@ class ClientKorus30(AbstractClient):
             except NotFoundException:
                 return []
             else:
-                return result
+                return self.__unicode_result(result)
         else:
             raise exceptions.AttributeError
         return None
@@ -904,7 +911,7 @@ class ClientKorus30(AbstractClient):
             except WebFault, e:
                 print e
             else:
-                return result['list']
+                return self.__unicode_result(result['list'])
         else:
             raise exceptions.ValueError
         return None

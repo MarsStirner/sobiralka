@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Table, Integer, BigInteger, String, Unicode, Text, UnicodeText, Enum, ForeignKey, Boolean
-from sqlalchemy import ForeignKeyConstraint, UniqueConstraint
+from sqlalchemy import ForeignKeyConstraint, UniqueConstraint, Index
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.sql.expression import ClauseList
 
 Base = declarative_base()
 
@@ -37,46 +38,48 @@ class LPU(Base):
 class LPU_Units(Base):
     """Mapping for lpu_units table"""
     __tablename__ = 'lpu_units'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(BigInteger, primary_key=True)
-    lpuId = Column(BigInteger, ForeignKey('lpu.id'))
-    orgId = Column(BigInteger, index=True)
+    lpuId = Column(BigInteger, ForeignKey('lpu.id', ondelete='CASCADE'))
+    orgId = Column(BigInteger)
     name = Column(Unicode(256))
     address = Column(Unicode(256))
 
-    lpu = relationship("LPU", backref=backref('lpu_units', order_by=id))
+    __table_args__ = (Index('lpu_org', lpuId, orgId), {'mysql_engine': 'InnoDB'})
+
+    lpu = relationship(LPU, backref=backref('lpu_units', order_by=id))
+
+
+class UnitsParentForId(Base):
+    """Mapping for UnitsParentForId table"""
+    __tablename__ = 'UnitsParentForId'
+
+    LpuId = Column(BigInteger, ForeignKey(LPU.id, ondelete='CASCADE'), primary_key=True)
+    OrgId = Column(BigInteger, primary_key=True)
+    ChildId = Column(BigInteger, primary_key=True)
+
+    __table_args__ = (ForeignKeyConstraint([LpuId, OrgId], [LPU_Units.lpuId, LPU_Units.orgId]),
+                      ForeignKeyConstraint([LpuId, ChildId], [LPU_Units.lpuId, LPU_Units.orgId]),
+                      {'mysql_engine': 'InnoDB'})
+
+    lpu = relationship(LPU)
+
+    org = relationship(
+        LPU_Units,
+        primaryjoin='and_(LPU_Units.orgId==UnitsParentForId.OrgId, LPU_Units.lpuId==UnitsParentForId.LpuId)',
+    )
+
+    children = relationship(
+        LPU_Units,
+        backref=backref('parent', uselist=False),
+        primaryjoin="and_(LPU_Units.orgId==UnitsParentForId.ChildId, LPU_Units.lpuId==UnitsParentForId.LpuId)"
+    )
 
 
 # units_parents = Table("units_parents", Base.metadata,
 #     Column("lpuid", BigInteger, ForeignKey("lpu.id")),
 #     Column("orgid", BigInteger, ForeignKey("lpu.id")),
 # )
-
-
-class UnitsParentForId(Base):
-    """Mapping for UnitsParentForId table"""
-    __tablename__ = 'UnitsParentForId'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-
-    id = Column(Integer, primary_key=True)
-    LpuId = Column(BigInteger, ForeignKey('lpu.id'), index=True)
-    OrgId = Column(BigInteger, ForeignKey('lpu_units.orgId'), index=True)
-    ChildId = Column(BigInteger, index=True)
-
-    lpu = relationship("LPU", backref=backref('lpu', order_by=id), foreign_keys=LpuId, primaryjoin=LPU.id == LpuId,)
-    org = relationship("LPU_Units",
-                       backref=backref('org', order_by=id),
-                       foreign_keys=OrgId,
-                       primaryjoin=LPU_Units.orgId == OrgId,)
-
-    #TODO: проверка выборки parent
-    child = relationship(
-        "LPU_Units",
-        backref=backref('parent', order_by=id, uselist=False),
-        foreign_keys=ChildId,
-        primaryjoin="and_(LPU_Units.orgId==UnitsParentForId.ChildId, LPU_Units.lpuId==UnitsParentForId.LpuId)"
-    )
 
 
 class Enqueue(Base):
@@ -115,7 +118,6 @@ class Personal(Base):
     FirstName = Column(Unicode(32), nullable=False)
     LastName = Column(Unicode(32), nullable=False)
     PatrName = Column(Unicode(32), nullable=False)
-#    TODO: replace to relationship on speciality_id=speciality.id
     speciality_id = Column(Integer, ForeignKey(Speciality.id), nullable=False, index=True)
     # speciality = Column(Unicode(64))
     speciality = relationship(Speciality)
@@ -137,8 +139,8 @@ class LPU_Specialities(Base):
     __tablename__ = 'lpu_speciality'
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
-    lpu_id = Column(BigInteger, ForeignKey(LPU.id), primary_key=True)
-    speciality_id = Column(Integer, ForeignKey(Speciality.id), primary_key=True)
+    lpu_id = Column(BigInteger, ForeignKey(LPU.id, ondelete='CASCADE'), primary_key=True)
+    speciality_id = Column(Integer, ForeignKey(Speciality.id, ondelete='CASCADE'), primary_key=True)
 
     UniqueConstraint(lpu_id, speciality_id)
 
