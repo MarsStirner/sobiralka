@@ -232,13 +232,16 @@ class ClientKorus20(AbstractClient):
         """
         result = []
         if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid']:
+            server_id = kwargs.get('server_id')
+            doctor_uid = kwargs.get('doctor_uid')
+            hospital_uid_from = kwargs.get('hospital_uid_from', '0')
             for i in xrange((kwargs['end'] - kwargs['start']).days):
                 start = (kwargs['start'] + datetime.timedelta(days=i))
                 params = {
-                    'serverId': kwargs.get('server_id'),
-                    'personId': kwargs.get('doctor_uid'),
+                    'serverId': server_id,
+                    'personId': doctor_uid,
                     'date': start,
-                    'hospitalUidFrom': kwargs.get('hospital_uid_from', '0'),
+                    'hospitalUidFrom': hospital_uid_from,
                 }
                 timeslot = self.getWorkTimeAndStatus(**params)
                 if timeslot:
@@ -873,14 +876,19 @@ class ClientKorus30(AbstractClient):
         """
         result = []
         if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid']:
+            server_id = kwargs.get('server_id')
+            doctor_uid = kwargs.get('doctor_uid')
+            hospital_uid_from = kwargs.get('hospital_uid_from')
+            if not hospital_uid_from:
+                hospital_uid_from = ''
             for i in xrange((kwargs['end'] - kwargs['start']).days):
                 start = (kwargs['start'] + datetime.timedelta(days=i))
                 try:
                     timeslot = self.getWorkTimeAndStatus(
-                        serverId=kwargs.get('server_id'),
-                        personId=kwargs.get('doctor_uid'),
+                        serverId=server_id,
+                        personId=doctor_uid,
                         date=start,
-                        hospitalUidFrom=kwargs.get('hospital_uid_from', '0'),
+                        hospitalUidFrom=hospital_uid_from,
                     )
                 except NotFoundException, e:
                     print e.error_msg
