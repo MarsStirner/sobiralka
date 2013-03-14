@@ -26,9 +26,9 @@ class Clients(object):
     """Class provider for current Clients"""
     @classmethod
     def provider(cls, client_type, proxy_url):
-        logging.basicConfig(level=logging.CRITICAL)
+        logging.basicConfig(level=logging.DEBUG)
         if settings.DEBUG:
-            logging.getLogger('suds.client').setLevel(logging.CRITICAL)
+            logging.getLogger('suds.client').setLevel(logging.DEBUG)
             logging.getLogger('Thrift_Client').setLevel(logging.DEBUG)
         else:
             logging.getLogger('suds.client').setLevel(logging.CRITICAL)
@@ -970,13 +970,6 @@ class ClientKorus30(AbstractClient):
             'sex': kwargs.get('sex'),
         }
 
-#        omiPolicy = kwargs.get('omiPolicy').split(' ')
-#        if len(omiPolicy) == 2 and omiPolicy[1]:
-#            params['omiPolicySerial'] = omiPolicy[0]
-#            params['omiPolicyNumber'] = omiPolicy[1]
-#        else:
-#            params['omiPolicyNumber'] = omiPolicy
-
         try:
             result = self.client.findPatient(FindPatientParameters(**params))
         except NotFoundException, e:
@@ -1032,7 +1025,7 @@ class ClientKorus30(AbstractClient):
             parameters = GetTimeWorkAndStatusParameters(
                 hospitalUidFrom=kwargs.get('hospitalUidFrom'),
                 personId=kwargs.get('personId'),
-                date=time.mktime(time_tuple) * 1000
+                date=calendar.timegm(time_tuple) * 1000
             )
             schedule = self.client.getWorkTimeAndStatus(parameters)
         except WebFault, e:
@@ -1123,11 +1116,12 @@ class ClientKorus30(AbstractClient):
 #                serverId = kwargs.get('serverId'),
                 patientId=int(patient_id),
                 personId=int(kwargs.get('doctorUid')),
-                dateTime=int(time.mktime(date_time.timetuple()) * 1000),
+                dateTime=int(calendar.timegm(date_time.timetuple()) * 1000),
                 note=kwargs.get('E-mail', 'E-mail'),
                 hospitalUidFrom=kwargs.get('hospitalUidFrom'),
             )
-        except:
+        except Exception, e:
+            print e
             raise exceptions.ValueError
         else:
             try:
