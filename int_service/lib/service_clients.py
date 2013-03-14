@@ -1142,11 +1142,6 @@ class ClientEPGU():
     url = settings.EPGU_SERVICE_URL
 
     def __init__(self):
-        """
-        Args:
-            url: URL-адрес WSDL с ЕПГУ
-
-        """
         if settings.DEBUG:
             self.client = Client(self.url, cache=None)
         else:
@@ -1179,5 +1174,18 @@ class ClientEPGU():
     def PostRules(self):
         pass
 
-    def PutLocationSchedule(self):
+    def PostLocationSchedule(self):
         pass
+
+    def PutActivateLocation(self):
+        pass
+
+    def PostReserve(self):
+        pass
+
+    def PutSlot(self):
+        pass
+
+    def DeleteSlot(self):
+        pass
+
