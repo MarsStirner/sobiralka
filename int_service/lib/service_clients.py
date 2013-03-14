@@ -955,6 +955,7 @@ class ClientKorus30(AbstractClient):
             patrName: отчество (обязательный)
             birthDate: дата рождения (обязательный)
             omiPolicy: номер полиса ОМС (обязательный)
+            sex: пол пациента (обязательный)
 
         """
         params = {
@@ -963,6 +964,7 @@ class ClientKorus30(AbstractClient):
             'patrName': kwargs.get('patrName'),
             'birthDate': kwargs.get('birthDate'),
             'document': kwargs.get('document'),
+            'sex': kwargs.get('sex'),
         }
 
 #        omiPolicy = kwargs.get('omiPolicy').split(' ')
