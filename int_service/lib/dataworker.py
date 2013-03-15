@@ -710,7 +710,7 @@ class EnqueueWorker(object):
             if document_obj.document_code:
                 document['document_code'] = str(document_obj.document_code)
             if document_obj.series:
-                document['series'] = document_obj.series
+                document['serial'] = document_obj.series
             if document_obj.number:
                 document['number'] = document_obj.number
 
