@@ -350,6 +350,7 @@ class ClientKorus20(AbstractClient):
             document = kwargs.get('document')
             if 'serial' in document:
                 document['series'] = document['serial']
+                del document['serial']
             params = {
 #                'serverId': kwargs['serverId'],
                 'lastName': kwargs['lastName'],
