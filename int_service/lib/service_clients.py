@@ -440,7 +440,7 @@ class ClientKorus20(AbstractClient):
             patient_id = patient.patientId
         else:
 #            raise exceptions.LookupError
-            return {'result': False, 'error_code': patient.message,}
+            return {'result': False, 'error_code': patient.message, }
 
         try:
             date_time = kwargs.get('timeslotStart')
@@ -1101,7 +1101,7 @@ class ClientKorus30(AbstractClient):
             patient = self.findPatient(**patient_params)
         except NotFoundException, e:
             print e.error_msg
-            return {'result': False, 'error_code': e.error_msg, }
+            return {'result': False, 'error_code': e.error_msg.decode('utf-8'), }
         except TException, e:
             print e
             return {'result': False, 'error_code': e.message, }
@@ -1112,7 +1112,7 @@ class ClientKorus30(AbstractClient):
             patient_id = patient.patientId
         else:
         #            raise exceptions.LookupError
-            return {'result': False, 'error_code': patient.message, }
+            return {'result': False, 'error_code': patient.message.decode('utf-8'), }
 
         try:
             date_time = kwargs.get('timeslotStart', datetime.datetime.now())
