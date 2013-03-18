@@ -2,17 +2,19 @@
 
 import unittest
 import logging
+import datetime
 from suds.client import Client
 from int_service.lib.service_clients import ClientEPGU
 
 logging.basicConfig()
 logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
+client = ClientEPGU()
+
 
 class ClientTests(unittest.TestCase):
 
     def test_GetMedicalSpecialization(self):
-        client = ClientEPGU()
         res = client.GetMedicalSpecialization()
         self.assertIsInstance(res, list)
 
@@ -47,29 +49,75 @@ class ClientTests(unittest.TestCase):
                           'name': u"Пациенты с полисами ОМС",
                           'default': "true",
                           }, ]
-        client = ClientEPGU()
         res = client.GetPaymentMethods()
         self.assertIsInstance(res, list)
         self.assertListEqual(res, assert_result)
 
     def test_GetServiceType(self):
-        client = ClientEPGU()
         res = client.GetServiceType()
         self.assertIsInstance(res, list)
 
     def test_GetPlace(self):
         assert_result = {'id': '4f880ca42bcfa5277202f051',
                          'name': u'ГУЗ "ПЕНЗЕНСКАЯ ОБЛАСТНАЯ КЛИНИЧЕСКАЯ БОЛЬНИЦА ИМ.Н.Н.БУРДЕНКО"'}
-        client = ClientEPGU()
         res = client.GetPlace(auth_token='CKzeDG37SdTRjzddVCn6')
         self.assertIsInstance(res, dict)
         self.assertDictEqual(res, assert_result)
 
     def test_GetLocations(self):
-        client = ClientEPGU()
         res = client.GetLocations(place_id='4f1e8fa0c95ea177b00000b6',
                                   service_type_id='4f1e8fa0c95ea177b00000b3',
                                   auth_token='CmBPwiTZhiePQQZMu5iL')
+        self.assertIsInstance(res, list)
+
+    def test_DeleteEditLocation(self):
+        pass
+
+    def test_PostLocations(self):
+        doctor = {'prefix': u'ФИО врача',
+                  'medical_specialization_id': '4f882b982bcfa5145a000383',
+                  'cabinet_number': '13',
+                  'time_table_period': '15',
+                  'reservation_time': '1',
+                  'reserved_time_for_slot': '1',
+                  'reservation_type_id': '4f8805b52bcfa52299000011',
+                  'payment_method_id': '4f8804ab2bcfa520e6000001'}
+        service_types = ['4f882b9c2bcfa5145a0006e8']
+        hospital = {'place_id': '4f880ca42bcfa5277202f051', 'auth_token': 'CKzeDG37SdTRjzddVCn6'}
+        res = client.PostLocations(doctor, service_types, hospital)
+        self.assertIsInstance(res, dict)
+
+    def test_PostRules(self):
+        doctor = u'ФИО врача'
+        period = '%s - %s' % (
+            (
+                datetime.datetime.today() - datetime.timedelta(days=datetime.datetime.today().isoweekday() + 1)
+            ).strftime('MM.DD.YYYY'),
+            (
+                datetime.datetime.today() + datetime.timedelta(days=(7 - datetime.datetime.today().isoweekday()))
+            ).strftime('MM.DD.YYYY'),
+        )
+        days = dict(date=datetime.datetime.today(), time0='08:00', time1='18:00')
+        hospital = {'place_id': '4f880ca42bcfa5277202f051', 'auth_token': 'CKzeDG37SdTRjzddVCn6'}
+        res = client.PostLocations(doctor, period, days, hospital)
+        self.assertIsInstance(res, dict)
+
+    def test_PostLocationSchedule(self):
+        doctor_id = '50506af8bb4d3371b8028ea3'
+        rule = {'id': '50507480ef2455c01202a0ca',
+                'start': (datetime.datetime.today() -
+                          datetime.timedelta(days=datetime.datetime.today().isoweekday() + 1)),
+                'end': (datetime.datetime.today() +
+                        datetime.timedelta(days=(7 - datetime.datetime.today().isoweekday())))
+                }
+        hospital = {'place_id': '4f880ca42bcfa5277202f051', 'auth_token': 'CKzeDG37SdTRjzddVCn6'}
+        res = client.PostLocationSchedule(doctor_id, rule, hospital)
+        self.assertIsInstance(res, dict)
+
+    def test_PutActivateLocation(self):
+        doctor_id = '50506af8bb4d3371b8028ea3'
+        hospital = {'place_id': '4f880ca42bcfa5277202f051', 'auth_token': 'CKzeDG37SdTRjzddVCn6'}
+        res = client.PutActivateLocation(doctor_id, hospital)
         self.assertIsInstance(res, dict)
 
 

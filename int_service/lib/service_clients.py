@@ -1365,21 +1365,198 @@ class ClientEPGU():
             return result
         return None
 
-    def PostLocations(self):
+    def PostLocations(self, doctor, service_types, hospital):
         """Отправляет запрос на добавление врачей на ЕПГУ
+
+        Args:
+            doctor: (обязательный) словарь с информацией о враче, вида:
+                {'prefix': ФИО врача,
+                 'medical_specialization_id': код специальности (Speciality.nameEPGU),
+                 'cabinet_number': ?? номер кабинета (#TODO: дописать ИС для получение кабинета),
+                 'time_table_period': количество дней на которое будет доступно расписание
+                    (Определяется максимальной датой, на которую доступно расписание для данного врача.
+                    Данный параметр можно вынести в файл настроек. По умолчанию значение 90)
+                 'reservation_time': время (в минутах) приема врача
+                    (необходимо высчитывать время приема для каждого врача индивидуально как разницу между началом и
+                    окончанием приема одного пациента на первый день получаемого расписания),
+                 'reserved_time_for_slot': время между талонами на прием, равно времени указанном в reservation_time,
+                 'reservation_type_id': идентификатор типа записи, полученный в GetServiceType,
+                 'payment_method_id': идентификатор вида оплаты, полученный в GetPaymentMethods,
+                }
+            service_types: (обязательный) список кодов мед. услуг из GetServiceType, вида:
+                ['4f882b9c2bcfa5145a0006e8', ]
+            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
+                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
+                 'auth_token': token ЛПУ
+                }
+
+        Returns:
+            Словарь с информацией о созданной записи, вида:
+            {'created-at': '2012-09-12T14:59:04+04:00',
+             'id': '50506af8bb4d3371b8028ea3',
+             'medical-specialization-id': '4f882b982bcfa5145a000383'
+            }
+
+        """
+        try:
+            params = dict()
+            try:
+                params['prefix'] = doctor['prefix']
+                params['medical_specialization_id'] = doctor['medical_specialization_id']
+                params['cabinet_number'] = doctor['cabinet_number']
+                params['time_table_period'] = doctor['time_table_period']
+                params['reservation_time'] = doctor['reservation_time']
+                params['reserved_time_for_slot'] = doctor['reserved_time_for_slot']
+                params['reservation_type_id'] = doctor['reservation_type_id']
+                params['payment_method_id'] = doctor['payment_method_id']
+
+                service_type_ids = dict()
+                for k, service_type in service_types:
+                    service_type_ids['st%d' % k] = service_type
+                params['service_types_ids'] = service_type_ids
+
+                #TODO: add name attribute to tags:
+                # <param name=":place_id">current</param>
+                # <param name="auth_token">CKzeDG37SdTRjzddVCn6</param>
+                params['params'] = {':place_id': hospital['place_id'], 'auth_token': hospital['auth_token']}
+            except AttributeError, e:
+                print e
+                return None
+            else:
+                result = self.client.service.PostLocations(location=params)
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
+
+    def PostRules(self, doctor, period, days, hospital):
+        """Добавляет расписание на ЕПГУ
+
+        Args:
+            doctor: (обязательный) строка, ФИО врача,
+            period: (обязательный) строка, период, на которые передаётся расписание,
+            days: (обязательный) массив, содержащий расписание по датам, вида:
+                [{'date': дата,
+                  'start': время начала приёма,
+                  'end': время окончания приёма,
+                }],
+            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
+                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
+                 'auth_token': token ЛПУ
+                }
+
+        Returns:
+            Словарь с информацией о созданном расписании, вида:
+            {'id': '50507480ef2455c01202a0ca', # идентификатор расписания
+             'name': u'Новое расписание', # наименование расписания
+            }
+
+        """
+        try:
+            params = dict()
+            try:
+                params['schedules_rule'] = dict(name='%s (%s)' % (doctor, period))
+
+                day_rule = dict()
+                for day in days:
+                    key = 'day%d' % (day['date'].isoweekday() % 7)
+                    day_rule[key]['int0'] = dict(time0=day['start'], time1=day['end'])
+                params['day_rule'] = day_rule
+
+                #TODO: add name attribute to tags:
+                # <param name=":place_id">current</param>
+                # <param name="auth_token">CKzeDG37SdTRjzddVCn6</param>
+                params['params'] = {':place_id': hospital['place_id'], 'auth_token': hospital['auth_token']}
+            except AttributeError, e:
+                print e
+                return None
+            else:
+                result = self.client.service.PostRules(rule_data=params)
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
+
+    def PostLocationSchedule(self, doctor_id, rule, hospital):
+        """Связывает сотрудников и расписание
+
+        Args:
+            doctor_id: (обязательный) строка, id врача из PostLocations,
+            rule: (обязательный) (обязательный) словарь с информацией о расписании, вида:
+                {'id': '50507480ef2455c01202a0ca', # идентификатор расписания из PostRules
+                 'start': дата начала действия расписания,
+                 'end': дата окончания действия расписания
+                }
+            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
+                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
+                 'auth_token': token ЛПУ
+                }
+
+        Returns:
+            Сообщение об ошибке, либо сообщение об успешной записи
 
 
         """
-        pass
+        try:
+            params = dict()
+            try:
+                params['applied_short_day'] = None
+                params['applied_nonworking_day'] = None
+                params['applied_exception'] = None
 
-    def PostRules(self):
-        pass
+                applied_rule = dict()
+                applied_rule['rule1'] = dict(rule_id=rule['id'],
+                                             start_date=rule['start'].format('DD.MM.YYYY'),
+                                             end_date=rule['end'].format('DD.MM.YYYY'),
+                                             type='all'
+                                             )
+                params['applied_rule'] = applied_rule
 
-    def PostLocationSchedule(self):
-        pass
+                #TODO: add name attribute to tags:
+                # <param name="auth_token">CKzeDG37SdTRjzddVCn6</param>
+                params['params'] = {':location_id': doctor_id, 'auth_token': hospital['auth_token']}
+            except AttributeError, e:
+                print e
+                return None
+            else:
+                result = self.client.service.PostRules(applied_schedule=params)
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
 
-    def PutActivateLocation(self):
-        pass
+    def PutActivateLocation(self, doctor_id, hospital):
+        """Активирует расписание
+
+        Args:
+            doctor_id: (обязательный) строка, id врача из PostLocations,
+            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
+                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
+                 'auth_token': token ЛПУ
+                }
+
+        Returns:
+            Сообщение об ошибке, либо сообщение об успешной записи
+
+        """
+        try:
+            result = self.client.service.PutActivateLocation(location_id=doctor_id,  auth_token=hospital['auth_token'])
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
 
     def PostReserve(self):
         pass
