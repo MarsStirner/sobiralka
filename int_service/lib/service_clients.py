@@ -1159,27 +1159,217 @@ class ClientEPGU():
             self.client = Client(self.url)
 
     def GetMedicalSpecialization(self):
-        pass
+        """Получает список специальностей из ЕПГУ:
+
+        <medical-specialization>
+            <id>4f882b982bcfa5145a00036c</id>
+            <name>Аллергология и иммунология</name>
+            <description/>
+        </medical-specialization>
+        <medical-specialization>
+            <id>4f882b982bcfa5145a00036d</id>
+            <name>Анестезиология и реаниматология</name>
+            <description/>
+        </medical-specialization>
+        <medical-specialization>
+            <id>4f882b982bcfa5145a00036e</id>
+            <name>Гастроэнтерология</name>
+            <description/>
+        </medical-specialization>
+
+        Тег id – идентификатор специальности в справочнике ЕПГУ
+        Тег name – название специальности в справочнике ЕПГУ
+        """
+        try:
+            result = self.client.service.GetMedicalSpecialization()
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
 
     def GetReservationTypes(self):
-        pass
+        """Получает список типов записи из ЕПГУ:
+
+        <reservation-type>
+            <id>4f8805b52bcfa52299000011</id>
+            <name>Автоматическая запись</name>
+            <code>automatic</code>
+        </reservation-type>
+        <reservation-type>
+            <id>4f8805b52bcfa52299000013</id>
+            <name>Запись по листу ожидания</name>
+            <code>waiting_list</code>
+        </reservation-type>
+        <reservation-type>
+            <id>4f8805b52bcfa52299000012</id>
+            <name>Запись с подтверждением</name>
+            <code>manual</code>
+        </reservation-type>
+
+        Тег id – идентификатор типа записи в справочнике ЕПГУ
+        Тег name – название типа записи в справочнике ЕПГУ
+        Тег code – код типа записи в справочнике ЕПГУ
+
+        По умолчанию использовать значение automatic.
+        """
+        try:
+            result = self.client.service.GetReservationTypes()
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
 
     def GetPaymentMethods(self):
-        pass
+        """Получить список методов оплаты из ЕПГУ
+
+        <payment-method>
+            <id>4f8804ab2bcfa520e6000003</id>
+            <name>Бюджетные пациенты</name>
+            <default/>
+        </payment-method>
+        <payment-method>
+            <id>4f8804ab2bcfa520e6000002</id>
+            <name>Пациенты ДМС</name>
+            <default/>
+        </payment-method>
+        <payment-method>
+            <id>4f8804ab2bcfa520e6000001</id>
+            <name>Пациенты с полисами ОМС</name>
+            <default>true</default>
+        </payment-method>
+
+
+        Тег id – идентификатор метода оплаты в справочнике ЕПГУ
+        Тег name – название метода оплаты в справочнике ЕПГУ
+        Тег default – используется ли данный метод по умолчанию
+
+        По умолчанию для значения Пациенты с полисами ОМС использовать тег default = true.
+        """
+        try:
+            result = self.client.service.GetPaymentMethods()
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
 
     def GetServiceType(self):
-        pass
+        """Получить список медицинских услуг из ЕПГУ:
 
-    def GetPlace(self):
-        pass
+        <service-type>
+            <id>4f993422ef245509c20001d3</id>
+            <name>Ангиография артерии верхней конечности прямая</name>
+            <recid>828</recid>
+            <code>A0612018</code>
+        </service-type>
+        <service-type>
+            <id>4f993422ef245509c20001d4</id>
+            <name>Ангиография артерии верхней конечности ретроградная</name>
+            <recid>829</recid>
+            <code>A0612019</code>
+        </service-type>
+        <service-type>
+            <id>4f993422ef245509c20001c9</id>
+            <name>Ангиография артерии щитовидной железы</name>
+            <recid>818</recid>
+            <code>A0612008</code>
+        </service-type>
 
-    def GetLocations(self):
-        pass
+        Тег id – идентификатор метода оплаты в справочнике ЕПГУ
+        Тег name – название метода оплаты в справочнике ЕПГУ
+
+        По умолчанию для значения Пациенты с полисами ОМС использовать тег default = true.
+        """
+        try:
+            result = self.client.service.GetServiceType()
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
+
+    def GetPlace(self, auth_token, place_id='current'):
+        """Получает код ЛПУ из БД ЕПГУ
+
+        Args:
+            auth_token: указывается token ЛПУ (обязательный)
+            place_id: всегда указывается current (обязательный)
+
+        Returns:
+            Идентификатор ЛПУ. Пример:
+            {'id': '4f880ca42bcfa5277202f051',
+             'name': u'ГУЗ "ПЕНЗЕНСКАЯ ОБЛАСТНАЯ КЛИНИЧЕСКАЯ БОЛЬНИЦА ИМ.Н.Н.БУРДЕНКО"'
+             }
+
+        """
+        try:
+            result = self.client.service.GetServiceType(params={':place_id': place_id, 'auth_token': auth_token})
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
+
+    def GetLocations(self, place_id, service_type_id, auth_token):
+        """Получает список врачей для указанного ЛПУ по указанному типу услуг
+
+        Args:
+            place_id: идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace (обязательный)
+            service_type_id: идентификатор услуги в ЕПГУ, получаемый в GetServiceType (обязательный)
+            auth_token: указывается token ЛПУ (обязательный)
+
+        Returns:
+            массив ФИО врачей:
+            [{'prefix': u'Ененко У.С. - хирург', }]
+
+        """
+        try:
+            result = self.client.service.GetLocations(params={':place_id': place_id,
+                                                              'service_type_id': service_type_id,
+                                                              'auth_token': auth_token})
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
 
     def DeleteEditLocation(self):
-        pass
+        """Помечает врача как удаленного на ЕПГУ
+
+
+        """
+        try:
+            # TODO: определить параметры, передаваемые по SOAP
+            raise Exception
+            result = None
+            # result = self.client.service.DeleteEditLocation()
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
 
     def PostLocations(self):
+        """Отправляет запрос на добавление врачей на ЕПГУ
+
+
+        """
         pass
 
     def PostRules(self):
