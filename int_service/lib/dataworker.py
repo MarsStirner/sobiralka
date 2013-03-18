@@ -704,13 +704,15 @@ class EnqueueWorker(object):
         document = dict()
         if document_obj:
             if document_obj.client_id:
-                document['client_id'] = document_obj.client_id
+                document['client_id'] = str(document_obj.client_id)
             if document_obj.policy_type:
-                document['policy_type'] = document_obj.policy_type
+                document['policy_type'] = str(document_obj.policy_type)
             if document_obj.document_code:
-                document['document_code'] = document_obj.document_code
+                document['document_code'] = str(document_obj.document_code)
             if document_obj.series:
-                document['series'] = document_obj.series
+                document['serial'] = document_obj.series
+            else:
+                document['serial'] = ''
             if document_obj.number:
                 document['number'] = document_obj.number
 

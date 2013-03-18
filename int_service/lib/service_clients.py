@@ -26,10 +26,10 @@ class Clients(object):
     """Class provider for current Clients"""
     @classmethod
     def provider(cls, client_type, proxy_url):
-        logging.basicConfig(level=logging.CRITICAL)
+        logging.basicConfig(level=logging.INFO)
         if settings.DEBUG:
-            logging.getLogger('suds.client').setLevel(logging.CRITICAL)
-            logging.getLogger('Thrift_Client').setLevel(logging.DEBUG)
+            logging.getLogger('suds.client').setLevel(logging.INFO)
+            logging.getLogger('Thrift_Client').setLevel(logging.INFO)
         else:
             logging.getLogger('suds.client').setLevel(logging.CRITICAL)
             logging.getLogger('Thrift_Client').setLevel(logging.CRITICAL)
@@ -232,13 +232,16 @@ class ClientKorus20(AbstractClient):
         """
         result = []
         if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid']:
+            server_id = kwargs.get('server_id')
+            doctor_uid = kwargs.get('doctor_uid')
+            hospital_uid_from = kwargs.get('hospital_uid_from', '0')
             for i in xrange((kwargs['end'] - kwargs['start']).days):
                 start = (kwargs['start'] + datetime.timedelta(days=i))
                 params = {
-                    'serverId': kwargs.get('server_id'),
-                    'personId': kwargs.get('doctor_uid'),
+                    'serverId': server_id,
+                    'personId': doctor_uid,
                     'date': start,
-                    'hospitalUidFrom': kwargs.get('hospital_uid_from', '0'),
+                    'hospitalUidFrom': hospital_uid_from,
                 }
                 timeslot = self.getWorkTimeAndStatus(**params)
                 if timeslot:
@@ -344,6 +347,10 @@ class ClientKorus20(AbstractClient):
 
         """
         try:
+            document = kwargs.get('document')
+            if 'serial' in document:
+                document['series'] = document['serial']
+                del document['serial']
             params = {
 #                'serverId': kwargs['serverId'],
                 'lastName': kwargs['lastName'],
@@ -433,7 +440,7 @@ class ClientKorus20(AbstractClient):
             patient_id = patient.patientId
         else:
 #            raise exceptions.LookupError
-            return {'result': False, 'error_code': patient.message,}
+            return {'result': False, 'error_code': patient.message, }
 
         try:
             date_time = kwargs.get('timeslotStart')
@@ -873,14 +880,19 @@ class ClientKorus30(AbstractClient):
         """
         result = []
         if kwargs['start'] and kwargs['end'] and kwargs['doctor_uid']:
+            server_id = kwargs.get('server_id')
+            doctor_uid = kwargs.get('doctor_uid')
+            hospital_uid_from = kwargs.get('hospital_uid_from')
+            if not hospital_uid_from:
+                hospital_uid_from = ''
             for i in xrange((kwargs['end'] - kwargs['start']).days):
                 start = (kwargs['start'] + datetime.timedelta(days=i))
                 try:
                     timeslot = self.getWorkTimeAndStatus(
-                        serverId=kwargs.get('server_id'),
-                        personId=kwargs.get('doctor_uid'),
+                        serverId=server_id,
+                        personId=doctor_uid,
                         date=start,
-                        hospitalUidFrom=kwargs.get('hospital_uid_from', '0'),
+                        hospitalUidFrom=hospital_uid_from,
                     )
                 except NotFoundException, e:
                     print e.error_msg
@@ -946,23 +958,21 @@ class ClientKorus30(AbstractClient):
             firstName: имя (обязательный)
             patrName: отчество (обязательный)
             birthDate: дата рождения (обязательный)
-            omiPolicy: номер полиса ОМС (обязательный)
+            document: документ пациента, словарь (обязательный)
+            sex: пол пациента (обязательный)
 
         """
+        document = kwargs.get('document')
+        if not document:
+            document = dict()
         params = {
             'lastName': kwargs.get('lastName'),
             'firstName': kwargs.get('firstName'),
             'patrName': kwargs.get('patrName'),
             'birthDate': kwargs.get('birthDate'),
-            'document': kwargs.get('document'),
+            'document': document,
+            'sex': kwargs.get('sex'),
         }
-
-#        omiPolicy = kwargs.get('omiPolicy').split(' ')
-#        if len(omiPolicy) == 2 and omiPolicy[1]:
-#            params['omiPolicySerial'] = omiPolicy[0]
-#            params['omiPolicyNumber'] = omiPolicy[1]
-#        else:
-#            params['omiPolicyNumber'] = omiPolicy
 
         try:
             result = self.client.findPatient(FindPatientParameters(**params))
@@ -1019,7 +1029,7 @@ class ClientKorus30(AbstractClient):
             parameters = GetTimeWorkAndStatusParameters(
                 hospitalUidFrom=kwargs.get('hospitalUidFrom'),
                 personId=kwargs.get('personId'),
-                date=time.mktime(time_tuple) * 1000
+                date=calendar.timegm(time_tuple) * 1000
             )
             schedule = self.client.getWorkTimeAndStatus(parameters)
         except WebFault, e:
@@ -1091,7 +1101,7 @@ class ClientKorus30(AbstractClient):
             patient = self.findPatient(**patient_params)
         except NotFoundException, e:
             print e.error_msg
-            return {'result': False, 'error_code': e.error_msg, }
+            return {'result': False, 'error_code': e.error_msg.decode('utf-8'), }
         except TException, e:
             print e
             return {'result': False, 'error_code': e.message, }
@@ -1102,7 +1112,7 @@ class ClientKorus30(AbstractClient):
             patient_id = patient.patientId
         else:
         #            raise exceptions.LookupError
-            return {'result': False, 'error_code': patient.message, }
+            return {'result': False, 'error_code': patient.message.decode('utf-8'), }
 
         try:
             date_time = kwargs.get('timeslotStart', datetime.datetime.now())
@@ -1110,11 +1120,12 @@ class ClientKorus30(AbstractClient):
 #                serverId = kwargs.get('serverId'),
                 patientId=int(patient_id),
                 personId=int(kwargs.get('doctorUid')),
-                dateTime=int(time.mktime(date_time.timetuple()) * 1000),
+                dateTime=int(calendar.timegm(date_time.timetuple()) * 1000),
                 note=kwargs.get('E-mail', 'E-mail'),
                 hospitalUidFrom=kwargs.get('hospitalUidFrom'),
             )
-        except:
+        except Exception, e:
+            print e
             raise exceptions.ValueError
         else:
             try:
