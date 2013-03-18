@@ -119,7 +119,6 @@ class Personal(Base):
     LastName = Column(Unicode(32), nullable=False)
     PatrName = Column(Unicode(32), nullable=False)
     speciality_id = Column(Integer, ForeignKey(Speciality.id), nullable=False, index=True)
-    # speciality = Column(Unicode(64))
     speciality = relationship(Speciality)
 
     keyEPGU = Column(String(45))
