@@ -65,9 +65,9 @@ class ClientTests(unittest.TestCase):
         self.assertDictEqual(res, assert_result)
 
     def test_GetLocations(self):
-        res = client.GetLocations(place_id='4f1e8fa0c95ea177b00000b6',
-                                  service_type_id='4f1e8fa0c95ea177b00000b3',
-                                  auth_token='CmBPwiTZhiePQQZMu5iL')
+        hospital = {'place_id': '4f1e8fa0c95ea177b00000b6', 'auth_token': 'CmBPwiTZhiePQQZMu5iL'}
+        res = client.GetLocations(service_type_id='4f1e8fa0c95ea177b00000b3',
+                                  hospital=hospital)
         self.assertIsInstance(res, list)
 
     def test_DeleteEditLocation(self):
@@ -118,6 +118,33 @@ class ClientTests(unittest.TestCase):
         doctor_id = '50506af8bb4d3371b8028ea3'
         hospital = {'place_id': '4f880ca42bcfa5277202f051', 'auth_token': 'CKzeDG37SdTRjzddVCn6'}
         res = client.PutActivateLocation(doctor_id, hospital)
+        self.assertIsInstance(res, dict)
+
+    def test_PostReserve(self):
+        doctor_id = '4f28f1f2c95ea12bbc0002a6'
+        service_type_id = '4f28e642c95ea12358000005'
+        hospital = {'place_id': '4f880ca42bcfa5277202f051', 'auth_token': 'CmBPwiTZhiePQQZMu5iL'}
+        date = {'date': datetime.datetime.today().date(), 'start_time': '08:30'}
+        res = client.PostReserve(doctor_id, hospital, service_type_id, date)
+        self.assertIsInstance(res, dict)
+
+    def test_PutSlot(self):
+        patient = {
+            'name': u'Имя',
+            'surname': u'Фамилия',
+            'patronymic': u'Отчество',
+            'phone': '+7(472)3515909',
+            'id': '240721313',
+        }
+        slot_id = '32ghghgjhg43hjh5ghghdfHGDHSdhg34h3g5h4g5h4'
+        hospital = {'place_id': '4f880ca42bcfa5277202f051', 'auth_token': 'CmBPwiTZhiePQQZMu5iL'}
+        res = client.PutSlot(patient, hospital, slot_id)
+        self.assertIsInstance(res, dict)
+
+    def test_DeleteSlot(self):
+        slot_id = '4f33b7b72bcfa52ddd000470'
+        hospital = {'place_id': '4f880ca42bcfa5277202f051', 'auth_token': 'CmBPwiTZhiePQQZMu5iL'}
+        res = client.DeleteSlot(slot_id, hospital)
         self.assertIsInstance(res, dict)
 
 

@@ -3,7 +3,7 @@
 import exceptions
 import datetime
 import calendar
-import time
+import base64
 import logging
 from urlparse import urlparse
 from abc import ABCMeta, abstractmethod, abstractproperty
@@ -1322,13 +1322,15 @@ class ClientEPGU():
             return result
         return None
 
-    def GetLocations(self, place_id, service_type_id, auth_token):
+    def GetLocations(self, service_type_id, hospital):
         """Получает список врачей для указанного ЛПУ по указанному типу услуг
 
         Args:
-            place_id: идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace (обязательный)
             service_type_id: идентификатор услуги в ЕПГУ, получаемый в GetServiceType (обязательный)
-            auth_token: указывается token ЛПУ (обязательный)
+            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
+                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
+                 'auth_token': token ЛПУ
+                }
 
         Returns:
             массив ФИО врачей:
@@ -1336,9 +1338,9 @@ class ClientEPGU():
 
         """
         try:
-            result = self.client.service.GetLocations(params={':place_id': place_id,
+            result = self.client.service.GetLocations(params={':place_id': hospital['place_id'],
                                                               'service_type_id': service_type_id,
-                                                              'auth_token': auth_token})
+                                                              'auth_token': hospital['auth_token']})
         except WebFault, e:
             print e
         except Exception, e:
@@ -1558,12 +1560,117 @@ class ClientEPGU():
             return result
         return None
 
-    def PostReserve(self):
-        pass
+    def PostReserve(self, doctor_id, hospital, service_type_id, date):
+        """Резервирует время на запись
 
-    def PutSlot(self):
-        pass
+        Args:
+            doctor_id: (обязательный) строка, id врача из PostLocations,
+            service_type_id: (обязательный) строка, id типа услуги из GetServiceType,
+            date: (обязательный) словарь с информацией о расписании, вида:
+                {'date': дата приёма,
+                 'time': время приёма
+                }
+            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
+                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
+                 'auth_token': token ЛПУ
+                }
 
-    def DeleteSlot(self):
-        pass
+        Возвращает идентификатор зарезервированного слота
 
+        """
+        try:
+            params = dict()
+            try:
+                params['location_id'] = doctor_id
+                params['service_type_id'] = service_type_id
+                params['date'] = date['date']
+                params['start_time'] = date['start_time']
+
+                #TODO: add name attribute to tags:
+                # <param name="auth_token">CKzeDG37SdTRjzddVCn6</param>
+                params['params'] = {'auth_token': hospital['auth_token']}
+            except AttributeError, e:
+                print e
+                return None
+            else:
+                result = self.client.service.PostReserve(client_info=params)
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
+
+    def PutSlot(self, patient, hospital, slot_id):
+        """Резервирует время на запись
+
+        Args:
+            patient: (обязательный) словарь с информацией о пациенте, вида:
+                {'name': (обязательный) имя пациента,
+                 'surname': (обязательный) фамилия пациента,
+                 'patronymic': (необязательный) отчество пациента,
+                 'phone': (обязательный) номер телефона в формате +7(код)номер,
+                 'id': (обязательный) уникальный идентификатор пациента,
+                },
+            slot_id: (обязательный) идентификатор зарезервированного слота, в который производится запись,
+            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
+                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
+                 'auth_token': token ЛПУ
+                }
+
+        """
+        try:
+            params = dict()
+            try:
+                params['name'] = base64.b64decode(patient['name'])
+                params['surname'] = base64.b64decode(patient['surname'])
+                params['patronymic'] = base64.b64decode(patient['patronymic'])
+                params['phone'] = patient['phone']
+                params['client_id'] = patient['id']
+
+                #TODO: add name attribute to tags:
+                # <param name="auth_token">CKzeDG37SdTRjzddVCn6</param>
+                params['params'] = {'auth_token': hospital['auth_token'], ':slot_id': slot_id}
+            except AttributeError, e:
+                print e
+                return None
+            else:
+                result = self.client.service.PutSlot(client_info=params)
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
+
+    def DeleteSlot(self, slot_id, hospital):
+        """Отмена записи на прием к врачу из ЛПУ на ЕПГУ
+
+        Args:
+            slot_id: (обязательный) идентификатор зарезервированного слота, в который производится запись,
+            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
+                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
+                 'auth_token': token ЛПУ
+                }
+
+        """
+        try:
+            params = dict()
+            try:
+                #TODO: add name attribute to tags:
+                # <param name="auth_token">CKzeDG37SdTRjzddVCn6</param>
+                params['params'] = {'auth_token': hospital['auth_token'], ':slot_id': slot_id}
+            except AttributeError, e:
+                print e
+                return None
+            else:
+                result = self.client.service.DeleteSlot(params=params)
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
