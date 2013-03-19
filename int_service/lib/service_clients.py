@@ -1165,7 +1165,7 @@ class ClientEPGU():
     def __send(self, method, message=None):
         params = dict(Message=method)
         if message:
-            params.update(dict(MessageData=base64.b64encode(message)))
+            params.update(dict(MessageData=base64.b64encode(message.encode('utf-8'))))
         return self.client.service.SendEPGU(**params)
 
     def __generate_message(self, params):
@@ -1432,7 +1432,7 @@ class ClientEPGU():
                 params['payment_method_id'] = doctor['payment_method_id']
 
                 service_type_ids = dict()
-                for k, service_type in service_types.items():
+                for k, service_type in enumerate(service_types):
                     service_type_ids['st%d' % k] = service_type
                 params['service_types_ids'] = service_type_ids
 
@@ -1477,12 +1477,12 @@ class ClientEPGU():
         try:
             params = dict()
             try:
-                params['schedules_rule'] = dict(name='%s (%s)' % (doctor, period))
+                params['schedules_rule'] = dict(name=u'%s (%s)' % (doctor, unicode(period)))
 
                 day_rule = dict()
                 for day in days:
                     key = 'day%d' % (day['date'].isoweekday() % 7)
-                    day_rule[key]['int0'] = dict(time0=day['start'], time1=day['end'])
+                    day_rule[key] = dict(int0=dict(time0=day['start'], time1=day['end']))
                 params['day_rule'] = day_rule
 
                 params['params'] = {':place_id': hospital['place_id'], 'auth_token': hospital['auth_token']}
@@ -1637,9 +1637,9 @@ class ClientEPGU():
         try:
             params = dict()
             try:
-                params['name'] = base64.b64decode(patient['name'])
-                params['surname'] = base64.b64decode(patient['surname'])
-                params['patronymic'] = base64.b64decode(patient['patronymic'])
+                params['name'] = base64.b64decode(patient['name'].encode('utf-8'))
+                params['surname'] = base64.b64decode(patient['surname'].encode('utf-8'))
+                params['patronymic'] = base64.b64decode(patient['patronymic'].encode('utf-8'))
                 params['phone'] = patient['phone']
                 params['client_id'] = patient['id']
 

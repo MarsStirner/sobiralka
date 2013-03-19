@@ -92,12 +92,12 @@ class ClientTests(unittest.TestCase):
         period = '%s - %s' % (
             (
                 datetime.datetime.today() - datetime.timedelta(days=datetime.datetime.today().isoweekday() + 1)
-            ).strftime('MM.DD.YYYY'),
+            ).strftime('%d.%m.%Y'),
             (
                 datetime.datetime.today() + datetime.timedelta(days=(7 - datetime.datetime.today().isoweekday()))
-            ).strftime('MM.DD.YYYY'),
+            ).strftime('%d.%m.%Y'),
         )
-        days = dict(date=datetime.datetime.today(), time0='08:00', time1='18:00')
+        days = [dict(date=datetime.datetime.today(), start='08:00', end='18:00')]
         hospital = {'place_id': '4f880ca42bcfa5277202f051', 'auth_token': 'CKzeDG37SdTRjzddVCn6'}
         res = client.PostRules(doctor, period, days, hospital)
         self.assertIsInstance(res, dict)
