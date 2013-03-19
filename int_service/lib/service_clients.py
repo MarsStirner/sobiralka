@@ -13,6 +13,8 @@ from suds import WebFault
 import is_exceptions
 import settings
 
+from jinja2 import Environment, PackageLoader
+
 from thrift.transport import TTransport, TSocket, THttpClient
 from thrift.protocol import TBinaryProtocol, TProtocol
 from core_services.Communications import Client as Thrift_Client
@@ -1158,6 +1160,21 @@ class ClientEPGU():
         else:
             self.client = Client(self.url)
 
+        self.jinja2env = Environment(loader=PackageLoader('int_service', 'templates'))
+
+    def __send(self, method, message=None):
+        params = dict(Message=method)
+        if message:
+            params.update(dict(MessageData=base64.b64encode(message)))
+        return self.client.service.SendEPGU(**params)
+
+    def __generate_message(self, params):
+        template = self.jinja2env.get_template('epgu_message.tpl')
+        for k, v in params.items():
+            if isinstance(v, dict) and k != 'params':
+                params = {k: self.__generate_message(v)}
+        return template.render(params=params)
+
     def GetMedicalSpecialization(self):
         """Получает список специальностей из ЕПГУ:
 
@@ -1181,7 +1198,7 @@ class ClientEPGU():
         Тег name – название специальности в справочнике ЕПГУ
         """
         try:
-            result = self.client.service.GetMedicalSpecialization()
+            result = self.__send('GetMedicalSpecialization')
         except WebFault, e:
             print e
         except Exception, e:
@@ -1216,7 +1233,7 @@ class ClientEPGU():
         По умолчанию использовать значение automatic.
         """
         try:
-            result = self.client.service.GetReservationTypes()
+            result = self.__send('GetReservationTypes')
         except WebFault, e:
             print e
         except Exception, e:
@@ -1252,7 +1269,7 @@ class ClientEPGU():
         По умолчанию для значения Пациенты с полисами ОМС использовать тег default = true.
         """
         try:
-            result = self.client.service.GetPaymentMethods()
+            result = self.__send('GetPaymentMethods')
         except WebFault, e:
             print e
         except Exception, e:
@@ -1289,7 +1306,7 @@ class ClientEPGU():
         По умолчанию для значения Пациенты с полисами ОМС использовать тег default = true.
         """
         try:
-            result = self.client.service.GetServiceType()
+            result = self.__send('GetServiceType')
         except WebFault, e:
             print e
         except Exception, e:
@@ -1313,7 +1330,8 @@ class ClientEPGU():
 
         """
         try:
-            result = self.client.service.GetServiceType(params={':place_id': place_id, 'auth_token': auth_token})
+            message = self.__generate_message(dict(params={':place_id': place_id, 'auth_token': auth_token}))
+            result = self.__send('GetServiceType', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1338,9 +1356,10 @@ class ClientEPGU():
 
         """
         try:
-            result = self.client.service.GetLocations(params={':place_id': hospital['place_id'],
-                                                              'service_type_id': service_type_id,
-                                                              'auth_token': hospital['auth_token']})
+            message = self.__generate_message(dict(params={':place_id': hospital['place_id'],
+                                                           'service_type_id': service_type_id,
+                                                           'auth_token': hospital['auth_token']}))
+            result = self.__send('GetLocations', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1413,19 +1432,17 @@ class ClientEPGU():
                 params['payment_method_id'] = doctor['payment_method_id']
 
                 service_type_ids = dict()
-                for k, service_type in service_types:
+                for k, service_type in service_types.items():
                     service_type_ids['st%d' % k] = service_type
                 params['service_types_ids'] = service_type_ids
 
-                #TODO: add name attribute to tags:
-                # <param name=":place_id">current</param>
-                # <param name="auth_token">CKzeDG37SdTRjzddVCn6</param>
                 params['params'] = {':place_id': hospital['place_id'], 'auth_token': hospital['auth_token']}
             except AttributeError, e:
                 print e
                 return None
             else:
-                result = self.client.service.PostLocations(location=params)
+                message = self.__generate_message(dict(location=params))
+                result = self.__send('PostLocations', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1468,15 +1485,13 @@ class ClientEPGU():
                     day_rule[key]['int0'] = dict(time0=day['start'], time1=day['end'])
                 params['day_rule'] = day_rule
 
-                #TODO: add name attribute to tags:
-                # <param name=":place_id">current</param>
-                # <param name="auth_token">CKzeDG37SdTRjzddVCn6</param>
                 params['params'] = {':place_id': hospital['place_id'], 'auth_token': hospital['auth_token']}
             except AttributeError, e:
                 print e
                 return None
             else:
-                result = self.client.service.PostRules(rule_data=params)
+                message = self.__generate_message(dict(rule_data=params))
+                result = self.__send('PostRules', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1514,20 +1529,19 @@ class ClientEPGU():
 
                 applied_rule = dict()
                 applied_rule['rule1'] = dict(rule_id=rule['id'],
-                                             start_date=rule['start'].format('DD.MM.YYYY'),
-                                             end_date=rule['end'].format('DD.MM.YYYY'),
+                                             start_date=rule['start'].strftime('%d.%m.%Y'),
+                                             end_date=rule['end'].strftime('%d.%m.%Y'),
                                              type='all'
                                              )
                 params['applied_rule'] = applied_rule
 
-                #TODO: add name attribute to tags:
-                # <param name="auth_token">CKzeDG37SdTRjzddVCn6</param>
                 params['params'] = {':location_id': doctor_id, 'auth_token': hospital['auth_token']}
             except AttributeError, e:
                 print e
                 return None
             else:
-                result = self.client.service.PostRules(applied_schedule=params)
+                message = self.__generate_message(dict(applied_schedule=params))
+                result = self.__send('PostRules', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1551,7 +1565,8 @@ class ClientEPGU():
 
         """
         try:
-            result = self.client.service.PutActivateLocation(location_id=doctor_id,  auth_token=hospital['auth_token'])
+            message = self.__generate_message(dict(location_id=doctor_id,  auth_token=hospital['auth_token']))
+            result = self.__send('PutActivateLocation', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1586,14 +1601,13 @@ class ClientEPGU():
                 params['date'] = date['date']
                 params['start_time'] = date['start_time']
 
-                #TODO: add name attribute to tags:
-                # <param name="auth_token">CKzeDG37SdTRjzddVCn6</param>
                 params['params'] = {'auth_token': hospital['auth_token']}
             except AttributeError, e:
                 print e
                 return None
             else:
-                result = self.client.service.PostReserve(client_info=params)
+                message = self.__generate_message(dict(client_info=params))
+                result = self.__send('PostReserve', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1629,14 +1643,13 @@ class ClientEPGU():
                 params['phone'] = patient['phone']
                 params['client_id'] = patient['id']
 
-                #TODO: add name attribute to tags:
-                # <param name="auth_token">CKzeDG37SdTRjzddVCn6</param>
                 params['params'] = {'auth_token': hospital['auth_token'], ':slot_id': slot_id}
             except AttributeError, e:
                 print e
                 return None
             else:
-                result = self.client.service.PutSlot(client_info=params)
+                message = self.__generate_message(dict(client_info=params))
+                result = self.__send('PutSlot', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1659,14 +1672,13 @@ class ClientEPGU():
         try:
             params = dict()
             try:
-                #TODO: add name attribute to tags:
-                # <param name="auth_token">CKzeDG37SdTRjzddVCn6</param>
                 params['params'] = {'auth_token': hospital['auth_token'], ':slot_id': slot_id}
             except AttributeError, e:
                 print e
                 return None
             else:
-                result = self.client.service.DeleteSlot(params=params)
+                message = self.__generate_message(dict(params=params))
+                result = self.__send('DeleteSlot', message)
         except WebFault, e:
             print e
         except Exception, e:

@@ -7,7 +7,7 @@ from suds.client import Client
 from int_service.lib.service_clients import ClientEPGU
 
 logging.basicConfig()
-logging.getLogger('suds.client').setLevel(logging.DEBUG)
+logging.getLogger('suds.client').setLevel(logging.INFO)
 
 client = ClientEPGU()
 
@@ -99,7 +99,7 @@ class ClientTests(unittest.TestCase):
         )
         days = dict(date=datetime.datetime.today(), time0='08:00', time1='18:00')
         hospital = {'place_id': '4f880ca42bcfa5277202f051', 'auth_token': 'CKzeDG37SdTRjzddVCn6'}
-        res = client.PostLocations(doctor, period, days, hospital)
+        res = client.PostRules(doctor, period, days, hospital)
         self.assertIsInstance(res, dict)
 
     def test_PostLocationSchedule(self):
