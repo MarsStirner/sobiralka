@@ -37,7 +37,7 @@ class CustomWsgiMounter(WsgiMounter):
 
 class InfoServer(ServiceBase):
 
-    @srpc(soap_models.GetHospitalInfoRequest, _returns=soap_models.GetHospitalInfoResponse)
+    @srpc(soap_models.GetHospitalInfoRequest, _returns=soap_models.GetHospitalInfoResponse, _out_variable_name='info')
     def getHospitalInfo(HospitalInfoRequest):
         obj = DataWorker.provider('lpu')
         if HospitalInfoRequest:
@@ -66,7 +66,7 @@ class ListServer(ServiceBase):
         obj = DataWorker.provider('regions')
         return {'regions': obj.get_list()}
 
-    @srpc(soap_models.ListHospitalsRequest, _returns=soap_models.ListHospitalsResponse)
+    @srpc(soap_models.ListHospitalsRequest, _returns=soap_models.ListHospitalsResponse, _out_variable_name='hospitals')
     def listHospitals(HospitalsRequest):
         obj = DataWorker.provider('lpu')
         if HospitalsRequest:
@@ -75,7 +75,7 @@ class ListServer(ServiceBase):
             hospitals = obj.get_list_hospitals()
         return hospitals
 
-    @srpc(soap_models.ListDoctorsRequest, _returns=soap_models.ListDoctorsResponse)
+    @srpc(soap_models.ListDoctorsRequest, _returns=soap_models.ListDoctorsResponse, _out_variable_name='doctors')
     def listDoctors(DoctorsRequest):
         obj = DataWorker.provider('personal')
         if DoctorsRequest:
@@ -84,7 +84,9 @@ class ListServer(ServiceBase):
             doctors = obj.get_list_doctors()
         return doctors
 
-    @srpc(soap_models.ListSpecialitiesRequest, _returns=soap_models.ListSpecialitiesResponse)
+    @srpc(soap_models.ListSpecialitiesRequest,
+          _returns=soap_models.ListSpecialitiesResponse,
+          _out_variable_name='speciality')
     def listSpecialities(SpecialitiesRequest):
         obj = DataWorker.provider('personal')
         return obj.get_list_specialities(**vars(SpecialitiesRequest))
@@ -95,7 +97,9 @@ class ListServer(ServiceBase):
 
 class ScheduleServer(ServiceBase):
 
-    @srpc(soap_models.GetScheduleInfoRequest, _returns=soap_models.GetScheduleInfoResponse)
+    @srpc(soap_models.GetScheduleInfoRequest,
+          _returns=soap_models.GetScheduleInfoResponse,
+          _out_variable_name='timeslots')
     def getScheduleInfo(ScheduleInfoRequest):
         obj = DataWorker.provider('enqueue')
         return obj.get_info(**vars(ScheduleInfoRequest))
