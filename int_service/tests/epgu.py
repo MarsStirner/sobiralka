@@ -3,11 +3,10 @@
 import unittest
 import logging
 import datetime
-from suds.client import Client
 from int_service.lib.service_clients import ClientEPGU
 
-logging.basicConfig()
-logging.getLogger('suds.client').setLevel(logging.INFO)
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 client = ClientEPGU()
 

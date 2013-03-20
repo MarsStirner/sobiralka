@@ -8,6 +8,7 @@ import logging
 from urlparse import urlparse
 from abc import ABCMeta, abstractmethod, abstractproperty
 from suds.client import Client
+from suds.plugin import MessagePlugin
 from suds.cache import DocumentCache
 from suds import WebFault
 import is_exceptions
@@ -30,8 +31,8 @@ class Clients(object):
     def provider(cls, client_type, proxy_url):
         logging.basicConfig(level=logging.INFO)
         if settings.DEBUG:
-            logging.getLogger('suds.client').setLevel(logging.INFO)
-            logging.getLogger('Thrift_Client').setLevel(logging.INFO)
+            logging.getLogger('suds.client').setLevel(logging.DEBUG)
+            logging.getLogger('Thrift_Client').setLevel(logging.DEBUG)
         else:
             logging.getLogger('suds.client').setLevel(logging.CRITICAL)
             logging.getLogger('Thrift_Client').setLevel(logging.CRITICAL)
@@ -1154,18 +1155,28 @@ class ClientEPGU():
     """Класс клиента для взаимодействия с ЕПГУ"""
     url = settings.EPGU_SERVICE_URL
 
+    class SudsPlugin(MessagePlugin):
+        def marshalled(self, context):
+            body = context.envelope.getChild('Body')
+            body.setPrefix('ns1')
+            request = body[0]
+            request.setPrefix('')
+            for el in request:
+                el.setPrefix('ns0')
+
     def __init__(self):
         if settings.DEBUG:
-            self.client = Client(self.url, cache=None)
+            self.client = Client(self.url, plugins=[self.SudsPlugin()], cache=None)
         else:
-            self.client = Client(self.url)
+            self.client = Client(self.url, plugins=[self.SudsPlugin()])
 
         self.jinja2env = Environment(loader=PackageLoader('int_service', 'templates'))
 
     def __send(self, method, message=None):
-        params = dict(Message=method)
+        params = dict()
+        params['Message'] = method
         if message:
-            params.update(dict(MessageData=base64.b64encode(message.encode('utf-8'))))
+            params['MessageData'] = base64.b64encode(message.encode('utf-8'))
         return self.client.service.SendEPGU(**params)
 
     def __generate_message(self, params):
