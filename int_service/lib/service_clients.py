@@ -29,7 +29,7 @@ class Clients(object):
     """Class provider for current Clients"""
     @classmethod
     def provider(cls, client_type, proxy_url):
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.DEBUG)
         if settings.DEBUG:
             logging.getLogger('suds.client').setLevel(logging.DEBUG)
             logging.getLogger('Thrift_Client').setLevel(logging.DEBUG)
@@ -361,9 +361,11 @@ class ClientKorus20(AbstractClient):
                 'patrName': kwargs['patrName'],
                 'birthDate': kwargs['birthDate'],
                 'sex': self.__sex_parse(kwargs['sex']),
-                # 'omiPolicy': kwargs['omiPolicy'],
                 'document': kwargs.get('document'),
             }
+            omiPolicy = kwargs.get('omiPolicy')
+            if omiPolicy:
+                params.update({'omiPolicy': omiPolicy}) # для совместимости со старой версией сайта и киоска
         except exceptions.KeyError:
             pass
         else:
@@ -431,7 +433,7 @@ class ClientKorus20(AbstractClient):
             'lastName': person.get('lastName'),
             'firstName': person.get('firstName'),
             'patrName': person.get('patronymic'),
-            # 'omiPolicy': kwargs.get('omiPolicyNumber'),
+            'omiPolicy': kwargs.get('omiPolicyNumber'),
             'document': kwargs.get('document'),
             'sex': kwargs.get('sex', 0),
             'birthDate': kwargs.get('birthday'),

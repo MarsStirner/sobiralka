@@ -859,7 +859,7 @@ class PersonalWorker(object):
         if speciality:
             query = query.filter(Speciality.name == speciality)
         if lastName:
-            query = query.filter(Personal.lastName == lastName)
+            query = query.filter(Personal.LastName == lastName)
 
         query = query.filter(or_(*or_list))
         query = query.order_by(Personal.LastName, Personal.FirstName, Personal.PatrName)
