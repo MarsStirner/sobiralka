@@ -38,10 +38,10 @@ class CustomWsgiMounter(WsgiMounter):
 class InfoServer(ServiceBase):
 
     @srpc(soap_models.GetHospitalInfoRequest, _returns=soap_models.GetHospitalInfoResponse, _out_variable_name='info')
-    def getHospitalInfo(HospitalInfoRequest):
+    def getHospitalInfo(parameters):
         obj = DataWorker.provider('lpu')
-        if HospitalInfoRequest:
-            info = obj.get_info(**vars(HospitalInfoRequest))
+        if parameters:
+            info = obj.get_info(**vars(parameters))
         else:
             info = obj.get_info()
         return info
@@ -50,9 +50,9 @@ class InfoServer(ServiceBase):
         pass
 
     @srpc(soap_models.GetHospitalUidRequest, _returns=soap_models.GetHospitalUidResponse)
-    def getHospitalUid(HospitalUidRequest):
+    def getHospitalUid(parameters):
         obj = DataWorker.provider('lpu')
-        return obj.get_uid_by_code(code=HospitalUidRequest.hospitalCode)
+        return obj.get_uid_by_code(code=parameters.hospitalCode)
 
     @rpc(_returns=soap_models.GetVersionResponse)
     def getVersion(self):
@@ -67,19 +67,19 @@ class ListServer(ServiceBase):
         return {'regions': obj.get_list()}
 
     @srpc(soap_models.ListHospitalsRequest, _returns=soap_models.ListHospitalsResponse, _out_variable_name='hospitals')
-    def listHospitals(HospitalsRequest):
+    def listHospitals(parameters):
         obj = DataWorker.provider('lpu')
-        if HospitalsRequest:
-            hospitals = obj.get_list_hospitals(**vars(HospitalsRequest))
+        if parameters:
+            hospitals = obj.get_list_hospitals(**vars(parameters))
         else:
             hospitals = obj.get_list_hospitals()
         return hospitals
 
     @srpc(soap_models.ListDoctorsRequest, _returns=soap_models.ListDoctorsResponse, _out_variable_name='doctors')
-    def listDoctors(DoctorsRequest):
+    def listDoctors(parameters):
         obj = DataWorker.provider('personal')
-        if DoctorsRequest:
-            doctors = obj.get_list_doctors(**vars(DoctorsRequest))
+        if parameters:
+            doctors = obj.get_list_doctors(**vars(parameters))
         else:
             doctors = obj.get_list_doctors()
         return doctors
@@ -87,9 +87,9 @@ class ListServer(ServiceBase):
     @srpc(soap_models.ListSpecialitiesRequest,
           _returns=soap_models.ListSpecialitiesResponse,
           _out_variable_name='speciality')
-    def listSpecialities(SpecialitiesRequest):
+    def listSpecialities(parameters):
         obj = DataWorker.provider('personal')
-        return obj.get_list_specialities(**vars(SpecialitiesRequest))
+        return obj.get_list_specialities(**vars(parameters))
 
     def listServTypesInfo(self):
         pass
@@ -100,19 +100,19 @@ class ScheduleServer(ServiceBase):
     @srpc(soap_models.GetScheduleInfoRequest,
           _returns=soap_models.GetScheduleInfoResponse,
           _out_variable_name='timeslots')
-    def getScheduleInfo(ScheduleInfoRequest):
+    def getScheduleInfo(parameters):
         obj = DataWorker.provider('enqueue')
-        return obj.get_info(**vars(ScheduleInfoRequest))
+        return obj.get_info(**vars(parameters))
 
     @srpc(soap_models.GetTicketStatusRequest, _returns=soap_models.GetTicketStatusResponse)
-    def getTicketStatus(TicketStatusRequest):
+    def getTicketStatus(parameters):
         obj = DataWorker.provider('enqueue')
-        return obj.get_ticket_status(**vars(TicketStatusRequest))
+        return obj.get_ticket_status(**vars(parameters))
 
     @srpc(soap_models.EnqueueRequest, _returns=soap_models.EnqueueResponse)
-    def enqueue(EnqRequest):
+    def enqueue(parameters):
         obj = DataWorker.provider('enqueue')
-        return obj.enqueue(**vars(EnqRequest))
+        return obj.enqueue(**vars(parameters))
 
     def setTicketReadStatus(self):
         pass
