@@ -1162,34 +1162,40 @@ class ClientEPGU():
             body = context.envelope.getChild('Body')
             body.setPrefix('ns1')
             request = body[0]
-            request.setPrefix('')
+            # request.setPrefix('ns0')
             for el in request:
                 el.setPrefix('ns0')
 
     def __init__(self):
         if settings.DEBUG:
-            self.client = Client(self.url, plugins=[self.SudsPlugin()], cache=None)
+            self.client = Client(self.url, cache=None)
         else:
-            self.client = Client(self.url, plugins=[self.SudsPlugin()])
+            self.client = Client(self.url)
 
         self.jinja2env = Environment(loader=PackageLoader('int_service', 'templates'))
 
     def __send(self, method, message=None):
         params = dict()
-        params['Message'] = method
+        params['messageCode'] = method
         if message:
-            params['MessageData'] = base64.b64encode(message.encode('utf-8'))
-        return self.client.service.SendEPGU(**params)
+            params['message'] = base64.b64encode(message.encode('utf-8'))
+        return self.client.service.Send(MessageData={'AppData': params})
 
     def __generate_message(self, params):
         template = self.jinja2env.get_template('epgu_message.tpl')
         for k, v in params.items():
             if isinstance(v, dict) and k != 'params':
                 params = {k: self.__generate_message(v)}
-        return template.render(params=params)
+        return self.__strip_message(template.render(params=params))
 
-    def GetMedicalSpecialization(self):
+    def __strip_message(self, message):
+        return u''.join([string.strip() for string in message.splitlines()])
+
+    def GetMedicalSpecializations(self, auth_token):
         """Получает список специальностей из ЕПГУ:
+
+        Args:
+            auth_token: указывается token ЛПУ (обязательный)
 
         <medical-specialization>
             <id>4f882b982bcfa5145a00036c</id>
@@ -1211,7 +1217,8 @@ class ClientEPGU():
         Тег name – название специальности в справочнике ЕПГУ
         """
         try:
-            result = self.__send('GetMedicalSpecialization')
+            message = self.__generate_message(dict(params={'auth_token': auth_token}))
+            result = self.__send('GetMedicalSpecializations', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1220,8 +1227,11 @@ class ClientEPGU():
             return result
         return None
 
-    def GetReservationTypes(self):
+    def GetReservationTypes(self, auth_token):
         """Получает список типов записи из ЕПГУ:
+
+        Args:
+            auth_token: указывается token ЛПУ (обязательный)
 
         <reservation-type>
             <id>4f8805b52bcfa52299000011</id>
@@ -1246,7 +1256,8 @@ class ClientEPGU():
         По умолчанию использовать значение automatic.
         """
         try:
-            result = self.__send('GetReservationTypes')
+            message = self.__generate_message(dict(params={'auth_token': auth_token}))
+            result = self.__send('GetReservationTypes', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1255,8 +1266,11 @@ class ClientEPGU():
             return result
         return None
 
-    def GetPaymentMethods(self):
+    def GetPaymentMethods(self, auth_token):
         """Получить список методов оплаты из ЕПГУ
+
+        Args:
+            auth_token: указывается token ЛПУ (обязательный)
 
         <payment-method>
             <id>4f8804ab2bcfa520e6000003</id>
@@ -1282,7 +1296,8 @@ class ClientEPGU():
         По умолчанию для значения Пациенты с полисами ОМС использовать тег default = true.
         """
         try:
-            result = self.__send('GetPaymentMethods')
+            message = self.__generate_message(dict(params=dict(auth_token=auth_token)))
+            result = self.__send('GetPaymentMethods', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1291,8 +1306,12 @@ class ClientEPGU():
             return result
         return None
 
-    def GetServiceType(self):
+    def GetServiceTypes(self, auth_token, ms_id=None):
         """Получить список медицинских услуг из ЕПГУ:
+
+        Args:
+            auth_token: указывается token ЛПУ (обязательный)
+            ms_id: указывается идентификатор медицинской специализации (необязательный)
 
         <service-type>
             <id>4f993422ef245509c20001d3</id>
@@ -1319,7 +1338,11 @@ class ClientEPGU():
         По умолчанию для значения Пациенты с полисами ОМС использовать тег default = true.
         """
         try:
-            result = self.__send('GetServiceType')
+            params = dict(auth_token=auth_token)
+            if ms_id:
+                params.update(dict(ms_id=ms_id))
+            message = self.__generate_message(dict(params=params))
+            result = self.__send('GetServiceTypes', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1328,12 +1351,58 @@ class ClientEPGU():
             return result
         return None
 
+    def GetServiceType(self, auth_token, service_type_id):
+        """Получить вид услуги по идентификатору из ЕПГУ:
+
+        Args:
+            auth_token: указывается token ЛПУ (обязательный)
+            ms_id: указывается идентификатор медицинской услуги (обязательный)
+
+        <service-type>
+            <id>4f993422ef245509c20001d3</id>
+            <name>Ангиография артерии верхней конечности прямая</name>
+            <recid>828</recid>
+            <code>A0612018</code>
+        </service-type>
+        <service-type>
+            <id>4f993422ef245509c20001d4</id>
+            <name>Ангиография артерии верхней конечности ретроградная</name>
+            <recid>829</recid>
+            <code>A0612019</code>
+        </service-type>
+        <service-type>
+            <id>4f993422ef245509c20001c9</id>
+            <name>Ангиография артерии щитовидной железы</name>
+            <recid>818</recid>
+            <code>A0612008</code>
+        </service-type>
+
+        Тег id – идентификатор метода оплаты в справочнике ЕПГУ
+        Тег name – название метода оплаты в справочнике ЕПГУ
+
+        По умолчанию для значения Пациенты с полисами ОМС использовать тег default = true.
+        """
+        try:
+            message = self.__generate_message(dict(params={'auth_token': auth_token,
+                                                           ':service_type_id': service_type_id}))
+            result = self.__send('GetServiceType', message)
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            return result
+        return None
+
+    def GetPlaces(self, **kwargs):
+        pass
+
     def GetPlace(self, auth_token, place_id='current'):
         """Получает код ЛПУ из БД ЕПГУ
 
         Args:
             auth_token: указывается token ЛПУ (обязательный)
-            place_id: всегда указывается current (обязательный)
+            place_id: всегда указывается current (??) (обязательный)
 
         Returns:
             Идентификатор ЛПУ. Пример:
@@ -1344,7 +1413,7 @@ class ClientEPGU():
         """
         try:
             message = self.__generate_message(dict(params={':place_id': place_id, 'auth_token': auth_token}))
-            result = self.__send('GetServiceType', message)
+            result = self.__send('GetPlace', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1353,15 +1422,16 @@ class ClientEPGU():
             return result
         return None
 
-    def GetLocations(self, service_type_id, hospital):
+    def GetLocations(self, hospital, service_type_id, page=1):
         """Получает список врачей для указанного ЛПУ по указанному типу услуг
 
         Args:
-            service_type_id: идентификатор услуги в ЕПГУ, получаемый в GetServiceType (обязательный)
             hospital: (обязательный) словарь с информацией об ЛПУ, вида:
                 {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
                  'auth_token': token ЛПУ
                 }
+            service_type_id: идентификатор услуги в ЕПГУ, получаемый в GetServiceType (необязательный)
+            page: (необязательный) № страницы. По умолчанию 1-я, количество записей на странице - 10 шт
 
         Returns:
             массив ФИО врачей:
@@ -1371,7 +1441,8 @@ class ClientEPGU():
         try:
             message = self.__generate_message(dict(params={':place_id': hospital['place_id'],
                                                            'service_type_id': service_type_id,
-                                                           'auth_token': hospital['auth_token']}))
+                                                           'auth_token': hospital['auth_token'],
+                                                           'page': page}))
             result = self.__send('GetLocations', message)
         except WebFault, e:
             print e
@@ -1381,16 +1452,28 @@ class ClientEPGU():
             return result
         return None
 
-    def DeleteEditLocation(self):
+    def GetLocation(self):
+        pass
+
+    def DeleteEditLocation(self, hospital, location_id):
         """Помечает врача как удаленного на ЕПГУ
 
+        Args:
+            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
+                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
+                 'auth_token': token ЛПУ
+                }
+            location_id: (обязательный) идентификатор редактируемой очереди
 
         """
         try:
-            # TODO: определить параметры, передаваемые по SOAP
-            raise Exception
-            result = None
-            # result = self.client.service.DeleteEditLocation()
+            params = dict()
+            params['params'] = {'auth_token': hospital['auth_token'],
+                                ':place_id': hospital['place_id'],
+                                ':location_id': hospital['location_id'],
+                                }
+            message = self.__generate_message(params)
+            result = self.__send('DeleteEditLocation', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1399,12 +1482,16 @@ class ClientEPGU():
             return result
         return None
 
-    def PostLocations(self, doctor, service_types, hospital):
-        """Отправляет запрос на добавление врачей на ЕПГУ
+    def PostLocations(self, hospital, doctor, service_types, can_write=None):
+        """Используется для создания очереди в федеральной регистратуре (на ЕПГУ)
 
         Args:
+            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
+                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
+                 'auth_token': token ЛПУ
+                }
             doctor: (обязательный) словарь с информацией о враче, вида:
-                {'prefix': ФИО врача,
+                {'prefix': название очереди (ФИО?),
                  'medical_specialization_id': код специальности (Speciality.nameEPGU),
                  'cabinet_number': ?? номер кабинета (#TODO: дописать ИС для получение кабинета),
                  'time_table_period': количество дней на которое будет доступно расписание
@@ -1413,16 +1500,16 @@ class ClientEPGU():
                  'reservation_time': время (в минутах) приема врача
                     (необходимо высчитывать время приема для каждого врача индивидуально как разницу между началом и
                     окончанием приема одного пациента на первый день получаемого расписания),
-                 'reserved_time_for_slot': время между талонами на прием, равно времени указанном в reservation_time,
+                 'reserved_time_for_slot': время между талонами на прием (?равно времени указанном в reservation_time),
                  'reservation_type_id': идентификатор типа записи, полученный в GetServiceType,
                  'payment_method_id': идентификатор вида оплаты, полученный в GetPaymentMethods,
                 }
             service_types: (обязательный) список кодов мед. услуг из GetServiceType, вида:
                 ['4f882b9c2bcfa5145a0006e8', ]
-            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
-                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
-                 'auth_token': token ЛПУ
-                }
+            can_write: (необязательный) строка через запятую без пробелов из тех,
+                кто имеет доступ к записи в данную очередь. если массив пустой, то записаться никто не сможет.
+                если параметр не присылать, то по умолчанию доступ к записи имеют все
+                (возможные значения: registry, epgu, call_center, terminal, mis);
 
         Returns:
             Словарь с информацией о созданной записи, вида:
@@ -1444,6 +1531,9 @@ class ClientEPGU():
                 params['reservation_type_id'] = doctor['reservation_type_id']
                 params['payment_method_id'] = doctor['payment_method_id']
 
+                if can_write:
+                    params['can_write'] = can_write
+
                 service_type_ids = dict()
                 for k, service_type in enumerate(service_types):
                     service_type_ids['st%d' % k] = service_type
@@ -1464,7 +1554,7 @@ class ClientEPGU():
             return result
         return None
 
-    def PostRules(self, doctor, period, days, hospital):
+    def PostRules(self, hospital, doctor, period, days, can_write=None):
         """Добавляет расписание на ЕПГУ
 
         Args:
@@ -1479,6 +1569,10 @@ class ClientEPGU():
                 {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
                  'auth_token': token ЛПУ
                 }
+            can_write: (необязательный) строка через запятую без пробелов из тех,
+                кто имеет доступ к записи в данную очередь. если массив пустой, то записаться никто не сможет.
+                если параметр не присылать, то по умолчанию доступ к записи имеют все
+                (возможные значения: registry, epgu, call_center, terminal, mis);
 
         Returns:
             Словарь с информацией о созданном расписании, вида:
@@ -1497,6 +1591,9 @@ class ClientEPGU():
                     key = 'day%d' % (day['date'].isoweekday() % 7)
                     day_rule[key] = dict(int0=dict(time0=day['start'], time1=day['end']))
                 params['day_rule'] = day_rule
+                
+                if can_write:
+                    params['can_write'] = can_write
 
                 params['params'] = {':place_id': hospital['place_id'], 'auth_token': hospital['auth_token']}
             except AttributeError, e:
@@ -1554,7 +1651,7 @@ class ClientEPGU():
                 return None
             else:
                 message = self.__generate_message(dict(applied_schedule=params))
-                result = self.__send('PostRules', message)
+                result = self.__send('PostLocationSchedule', message)
         except WebFault, e:
             print e
         except Exception, e:
@@ -1563,11 +1660,11 @@ class ClientEPGU():
             return result
         return None
 
-    def PutActivateLocation(self, doctor_id, hospital):
+    def PutActivateLocation(self, hospital, location_id):
         """Активирует расписание
 
         Args:
-            doctor_id: (обязательный) строка, id врача из PostLocations,
+            location_id: (обязательный) строка, id врача из PostLocations,
             hospital: (обязательный) словарь с информацией об ЛПУ, вида:
                 {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
                  'auth_token': token ЛПУ
@@ -1578,7 +1675,8 @@ class ClientEPGU():
 
         """
         try:
-            message = self.__generate_message(dict(location_id=doctor_id,  auth_token=hospital['auth_token']))
+            message = self.__generate_message(dict(params={':location_id': location_id,
+                                                           'auth_token': hospital['auth_token']}))
             result = self.__send('PutActivateLocation', message)
         except WebFault, e:
             print e
@@ -1588,7 +1686,7 @@ class ClientEPGU():
             return result
         return None
 
-    def PostReserve(self, doctor_id, hospital, service_type_id, date):
+    def PostReserve(self, hospital, doctor_id, service_type_id, date, cito=0):
         """Резервирует время на запись
 
         Args:
@@ -1602,6 +1700,8 @@ class ClientEPGU():
                 {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
                  'auth_token': token ЛПУ
                 }
+            cito: (необязательный) обозначает, что пациент экстренный и может записаться в любое время.
+                Список возможных значений: 0 - не экстренный; 1 - экстренный.  Значение поумолчанию - 0
 
         Возвращает идентификатор зарезервированного слота
 
@@ -1613,6 +1713,7 @@ class ClientEPGU():
                 params['service_type_id'] = service_type_id
                 params['date'] = date['date']
                 params['start_time'] = date['start_time']
+                params[':cito'] = cito
 
                 params['params'] = {'auth_token': hospital['auth_token']}
             except AttributeError, e:
@@ -1629,7 +1730,7 @@ class ClientEPGU():
             return result
         return None
 
-    def PutSlot(self, patient, hospital, slot_id):
+    def PutSlot(self, hospital, patient, slot_id):
         """Резервирует время на запись
 
         Args:
@@ -1671,21 +1772,23 @@ class ClientEPGU():
             return result
         return None
 
-    def DeleteSlot(self, slot_id, hospital):
+    def DeleteSlot(self, hospital, slot_id, comment=None):
         """Отмена записи на прием к врачу из ЛПУ на ЕПГУ
 
         Args:
-            slot_id: (обязательный) идентификатор зарезервированного слота, в который производится запись,
             hospital: (обязательный) словарь с информацией об ЛПУ, вида:
                 {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
                  'auth_token': token ЛПУ
                 }
+            slot_id: (обязательный) идентификатор зарезервированного слота, в который производится запись,
+            comment: (необязательный) комментарий удаления слота
 
         """
         try:
-            params = dict()
             try:
-                params['params'] = {'auth_token': hospital['auth_token'], ':slot_id': slot_id}
+                params = {'auth_token': hospital['auth_token'], ':slot_id': slot_id}
+                if comment:
+                    params.update(dict(comment=comment))
             except AttributeError, e:
                 print e
                 return None
