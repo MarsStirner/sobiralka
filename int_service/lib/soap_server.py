@@ -109,7 +109,7 @@ class ScheduleServer(ServiceBase):
         obj = DataWorker.provider('enqueue')
         return obj.get_ticket_status(**vars(parameters))
 
-    @srpc(soap_models.EnqueueRequest, _returns=soap_models.EnqueueResponse)
+    @srpc(soap_models.EnqueueRequest, _returns=soap_models.EnqueueResponse, _out_variable_name='result')
     def enqueue(parameters):
         obj = DataWorker.provider('enqueue')
         return obj.enqueue(**vars(parameters))
