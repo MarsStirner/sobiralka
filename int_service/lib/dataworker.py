@@ -428,7 +428,9 @@ class EnqueueWorker(object):
         """
         result = {}
 
-        hospital_uid = kwargs.get('hospitalUid', '').split('/')
+        hospital_uid = kwargs.get('hospitalUid', '')
+        if hospital_uid:
+            hospital_uid = hospital_uid.split('/')
         if isinstance(hospital_uid, list) and len(hospital_uid) > 1:
             lpu_dw = LPUWorker()
             lpu = lpu_dw.get_by_id(hospital_uid[0])
@@ -692,7 +694,9 @@ class EnqueueWorker(object):
             hospitalUidFrom: uid ЛПУ, с которого производится запись (необязательный), используется для записи между ЛПУ
 
         """
-        hospital_uid = kwargs.get('hospitalUid', '').split('/')
+        hospital_uid = kwargs.get('hospitalUid', '')
+        if hospital_uid:
+            hospital_uid = hospital_uid.split('/')
         birthday = kwargs.get('birthday')
         doctor_uid = kwargs.get('doctorUid')
         person = kwargs.get('person')
