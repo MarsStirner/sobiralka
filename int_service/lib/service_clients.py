@@ -363,7 +363,7 @@ class ClientKorus20(AbstractClient):
                 'sex': self.__sex_parse(kwargs['sex']),
                 'document': kwargs.get('document'),
             }
-            omiPolicy = kwargs.get('omiPolicy')
+            omiPolicy = kwargs.get('omiPolicyNumber')
             if omiPolicy:
                 params.update({'omiPolicy': omiPolicy}) # для совместимости со старой версией сайта и киоска
         except exceptions.KeyError:
