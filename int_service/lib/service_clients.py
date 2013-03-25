@@ -1157,15 +1157,6 @@ class ClientEPGU():
     """Класс клиента для взаимодействия с ЕПГУ"""
     url = settings.EPGU_SERVICE_URL
 
-    class SudsPlugin(MessagePlugin):
-        def marshalled(self, context):
-            body = context.envelope.getChild('Body')
-            body.setPrefix('ns1')
-            request = body[0]
-            # request.setPrefix('ns0')
-            for el in request:
-                el.setPrefix('ns0')
-
     def __init__(self):
         if settings.DEBUG:
             self.client = Client(self.url, cache=None)
@@ -1224,7 +1215,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            medical_specializations = getattr(result.AppData, 'medical-specializations', None)
+            if medical_specializations:
+                return medical_specializations
+            return getattr(result.AppData, 'errors', None)
         return None
 
     def GetReservationTypes(self, auth_token):
@@ -1263,7 +1257,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            reservation_types = getattr(result.AppData, 'reservation-types', None)
+            if reservation_types:
+                return reservation_types
+            return getattr(result.AppData, 'errors', None)
         return None
 
     def GetPaymentMethods(self, auth_token):
@@ -1303,7 +1300,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            payment_methods = getattr(result.AppData, 'payment-methods', None)
+            if payment_methods:
+                return payment_methods
+            return getattr(result.AppData, 'errors', None)
         return None
 
     def GetServiceTypes(self, auth_token, ms_id=None):
@@ -1348,7 +1348,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            service_types = getattr(result.AppData, 'service-types', None)
+            if service_types:
+                return service_types
+            return getattr(result.AppData, 'errors', None)
         return None
 
     def GetServiceType(self, auth_token, service_type_id):
@@ -1391,7 +1394,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            service_type = getattr(result.AppData, 'service-type', None)
+            if service_type:
+                return service_type
+            return getattr(result.AppData, 'errors', None)
         return None
 
     def GetPlaces(self, **kwargs):
@@ -1419,7 +1425,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            places = getattr(result.AppData, 'places', None)
+            if places:
+                return places
+            return getattr(result.AppData, 'errors', None)
         return None
 
     def GetLocations(self, hospital, service_type_id, page=1):
@@ -1449,7 +1458,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            place_locations_data = getattr(result.AppData, 'place-locations-data', None)
+            if place_locations_data:
+                return place_locations_data
+            return getattr(result.AppData, 'errors', None)
         return None
 
     def GetLocation(self):
@@ -1470,7 +1482,7 @@ class ClientEPGU():
             params = dict()
             params['params'] = {'auth_token': hospital['auth_token'],
                                 ':place_id': hospital['place_id'],
-                                ':location_id': hospital['location_id'],
+                                ':location_id': location_id,
                                 }
             message = self.__generate_message(params)
             result = self.__send('DeleteEditLocation', message)
@@ -1479,7 +1491,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            errors = getattr(result.AppData, 'errors', None)
+            if errors:
+                return errors
+            return result.AppData
         return None
 
     def PostLocations(self, hospital, doctor, service_types, can_write=None):
@@ -1551,7 +1566,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            location = getattr(result.AppData, 'location', None)
+            if location:
+                return location
+            return getattr(result.AppData, 'errors', None)
         return None
 
     def PostRules(self, hospital, doctor, period, days, can_write=None):
@@ -1607,19 +1625,22 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            rule = getattr(result.AppData, 'rule', None)
+            if rule:
+                return rule
+            return getattr(result.AppData, 'errors', None)
         return None
 
-    def PostLocationSchedule(self, doctor_id, rule, hospital):
+    def PutLocationSchedule(self, hospital, location_id, rules):
         """Связывает сотрудников и расписание
 
         Args:
-            doctor_id: (обязательный) строка, id врача из PostLocations,
-            rule: (обязательный) (обязательный) словарь с информацией о расписании, вида:
-                {'id': '50507480ef2455c01202a0ca', # идентификатор расписания из PostRules
+            location_id: (обязательный) строка, id очереди из PostLocations,
+            rules: (обязательный) массив словарей с информацией о расписании, вида:
+                [{'id': '50507480ef2455c01202a0ca', # идентификатор расписания из PostRules
                  'start': дата начала действия расписания,
                  'end': дата окончания действия расписания
-                }
+                },]
             hospital: (обязательный) словарь с информацией об ЛПУ, вида:
                 {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
                  'auth_token': token ЛПУ
@@ -1638,26 +1659,29 @@ class ClientEPGU():
                 params['applied_exception'] = None
 
                 applied_rule = dict()
-                applied_rule['rule1'] = dict(rule_id=rule['id'],
-                                             start_date=rule['start'].strftime('%d.%m.%Y'),
-                                             end_date=rule['end'].strftime('%d.%m.%Y'),
-                                             type='all'
-                                             )
+                for k in xrange(len(rules)):
+                    applied_rule['rule%d' % k] = dict(rule_id=rules[k]['id'],
+                                                      start_date=rules[k]['start'].strftime('%d.%m.%Y'),
+                                                      end_date=rules[k]['end'].strftime('%d.%m.%Y'),
+                                                      type='all')
                 params['applied_rule'] = applied_rule
 
-                params['params'] = {':location_id': doctor_id, 'auth_token': hospital['auth_token']}
+                params['params'] = {':location_id': location_id, 'auth_token': hospital['auth_token']}
             except AttributeError, e:
                 print e
                 return None
             else:
                 message = self.__generate_message(dict(applied_schedule=params))
-                result = self.__send('PostLocationSchedule', message)
+                result = self.__send('PutLocationSchedule', message)
         except WebFault, e:
             print e
         except Exception, e:
             print e
         else:
-            return result
+            applied_schedule = getattr(result.AppData, 'applied-schedule', None)
+            if applied_schedule:
+                return applied_schedule
+            return getattr(result.AppData, 'errors', None)
         return None
 
     def PutActivateLocation(self, hospital, location_id):
@@ -1683,7 +1707,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            location = getattr(result.AppData, 'location', None)
+            if location:
+                return location
+            return getattr(result.AppData, 'errors', None)
         return None
 
     def PostReserve(self, hospital, doctor_id, service_type_id, date, cito=0):
@@ -1727,7 +1754,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            slot = getattr(result.AppData, 'slot', None)
+            if slot:
+                return slot
+            return getattr(result.AppData, 'errors', None)
         return None
 
     def PutSlot(self, hospital, patient, slot_id):
@@ -1769,7 +1799,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            slot = getattr(result.AppData, 'slot', None)
+            if slot:
+                return slot
+            return getattr(result.AppData, 'errors', None)
         return None
 
     def DeleteSlot(self, hospital, slot_id, comment=None):
@@ -1800,5 +1833,8 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            return result
+            hash = getattr(result.AppData, 'hash', None)
+            if hash:
+                return hash
+            return getattr(result.AppData, 'errors', None)
         return None
