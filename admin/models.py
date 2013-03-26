@@ -186,4 +186,5 @@ class EPGU_Service_Type(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(150), nullable=False)
+    epgu_speciality_id = Column(Integer, ForeignKey(EPGU_Speciality.id))
     keyEPGU = Column(String(45))
