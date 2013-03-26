@@ -16,6 +16,7 @@ from suds import WebFault
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
 from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality, Regions, LPU_Specialities
+from admin.models import Personal_Specialities
 from service_clients import Clients
 from is_exceptions import exception_by_code, IS_ConnectionError
 
@@ -889,7 +890,7 @@ class PersonalWorker(object):
             else:
                 query = query.filter(Personal.lpuId == int(lpu_unit[0]))
         if doctor_id:
-            query = query.filter(Personal.id == int(doctor_id))
+            query = query.filter(Personal.doctor_id == int(doctor_id))
 
         return query.one()
 
@@ -951,7 +952,7 @@ class PersonalWorker(object):
         for value in query_result:
             person = value.Personal
             result['doctors'].append({
-                'uid': person.id,
+                'uid': person.doctor_id,
                 'name': {
                     'firstName': person.FirstName,
                     'patronymic': person.PatrName,
@@ -1016,7 +1017,7 @@ class PersonalWorker(object):
                 speciality = {'speciality': _speciality.name,
                               'ticketsPerMonths': -1,
                               'ticketsAvailable': -1,
-                              'nameEPGU': _speciality.nameEPGU,
+                              'nameEPGU': _speciality.epgu_speciality.keyEPGU,
                               }
 
                 if lpu_specialities:
@@ -1159,7 +1160,6 @@ class UpdateWorker(object):
                             result = True
                             for doctor in doctors:
                                 if doctor.firstName and doctor.lastName and doctor.patrName:
-                                    #TODO: заменить Personal.speciality на FK(Speciality.id)
                                     speciality = self.__update_speciality(
                                         lpu_id=lpu.id,
                                         speciality=doctor.speciality.strip()
@@ -1167,15 +1167,18 @@ class UpdateWorker(object):
                                     if not speciality:
                                         continue
 
-                                    self.session.add(Personal(
-                                        id=doctor.id,
+                                    doctor = self.session.add(Personal(
+                                        doctor_id=doctor.id,
                                         lpuId=lpu.id,
                                         orgId=unit.id,
                                         FirstName=doctor.firstName,
                                         PatrName=doctor.patrName,
                                         LastName=doctor.lastName,
-                                        speciality=speciality,
                                     ))
+                                    self.session.commit()
+
+                                    self.__add_personal_speciality(doctor.id, speciality.id)
+
                                     self.__log('%s: %s %s %s (%s)' % (doctor.id,
                                                                       doctor.firstName,
                                                                       doctor.lastName,
@@ -1197,6 +1200,10 @@ class UpdateWorker(object):
                 self.session.commit()
         self.__add_lpu_speciality(speciality_id=speciality.id, lpu_id=kwargs.get('lpu_id'))
         return speciality
+
+    def __add_personal_speciality(self, doctor_id, speciality_id):
+        self.session.add(Personal_Specialities(personal_id=doctor_id, speciality_id=speciality_id,))
+        self.session.commit()
 
     def __add_lpu_speciality(self, **kwargs):
         if not self.session.query(LPU_Specialities).filter_by(**kwargs).first():

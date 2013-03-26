@@ -76,12 +76,6 @@ class UnitsParentForId(Base):
     )
 
 
-# units_parents = Table("units_parents", Base.metadata,
-#     Column("lpuid", BigInteger, ForeignKey("lpu.id")),
-#     Column("orgid", BigInteger, ForeignKey("lpu.id")),
-# )
-
-
 class Enqueue(Base):
     """Mapping for enqueue table"""
     __tablename__ = 'enqueue'
@@ -103,7 +97,8 @@ class Speciality(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(64), nullable=False, unique=True)
-    nameEPGU = Column(Unicode(64))
+    epgu_speciality_id = Column(Integer, ForeignKey(EPGU_Speciality.id), nullable=True, index=True)
+    epgu_speciality = relationship(EPGU_Speciality)
 
 
 class Personal(Base):
@@ -112,18 +107,18 @@ class Personal(Base):
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
     id = Column(BigInteger, primary_key=True)
-    lpuId = Column(BigInteger, ForeignKey(LPU.id), primary_key=True)
-    orgId = Column(BigInteger, primary_key=True)
+    doctor_id = Column(BigInteger, index=True)
+    lpuId = Column(BigInteger, ForeignKey(LPU.id), index=True)
+    orgId = Column(BigInteger, index=True)
 #    orgId = Column(BigInteger, ForeignKey('lpu_units.orgId'), primary_key=True)
     FirstName = Column(Unicode(32), nullable=False)
     LastName = Column(Unicode(32), nullable=False)
     PatrName = Column(Unicode(32), nullable=False)
-    speciality_id = Column(Integer, ForeignKey(Speciality.id), nullable=False, index=True)
-    speciality = relationship(Speciality)
-
     keyEPGU = Column(String(45))
 
     lpu = relationship(LPU, backref=backref('personal', order_by=id))
+    UniqueConstraint(doctor_id, lpuId, orgId)
+
 #    lpu_units = relationship("LPU_Units", backref=backref('personal', order_by=id))
 #    ForeignKeyConstraint(
 #        ['personal.orgId', 'personal.lpuId'],
@@ -131,6 +126,20 @@ class Personal(Base):
 #        use_alter=True,
 #        name='personal_lpu_units_constraint'
 #    )
+
+
+class Personal_Specialities(Base):
+    """Mapping for many-to-many relations between Personal and Specialities"""
+    __tablename__ = 'personal_speciality'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    personal_id = Column(BigInteger, ForeignKey(Personal.id, ondelete='CASCADE'), primary_key=True)
+    speciality_id = Column(Integer, ForeignKey(Speciality.id, ondelete='CASCADE'), primary_key=True)
+
+    UniqueConstraint(personal_id, speciality_id)
+
+    relationship('personal', backref('personal_speciality', order_by=id))
+    relationship('speciality')
 
 
 class LPU_Specialities(Base):
@@ -158,3 +167,23 @@ class Regions(Base):
     is_active = Column(Boolean, default=True)
 
     __mapper_args__ = {'order_by': name}
+
+
+class EPGU_Speciality(Base):
+    """Mapping for epgu_specialities table"""
+    __tablename__ = 'epgu_speciality'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(64), nullable=False, unique=True)
+    keyEPGU = Column(String(45))
+
+
+class EPGU_Service_Type(Base):
+    """Mapping for epgu_service_type table"""
+    __tablename__ = 'epgu_service_type'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(150), nullable=False)
+    keyEPGU = Column(String(45))
