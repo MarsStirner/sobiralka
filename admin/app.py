@@ -13,7 +13,9 @@ admin.locale_selector(lambda: 'ru')
 
 admin.add_view(views.RegionsAdmin(Session, name=u'Список Регионов'))
 admin.add_view(views.LPUAdmin(Session, name=u'Список ЛПУ'))
+admin.add_view(views.SpecialityAdmin(Session, name=u'Специальности'))
 admin.add_view(views.UpdateAdmin(name=u'Обновление БД'))
+admin.add_view(views.SyncEPGUAdmin(name=u'Синхронизация с ЕПГУ'))
 
 
 @app.teardown_request

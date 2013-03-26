@@ -90,6 +90,27 @@ class Enqueue(Base):
         self.Data = data
 
 
+class EPGU_Speciality(Base):
+    """Mapping for epgu_specialities table"""
+    __tablename__ = 'epgu_speciality'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(64), nullable=False, unique=True)
+    keyEPGU = Column(String(45))
+
+
+class EPGU_Service_Type(Base):
+    """Mapping for epgu_service_type table"""
+    __tablename__ = 'epgu_service_type'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(150), nullable=False)
+    epgu_speciality_id = Column(Integer, ForeignKey(EPGU_Speciality.id))
+    keyEPGU = Column(String(45))
+
+
 class Speciality(Base):
     """Mapping for speciality table"""
     __tablename__ = 'speciality'
@@ -99,6 +120,8 @@ class Speciality(Base):
     name = Column(Unicode(64), nullable=False, unique=True)
     epgu_speciality_id = Column(Integer, ForeignKey(EPGU_Speciality.id), nullable=True, index=True)
     epgu_speciality = relationship(EPGU_Speciality)
+
+    __mapper_args__ = {'order_by': name}
 
 
 class Personal(Base):
@@ -167,24 +190,3 @@ class Regions(Base):
     is_active = Column(Boolean, default=True)
 
     __mapper_args__ = {'order_by': name}
-
-
-class EPGU_Speciality(Base):
-    """Mapping for epgu_specialities table"""
-    __tablename__ = 'epgu_speciality'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-
-    id = Column(Integer, primary_key=True)
-    name = Column(Unicode(64), nullable=False, unique=True)
-    keyEPGU = Column(String(45))
-
-
-class EPGU_Service_Type(Base):
-    """Mapping for epgu_service_type table"""
-    __tablename__ = 'epgu_service_type'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-
-    id = Column(Integer, primary_key=True)
-    name = Column(Unicode(150), nullable=False)
-    epgu_speciality_id = Column(Integer, ForeignKey(EPGU_Speciality.id))
-    keyEPGU = Column(String(45))

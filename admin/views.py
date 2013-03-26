@@ -5,7 +5,7 @@ from flask.ext.admin.contrib.sqlamodel import ModelView
 from flask.ext.admin.base import expose, BaseView
 from wtforms.fields import SelectField, BooleanField
 
-from admin.models import LPU, Regions
+from admin.models import LPU, Regions, Speciality
 from int_service.lib.dataworker import UpdateWorker
 
 
@@ -41,6 +41,16 @@ class RegionsAdmin(ModelView):
         super(RegionsAdmin, self).__init__(Regions, session, **kwargs)
 
 
+class SpecialityAdmin(ModelView):
+    form_columns = ('name', 'epgu_speciality')
+    column_list = ('name', 'epgu_speciality')
+    column_labels = dict(name=u'Специальность', epgu_speciality=u'Соответствие в ЕПГУ')
+    column_sortable_list = ('name',)
+
+    def __init__(self, session, **kwargs):
+        super(SpecialityAdmin, self).__init__(Speciality, session, **kwargs)
+
+
 class UpdateAdmin(BaseView):
     @expose('/')
     def index(self):
@@ -54,4 +64,20 @@ class UpdateAdmin(BaseView):
             msg = data_worker.msg
         else:
             msg = [u'Ошибка обновления БД']
-        return self.render('update_process.html', result_msg = msg)
+        return self.render('update_process.html', result_msg=msg)
+
+
+class SyncEPGUAdmin(BaseView):
+    @expose('/')
+    def index(self):
+        return self.render('update.html')
+
+    @expose('/process/', methods=('POST',))
+    def process(self):
+        if request.form['do_update']:
+            data_worker = UpdateWorker()
+            data_worker.update_data()
+            msg = data_worker.msg
+        else:
+            msg = [u'Ошибка обновления БД']
+        return self.render('update_process.html', result_msg=msg)

@@ -7,7 +7,7 @@ DB_HOST = 'localhost'
 DB_PORT = 3306
 DB_USER = 'soap_user'
 DB_PASSWORD = 'q1w2e3r4t5'
-DB_NAME = 'soap_new'
+DB_NAME = 'soap_dev'
 
 #Системный пользователь, от которого будет запускаться вэб-сервер
 SYSTEM_USER = 'is_user'

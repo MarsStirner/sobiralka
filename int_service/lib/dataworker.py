@@ -1167,17 +1167,18 @@ class UpdateWorker(object):
                                     if not speciality:
                                         continue
 
-                                    doctor = self.session.add(Personal(
+                                    personal = Personal(
                                         doctor_id=doctor.id,
                                         lpuId=lpu.id,
                                         orgId=unit.id,
                                         FirstName=doctor.firstName,
                                         PatrName=doctor.patrName,
                                         LastName=doctor.lastName,
-                                    ))
+                                    )
+                                    self.session.add(personal)
                                     self.session.commit()
 
-                                    self.__add_personal_speciality(doctor.id, speciality.id)
+                                    self.__add_personal_speciality(personal.id, speciality.id)
 
                                     self.__log('%s: %s %s %s (%s)' % (doctor.id,
                                                                       doctor.firstName,
@@ -1270,3 +1271,29 @@ class UpdateWorker(object):
                     self.__log(u'Обновление прошло успешно!')
                     self.__log('----------------------------')
         return shutdown_session()
+
+
+class EPGUWorker(object):
+    """Класс взаимодействия с ЕПГУ"""
+    session = Session()
+    msg = []
+
+    def __del__(self):
+        self.session.close()
+
+    def __log(self, msg):
+        if msg:
+            self.msg.append(msg)
+
+    def __failed_update(self, error=""):
+        self.session.rollback()
+        # shutdown_session()
+        if error:
+            self.__log(u'Ошибка синхронизации: %s' % error)
+            self.__log('----------------------------')
+        return False
+
+    def __success_update(self):
+        self.session.commit()
+        # shutdown_session()
+        return True
