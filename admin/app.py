@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from flask import Flask
+from flask import Flask, request, session
 from flask.ext.admin import Admin
+from flask.ext.babelex import Babel
 from settings import FLASK_SECRET_KEY
 from admin.database import Session
 from admin import views
@@ -9,7 +10,18 @@ app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY
 admin = Admin(app, name=u'Управление ИС')
 #admin.init_app(app)
-admin.locale_selector(lambda: 'ru')
+
+# Initialize babel
+babel = Babel(app)
+
+@babel.localeselector
+def get_locale():
+    override = request.args.get('lang')
+
+    if override:
+        session['lang'] = override
+
+    return session.get('lang', 'ru')
 
 admin.add_view(views.RegionsAdmin(Session, name=u'Список Регионов'))
 admin.add_view(views.LPUAdmin(Session, name=u'Список ЛПУ'))

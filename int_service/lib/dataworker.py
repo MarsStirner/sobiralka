@@ -16,8 +16,8 @@ from suds import WebFault
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
 from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality, Regions, LPU_Specialities
-from admin.models import Personal_Specialities
-from service_clients import Clients
+from admin.models import Personal_Specialities, EPGU_Speciality, EPGU_Service_Type
+from service_clients import Clients, ClientEPGU
 from is_exceptions import exception_by_code, IS_ConnectionError
 
 from admin.database import Session, shutdown_session
@@ -1277,6 +1277,7 @@ class EPGUWorker(object):
     """Класс взаимодействия с ЕПГУ"""
     session = Session()
     msg = []
+    proxy_client = ClientEPGU()
 
     def __del__(self):
         self.session.close()
@@ -1297,3 +1298,53 @@ class EPGUWorker(object):
         self.session.commit()
         # shutdown_session()
         return True
+
+    def sync_specialities(self):
+        lpu_dw = LPUWorker()
+        lpu_list = lpu_dw.get_list()
+        if lpu_list:
+            for lpu in lpu_list:
+                specialities = getattr(self.proxy_client.GetMedicalSpecializations(lpu.token),
+                                       'medical-specialization',
+                                       None)
+                if specialities:
+                    epgu_specialities = self.__update_epgu_specialities(specialities=specialities)
+                    self.__update_services(specialities=epgu_specialities, lpu_token=lpu.token)
+                else:
+                    self.__log(getattr(self.proxy_client.GetMedicalSpecializations(lpu.token), 'error', None))
+
+    def __update_epgu_specialities(self, specialities):
+        result = []
+        for speciality in specialities:
+            exists = self.session.query(EPGU_Speciality).filter(EPGU_Speciality.name == speciality.name).first()
+            if not exists:
+                epgu_speciality = EPGU_Speciality(name=speciality.name, keyEPGU=speciality.id)
+                self.session.add(epgu_speciality)
+                self.session.commit()
+                result.append(epgu_speciality)
+        return result
+
+    def __update_services(self, specialities, lpu_token):
+        for epgu_speciality in specialities:
+            epgu_services = getattr(self.proxy_client.GetServiceTypes(auth_token=lpu_token, ms_id=epgu_speciality.id),
+                                    'service-type',
+                                    None)
+            if epgu_services:
+                for service in epgu_services:
+                    exists = (self.session.query(EPGU_Service_Type).
+                              filter(EPGU_Service_Type.keyEPGU == service.id).first())
+                    if not exists:
+                        self.session.add(EPGU_Service_Type(name=service.name,
+                                                           keyEPGU=service.id,
+                                                           epgu_speciality_id=epgu_speciality.id))
+                        self.session.commit()
+
+    def sync_locations(self):
+        pass
+
+    def sync_schedule(self):
+        pass
+
+    def sync_data(self):
+        pass
+

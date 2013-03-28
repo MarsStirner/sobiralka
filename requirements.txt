@@ -2,6 +2,8 @@ Flask
 wtforms
 Flask-WTF
 Flask-Admin
+Flask-BabelEx
+Celery
 #Flask-Login
 spyne==2.9.3
 SQLAlchemy

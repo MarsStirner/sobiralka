@@ -70,7 +70,7 @@ class UpdateAdmin(BaseView):
 class SyncEPGUAdmin(BaseView):
     @expose('/')
     def index(self):
-        return self.render('update.html')
+        return self.render('update_epgu.html')
 
     @expose('/process/', methods=('POST',))
     def process(self):
