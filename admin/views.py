@@ -6,7 +6,7 @@ from flask.ext.admin.base import expose, BaseView
 from wtforms.fields import SelectField, BooleanField
 
 from admin.models import LPU, Regions, Speciality
-from int_service.lib.dataworker import UpdateWorker
+from int_service.lib.dataworker import UpdateWorker, EPGUWorker
 
 
 class LPUAdmin(ModelView):
@@ -70,13 +70,33 @@ class UpdateAdmin(BaseView):
 class SyncEPGUAdmin(BaseView):
     @expose('/')
     def index(self):
-        return self.render('update_epgu.html')
+        return self.render('epgu_sync.html')
 
-    @expose('/process/', methods=('POST',))
-    def process(self):
+    @expose('/update_specialitites/', methods=('POST',))
+    def sync_specialitites(self):
         if request.form['do_update']:
-            data_worker = UpdateWorker()
-            data_worker.update_data()
+            data_worker = EPGUWorker()
+            data_worker.sync_specialities()
+            msg = data_worker.msg
+        else:
+            msg = [u'Ошибка обновления БД']
+        return self.render('update_process.html', result_msg=msg)
+
+    @expose('/update_locations/', methods=('POST',))
+    def sync_locations(self):
+        if request.form['do_update']:
+            data_worker = EPGUWorker()
+            data_worker.sync_locations()
+            msg = data_worker.msg
+        else:
+            msg = [u'Ошибка обновления БД']
+        return self.render('update_process.html', result_msg=msg)
+
+    @expose('/update_schedules/', methods=('POST',))
+    def sync_schedules(self):
+        if request.form['do_update']:
+            data_worker = EPGUWorker()
+            data_worker.sync_schedule()
             msg = data_worker.msg
         else:
             msg = [u'Ошибка обновления БД']

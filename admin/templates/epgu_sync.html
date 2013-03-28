@@ -1,0 +1,80 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+<h2>Синхронизация с ЕПГУ</h2>
+<h3>Обновить специальности и услуги</h3>
+<form id="update_specialitites" method="POST">
+    <div class="control-group">
+        <div class="controls">
+            <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
+            <a href="/admin/" class="btn">Отмена</a>
+        </div>
+    </div>
+</form>
+<div id="result_update_specialitites"></div>
+<h3>Синхронизировать очереди</h3>
+<form id="update_locations" method="POST">
+    <div class="control-group">
+        <div class="controls">
+            <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
+            <a href="/admin/" class="btn">Отмена</a>
+        </div>
+    </div>
+</form>
+<div id="result_update_locations"></div>
+<h3>Синхронизировать расписания</h3>
+<form id="update_schedules" method="POST">
+    <div class="control-group">
+        <div class="controls">
+            <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
+            <a href="/admin/" class="btn">Отмена</a>
+        </div>
+    </div>
+</form>
+<div id="result_update_schedules"></div>
+<div class="loader"></div>
+
+<script type=text/javascript src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        $("body").on({
+            ajaxStart: function() {
+                $(this).addClass("loading");
+            },
+            ajaxStop: function() {
+                $(this).removeClass("loading");
+            }
+        });
+        $('form').each(function(){
+            var $this = $(this);
+            $this.submit(function(){
+                $this.hide();
+                var data = {};
+                $this.find('input').each(function(){
+                    data[$(this).attr('name')] = $this.val();
+                });
+                switch ($this.attr('id')){
+                    case 'update_specialitites':
+                        $.post("{{ url_for('.sync_specialitites') }}" + $this.attr('id'), data, function(res) {
+                            $('#result_' + $this.attr('id')).html(res);
+                        });
+                        break;
+
+                    case 'update_locations':
+                        $.post("{{ url_for('.sync_locations') }}" + $this.attr('id'), data, function(res) {
+                            $('#result_' + $this.attr('id')).html(res);
+                        });
+                        break;
+
+                    case 'update_schedules':
+                        $.post("{{ url_for('.sync_schedules') }}" + $this.attr('id'), data, function(res) {
+                            $('#result_' + $this.attr('id')).html(res);
+                        });
+                        break;
+                }
+                return false;
+            });
+        });
+    });
+</script>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/style.css') }}">
+{% endblock %}
