@@ -9,7 +9,6 @@ from admin import views
 app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY
 admin = Admin(app, name=u'Управление ИС')
-#admin.init_app(app)
 
 # Initialize babel
 babel = Babel(app)

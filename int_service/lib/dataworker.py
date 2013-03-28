@@ -9,7 +9,7 @@ try:
 except ImportError:
     import simplejson as json
 
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, func
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.exc import InvalidRequestError
 from suds import WebFault
@@ -17,6 +17,7 @@ from suds import WebFault
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
 from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality, Regions, LPU_Specialities
 from admin.models import Personal_Specialities, EPGU_Speciality, EPGU_Service_Type
+from admin.models import EPGU_Payment_Method, EPGU_Reservation_Type
 from service_clients import Clients, ClientEPGU
 from is_exceptions import exception_by_code, IS_ConnectionError
 
@@ -1304,40 +1305,78 @@ class EPGUWorker(object):
         lpu_list = lpu_dw.get_list()
         if lpu_list:
             for lpu in lpu_list:
-                specialities = getattr(self.proxy_client.GetMedicalSpecializations(lpu.token),
-                                       'medical-specialization',
-                                       None)
+                epgu_result = self.proxy_client.GetMedicalSpecializations(lpu.token)
+                specialities = getattr(epgu_result, 'medical-specialization', None)
                 if specialities:
                     epgu_specialities = self.__update_epgu_specialities(specialities=specialities)
                     self.__update_services(specialities=epgu_specialities, lpu_token=lpu.token)
                 else:
-                    self.__log(getattr(self.proxy_client.GetMedicalSpecializations(lpu.token), 'error', None))
+                    self.__log(getattr(epgu_result, 'error', None))
 
     def __update_epgu_specialities(self, specialities):
         result = []
         for speciality in specialities:
-            exists = self.session.query(EPGU_Speciality).filter(EPGU_Speciality.name == speciality.name).first()
+            exists = self.session.query(EPGU_Speciality).filter(EPGU_Speciality.name == speciality.name).count()
             if not exists:
                 epgu_speciality = EPGU_Speciality(name=speciality.name, keyEPGU=speciality.id)
                 self.session.add(epgu_speciality)
-                self.session.commit()
                 result.append(epgu_speciality)
+        self.session.commit()
         return result
 
     def __update_services(self, specialities, lpu_token):
         for epgu_speciality in specialities:
-            epgu_services = getattr(self.proxy_client.GetServiceTypes(auth_token=lpu_token, ms_id=epgu_speciality.id),
-                                    'service-type',
-                                    None)
+            epgu_result = self.proxy_client.GetServiceTypes(auth_token=lpu_token, ms_id=epgu_speciality.id)
+            epgu_services = getattr(epgu_result, 'service-type', None)
             if epgu_services:
                 for service in epgu_services:
                     exists = (self.session.query(EPGU_Service_Type).
-                              filter(EPGU_Service_Type.keyEPGU == service.id).first())
+                              filter(EPGU_Service_Type.keyEPGU == service.id).count())
                     if not exists:
                         self.session.add(EPGU_Service_Type(name=service.name,
                                                            keyEPGU=service.id,
                                                            epgu_speciality_id=epgu_speciality.id))
+                self.session.commit()
+            else:
+                self.__log(getattr(epgu_result, 'error', None))
+
+    def sync_payment_methods(self):
+        auth_token = self.__get_token()
+        if auth_token:
+            epgu_result = self.proxy_client.GetPaymentMethods(auth_token=auth_token)
+            payment_methods = getattr(epgu_result, 'payment-method', None)
+            if payment_methods:
+                for _methods in payment_methods:
+                    if not (self.session.query(EPGU_Payment_Method).
+                            filter(EPGU_Payment_Method.keyEPGU == _methods.id).
+                            count()):
+                        self.session.add(EPGU_Payment_Method(name=_methods.name,
+                                                             default=(_methods.default == 'true'),
+                                                             keyEPGU=_methods.id))
                         self.session.commit()
+            else:
+                self.__log(getattr(epgu_result, 'error', None))
+
+    def sync_reservation_types(self):
+        auth_token = self.__get_token()
+        if auth_token:
+            epgu_result = self.proxy_client.GetReservationTypes(auth_token=auth_token)
+            reservation_types = getattr(epgu_result, 'reservation-type', None)
+            if reservation_types:
+                for _type in reservation_types:
+                    if not (self.session.query(EPGU_Reservation_Type).
+                            filter(EPGU_Reservation_Type.keyEPGU == _type.id).
+                            count()):
+                        self.session.add(EPGU_Reservation_Type(name=_type.name, code=_type.code, keyEPGU=_type.id))
+                        self.session.commit()
+            else:
+                self.__log(getattr(epgu_result, 'error', None))
+
+    def __get_token(self):
+        lpu_token = self.session.query(LPU.token).filter(LPU.token != None).first()
+        if lpu_token:
+            return lpu_token.token
+        return None
 
     def sync_locations(self):
         pass
@@ -1345,6 +1384,19 @@ class EPGUWorker(object):
     def sync_schedule(self):
         pass
 
-    def sync_data(self):
-        pass
+    def sync_hospitals(self):
+        lpu_list = self.session.query(LPU).filter(LPU.keyEPGU == None)
+        if lpu_list:
+            for lpu in lpu_list:
+                place = getattr(self.proxy_client.GetPlace(auth_token=lpu.token), 'place', None)
+                if place:
+                    lpu.keyEPGU = place.id
+                else:
+                    self.__log(getattr(self.proxy_client.GetPlace(auth_token=lpu.token), 'error', None))
+            self.session.commit()
 
+    def sync_data(self):
+        self.sync_hospitals()
+        self.sync_reservation_types()
+        self.sync_payment_methods()
+        self.sync_specialities()

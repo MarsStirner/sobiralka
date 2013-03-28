@@ -33,6 +33,7 @@ class LPU(Base):
     type = Column(Unicode(32), doc=u'Тип ЛПУ: (Поликлиника)')
     protocol = Column(Enum('samson', 'intramed', 'korus20', 'korus30'), nullable=False, default='korus30')
     token = Column(String(45), doc=u'Токен ЕПГУ')
+    keyEPGU = Column(String(45), doc=u'ID ЛПУ на ЕПГУ')
 
 
 class LPU_Units(Base):
@@ -108,6 +109,30 @@ class EPGU_Service_Type(Base):
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(150), nullable=False)
     epgu_speciality_id = Column(Integer, ForeignKey(EPGU_Speciality.id))
+    recid = Column(String(20))
+    code = Column(Unicode(20))
+    keyEPGU = Column(String(45))
+
+
+class EPGU_Reservation_Type(Base):
+    """Mapping for epgu_service_type table"""
+    __tablename__ = 'epgu_reservation_type'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(50), nullable=False)
+    code = Column(String(50), nullable=False)
+    keyEPGU = Column(String(45))
+
+
+class EPGU_Payment_Method(Base):
+    """Mapping for epgu_service_type table"""
+    __tablename__ = 'epgu_payment_method'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(150), nullable=False)
+    default = Column(Boolean, default=False)
     keyEPGU = Column(String(45))
 
 
