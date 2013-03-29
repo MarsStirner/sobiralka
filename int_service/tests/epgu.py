@@ -68,7 +68,7 @@ class ClientTests(unittest.TestCase):
         self.assertDictEqual(res, assert_result)
 
     def test_GetLocations(self):
-        hospital = {'place_id': '4f1e8fa0c95ea177b00000b6', 'auth_token': 'CmBPwiTZhiePQQZMu5iL'}
+        hospital = {'place_id': '4f880ca42bcfa5277202f051', 'auth_token': 'CKzeDG37SdTRjzddVCn6'}
         res = client.GetLocations(service_type_id='4f1e8fa0c95ea177b00000b3',
                                   hospital=hospital)
         self.assertIsInstance(res, list)

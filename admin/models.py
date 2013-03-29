@@ -99,6 +99,7 @@ class EPGU_Speciality(Base):
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(64), nullable=False, unique=True)
     keyEPGU = Column(String(45))
+    epgu_service_type = relationship(EPGU_Service_Type)
 
 
 class EPGU_Service_Type(Base):
@@ -162,6 +163,7 @@ class Personal(Base):
     FirstName = Column(Unicode(32), nullable=False)
     LastName = Column(Unicode(32), nullable=False)
     PatrName = Column(Unicode(32), nullable=False)
+    office = Column(Unicode(8), nullable=True)
     keyEPGU = Column(String(45))
 
     lpu = relationship(LPU, backref=backref('personal', order_by=id))

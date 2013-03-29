@@ -510,7 +510,7 @@ class ClientIntramed(AbstractClient):
                         'id': int(hospital.uid),
                         'name': unicode(hospital.title),
                         'address': unicode(hospital.address),
-                        }
+                    }
                     hospitals.append(self.Struct(**params))
             except exceptions.AttributeError:
                 pass
@@ -1431,7 +1431,7 @@ class ClientEPGU():
             return getattr(result.AppData, 'errors', None)
         return None
 
-    def GetLocations(self, hospital, service_type_id, page=1):
+    def GetLocations(self, hospital, service_type_id=None, page=1):
         """Получает список врачей для указанного ЛПУ по указанному типу услуг
 
         Args:
