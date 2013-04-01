@@ -1281,6 +1281,11 @@ class EPGUWorker(object):
     msg = []
     proxy_client = ClientEPGU()
 
+    def __init__(self):
+        self.time_table_period = 90  # TODO: вынести в настройки
+        self.schedule_weeks_period = 3  # TODO: вынести в настройки
+        self.default_phone = '+79011111111'
+
     def __del__(self):
         self.session.close()
 
@@ -1437,8 +1442,31 @@ class EPGUWorker(object):
             self.__log(getattr(epgu_result, 'error', None))
             return None
 
-    def __get_reservation_time(self, doctor):
-        pass
+    def __get_nearest_monday(self):
+        today = datetime.date.today()
+        if today.isoweekday() == 1:
+            nearest_monday = today
+        else:
+            nearest_monday = today + datetime.timedelta(days=(7 - today.isoweekday() + 1))
+        return nearest_monday
+
+    def __get_reservation_time(self, hospital, doctor, date=None):
+        reservation_time = None
+
+        enqueue_dw = EnqueueWorker()
+        if date is None:
+            date = self.__get_nearest_monday()
+        params = {
+            'hospitalUid': '%s/%s' % (doctor.lpuId, doctor.orgId),
+            'doctorUid': doctor.doctor_id,
+            'startDate': date,
+            'endDate': date + datetime.timedelta(days=1),
+        }
+        result = enqueue_dw.get_info(**params)
+        if result:
+            timeslot = result['timeslots'][0]
+            reservation_time = (timeslot.finish - timeslot.start).seconds / 60
+        return reservation_time
 
     def __post_location_epgu(self, hospital, doctor):
         params = dict(hospital=hospital)
@@ -1448,18 +1476,18 @@ class EPGUWorker(object):
         reservation_type = (self.session.query(EPGU_Reservation_Type)
                             .filter(EPGU_Reservation_Type.code == 'automatic')
                             .one())
-        reservation_time = self.__get_reservation_time(doctor)
+        reservation_time = self.__get_reservation_time(hospital, doctor)
+
         params['doctor'] = dict(
             prefix='%s %s. %s.' % (doctor.lastName, doctor.firstName[0:1], doctor.patrName[0:1]),
             medical_specialization_id=doctor.speciality.epgu_speciality.keyEPGU,
             cabinet_number=doctor.office,
-            time_table_period=90,  # TODO: вынести в настройки
+            time_table_period=self.time_table_period,
             reservation_time=reservation_time,
             reserved_time_for_slot=reservation_time,
             reservation_type_id=reservation_type.keyEPGU,
             payment_method_id=payment_method.keyEPGU,
         )
-
         params['service_types'] = []
         for service_type in doctor.speciality.epgu_speciality.epgu_service_type:
             params['service_types'].append(service_type.keyEPGU)
@@ -1492,8 +1520,111 @@ class EPGUWorker(object):
                         if location_id:
                             self.__update_doctor(doctor, dict(keyEPGU=location_id))
 
+    def __link_activate_schedule(self, hospital, doctor, rules):
+        epgu_result = self.proxy_client.PutLocationSchedule(
+            hospital,
+            doctor.keyEPGU,
+            rules, )
+        error = getattr(epgu_result, 'error', None)
+        if error:
+            self.__log(getattr(epgu_result, 'error', None))
+        else:
+            epgu_result = self.proxy_client.PutActivateLocation(hospital, doctor.keyEPGU)
+            error = getattr(epgu_result, 'error', None)
+            if error:
+                self.__log(error)
+
+    def __sign_patients(self, hospital, doctor, patient_slots):
+        for patient_slot in patient_slots:
+            epgu_result = self.proxy_client.PostReserve(
+                hospital,
+                doctor.doctor_id,
+                doctor.speciality.epgu_speciality.epgu_service_type.keyEPGU,
+                date=dict(
+                    date=patient_slot.date().strftime('%Y-%m-%d'), start_time=patient_slot.time().strftime('%H:%M')
+                )
+            )
+            slot = getattr(epgu_result, 'slot', None)
+            if slot:
+                fio_list = patient_slot['fio'].split()
+                patient = dict(name=fio_list[1],
+                               surname=fio_list[0],
+                               patronymic=fio_list.get(2),
+                               phone=self.default_phone,
+                               id=patient_slot['id'])
+                epgu_result = self.proxy_client.PutSlot(hospital, patient, getattr(slot, 'unique-key'))
+                error = getattr(epgu_result, 'error', None)
+                if error:
+                    self.__log(error)
+            else:
+                self.__log(getattr(epgu_result, 'error', None))
+
     def sync_schedule(self):
-        pass
+        lpu_dw = LPUWorker()
+        lpu_list = lpu_dw.get_list()
+        hospital = dict()
+        if lpu_list:
+            for lpu in lpu_list:
+                hospital[lpu.id] = dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
+
+        today = datetime.datetime.today()
+        start_date = today - datetime.timedelta(days=(today.isoweekday() - 1))
+        end_date = start_date + datetime.timedelta(weeks=self.schedule_weeks_period)
+        enqueue_dw = EnqueueWorker()
+        epgu_doctors = self.session.query(Personal).filter(Personal.keyEPGU != None).all()
+        for doctor in epgu_doctors:
+            params = {
+                'hospitalUid': '%s/%s' % (doctor.lpuId, doctor.orgId),
+                'doctorUid': doctor.doctor_id,
+                'startDate': start_date,
+                'endDate': end_date,
+            }
+            schedule = enqueue_dw.get_info(**params)
+            if schedule:
+                doctor_rules = []
+                busy_by_patients = []
+                days = []
+                interval = []
+                week_number = 1
+                previous_day = None
+                for timeslot in schedule['timeslot']:
+                    if timeslot.start >= start_date + datetime.timedelta(weeks=week_number):
+                        if days:
+                            epgu_result = self.proxy_client.PostRules(
+                                hospital=hospital[doctor.lpuId],
+                                doctor=doctor,
+                                period='%s-%s' % (start_date.strftime('%d.%m.%Y'), end_date.strftime('%d.%m.%Y'), ),
+                                days=days)
+                            rule = getattr(epgu_result, 'rule', None)
+                            if rule:
+                                doctor_rules.append(
+                                    dict(
+                                        id=rule.id,
+                                        start=start_date + datetime.timedelta(weeks=(week_number - 1)),
+                                        end=end_date + datetime.timedelta(weeks=(week_number - 1)),
+                                    ))
+                            else:
+                                self.__log(getattr(epgu_result, 'error', None))
+                            days = []
+                        week_number += week_number
+
+                    if previous_day is not None and previous_day != timeslot.start.date():
+                        days.append(dict(date=timeslot.start, interval=interval))
+                        interval = []
+                    interval.append(dict(start=timeslot.start.time().strftime('%H:%M'),
+                                         end=timeslot.finish.time().strftime('%H:%M')))
+
+                    if timeslot.patientId and timeslot.patientInfo:
+                        busy_by_patients.append(
+                            dict(date_time=timeslot.start,
+                                 patient=dict(id=timeslot.patientId, fio=timeslot.patientInfo)
+                                 ))
+
+                if doctor_rules:
+                    self.__link_activate_schedule(hospital[doctor.lpuId], doctor, doctor_rules)
+
+                if busy_by_patients:
+                    self.__sign_patients(hospital[doctor.lpuId], doctor, busy_by_patients)
 
     def sync_hospitals(self):
         lpu_list = self.session.query(LPU).filter(LPU.keyEPGU == None)

@@ -273,7 +273,7 @@ class ClientKorus20(AbstractClient):
                     result.append({
                         'start': datetime.datetime.combine(kwargs.get('date'), timeslot.time),
                         'finish': (
-                            datetime.datetime.combine(kwargs.get('date'), schedule.tickets[key+1].time)
+                            datetime.datetime.combine(kwargs.get('date'), schedule.tickets[key + 1].time)
                             if key < (len(schedule.tickets) - 1)
                             else datetime.datetime.combine(kwargs.get('date'), schedule.endTime)
                         ),
@@ -318,7 +318,7 @@ class ClientKorus20(AbstractClient):
         server_id = kwargs.get('serverId')
         patient_id = kwargs.get('patientId')
         if server_id and patient_id:
-            params = {'serverId': server_id, 'patientId': patient_id,}
+            params = {'serverId': server_id, 'patientId': patient_id, }
             try:
                 result = self.client.service.getPatientInfo(**params)
             except WebFault, e:
@@ -704,7 +704,7 @@ class ClientIntramed(AbstractClient):
         self.client = Client(self.url + 'egov.v3.infoPort.CLS?WSDL=1', cache=None)
 
         if kwargs['serverId'] and kwargs['patientId']:
-            params = {'serverId': kwargs['serverId'], 'patientId': kwargs['patientId'],}
+            params = {'serverId': kwargs['serverId'], 'patientId': kwargs['patientId'], }
             try:
                 result = self.client.service.getPatientQueue(**params)
             except WebFault, e:
@@ -1264,7 +1264,7 @@ class ClientEPGU():
         return None
 
     def GetPaymentMethods(self, auth_token):
-        """Получить список методов оплаты из ЕПГУ
+        """Получает список методов оплаты из ЕПГУ
 
         Args:
             auth_token: указывается token ЛПУ (обязательный)
@@ -1307,7 +1307,7 @@ class ClientEPGU():
         return None
 
     def GetServiceTypes(self, auth_token, ms_id=None):
-        """Получить список медицинских услуг из ЕПГУ:
+        """Получает список медицинских услуг из ЕПГУ:
 
         Args:
             auth_token: указывается token ЛПУ (обязательный)
@@ -1355,7 +1355,7 @@ class ClientEPGU():
         return None
 
     def GetServiceType(self, auth_token, service_type_id):
-        """Получить вид услуги по идентификатору из ЕПГУ:
+        """Получает вид услуги по идентификатору из ЕПГУ:
 
         Args:
             auth_token: указывается token ЛПУ (обязательный)
@@ -1580,8 +1580,12 @@ class ClientEPGU():
             period: (обязательный) строка, период, на которые передаётся расписание,
             days: (обязательный) массив, содержащий расписание по датам, вида:
                 [{'date': дата,
-                  'start': время начала приёма,
-                  'end': время окончания приёма,
+                  'interval': - массив интервалов, вида:
+                      [{'start': время начала приёма,
+                      'end': время окончания приёма,},
+                      {'start': время начала приёма,
+                      'end': время окончания приёма,},
+                      ]
                 }],
             hospital: (обязательный) словарь с информацией об ЛПУ, вида:
                 {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
@@ -1607,7 +1611,9 @@ class ClientEPGU():
                 day_rule = dict()
                 for day in days:
                     key = 'day%d' % (day['date'].isoweekday() % 7)
-                    day_rule[key] = dict(int0=dict(time0=day['start'], time1=day['end']))
+                    day_rule[key] = []
+                    for key, interval in enumerate(day['interval']):
+                        day_rule[key].append({'int%s' % key: dict(time0=interval['start'], time1=interval['end'])})
                 params['day_rule'] = day_rule
                 
                 if can_write:
@@ -1635,16 +1641,16 @@ class ClientEPGU():
         """Связывает сотрудников и расписание
 
         Args:
+            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
+                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
+                 'auth_token': token ЛПУ
+                }
             location_id: (обязательный) строка, id очереди из PostLocations,
             rules: (обязательный) массив словарей с информацией о расписании, вида:
                 [{'id': '50507480ef2455c01202a0ca', # идентификатор расписания из PostRules
                  'start': дата начала действия расписания,
                  'end': дата окончания действия расписания
                 },]
-            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
-                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
-                 'auth_token': token ЛПУ
-                }
 
         Returns:
             Сообщение об ошибке, либо сообщение об успешной записи
@@ -1721,7 +1727,7 @@ class ClientEPGU():
             service_type_id: (обязательный) строка, id типа услуги из GetServiceType,
             date: (обязательный) словарь с информацией о расписании, вида:
                 {'date': дата приёма,
-                 'time': время приёма
+                 'start_time': время приёма
                 }
             hospital: (обязательный) словарь с информацией об ЛПУ, вида:
                 {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
@@ -1761,7 +1767,7 @@ class ClientEPGU():
         return None
 
     def PutSlot(self, hospital, patient, slot_id):
-        """Резервирует время на запись
+        """Запрос на получение из федеральной регистратуры факта записи  на оказание услуги
 
         Args:
             patient: (обязательный) словарь с информацией о пациенте, вида:
