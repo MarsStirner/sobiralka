@@ -1632,8 +1632,8 @@ class EPGUWorker(object):
                 interval = []
                 week_number = 1
                 previous_day = None
-                for timeslot in schedule['timeslot']:
-                    if timeslot.start >= start_date + datetime.timedelta(weeks=week_number):
+                for timeslot in schedule['timeslots']:
+                    if timeslot['start'] >= start_date + datetime.timedelta(weeks=week_number):
                         if days:
                             epgu_result = self.proxy_client.PostRules(
                                 hospital=hospital[doctor.lpuId],
@@ -1653,16 +1653,16 @@ class EPGUWorker(object):
                             days = []
                         week_number += week_number
 
-                    if previous_day is not None and previous_day != timeslot.start.date():
-                        days.append(dict(date=timeslot.start, interval=interval))
+                    if previous_day is not None and previous_day != timeslot['start'].date():
+                        days.append(dict(date=timeslot['start'], interval=interval))
                         interval = []
-                    interval.append(dict(start=timeslot.start.time().strftime('%H:%M'),
-                                         end=timeslot.finish.time().strftime('%H:%M')))
+                    interval.append(dict(start=timeslot['start'].time().strftime('%H:%M'),
+                                         end=timeslot['finish'].time().strftime('%H:%M')))
 
-                    if timeslot.patientId and timeslot.patientInfo:
+                    if timeslot['patientId'] and timeslot['patientInfo']:
                         busy_by_patients.append(
-                            dict(date_time=timeslot.start,
-                                 patient=dict(id=timeslot.patientId, fio=timeslot.patientInfo)
+                            dict(date_time=timeslot['start'],
+                                 patient=dict(id=timeslot['patientId'], fio=timeslot['patientInfo'])
                                  ))
 
                 if doctor_rules:
