@@ -5,12 +5,12 @@ from flask.ext.admin.contrib.sqlamodel import ModelView
 from flask.ext.admin.base import expose, BaseView
 from wtforms.fields import SelectField, BooleanField
 
-from admin.models import LPU, Regions, Speciality
+from admin.models import LPU, Regions, Speciality, EPGU_Speciality
 from int_service.lib.dataworker import UpdateWorker, EPGUWorker
 
 
 class LPUAdmin(ModelView):
-    column_exclude_list = ('LastUpdate', 'schedule', 'kladr', 'OGRN', 'type', 'token')
+    column_exclude_list = ('LastUpdate', 'schedule', 'kladr', 'OGRN', 'type', 'keyEPGU', 'token')
     form_excluded_columns = ('LastUpdate', 'schedule', )
     column_labels = dict(name=u'Наименование',
                          address=u'Адрес',
@@ -21,6 +21,7 @@ class LPUAdmin(ModelView):
                          type=u'Тип ЛПУ',
                          phone=u'Телефон',
                          protocol=u'Протокол',
+                         keyEPGU=u'ID на ЕПГУ',
                          token=u'Токен')
     form_overrides = dict(protocol=SelectField)
     form_args = dict(
@@ -71,6 +72,18 @@ class SyncEPGUAdmin(BaseView):
     @expose('/')
     def index(self):
         return self.render('epgu_sync.html')
+
+    @expose('/update_common_data/', methods=('POST',))
+    def sync_common_data(self):
+        if request.form['do_update']:
+            data_worker = EPGUWorker()
+            data_worker.sync_hospitals()
+            data_worker.sync_reservation_types()
+            data_worker.sync_payment_methods()
+            msg = data_worker.msg
+        else:
+            msg = [u'Ошибка обновления БД']
+        return self.render('update_process.html', result_msg=msg)
 
     @expose('/update_specialitites/', methods=('POST',))
     def sync_specialitites(self):

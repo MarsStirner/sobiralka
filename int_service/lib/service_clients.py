@@ -1176,7 +1176,7 @@ class ClientEPGU():
         template = self.jinja2env.get_template('epgu_message.tpl')
         for k, v in params.items():
             if isinstance(v, dict) and k != 'params':
-                params = {k: self.__generate_message(v)}
+                params[k] = self.__generate_message(v)
         return self.__strip_message(template.render(params=params))
 
     def __strip_message(self, message):
@@ -1448,10 +1448,12 @@ class ClientEPGU():
 
         """
         try:
-            message = self.__generate_message(dict(params={':place_id': hospital['place_id'],
-                                                           'service_type_id': service_type_id,
-                                                           'auth_token': hospital['auth_token'],
-                                                           'page': page}))
+            params = {':place_id': hospital['place_id'],
+                      'auth_token': hospital['auth_token'],
+                      'page': page}
+            if service_type_id:
+                params['service_type_id'] = service_type_id,
+            message = self.__generate_message(dict(params=params))
             result = self.__send('GetLocations', message)
         except WebFault, e:
             print e

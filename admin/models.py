@@ -99,7 +99,9 @@ class EPGU_Speciality(Base):
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(64), nullable=False, unique=True)
     keyEPGU = Column(String(45))
-    epgu_service_type = relationship(EPGU_Service_Type)
+
+    def __unicode__(self):
+        return self.name
 
 
 class EPGU_Service_Type(Base):
@@ -113,6 +115,7 @@ class EPGU_Service_Type(Base):
     recid = Column(String(20))
     code = Column(Unicode(20))
     keyEPGU = Column(String(45))
+    epgu_speciality = relationship(EPGU_Speciality, backref=backref('epgu_service_type'), lazy='joined')
 
 
 class EPGU_Reservation_Type(Base):
@@ -144,10 +147,31 @@ class Speciality(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(Unicode(64), nullable=False, unique=True)
-    epgu_speciality_id = Column(Integer, ForeignKey(EPGU_Speciality.id), nullable=True, index=True)
-    epgu_speciality = relationship(EPGU_Speciality)
+    epgu_speciality_id = Column(Integer, ForeignKey('epgu_speciality.id'), nullable=True, index=True)
+    epgu_speciality = relationship(EPGU_Speciality, lazy='joined')
 
     __mapper_args__ = {'order_by': name}
+
+
+# Personal_Specialities = Table(
+#     'personal_speciality',
+#     Base.metadata,
+#     Column('personal_id', BigInteger, ForeignKey('personal.id', ondelete='CASCADE'), primary_key=True),
+#     Column('speciality_id', Integer, ForeignKey('speciality.id', ondelete='CASCADE'), primary_key=True)
+# )
+
+class Personal_Specialities(Base):
+    """Mapping for many-to-many relations between Personal and Specialities"""
+    __tablename__ = 'personal_speciality'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    personal_id = Column(BigInteger, ForeignKey('personal.id', ondelete='CASCADE'), primary_key=True)
+    speciality_id = Column(Integer, ForeignKey('speciality.id', ondelete='CASCADE'), primary_key=True)
+
+    UniqueConstraint(personal_id, speciality_id)
+
+    # personal = relationship(Personal, backref=backref('speciality'), lazy='joined')
+    # speciality = relationship(Speciality, lazy='joined')
 
 
 class Personal(Base):
@@ -167,6 +191,7 @@ class Personal(Base):
     keyEPGU = Column(String(45))
 
     lpu = relationship(LPU, backref=backref('personal', order_by=id))
+    speciality = relationship(Speciality, secondary='personal_speciality', backref=backref('personal'))
     UniqueConstraint(doctor_id, lpuId, orgId)
 
 #    lpu_units = relationship("LPU_Units", backref=backref('personal', order_by=id))
@@ -176,20 +201,6 @@ class Personal(Base):
 #        use_alter=True,
 #        name='personal_lpu_units_constraint'
 #    )
-
-
-class Personal_Specialities(Base):
-    """Mapping for many-to-many relations between Personal and Specialities"""
-    __tablename__ = 'personal_speciality'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-
-    personal_id = Column(BigInteger, ForeignKey(Personal.id, ondelete='CASCADE'), primary_key=True)
-    speciality_id = Column(Integer, ForeignKey(Speciality.id, ondelete='CASCADE'), primary_key=True)
-
-    UniqueConstraint(personal_id, speciality_id)
-
-    relationship('personal', backref('personal_speciality', order_by=id))
-    relationship('speciality')
 
 
 class LPU_Specialities(Base):
@@ -202,8 +213,8 @@ class LPU_Specialities(Base):
 
     UniqueConstraint(lpu_id, speciality_id)
 
-    relationship('lpu')
-    relationship('speciality')
+    lpu = relationship(LPU)
+    speciality = relationship(Speciality)
 
 
 class Regions(Base):

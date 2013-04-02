@@ -1,36 +1,59 @@
 {% extends 'admin/master.html' %}
 {% block body %}
 <h2>Синхронизация с ЕПГУ</h2>
-<h3>Обновить специальности и услуги</h3>
-<form id="update_specialitites" method="POST">
-    <div class="control-group">
-        <div class="controls">
-            <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
-            <a href="/admin/" class="btn">Отмена</a>
-        </div>
+<div class="row-fluid">
+    <div class="span6">
+        <h4>Обновить справочники</h4>
+        <h6>(ЛПУ, методы оплаты, типы резервирования)</h6>
+        <form id="update_common_data" method="POST">
+            <div class="control-group">
+                <div class="controls">
+                    <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
+                    <a href="/admin/" class="btn">Отмена</a>
+                </div>
+            </div>
+        </form>
+        <blockquote style="border-color: #B94A48;"><div id="result_update_common_data"></div></blockquote>
     </div>
-</form>
-<div id="result_update_specialitites"></div>
-<h3>Синхронизировать очереди</h3>
-<form id="update_locations" method="POST">
-    <div class="control-group">
-        <div class="controls">
-            <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
-            <a href="/admin/" class="btn">Отмена</a>
-        </div>
+    <div class="span6">
+        <h4>Синхронизировать очереди</h4>
+        <form id="update_locations" method="POST">
+            <div class="control-group">
+                <div class="controls">
+                    <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
+                    <a href="/admin/" class="btn">Отмена</a>
+                </div>
+            </div>
+        </form>
+        <blockquote style="border-color: #B94A48;"><div id="result_update_locations"></div></blockquote>
     </div>
-</form>
-<div id="result_update_locations"></div>
-<h3>Синхронизировать расписания</h3>
-<form id="update_schedules" method="POST">
-    <div class="control-group">
-        <div class="controls">
-            <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
-            <a href="/admin/" class="btn">Отмена</a>
-        </div>
+</div>
+<div class="row-fluid">
+    <div class="span6">
+        <h4>Обновить специальности и услуги</h4>
+        <form id="update_specialitites" method="POST">
+            <div class="control-group">
+                <div class="controls">
+                    <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
+                    <a href="/admin/" class="btn">Отмена</a>
+                </div>
+            </div>
+        </form>
+        <blockquote style="border-color: #B94A48;"><div id="result_update_specialitites"></div></blockquote>
     </div>
-</form>
-<div id="result_update_schedules"></div>
+    <div class="span6">
+        <h4>Синхронизировать расписания</h4>
+        <form id="update_schedules" method="POST">
+            <div class="control-group">
+                <div class="controls">
+                    <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
+                    <a href="/admin/" class="btn">Отмена</a>
+                </div>
+            </div>
+        </form>
+        <blockquote style="border-color: #B94A48;"><div id="result_update_schedules"></div></blockquote>
+    </div>
+</div>
 <div class="loader"></div>
 
 <script type=text/javascript src="{{ url_for('static', filename='jquery.min.js') }}"></script>
@@ -50,23 +73,29 @@
                 $this.hide();
                 var data = {};
                 $this.find('input').each(function(){
-                    data[$(this).attr('name')] = $this.val();
+                    data[$(this).attr('name')] = $(this).val();
                 });
                 switch ($this.attr('id')){
+                    case 'update_common_data':
+                        $.post("{{ url_for('.sync_common_data') }}", data, function(res) {
+                            $('#result_' + $this.attr('id')).html(res);
+                        });
+                        break;
+
                     case 'update_specialitites':
-                        $.post("{{ url_for('.sync_specialitites') }}" + $this.attr('id'), data, function(res) {
+                        $.post("{{ url_for('.sync_specialitites') }}", data, function(res) {
                             $('#result_' + $this.attr('id')).html(res);
                         });
                         break;
 
                     case 'update_locations':
-                        $.post("{{ url_for('.sync_locations') }}" + $this.attr('id'), data, function(res) {
+                        $.post("{{ url_for('.sync_locations') }}", data, function(res) {
                             $('#result_' + $this.attr('id')).html(res);
                         });
                         break;
 
                     case 'update_schedules':
-                        $.post("{{ url_for('.sync_schedules') }}" + $this.attr('id'), data, function(res) {
+                        $.post("{{ url_for('.sync_schedules') }}", data, function(res) {
                             $('#result_' + $this.attr('id')).html(res);
                         });
                         break;

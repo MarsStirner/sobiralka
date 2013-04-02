@@ -10,6 +10,7 @@ except ImportError:
     import simplejson as json
 
 from sqlalchemy import or_, and_, func
+from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.exc import InvalidRequestError
 from suds import WebFault
@@ -453,7 +454,7 @@ class EnqueueWorker(object):
             personal_dw = PersonalWorker()
             doctor = personal_dw.get_doctor(doctor_id=doctor_uid, lpu_unit=hospital_uid)
             if doctor:
-                speciality = doctor.speciality.name
+                speciality = doctor.speciality[0].name
 
         hospital_uid_from = kwargs.get('hospitalUidFrom', 0)
         start, end = self.__get_dates_period(kwargs.get('startDate'), kwargs.get('endDate'))
@@ -1042,7 +1043,9 @@ class PersonalWorker(object):
 class UpdateWorker(object):
     """Класс для импорта данных в ИС из КС"""
     session = Session()
-    msg = []
+
+    def __init__(self):
+        self.msg = []
 
     def __del__(self):
         self.session.close()
@@ -1278,10 +1281,10 @@ class UpdateWorker(object):
 class EPGUWorker(object):
     """Класс взаимодействия с ЕПГУ"""
     session = Session()
-    msg = []
     proxy_client = ClientEPGU()
 
     def __init__(self):
+        self.msg = []
         self.time_table_period = 90  # TODO: вынести в настройки
         self.schedule_weeks_period = 3  # TODO: вынести в настройки
         self.default_phone = '+79011111111'
@@ -1311,6 +1314,9 @@ class EPGUWorker(object):
         lpu_list = lpu_dw.get_list()
         if lpu_list:
             for lpu in lpu_list:
+                if not lpu.token:
+                    continue
+
                 epgu_result = self.proxy_client.GetMedicalSpecializations(lpu.token)
                 specialities = getattr(epgu_result, 'medical-specialization', None)
                 if specialities:
@@ -1318,23 +1324,30 @@ class EPGUWorker(object):
                     self.__update_services(specialities=epgu_specialities, lpu_token=lpu.token)
                 else:
                     self.__log(getattr(epgu_result, 'error', None))
+                self.__log(u'Синхронизированы специальности и услуги по ЛПУ %s' % lpu.name)
+                self.__log('----------------------------')
 
     def __update_epgu_specialities(self, specialities):
         result = []
         for speciality in specialities:
-            exists = self.session.query(EPGU_Speciality).filter(EPGU_Speciality.name == speciality.name).count()
-            if not exists:
+            db_speciality = self.session.query(EPGU_Speciality).filter(EPGU_Speciality.name == speciality.name).one()
+            if not db_speciality:
                 epgu_speciality = EPGU_Speciality(name=speciality.name, keyEPGU=speciality.id)
                 self.session.add(epgu_speciality)
                 result.append(epgu_speciality)
+            elif not db_speciality.keyEPGU:
+                db_speciality.keyEPGU = speciality.id
+                result.append(db_speciality)
         self.session.commit()
         return result
 
     def __update_services(self, specialities, lpu_token):
         for epgu_speciality in specialities:
-            epgu_result = self.proxy_client.GetServiceTypes(auth_token=lpu_token, ms_id=epgu_speciality.id)
+            epgu_result = self.proxy_client.GetServiceTypes(auth_token=lpu_token, ms_id=epgu_speciality.keyEPGU)
             epgu_services = getattr(epgu_result, 'service-type', None)
             if epgu_services:
+                if not isinstance(epgu_services, list):
+                    epgu_services = [epgu_services]
                 for service in epgu_services:
                     exists = (self.session.query(EPGU_Service_Type).
                               filter(EPGU_Service_Type.keyEPGU == service.id).count())
@@ -1362,6 +1375,8 @@ class EPGUWorker(object):
                                                              default=(_methods.default == 'true'),
                                                              keyEPGU=_methods.id))
                         self.session.commit()
+                self.__log(u'Методы оплаты синхронизированы')
+                self.__log('----------------------------')
             else:
                 self.__log(getattr(epgu_result, 'error', None))
 
@@ -1377,6 +1392,8 @@ class EPGUWorker(object):
                             count()):
                         self.session.add(EPGU_Reservation_Type(name=_type.name, code=_type.code, keyEPGU=_type.id))
                         self.session.commit()
+                self.__log(u'Типы резервирования синхронизированы')
+                self.__log('----------------------------')
             else:
                 self.__log(getattr(epgu_result, 'error', None))
 
@@ -1407,6 +1424,8 @@ class EPGUWorker(object):
         return doctor
 
     def __update_doctor(self, doctor, data):
+        # Заново выбираем, т.к. не работает update commit с текущим пользователем (видимо, Session его забывает)
+        doctor = self.session.query(Personal).get(doctor.id)
         for k, v in data.items():
             if hasattr(doctor, k):
                 setattr(doctor, k, v)
@@ -1430,8 +1449,9 @@ class EPGUWorker(object):
         locations = getattr(epgu_result, 'locations', None)
         if locations:
             result.extend(self.__get_location_data(locations))
-            if locations.paginate.numpages > 1:
-                for page in xrange(2, locations.paginate.numpages + 1):
+            num_pages = int(locations.paginate.num_pages)
+            if num_pages > 1:
+                for page in xrange(2, num_pages + 1):
                     epgu_result = self.proxy_client.GetLocations(hospital=hospital, page=page)
                     locations = getattr(epgu_result, 'locations', None)
                     if locations:
@@ -1463,24 +1483,42 @@ class EPGUWorker(object):
             'endDate': date + datetime.timedelta(days=1),
         }
         result = enqueue_dw.get_info(**params)
-        if result:
+        if result['timeslots']:
             timeslot = result['timeslots'][0]
-            reservation_time = (timeslot.finish - timeslot.start).seconds / 60
+            reservation_time = (timeslot['finish'] - timeslot['start']).seconds / 60
         return reservation_time
 
+    def __get_service_types(self, epgu_speciality_id):
+        return (self.session.query(EPGU_Service_Type).
+                filter(EPGU_Service_Type.epgu_speciality_id == epgu_speciality_id).
+                all())
+
     def __post_location_epgu(self, hospital, doctor):
+        epgu_speciality = doctor.speciality[0].epgu_speciality
+        if not epgu_speciality:
+            self.__log(
+                u'Нет соответствия специальности %s на ЕПГУ для врача %s %s %s (id=%s)' %
+                (doctor.speciality[0].name, doctor.LastName, doctor.FirstName, doctor.PatrName, doctor.doctor_id))
+            return None
+
+        epgu_service_types = self.__get_service_types(epgu_speciality.id)
+
         params = dict(hospital=hospital)
         payment_method = self.session.query(EPGU_Payment_Method).filter(EPGU_Payment_Method.default == True).one()
 
         #TODO: reservation_type  = automatic + сделать настройку в админке
-        reservation_type = (self.session.query(EPGU_Reservation_Type)
-                            .filter(EPGU_Reservation_Type.code == 'automatic')
-                            .one())
+        reservation_type = (self.session.query(EPGU_Reservation_Type).
+                            filter(EPGU_Reservation_Type.code == 'automatic').
+                            one())
         reservation_time = self.__get_reservation_time(hospital, doctor)
+        if not reservation_time:
+            self.__log(u'Не заведено расписание для %s %s %s (id=%s)' %
+                       (doctor.LastName, doctor.FirstName, doctor.PatrName, doctor.doctor_id))
+            return None
 
         params['doctor'] = dict(
-            prefix='%s %s. %s.' % (doctor.lastName, doctor.firstName[0:1], doctor.patrName[0:1]),
-            medical_specialization_id=doctor.speciality.epgu_speciality.keyEPGU,
+            prefix='%s %s. %s.' % (doctor.LastName, doctor.FirstName[0:1], doctor.PatrName[0:1]),
+            medical_specialization_id=epgu_speciality.keyEPGU,
             cabinet_number=doctor.office,
             time_table_period=self.time_table_period,
             reservation_time=reservation_time,
@@ -1489,7 +1527,7 @@ class EPGUWorker(object):
             payment_method_id=payment_method.keyEPGU,
         )
         params['service_types'] = []
-        for service_type in doctor.speciality.epgu_speciality.epgu_service_type:
+        for service_type in epgu_service_types:
             params['service_types'].append(service_type.keyEPGU)
         epgu_result = self.proxy_client.PostLocations(**params)
         location_id = getattr(epgu_result, 'id', None)
@@ -1504,6 +1542,9 @@ class EPGUWorker(object):
         lpu_list = lpu_dw.get_list()
         if lpu_list:
             for lpu in lpu_list:
+                if not lpu.token:
+                    continue
+
                 hospital = dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
                 locations = self.__get_all_locations(hospital=hospital)
                 if locations:
@@ -1513,7 +1554,11 @@ class EPGUWorker(object):
                             self.__update_doctor(doctor, dict(keyEPGU=location.keyEPGU))
                         elif not doctor:
                             self.__delete_location_epgu(hospital, location.keyEPGU)
-                non_epgu_doctors = self.session.query(Personal).filter(Personal.keyEPGU == None).all()
+
+                non_epgu_doctors = (self.session.query(Personal).
+                                    options(joinedload(Personal.speciality)).
+                                    filter(Personal.keyEPGU == None).
+                                    all())
                 if non_epgu_doctors:
                     for doctor in non_epgu_doctors:
                         location_id = self.__post_location_epgu(hospital, doctor)
@@ -1627,16 +1672,23 @@ class EPGUWorker(object):
                     self.__sign_patients(hospital[doctor.lpuId], doctor, busy_by_patients)
 
     def sync_hospitals(self):
-        lpu_list = self.session.query(LPU).filter(LPU.keyEPGU == None)
+        lpu_list = self.session.query(LPU).filter(or_(~LPU.keyEPGU, LPU.keyEPGU == None))
         if lpu_list:
             for lpu in lpu_list:
+                if not lpu.token:
+                    self.__log(u'Не заведён токен для ЛПУ %s (id=%i)' % (lpu.name, lpu.id))
+                    continue
+
                 epgu_result = self.proxy_client.GetPlace(auth_token=lpu.token)
                 place = getattr(epgu_result, 'place', None)
                 if place:
                     lpu.keyEPGU = place.id
+                    self.__log(getattr(epgu_result, 'error', None))
                 else:
                     self.__log(getattr(epgu_result, 'error', None))
             self.session.commit()
+            self.__log(u'ЛПУ синхронизированы')
+            self.__log('----------------------------')
 
     def sync_data(self):
         self.sync_hospitals()
@@ -1644,3 +1696,4 @@ class EPGUWorker(object):
         self.sync_payment_methods()
         self.sync_specialities()
         self.sync_locations()
+        self.sync_schedule()
