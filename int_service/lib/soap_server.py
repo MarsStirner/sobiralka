@@ -16,7 +16,7 @@ from spyne.decorator import srpc, rpc
 from spyne.model.complex import Array, Iterable, ComplexModel
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, SOAP_NAMESPACE
-from dataworker import DataWorker
+from dataworker import DataWorker, EPGUWorker
 import soap_models
 import version
 
@@ -127,6 +127,20 @@ class ScheduleServer(ServiceBase):
         pass
 
 
+class EPGUGateServer(ServiceBase):
+    @srpc(soap_models.RequestType,
+          _in_variable_names=dict(parameters='Request'),
+          _returns=soap_models.ResponseType, _out_variable_name='Response')
+    def sendRequest(parameters):
+        obj = EPGUWorker()
+        try:
+            pass
+        except Exception, e:
+            return []
+        else:
+            return []
+
+
 class Server(object):
 
     def __init__(self):
@@ -155,10 +169,19 @@ class Server(object):
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
+        epgu_gate_app = Application(
+            [EPGUGateServer],
+            tns=SOAP_NAMESPACE,
+            name='GateService',
+            interface=Wsdl11(),
+            in_protocol=Soap11(),
+            out_protocol=Soap11()
+        )
         self.applications = CustomWsgiMounter({
             'info': info_app,
             'list': list_app,
             'schedule': schedule_app,
+            'gate': epgu_gate_app,
         })
 
     def run(self):
