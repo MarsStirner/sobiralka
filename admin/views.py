@@ -81,6 +81,7 @@ class SyncEPGUAdmin(BaseView):
             data_worker.sync_reservation_types()
             data_worker.sync_payment_methods()
             msg = data_worker.msg
+            del data_worker
         else:
             msg = [u'Ошибка обновления БД']
         return self.render('update_process.html', result_msg=msg)
@@ -91,6 +92,7 @@ class SyncEPGUAdmin(BaseView):
             data_worker = EPGUWorker()
             data_worker.sync_specialities()
             msg = data_worker.msg
+            del data_worker
         else:
             msg = [u'Ошибка обновления БД']
         return self.render('update_process.html', result_msg=msg)
@@ -101,6 +103,7 @@ class SyncEPGUAdmin(BaseView):
             data_worker = EPGUWorker()
             data_worker.sync_locations()
             msg = data_worker.msg
+            del data_worker
         else:
             msg = [u'Ошибка обновления БД']
         return self.render('update_process.html', result_msg=msg)
@@ -111,6 +114,7 @@ class SyncEPGUAdmin(BaseView):
             data_worker = EPGUWorker()
             data_worker.sync_schedule()
             msg = data_worker.msg
+            del data_worker
         else:
             msg = [u'Ошибка обновления БД']
         return self.render('update_process.html', result_msg=msg)

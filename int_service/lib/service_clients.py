@@ -1174,9 +1174,15 @@ class ClientEPGU():
 
     def __generate_message(self, params):
         template = self.jinja2env.get_template('epgu_message.tpl')
-        for k, v in params.items():
-            if isinstance(v, dict) and k != 'params':
-                params[k] = self.__generate_message(v)
+        if isinstance(params, list):
+            result = []
+            for value in params:
+                result.append(self.__generate_message(value))
+            return u''.join(result)
+        if isinstance(params, dict):
+            for k, v in params.items():
+                if isinstance(v, (dict, list)) and k != 'params':
+                    params[k] = self.__generate_message(v)
         return self.__strip_message(template.render(params=params))
 
     def __strip_message(self, message):
@@ -1614,8 +1620,8 @@ class ClientEPGU():
                 for day in days:
                     key = 'day%d' % (day['date'].isoweekday() % 7)
                     day_rule[key] = []
-                    for key, interval in enumerate(day['interval']):
-                        day_rule[key].append({'int%s' % key: dict(time0=interval['start'], time1=interval['end'])})
+                    for k, interval in enumerate(day['interval']):
+                        day_rule[key].append({'int%s' % k: dict(time0=interval['start'], time1=interval['end'])})
                 params['day_rule'] = day_rule
                 
                 if can_write:
@@ -1633,10 +1639,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            rule = getattr(result.AppData, 'rule', None)
-            if rule:
-                return rule
-            return getattr(result.AppData, 'errors', None)
+            errors = getattr(result.AppData, 'errors', None)
+            if errors:
+                return errors
+            return result.AppData
         return None
 
     def PutLocationSchedule(self, hospital, location_id, rules):
@@ -1667,11 +1673,11 @@ class ClientEPGU():
                 params['applied_exception'] = None
 
                 applied_rule = dict()
-                for k in xrange(len(rules)):
-                    applied_rule['rule%d' % k] = dict(rule_id=rules[k]['id'],
-                                                      start_date=rules[k]['start'].strftime('%d.%m.%Y'),
-                                                      end_date=rules[k]['end'].strftime('%d.%m.%Y'),
-                                                      type='all')
+                for k, v in enumerate(rules):
+                    applied_rule['rule%d' % (k + 1)] = dict(rule_id=v['id'],
+                                                            start_date=v['start'].strftime('%d.%m.%Y'),
+                                                            end_date=v['end'].strftime('%d.%m.%Y'),
+                                                            type='all')
                 params['applied_rule'] = applied_rule
 
                 params['params'] = {':location_id': location_id, 'auth_token': hospital['auth_token']}
@@ -1686,10 +1692,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            applied_schedule = getattr(result.AppData, 'applied-schedule', None)
-            if applied_schedule:
-                return applied_schedule
-            return getattr(result.AppData, 'errors', None)
+            errors = getattr(result.AppData, 'errors', None)
+            if errors:
+                return errors
+            return result.AppData
         return None
 
     def PutActivateLocation(self, hospital, location_id):
@@ -1715,10 +1721,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            location = getattr(result.AppData, 'location', None)
-            if location:
-                return location
-            return getattr(result.AppData, 'errors', None)
+            errors = getattr(result.AppData, 'errors', None)
+            if errors:
+                return errors
+            return result.AppData
         return None
 
     def PostReserve(self, hospital, doctor_id, service_type_id, date, cito=0):
@@ -1841,8 +1847,8 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            hash = getattr(result.AppData, 'hash', None)
-            if hash:
-                return hash
+            _hash = getattr(result.AppData, 'hash', None)
+            if _hash:
+                return _hash
             return getattr(result.AppData, 'errors', None)
         return None
