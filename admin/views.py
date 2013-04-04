@@ -5,7 +5,7 @@ from flask.ext.admin.contrib.sqlamodel import ModelView
 from flask.ext.admin.base import expose, BaseView
 from wtforms.fields import SelectField, BooleanField
 
-from admin.models import LPU, Regions, Speciality, EPGU_Speciality
+from admin.models import LPU, Regions, Speciality, EPGU_Speciality, EPGU_Service_Type
 from int_service.lib.dataworker import UpdateWorker, EPGUWorker
 
 
@@ -43,9 +43,11 @@ class RegionsAdmin(ModelView):
 
 
 class SpecialityAdmin(ModelView):
-    form_columns = ('name', 'epgu_speciality')
-    column_list = ('name', 'epgu_speciality')
-    column_labels = dict(name=u'Специальность', epgu_speciality=u'Соответствие в ЕПГУ')
+    form_columns = ('name', 'epgu_speciality', 'epgu_service_type')
+    column_list = ('name', 'epgu_speciality', 'epgu_service_type')
+    column_labels = dict(name=u'Специальность',
+                         epgu_speciality=u'Соответствие в ЕПГУ',
+                         epgu_service_type=u'Услуга для выгрузки на ЕПГУ')
     column_sortable_list = ('name',)
 
     def __init__(self, session, **kwargs):

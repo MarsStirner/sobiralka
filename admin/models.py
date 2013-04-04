@@ -117,6 +117,11 @@ class EPGU_Service_Type(Base):
     keyEPGU = Column(String(45))
     epgu_speciality = relationship(EPGU_Speciality, backref=backref('epgu_service_type'), lazy='joined')
 
+    __mapper_args__ = {'order_by': name}
+
+    def __unicode__(self):
+        return self.name
+
 
 class EPGU_Reservation_Type(Base):
     """Mapping for epgu_service_type table"""
@@ -149,6 +154,10 @@ class Speciality(Base):
     name = Column(Unicode(64), nullable=False, unique=True)
     epgu_speciality_id = Column(Integer, ForeignKey('epgu_speciality.id'), nullable=True, index=True)
     epgu_speciality = relationship(EPGU_Speciality, lazy='joined')
+    epgu_service_type_id = Column(Integer, ForeignKey('epgu_service_type.id'), nullable=True, index=True)
+    epgu_service_type = relationship(
+        EPGU_Service_Type,
+        lazy='joined',)
 
     __mapper_args__ = {'order_by': name}
 

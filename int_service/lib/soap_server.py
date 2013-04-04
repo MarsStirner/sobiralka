@@ -177,7 +177,7 @@ class Server(object):
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
-        self.applications = CustomWsgiMounter({
+        self.applications = WsgiMounter({
             'info': info_app,
             'list': list_app,
             'schedule': schedule_app,

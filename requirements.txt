@@ -4,8 +4,9 @@ Flask-WTF
 Flask-Admin
 Flask-BabelEx
 Celery
+supervisor
 #Flask-Login
-spyne==2.9.3
+spyne>=2.9.4
 SQLAlchemy
 #Flask-SQLAlchemy
 pytz

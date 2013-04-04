@@ -1496,10 +1496,11 @@ class EPGUWorker(object):
             reservation_time = (timeslot['finish'] - timeslot['start']).seconds / 60
         return reservation_time
 
-    def __get_service_types(self, epgu_speciality_id):
-        return (self.session.query(EPGU_Service_Type).
-                filter(EPGU_Service_Type.epgu_speciality_id == epgu_speciality_id).
-                all())
+    def __get_service_types(self, doctor, epgu_speciality_id):
+        return [doctor.speciality[0].epgu_service_type.keyEPGU]
+        # return (self.session.query(EPGU_Service_Type).
+        #         filter(EPGU_Service_Type.epgu_speciality_id == epgu_speciality_id).
+        #         all())
 
     def __post_location_epgu(self, hospital, doctor):
         epgu_speciality = doctor.speciality[0].epgu_speciality
@@ -1509,7 +1510,12 @@ class EPGUWorker(object):
                 (doctor.speciality[0].name, doctor.LastName, doctor.FirstName, doctor.PatrName, doctor.doctor_id))
             return None
 
-        epgu_service_types = self.__get_service_types(epgu_speciality.id)
+        try:
+            epgu_service_types = self.__get_service_types(doctor, epgu_speciality.id)
+        except AttributeError, e:
+            print e
+            self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
+            return None
 
         params = dict(hospital=hospital)
         payment_method = self.session.query(EPGU_Payment_Method).filter(EPGU_Payment_Method.default == True).one()
@@ -1601,12 +1607,18 @@ class EPGUWorker(object):
         else:
             self.__log(getattr(epgu_result, 'error', None))
 
-    def __sign_patients(self, hospital, doctor, patient_slots):
+    def __appoint_patients(self, hospital, doctor, patient_slots):
         for patient_slot in patient_slots:
+            try:
+                service_type = doctor.speciality[0].epgu_service_type
+            except AttributeError, e:
+                print e
+                self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
+                continue
             epgu_result = self.proxy_client.PostReserve(
                 hospital,
                 doctor.doctor_id,
-                doctor.speciality.epgu_speciality.epgu_service_type.keyEPGU,
+                service_type.keyEPGU,
                 date=dict(
                     date=patient_slot.date().strftime('%Y-%m-%d'), start_time=patient_slot.time().strftime('%H:%M')
                 )
@@ -1702,7 +1714,7 @@ class EPGUWorker(object):
                     self.__link_activate_schedule(hospital[doctor.lpuId], doctor, doctor_rules)
 
                 if busy_by_patients:
-                    self.__sign_patients(hospital[doctor.lpuId], doctor, busy_by_patients)
+                    self.__appoint_patients(hospital[doctor.lpuId], doctor, busy_by_patients)
 
     def sync_hospitals(self):
         lpu_list = self.session.query(LPU).filter(or_(~LPU.keyEPGU, LPU.keyEPGU == None))
