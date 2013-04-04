@@ -162,27 +162,6 @@ class Speciality(Base):
     __mapper_args__ = {'order_by': name}
 
 
-# Personal_Specialities = Table(
-#     'personal_speciality',
-#     Base.metadata,
-#     Column('personal_id', BigInteger, ForeignKey('personal.id', ondelete='CASCADE'), primary_key=True),
-#     Column('speciality_id', Integer, ForeignKey('speciality.id', ondelete='CASCADE'), primary_key=True)
-# )
-
-class Personal_Specialities(Base):
-    """Mapping for many-to-many relations between Personal and Specialities"""
-    __tablename__ = 'personal_speciality'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-
-    personal_id = Column(BigInteger, ForeignKey('personal.id', ondelete='CASCADE'), primary_key=True)
-    speciality_id = Column(Integer, ForeignKey('speciality.id', ondelete='CASCADE'), primary_key=True)
-
-    UniqueConstraint(personal_id, speciality_id)
-
-    # personal = relationship(Personal, backref=backref('speciality'), lazy='joined')
-    # speciality = relationship(Speciality, lazy='joined')
-
-
 class Personal(Base):
     """Mapping for personal table"""
     __tablename__ = 'personal'
@@ -210,6 +189,27 @@ class Personal(Base):
 #        use_alter=True,
 #        name='personal_lpu_units_constraint'
 #    )
+
+
+# Personal_Specialities = Table(
+#     'personal_speciality',
+#     Base.metadata,
+#     Column('personal_id', BigInteger, ForeignKey('personal.id', ondelete='CASCADE'), primary_key=True),
+#     Column('speciality_id', Integer, ForeignKey('speciality.id', ondelete='CASCADE'), primary_key=True)
+# )
+
+class Personal_Specialities(Base):
+    """Mapping for many-to-many relations between Personal and Specialities"""
+    __tablename__ = 'personal_speciality'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    personal_id = Column(BigInteger, ForeignKey('personal.id', ondelete='CASCADE'), primary_key=True)
+    speciality_id = Column(Integer, ForeignKey('speciality.id', ondelete='CASCADE'), primary_key=True)
+
+    UniqueConstraint(personal_id, speciality_id)
+
+    personal = relationship(Personal)
+    speciality = relationship(Speciality)
 
 
 class LPU_Specialities(Base):

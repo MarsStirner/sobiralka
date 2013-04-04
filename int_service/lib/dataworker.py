@@ -109,9 +109,6 @@ class LPUWorker(object):
         filter = []
         join = []
 
-        if speciality and isinstance(speciality, unicode):
-            fields.append(Personal.speciality)
-
         query_lpu = self.session.query(*fields)
 
         if speciality and isinstance(speciality, unicode):
@@ -859,7 +856,7 @@ class PersonalWorker(object):
             LPU.key,
         )
 
-        query = query.join(Speciality)
+        query = query.join(Personal.speciality)
         query = query.outerjoin(LPU)
         query = query.outerjoin(LPU_Units, Personal.orgId == LPU_Units.orgId).filter(Personal.lpuId == LPU_Units.lpuId)
 
@@ -1216,7 +1213,9 @@ class UpdateWorker(object):
             try:
                 self.session.add(LPU_Specialities(**kwargs))
                 self.session.commit()
-            except InvalidRequestError:
+            except InvalidRequestError, e:
+                print e
+                self.__failed_update(e)
                 return False
         return True
 
