@@ -367,9 +367,7 @@ class LPU_UnitsWorker(object):
         or_list = []
 
         if speciality and isinstance(speciality, unicode):
-            fields.append(Personal.speciality)
-            _join.append(Personal)
-            _join.append(Speciality)
+            _join.extend([LPU, LPU_Specialities, Speciality])
 
         query_lpu_units = self.session.query(*fields)
 
@@ -762,7 +760,7 @@ class EnqueueWorker(object):
             sex=sex,
             hospitalUid=hospital_uid[1],
             hospitalUidFrom=hospital_uid_from,
-            speciality=doctor_info.speciality.name.lower(),
+            speciality=doctor_info.speciality[0].name.lower(),
             doctorUid=doctor_uid,
             timeslotStart=timeslot_start
         )
@@ -958,7 +956,7 @@ class PersonalWorker(object):
                     'lastName': person.LastName,
                 },
                 'hospitalUid': str(person.lpuId) + '/' + str(person.orgId),
-                'speciality': person.speciality.name,
+                'speciality': person.speciality[0].name,
                 'keyEPGU': person.keyEPGU,
             })
 
@@ -1010,7 +1008,7 @@ class PersonalWorker(object):
                 lpu_specialities = proxy_client.getSpecialities(hospital_uid_from)
 
         for value in query_result:
-            _speciality = value.Personal.speciality
+            _speciality = value.Personal.speciality[0]
             if _speciality.id not in specialities:
                 specialities.append(_speciality.id)
                 speciality = {'speciality': _speciality.name,
@@ -1614,28 +1612,43 @@ class EPGUWorker(object):
                 print e
                 self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
                 continue
-            epgu_result = self.proxy_client.PostReserve(
-                hospital,
-                doctor.doctor_id,
-                service_type.keyEPGU,
-                date=dict(
-                    date=patient_slot.date().strftime('%Y-%m-%d'), start_time=patient_slot.time().strftime('%H:%M')
-                )
+            fio_list = patient_slot['fio'].split()
+            self.epgu_appoint_patient(
+                hospital=hospital,
+                doctor=dict(doctor_id=doctor.doctor_id, epgu_service_type=service_type.keyEPGU),
+                patient=dict(firstName=fio_list[1],
+                             lastName=fio_list[0],
+                             patronymic=fio_list.get(2),
+                             id=patient_slot['id']),
+                timeslot=patient_slot['date_time']
             )
+
+    def epgu_appoint_patient(self, hospital, doctor, patient, timeslot):
+        slot_unique_key = None
+        epgu_result = self.proxy_client.PostReserve(
+            hospital=hospital,
+            doctor_id=doctor['doctor_id'],
+            service_type_id=doctor['epgu_service_type'],
+            date=dict(
+                date=timeslot.date().strftime('%Y-%m-%d'), start_time=timeslot.time().strftime('%H:%M')
+            )
+        )
+        slot = getattr(epgu_result, 'slot', None)
+        if slot:
+            patient = dict(name=patient['firstName'],
+                           surname=patient['lastName'],
+                           patronymic=patient['patronymic'],
+                           phone=self.default_phone,
+                           id=patient['id'])
+            epgu_result = self.proxy_client.PutSlot(hospital, patient, getattr(slot, 'unique-key'))
             slot = getattr(epgu_result, 'slot', None)
             if slot:
-                fio_list = patient_slot['fio'].split()
-                patient = dict(name=fio_list[1],
-                               surname=fio_list[0],
-                               patronymic=fio_list.get(2),
-                               phone=self.default_phone,
-                               id=patient_slot['id'])
-                epgu_result = self.proxy_client.PutSlot(hospital, patient, getattr(slot, 'unique-key'))
-                error = getattr(epgu_result, 'error', None)
-                if error:
-                    self.__log(error)
+                slot_unique_key = getattr(slot, 'unique-key')
             else:
                 self.__log(getattr(epgu_result, 'error', None))
+        else:
+            self.__log(getattr(epgu_result, 'error', None))
+        return slot_unique_key
 
     def sync_schedule(self):
         lpu_dw = LPUWorker()
