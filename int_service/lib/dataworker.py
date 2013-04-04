@@ -1686,15 +1686,15 @@ class EPGUWorker(object):
                 for timeslot in schedule['timeslots']:
                     if timeslot['start'].date() >= start_date + datetime.timedelta(weeks=week_number):
                         if days:
+                            rule_start = start_date + datetime.timedelta(weeks=(week_number - 1))
+                            rule_end = rule_start + datetime.timedelta(days=6)
                             epgu_result = self.proxy_client.PostRules(
                                 hospital=hospital[doctor.lpuId],
                                 doctor=u'%s %s.%s.' % (doctor.LastName, doctor.FirstName[0:1], doctor.PatrName[0:1]),
-                                period='%s-%s' % (start_date.strftime('%d.%m.%Y'), end_date.strftime('%d.%m.%Y'), ),
+                                period='%s-%s' % (rule_start.strftime('%d.%m.%Y'), rule_end.strftime('%d.%m.%Y'), ),
                                 days=days)
                             rule = getattr(epgu_result, 'rule', None)
                             if rule:
-                                rule_start = start_date + datetime.timedelta(weeks=(week_number - 1))
-                                rule_end = rule_start + datetime.timedelta(days=6)
                                 doctor_rules.append(
                                     dict(
                                         id=rule.id,
