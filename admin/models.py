@@ -155,9 +155,7 @@ class Speciality(Base):
     epgu_speciality_id = Column(Integer, ForeignKey('epgu_speciality.id'), nullable=True, index=True)
     epgu_speciality = relationship(EPGU_Speciality, lazy='joined')
     epgu_service_type_id = Column(Integer, ForeignKey('epgu_service_type.id'), nullable=True, index=True)
-    epgu_service_type = relationship(
-        EPGU_Service_Type,
-        lazy='joined',)
+    epgu_service_type = relationship(EPGU_Service_Type, lazy='joined',)
 
     __mapper_args__ = {'order_by': name}
 
@@ -179,7 +177,7 @@ class Personal(Base):
     keyEPGU = Column(String(45))
 
     lpu = relationship(LPU, backref=backref('personal', order_by=id))
-    speciality = relationship(Speciality, secondary='personal_speciality', backref=backref('personal'))
+    speciality = relationship(Speciality, secondary='personal_speciality', backref=backref('personal'), lazy='joined')
     UniqueConstraint(doctor_id, lpuId, orgId)
 
 #    lpu_units = relationship("LPU_Units", backref=backref('personal', order_by=id))
@@ -209,7 +207,7 @@ class Personal_Specialities(Base):
     UniqueConstraint(personal_id, speciality_id)
 
     personal = relationship(Personal)
-    speciality = relationship(Speciality)
+    speciality = relationship(Speciality, lazy='joined')
 
 
 class LPU_Specialities(Base):

@@ -1612,14 +1612,19 @@ class EPGUWorker(object):
                 print e
                 self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
                 continue
-            fio_list = patient_slot['fio'].split()
+            fio_list = patient_slot['patient']['fio'].split()
+            patient = dict(firstName=fio_list[1], lastName=fio_list[0], id=patient_slot['patient']['id'])
+            try:
+                patronymic = fio_list[2]
+            except IndexError:
+                pass
+            else:
+                patient['patronymic'] = patronymic
+
             self.epgu_appoint_patient(
                 hospital=hospital,
-                doctor=dict(doctor_id=doctor.doctor_id, epgu_service_type=service_type.keyEPGU),
-                patient=dict(firstName=fio_list[1],
-                             lastName=fio_list[0],
-                             patronymic=fio_list.get(2),
-                             id=patient_slot['id']),
+                doctor=dict(location_id=doctor.keyEPGU, epgu_service_type=service_type.keyEPGU),
+                patient=patient,
                 timeslot=patient_slot['date_time']
             )
 
@@ -1627,7 +1632,7 @@ class EPGUWorker(object):
         slot_unique_key = None
         epgu_result = self.proxy_client.PostReserve(
             hospital=hospital,
-            doctor_id=doctor['doctor_id'],
+            doctor_id=doctor['location_id'],
             service_type_id=doctor['epgu_service_type'],
             date=dict(
                 date=timeslot.date().strftime('%Y-%m-%d'), start_time=timeslot.time().strftime('%H:%M')

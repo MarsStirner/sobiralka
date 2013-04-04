@@ -1754,9 +1754,8 @@ class ClientEPGU():
                 params['service_type_id'] = service_type_id
                 params['date'] = date['date']
                 params['start_time'] = date['start_time']
-                params[':cito'] = cito
 
-                params['params'] = {'auth_token': hospital['auth_token']}
+                params['params'] = {'auth_token': hospital['auth_token'], ':cito': cito}
             except AttributeError, e:
                 print e
                 return None
@@ -1768,10 +1767,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            slot = getattr(result.AppData, 'slot', None)
-            if slot:
-                return slot
-            return getattr(result.AppData, 'errors', None)
+            errors = getattr(result.AppData, 'errors', None)
+            if errors:
+                return errors
+            return result.AppData
         return None
 
     def PutSlot(self, hospital, patient, slot_id):
@@ -1795,9 +1794,9 @@ class ClientEPGU():
         try:
             params = dict()
             try:
-                params['name'] = base64.b64decode(patient['name'].encode('utf-8'))
-                params['surname'] = base64.b64decode(patient['surname'].encode('utf-8'))
-                params['patronymic'] = base64.b64decode(patient['patronymic'].encode('utf-8'))
+                params['name'] = base64.b64encode(patient['name'].encode('utf-8'))
+                params['surname'] = base64.b64encode(patient['surname'].encode('utf-8'))
+                params['patronymic'] = base64.b64encode(patient['patronymic'].encode('utf-8'))
                 params['phone'] = patient['phone']
                 params['client_id'] = patient['id']
 
