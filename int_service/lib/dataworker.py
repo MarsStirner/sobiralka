@@ -665,6 +665,9 @@ class EnqueueWorker(object):
         return result
 
     def __send_epgu(self, hospital, doctor, patient, timeslot, enqueue_id):
+        if not hospital.token or not hospital.keyEPGU:
+            return None
+
         _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
         try:
             service_type = doctor.speciality[0].epgu_service_type
@@ -690,6 +693,9 @@ class EnqueueWorker(object):
                 self.session.commit()
 
     def __delete_epgu_slot(self, hospital, patient_id, ticket_id):
+        if not hospital.token or not hospital.keyEPGU:
+            return None
+
         enqueue_record = (self.session.query(Enqueue).
                           filter(and_(Enqueue.patient_id == int(patient_id), Enqueue.ticket_id == int(ticket_id))).
                           one())
