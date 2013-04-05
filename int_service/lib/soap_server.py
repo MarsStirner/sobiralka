@@ -130,7 +130,7 @@ class ScheduleServer(ServiceBase):
 class EPGUGateServer(ServiceBase):
     @srpc(soap_models.RequestType,
           _in_variable_names=dict(parameters='Request'),
-          _returns=soap_models.ResponseType, _out_variable_name='Response')
+          _returns=soap_models.ResponseType, _out_variable_name='Response', _throws=soap_models.ErrorResponseType)
     def sendRequest(parameters):
         obj = EPGUWorker()
         try:
