@@ -85,6 +85,9 @@ class Enqueue(Base):
     id = Column(BigInteger, primary_key=True)
     Error = Column(String(64))
     Data = Column(Text)
+    patient_id = Column(BigInteger)
+    ticket_id = Column(BigInteger)
+    keyEPGU = Column(String(100))
 
     def __init__(self, error, data):
         self.Error = error

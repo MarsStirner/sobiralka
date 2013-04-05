@@ -117,8 +117,10 @@ class ScheduleServer(ServiceBase):
     def setTicketReadStatus(self):
         pass
 
-    def cancel(self):
-        pass
+    @srpc(soap_models.CancelRequest, _returns=soap_models.CancelResponse)
+    def cancel(parameters):
+        obj = DataWorker.provider('enqueue')
+        return obj.dequeue(**vars(parameters))
 
     def sendRequest(self):
         pass

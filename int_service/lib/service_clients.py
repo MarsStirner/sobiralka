@@ -483,6 +483,20 @@ class ClientKorus20(AbstractClient):
                     }
         return None
 
+    def dequeue(self, server_id, patient_id, ticket_id):
+        if server_id and patient_id and ticket_id:
+            try:
+                result = self.client.service.dequeuePatient(serverId=server_id, patientId=patient_id, queueId=ticket_id)
+            except WebFault, e:
+                print e
+            else:
+                return dict(
+                    success=result.success,
+                    comment=u'Запись на приём отменена.' if result.success else u'Ошибка отмены записи на приём.')
+        else:
+            raise exceptions.ValueError
+        return None
+
 
 class ClientIntramed(AbstractClient):
     """Класс клиента для работы с Интрамед"""
@@ -759,6 +773,9 @@ class ClientIntramed(AbstractClient):
                 else:
                     return {'result': False, 'error_code': result.enqueueResult}
         return None
+
+    def dequeue(self, server_id, patient_id, ticket_id):
+        pass
 
 
 class ClientKorus30(AbstractClient):
@@ -1154,6 +1171,24 @@ class ClientKorus30(AbstractClient):
                         'ticketUid': '',
                     }
         return None
+
+    def dequeue(self, server_id, patient_id, ticket_id):
+        if server_id and patient_id and ticket_id:
+            try:
+                result = self.client.dequeuePatient(patientId=patient_id, queueId=ticket_id)
+            except NotFoundException, e:
+                print e.error_msg
+                return {'success': False, 'comment': e.error_msg.decode('utf-8'), }
+            except TException, e:
+                print e
+                return {'success': False, 'comment': e.message, }
+            else:
+                message = getattr(result, 'message', None)
+                if not message:
+                    message = u'Запись на приём отменена.' if result.success else u'Ошибка отмены записи на приём.'
+                return dict(success=result.success, comment=message)
+        else:
+            raise exceptions.ValueError
 
 
 class ClientEPGU():
@@ -1815,10 +1850,10 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            slot = getattr(result.AppData, 'slot', None)
-            if slot:
-                return slot
-            return getattr(result.AppData, 'errors', None)
+            errors = getattr(result.AppData, 'errors', None)
+            if errors:
+                return errors
+            return result.AppData
         return None
 
     def DeleteSlot(self, hospital, slot_id, comment=None):
@@ -1849,8 +1884,8 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            _hash = getattr(result.AppData, 'hash', None)
-            if _hash:
-                return _hash
-            return getattr(result.AppData, 'errors', None)
+            errors = getattr(result.AppData, 'errors', None)
+            if errors:
+                return errors
+            return result.AppData
         return None

@@ -664,8 +664,7 @@ class EnqueueWorker(object):
         shutdown_session()
         return result
 
-    def __send_epgu(self, hospital, doctor, patient, timeslot):
-        epgu_dw = EPGUWorker()
+    def __send_epgu(self, hospital, doctor, patient, timeslot, enqueue_id):
         _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
         try:
             service_type = doctor.speciality[0].epgu_service_type
@@ -677,7 +676,28 @@ class EnqueueWorker(object):
                         lastName=patient['fio'].lastName,
                         patronymic=patient['fio'].patronymic,
                         id=patient['id'])
-        epgu_dw.epgu_appoint_patient(hospital=_hospital, doctor=_doctor, patient=_patient, timeslot=timeslot)
+
+        # TODO: CELERY TASK
+        epgu_dw = EPGUWorker()
+        slot_unique_key = epgu_dw.epgu_appoint_patient(hospital=_hospital,
+                                                       doctor=_doctor,
+                                                       patient=_patient,
+                                                       timeslot=timeslot)
+        if slot_unique_key:
+            _enqueue = self.session.query(Enqueue).get(enqueue_id)
+            if _enqueue:
+                _enqueue.keyEPGU = slot_unique_key
+                self.session.commit()
+
+    def __delete_epgu_slot(self, hospital, patient_id, ticket_id):
+        enqueue_record = (self.session.query(Enqueue).
+                          filter(and_(Enqueue.patient_id == int(patient_id), Enqueue.ticket_id == int(ticket_id))).
+                          one())
+        _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
+        if enqueue_record:
+            # TODO: CELERY TASK
+            epgu_dw = EPGUWorker()
+            epgu_dw.epgu_delete_slot(_hospital, enqueue_record.keyEPGU)
 
     def __get_ticket_print(self, **kwargs):
         """
@@ -781,7 +801,8 @@ class EnqueueWorker(object):
         )
 
         if _enqueue and _enqueue['result'] is True:
-            self.__add_ticket(
+            ticket_uid = _enqueue.get('ticketUid').split('/')
+            enqueue_id = self.__add_ticket(
                 error=_enqueue.get('error_code'),
                 data=json.dumps({
                     'ticketUID': _enqueue.get('ticketUid'),
@@ -789,6 +810,8 @@ class EnqueueWorker(object):
                     'hospitalUid': kwargs.get('hospitalUid'),
                     'doctorUid': doctor_uid,
                 }),
+                patient_id=_enqueue.get('patient_id'),
+                ticket_id=int(ticket_uid[0]),
             )
             result = {'result': _enqueue.get('result'),
                       'message': exception_by_code(_enqueue.get('error_code')),
@@ -797,7 +820,8 @@ class EnqueueWorker(object):
             self.__send_epgu(hospital=lpu_info,
                              doctor=doctor_info,
                              patient=dict(fio=patient, id=_enqueue.get('patient_id')),
-                             timeslot=timeslot_start)
+                             timeslot=timeslot_start,
+                             enqueue_id=enqueue_id)
         else:
             enqueue_id = self.__add_ticket(
                 error=_enqueue.get('error_code'),
@@ -829,6 +853,43 @@ class EnqueueWorker(object):
             self.session.commit()
             return enqueue.id
         return None
+
+    def dequeue(self, **kwargs):
+        """Отменяет запись на приём
+
+        Args:
+            hospitalUid:
+                uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (обязательный)
+            ticketUid: Идентификатор ранее поданной заявки о записи на приём (обязательный)
+
+        """
+        hospital_uid = kwargs.get('hospitalUid', '')
+        ticket_uid = kwargs.get('ticketUid', '')
+        if hospital_uid:
+            hospital_uid = hospital_uid.split('/')
+        if len(hospital_uid) > 1:
+            dw = LPUWorker()
+            lpu_info = dw.get_by_id(hospital_uid[0])
+            proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
+        else:
+            shutdown_session()
+            return dict()
+
+        if ticket_uid:
+            ticket_uid = ticket_uid.split('/')
+        if len(hospital_uid) > 1:
+            ticket_id = ticket_uid[0]
+            patient_id = ticket_uid[1]
+        else:
+            shutdown_session()
+            return dict()
+
+        result = proxy_client.dequeue(server_id=lpu_info.key, patient_id=patient_id, ticket_id=ticket_id)
+        if result and result['success']:
+            self.__delete_epgu_slot(hospital=lpu_info, patient_id=patient_id, ticket_id=ticket_id)
+
+        shutdown_session()
+        return result
 
 
 class PersonalWorker(object):
@@ -1674,6 +1735,13 @@ class EPGUWorker(object):
         else:
             self.__log(getattr(epgu_result, 'error', None))
         return slot_unique_key
+
+    def epgu_delete_slot(self, hospital, slot_id):
+        epgu_result = self.proxy_client.DeleteSlot(hospital, slot_id)
+        _hash = getattr(epgu_result, '_hash', None)
+        if not _hash:
+            self.__log(getattr(epgu_result, 'error', None))
+        return _hash
 
     def sync_schedule(self):
         lpu_dw = LPUWorker()
