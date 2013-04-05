@@ -473,6 +473,7 @@ class ClientKorus20(AbstractClient):
                         'result': True,
                         'error_code': result.message,
                         'ticketUid': str(result.queueId) + '/' + str(patient_id),
+                        'patient_id': patient_id,
                     }
                 else:
                     return {
@@ -753,6 +754,7 @@ class ClientIntramed(AbstractClient):
                         'result': True,
                         'error_code': result.enqueueResult,
                         'ticketUid': result.ticketUid,
+                        'patient_id': result.ticketUid,  # TODO: понять не передаётся ли из Интрамеда patient_id
                     }
                 else:
                     return {'result': False, 'error_code': result.enqueueResult}
@@ -1143,6 +1145,7 @@ class ClientKorus30(AbstractClient):
                         'result': True,
                         'error_code': result.message.decode('utf-8'),
                         'ticketUid': str(result.queueId) + '/' + str(patient_id),
+                        'patient_id': patient_id,
                     }
                 else:
                     return {

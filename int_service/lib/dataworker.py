@@ -664,6 +664,21 @@ class EnqueueWorker(object):
         shutdown_session()
         return result
 
+    def __send_epgu(self, hospital, doctor, patient, timeslot):
+        epgu_dw = EPGUWorker()
+        _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
+        try:
+            service_type = doctor.speciality[0].epgu_service_type
+        except AttributeError, e:
+            print e
+            return None
+        _doctor = dict(location_id=doctor.keyEPGU, epgu_service_type=service_type.keyEPGU)
+        _patient = dict(firstName=patient['fio'].firstName,
+                        lastName=patient['fio'].lastName,
+                        patronymic=patient['fio'].patronymic,
+                        id=patient['id'])
+        epgu_dw.epgu_appoint_patient(hospital=_hospital, doctor=_doctor, patient=_patient, timeslot=timeslot)
+
     def __get_ticket_print(self, **kwargs):
         """
         Return generated pdf for ticket print
@@ -697,7 +712,7 @@ class EnqueueWorker(object):
             hospital_uid = hospital_uid.split('/')
         birthday = kwargs.get('birthday')
         doctor_uid = kwargs.get('doctorUid')
-        person = kwargs.get('person')
+        patient = kwargs.get('person')
         sex = kwargs.get('sex')
         omi_policy_number = kwargs.get('omiPolicyNumber')
         if omi_policy_number:
@@ -720,7 +735,7 @@ class EnqueueWorker(object):
 
         timeslot_start = kwargs.get('timeslotStart', '')
 
-        if hospital_uid and birthday and doctor_uid and person:
+        if hospital_uid and birthday and doctor_uid and patient:
             if len(hospital_uid) > 1:
                 dw = LPUWorker()
                 lpu_info = dw.get_by_id(hospital_uid[0])
@@ -750,9 +765,9 @@ class EnqueueWorker(object):
         _enqueue = proxy_client.enqueue(
             serverId=lpu_info.key,
             person={
-                'firstName': person.firstName,
-                'lastName': person.lastName,
-                'patronymic': person.patronymic,
+                'firstName': patient.firstName,
+                'lastName': patient.lastName,
+                'patronymic': patient.patronymic,
             },
             omiPolicyNumber=omi_policy_number,
             document=document,
@@ -778,6 +793,11 @@ class EnqueueWorker(object):
             result = {'result': _enqueue.get('result'),
                       'message': exception_by_code(_enqueue.get('error_code')),
                       'ticketUid': _enqueue.get('ticketUid')}
+
+            self.__send_epgu(hospital=lpu_info,
+                             doctor=doctor_info,
+                             patient=dict(fio=patient, id=_enqueue.get('patient_id')),
+                             timeslot=timeslot_start)
         else:
             enqueue_id = self.__add_ticket(
                 error=_enqueue.get('error_code'),
