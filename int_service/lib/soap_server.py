@@ -136,7 +136,7 @@ class EPGUGateServer(ServiceBase):
           _in_variable_names=dict(parameters='Request'),
           # _returns=soap_models.ResponseType, _out_variable_name='Response',
           _throws=soap_models.ErrorResponseType)
-    def Request(parameters):
+    def sendRequest(parameters):
         obj = EPGUWorker()
         try:
             MessageData = parameters.MessageData

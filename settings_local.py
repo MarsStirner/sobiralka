@@ -13,7 +13,7 @@ DB_NAME = 'soap_dev'
 SYSTEM_USER = 'is_user'
 
 #Хост и порт, по которым будет доступе ИС
-SOAP_SERVER_HOST = '127.0.0.1'
+SOAP_SERVER_HOST = '192.168.0.126'
 SOAP_SERVER_PORT = 9910
 
 #Хост, по которому будет доступен административный интерфейс ИСа
