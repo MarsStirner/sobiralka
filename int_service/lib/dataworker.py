@@ -1868,6 +1868,9 @@ class EPGUWorker(object):
             hospital = doctor.lpu
         except MultipleResultsFound, e:
             print e
+        except NoResultFound, e:
+            print e
+            return None
         else:
             enqueue_dw = EnqueueWorker()
             _enqueue = enqueue_dw.enqueue(
@@ -1918,6 +1921,9 @@ class EPGUWorker(object):
             enqueue = self.session.query(Enqueue).filter(Enqueue.keyEPGU == params.get('slot_id')).one()
         except MultipleResultsFound, e:
             print e
+        except NoResultFound, e:
+            print e
+            return None
         else:
             data = json.load(enqueue.Data)
             if data['hospitalUid']:
@@ -1928,6 +1934,7 @@ class EPGUWorker(object):
         return result
 
     def epgu_request(self, format, message):
+        result = None
         data = None
         message = message.decode('utf-8')
         # TODO: повесить на celery, если ЕПГУ не нужен мгновенный ответ (просто дать ответ, а выполнить асинхронно)

@@ -20,7 +20,7 @@ from dataworker import DataWorker, EPGUWorker
 import soap_models
 import version
 
-# logging.basicConfig(level=logging.CRITICAL)
+logging.basicConfig(level=logging.ERROR)
 
 
 class CustomWsgiMounter(WsgiMounter):
@@ -134,9 +134,9 @@ class ScheduleServer(ServiceBase):
 class EPGUGateServer(ServiceBase):
     @srpc(soap_models.RequestType, _body_style='bare',
           _in_variable_names=dict(parameters='Request'),
-          # _returns=soap_models.ResponseType, _out_variable_name='Response',
+          _returns=soap_models.ResponseType, _out_variable_name='Response',
           _throws=soap_models.ErrorResponseType)
-    def sendRequest(parameters):
+    def Request(parameters):
         obj = EPGUWorker()
         try:
             MessageData = parameters.MessageData
@@ -144,9 +144,10 @@ class EPGUGateServer(ServiceBase):
             message = ''.join(MessageData.message)
             result = obj.epgu_request(format=_format, message=message)
         except Exception, e:
-            pass
-        # else:
-            # return result
+            print e
+            return []
+        else:
+            return result
 
 
 class Server(object):
@@ -178,8 +179,7 @@ class Server(object):
         )
         epgu_gate_app = Application(
             [EPGUGateServer],
-            tns=SOAP_NAMESPACE,
-            # tns='http://erGateService.er.atc.ru/ws',
+            tns='http://erGateService.er.atc.ru/ws',
             name='GateService',
             interface=Wsdl11(),
             in_protocol=Soap11(),
