@@ -15,12 +15,16 @@ from spyne.model.primitive import NATIVE_MAP, Mandatory, AnyDict, String
 from spyne.decorator import srpc, rpc
 from spyne.model.complex import Array, Iterable, ComplexModel
 
-from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, SOAP_NAMESPACE
+from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, SOAP_NAMESPACE, DEBUG
 from dataworker import DataWorker, EPGUWorker
 import soap_models
 import version
 
-logging.basicConfig(level=logging.ERROR)
+if DEBUG:
+    logging.basicConfig(level=logging.DEBUG)
+    logging.getLogger('spyne.protocol.soap').setLevel(logging.DEBUG)
+    logging.getLogger('spyne.service').setLevel(logging.DEBUG)
+    logging.getLogger('spyne.server.wsgi').setLevel(logging.DEBUG)
 
 
 class CustomWsgiMounter(WsgiMounter):
