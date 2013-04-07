@@ -88,8 +88,8 @@ class SyncEPGUAdmin(BaseView):
             msg = [u'Ошибка обновления БД']
         return self.render('update_process.html', result_msg=msg)
 
-    @expose('/update_specialitites/', methods=('POST',))
-    def sync_specialitites(self):
+    @expose('/update_specialities/', methods=('POST',))
+    def sync_specialities(self):
         if request.form['do_update']:
             data_worker = EPGUWorker()
             data_worker.sync_specialities()

@@ -82,8 +82,8 @@
                         });
                         break;
 
-                    case 'update_specialitites':
-                        $.post("{{ url_for('.sync_specialitites') }}", data, function(res) {
+                    case 'update_specialities':
+                        $.post("{{ url_for('.sync_specialities') }}", data, function(res) {
                             $('#result_' + $this.attr('id')).html(res);
                         });
                         break;
