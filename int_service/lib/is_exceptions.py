@@ -22,9 +22,15 @@ class IS_ConnectionError(ISError):
 class IS_PatientNotRegistered(ISError):
     message = u'Пациент не зарегистрирован в выбранном ЛПУ'
 
+    def __int__(self):
+        return 200
+
 
 class IS_FoundMultiplePatients(ISError):
     message = u'Найдено более одного пациента по указанным данным'
+
+    def __int__(self):
+        return 201
 
 
 class IS_NoSuchPatientTypeId(ISError):

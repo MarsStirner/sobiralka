@@ -21,7 +21,7 @@ from thrift.protocol import TBinaryProtocol, TProtocol
 from core_services.Communications import Client as Thrift_Client
 from core_services.ttypes import GetTimeWorkAndStatusParameters, EnqueuePatientParameters
 from core_services.ttypes import AddPatientParameters, FindOrgStructureByAddressParameters
-from core_services.ttypes import FindPatientParameters, PatientInfo
+from core_services.ttypes import FindPatientParameters, FindMultiplePatientsParameters, PatientInfo
 from core_services.ttypes import SQLException, NotFoundException, TException
 
 
@@ -338,6 +338,51 @@ class ClientKorus20(AbstractClient):
             name = ''
         return name
 
+    def findPatients(self, **kwargs):
+        """Получает id пациентов по параметрам
+
+        Args:
+            lastName: фамилия (обязательный)
+            firstName: имя (обязательный)
+            patrName: отчество (обязательный)
+
+        """
+        try:
+            document = kwargs.get('document')
+            if document and 'serial' in document:
+                document['series'] = document['serial']
+                del document['serial']
+            params = {
+                #                'serverId': kwargs['serverId'],
+                'lastName': kwargs['lastName'],
+                'firstName': kwargs['firstName'],
+                'patrName': kwargs['patrName'],
+            }
+            birthDate = kwargs.get('birthDate')
+            sex = kwargs.get('sex')
+            document = kwargs.get('document')
+
+            if birthDate:
+                params['birthDate'] = birthDate
+            if sex:
+                params['sex'] = sex
+            if document:
+                params['document'] = document
+
+            omiPolicy = kwargs.get('omiPolicy')
+            if omiPolicy:
+                params['omiPolicy'] = omiPolicy  # для совместимости со старой версией сайта и киоска
+        except exceptions.KeyError:
+            pass
+        else:
+            try:
+                result = self.client.service.findPatients(**params)
+            except WebFault, e:
+                print e
+            else:
+                return result
+        return None
+
     def findPatient(self, **kwargs):
         """Получает id пациента по параметрам
 
@@ -351,18 +396,27 @@ class ClientKorus20(AbstractClient):
         """
         try:
             document = kwargs.get('document')
-            if 'serial' in document:
+            if document and 'serial' in document:
                 document['series'] = document['serial']
                 del document['serial']
+
             params = {
-#                'serverId': kwargs['serverId'],
+                #                'serverId': kwargs['serverId'],
                 'lastName': kwargs['lastName'],
                 'firstName': kwargs['firstName'],
                 'patrName': kwargs['patrName'],
-                'birthDate': kwargs['birthDate'],
-                'sex': self.__sex_parse(kwargs['sex']),
-                'document': kwargs.get('document'),
             }
+            birthDate = kwargs.get('birthDate')
+            sex = kwargs.get('sex')
+            document = kwargs.get('document')
+
+            if birthDate:
+                params['birthDate'] = birthDate
+            if sex:
+                params['sex'] = sex
+            if document:
+                params['document'] = document
+
             omiPolicy = kwargs.get('omiPolicy')
             if omiPolicy:
                 params.update({'omiPolicy': omiPolicy}) # для совместимости со старой версией сайта и киоска
@@ -428,18 +482,34 @@ class ClientKorus20(AbstractClient):
             raise exceptions.AttributeError
             return {}
 
-        patient = self.findPatient(**{
-            'serverId': kwargs.get('serverId'),
-            'lastName': person.get('lastName'),
-            'firstName': person.get('firstName'),
-            'patrName': person.get('patronymic'),
-            'omiPolicy': kwargs.get('omiPolicyNumber'),
-            'document': kwargs.get('document'),
-            'sex': kwargs.get('sex', 0),
-            'birthDate': kwargs.get('birthday'),
-        })
-        if not patient.success and hospital_uid_from and hospital_uid_from != '0':
-            patient = self.addPatient(**kwargs)
+        document = kwargs.get('document')
+        birthDate = kwargs.get('birthday')
+        if document and birthDate:
+            patient = self.findPatient(
+                serverId=kwargs.get('serverId'),
+                lastName=person.get('lastName'),
+                firstName=person.get('firstName'),
+                patrName=person.get('patronymic'),
+                omiPolicy=kwargs.get('omiPolicyNumber'),
+                document=document,
+                sex=kwargs.get('sex', 0),
+                birthDate=birthDate,
+            )
+
+            if not patient.success and hospital_uid_from and hospital_uid_from != '0':
+                patient = self.addPatient(**kwargs)
+        else:
+            patient = self.findPatient(
+                serverId=kwargs.get('serverId'),
+                lastName=person.get('lastName'),
+                firstName=person.get('firstName'),
+                patrName=person.get('patronymic'),
+            )
+            exception_code = int(patient.message.split()[0])
+
+            if exception_code == int(is_exceptions.IS_PatientNotRegistered):
+                if not patient.success and hospital_uid_from and hospital_uid_from != '0':
+                    patient = self.addPatient(**kwargs)
 
         if patient.success and patient.patientId:
             patient_id = patient.patientId
@@ -1010,6 +1080,47 @@ class ClientKorus30(AbstractClient):
             return result
         return None
 
+    def findPatients(self, **kwargs):
+        """Получает id пациента по параметрам
+
+        Args:
+            lastName: фамилия (обязательный)
+            firstName: имя (обязательный)
+            patrName: отчество (обязательный)
+            birthDate: дата рождения (необязательный)
+            document: документ пациента, словарь (необязательный)
+            sex: пол пациента (необязательный)
+
+        """
+        params = {
+            'lastName': kwargs.get('lastName'),
+            'firstName': kwargs.get('firstName'),
+            'patrName': kwargs.get('patrName'),
+        }
+
+        birthDate = kwargs.get('birthDate')
+        document = kwargs.get('document')
+        sex = kwargs.get('sex')
+
+        if birthDate:
+            params['birthDate'] = birthDate
+        if document:
+            params['document'] = document
+        if sex:
+            params['sex'] = sex
+
+        try:
+            result = self.client.findPatients(FindMultiplePatientsParameters(**params))
+        except NotFoundException, e:
+            raise e
+        except TException, e:
+            raise e
+        except WebFault, e:
+            print e
+        else:
+            return result
+        return None
+
     def addPatient(self, **kwargs):
         """Добавление пациента в БД ЛПУ
 
@@ -1114,21 +1225,39 @@ class ClientKorus30(AbstractClient):
                           'lastName': person.get('lastName').encode('utf-8'),
                           'firstName': person.get('firstName').encode('utf-8'),
                           'patrName': person.get('patronymic').encode('utf-8'),
-                          'omiPolicy': (kwargs.get('omiPolicyNumber').encode('utf-8')
-                                        if hasattr(kwargs, 'omiPolicyNumber') else ''),
-                          'sex': kwargs.get('sex', 0),
-                          'document': kwargs.get('document'),
-                          'birthDate': calendar.timegm(kwargs.get('birthday').timetuple()) * 1000,
+                          'sex': kwargs.get('sex', 0)
                           }
 
+        omiPolicy = kwargs.get('omiPolicyNumber').encode('utf-8') if hasattr(kwargs, 'omiPolicyNumber') else ''
+        document = kwargs.get('document')
+        birthDate = kwargs.get('birthday')
+
+        if omiPolicy:
+            patient_params['omiPolicy'] = omiPolicy
+        if document:
+            patient_params['document'] = document
+        if birthDate:
+            patient_params['birthDate'] = calendar.timegm(birthDate.timetuple()) * 1000
+
         try:
-            patient = self.findPatient(**patient_params)
+            if 'birthDate' in patient_params and 'document' in patient_params:
+                patient = self.findPatient(**patient_params)
+            else:
+                patients = self.findPatients(**patient_params)
+                if len(patients) > 1:
+                    return {'result': False, 'error_code': int(is_exceptions.IS_FoundMultiplePatients), }
+                elif len(patients) == 0:
+                    return {'result': False, 'error_code': int(is_exceptions.IS_PatientNotRegistered), }
+                else:
+                    patient = patients[0]
+
         except NotFoundException, e:
             print e.error_msg
             return {'result': False, 'error_code': e.error_msg.decode('utf-8'), }
         except TException, e:
             print e
             return {'result': False, 'error_code': e.message, }
+
         if not patient.success and hospital_uid_from and hospital_uid_from != '0':
             patient = self.addPatient(**patient_params)
 

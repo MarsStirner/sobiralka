@@ -666,47 +666,6 @@ class EnqueueWorker(object):
         shutdown_session()
         return result
 
-    def __send_epgu(self, hospital, doctor, patient, timeslot, enqueue_id):
-        if not hospital.token or not hospital.keyEPGU:
-            return None
-
-        _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
-        try:
-            service_type = doctor.speciality[0].epgu_service_type
-        except AttributeError, e:
-            print e
-            return None
-        _doctor = dict(location_id=doctor.keyEPGU, epgu_service_type=service_type.keyEPGU)
-        _patient = dict(firstName=patient['fio'].firstName,
-                        lastName=patient['fio'].lastName,
-                        patronymic=patient['fio'].patronymic,
-                        id=patient['id'])
-
-        # TODO: CELERY TASK
-        epgu_dw = EPGUWorker()
-        slot_unique_key = epgu_dw.epgu_appoint_patient(hospital=_hospital,
-                                                       doctor=_doctor,
-                                                       patient=_patient,
-                                                       timeslot=timeslot)
-        if slot_unique_key:
-            _enqueue = self.session.query(Enqueue).get(enqueue_id)
-            if _enqueue:
-                _enqueue.keyEPGU = slot_unique_key
-                self.session.commit()
-
-    def __delete_epgu_slot(self, hospital, patient_id, ticket_id):
-        if not hospital.token or not hospital.keyEPGU:
-            return None
-
-        enqueue_record = (self.session.query(Enqueue).
-                          filter(and_(Enqueue.patient_id == int(patient_id), Enqueue.ticket_id == int(ticket_id))).
-                          one())
-        _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
-        if enqueue_record:
-            # TODO: CELERY TASK
-            epgu_dw = EPGUWorker()
-            epgu_dw.epgu_delete_slot(_hospital, enqueue_record.keyEPGU)
-
     def __get_ticket_print(self, **kwargs):
         """
         Return generated pdf for ticket print
@@ -727,9 +686,9 @@ class EnqueueWorker(object):
             }
             hospitalUid:
                 uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (обязательный)
-            birthday: дата рождения пациента (обязательный)
+            birthday: дата рождения пациента (необязательный)
             doctorUid: id врача, к которому производится запись (обязательный)
-            omiPolicyNumber: номер полиса мед. страхования (обязательный)
+            omiPolicyNumber: номер полиса мед. страхования (необязательный)
             sex: пол (необязательный)
             timeslotStart: время записи на приём (обязательный)
             hospitalUidFrom: uid ЛПУ, с которого производится запись (необязательный), используется для записи между ЛПУ
@@ -763,7 +722,7 @@ class EnqueueWorker(object):
 
         timeslot_start = kwargs.get('timeslotStart', '')
 
-        if hospital_uid and birthday and doctor_uid and patient:
+        if hospital_uid and doctor_uid and patient:
             if len(hospital_uid) > 1:
                 dw = LPUWorker()
                 lpu_info = dw.get_by_id(hospital_uid[0])
@@ -825,11 +784,14 @@ class EnqueueWorker(object):
                       'message': exception_by_code(_enqueue.get('error_code')),
                       'ticketUid': _enqueue.get('ticketUid')}
 
-            self.__send_epgu(hospital=lpu_info,
-                             doctor=doctor_info,
-                             patient=dict(fio=patient, id=_enqueue.get('patient_id')),
-                             timeslot=timeslot_start,
-                             enqueue_id=enqueue_id)
+            epgu_dw = EPGUWorker()
+            epgu_dw.send_enqueue(
+                hospital=lpu_info,
+                doctor=doctor_info,
+                patient=dict(fio=patient, id=_enqueue.get('patient_id')),
+                timeslot=timeslot_start,
+                enqueue_id=enqueue_id,
+                slot_unique_key=kwargs.get('epgu_slot_id'))
         else:
             enqueue_id = self.__add_ticket(
                 error=_enqueue.get('error_code'),
@@ -848,6 +810,19 @@ class EnqueueWorker(object):
 
         shutdown_session()
         return result
+
+    def __delete_epgu_slot(self, hospital, patient_id, ticket_id):
+        if not hospital.token or not hospital.keyEPGU:
+            return None
+
+        enqueue_record = (self.session.query(Enqueue).
+                          filter(and_(Enqueue.patient_id == int(patient_id), Enqueue.ticket_id == int(ticket_id))).
+                          one())
+        _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
+        if enqueue_record:
+            # TODO: CELERY TASK
+            epgu_dw = EPGUWorker()
+            epgu_dw.epgu_delete_slot(_hospital, enqueue_record.keyEPGU)
 
     def __add_ticket(self, **kwargs):
         """Добавляет информацию о талончике в БД ИС"""
@@ -1859,28 +1834,114 @@ class EPGUWorker(object):
     def __parse_hl7(self, message):
         add_code = ['SRM', 'S01', 'SRM_S01']
         del_code = ['SRM', 'S04', 'SRM_S01']
-
+        result = dict()
         data = hl7.parse(message)
         if data:
             operation_code = data['MSH'][0][8]
             if cmp(operation_code, add_code) == 0:
                 operation = 'add'
+                slot_id = data['ARQ'][0][1]
+                timeslot = datetime.datetime.strptime(data['ARQ'][0][11][0], '%Y%m%d%H%M%S')
+                patient = dict(lastName=data['PID'][0][5][0],
+                               firstName=data['PID'][0][5][1],
+                               patronymic=data['PID'][0][5][2])
+                doctor_keyEPGU = data['AIP'][0][3][0]
+                result = dict(operation=operation,
+                              slot_id=slot_id,
+                              timeslot=timeslot,
+                              patient=patient,
+                              doctor_keyEPGU=doctor_keyEPGU)
 
             elif cmp(operation_code, del_code) == 0:
                 operation = 'delete'
-        return {}
+                slot_id = data['ARQ'][0][1]
+                result = dict(operation=operation,
+                              slot_id=slot_id,)
+        return result
 
     def __parse_xml(self, message):
         return None
 
+    def __add_by_epgu(self, params):
+        try:
+            doctor = self.session.query(Personal).filter(Personal.keyEPGU == params.get('doctor_keyEPGU')).one()
+            hospital = doctor.lpu
+        except MultipleResultsFound, e:
+            print e
+        else:
+            enqueue_dw = EnqueueWorker()
+            _enqueue = enqueue_dw.enqueue(
+                person=params.get('patient'),
+                hospitalUid='%i/%i' % (doctor.lpuId, doctor.orgId),
+                doctorUid=doctor.doctor_id,
+                timeslotStart=params.get('timeslot'),
+                epgu_slot_id=params.get('slot_id')
+            )
+            if _enqueue and _enqueue['result'] is True:
+                return True
+            else:
+                self.epgu_delete_slot(
+                    hospital=dict(auth_token=hospital.token, place_id=hospital.keyEPGU),
+                    slot_id=params.get('slot_id'))
+
+    def send_enqueue(self, hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
+        if not slot_unique_key:
+            if not hospital.token or not hospital.keyEPGU:
+                return None
+
+            _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
+            try:
+                service_type = doctor.speciality[0].epgu_service_type
+            except AttributeError, e:
+                print e
+                return None
+            _doctor = dict(location_id=doctor.keyEPGU, epgu_service_type=service_type.keyEPGU)
+            _patient = dict(firstName=patient['fio'].firstName,
+                            lastName=patient['fio'].lastName,
+                            patronymic=patient['fio'].patronymic,
+                            id=patient['id'])
+
+            # TODO: CELERY TASK
+            epgu_dw = EPGUWorker()
+            slot_unique_key = epgu_dw.epgu_appoint_patient(hospital=_hospital,
+                                                           doctor=_doctor,
+                                                           patient=_patient,
+                                                           timeslot=timeslot)
+        if slot_unique_key:
+            _enqueue = self.session.query(Enqueue).get(enqueue_id)
+            if _enqueue:
+                _enqueue.keyEPGU = slot_unique_key
+                self.session.commit()
+
+    def __delete_by_epgu(self, params):
+        try:
+            enqueue = self.session.query(Enqueue).filter(Enqueue.keyEPGU == params.get('slot_id')).one()
+        except MultipleResultsFound, e:
+            print e
+        else:
+            data = json.load(enqueue.Data)
+            if data['hospitalUid']:
+                enqueue_dw = EnqueueWorker()
+                result = enqueue_dw.dequeue(
+                    dict(hospitalUid=data['hospitalUid'], ticketUid='%s/%s' % (enqueue.ticket_id, enqueue.patient_id))
+                )
+        return result
+
     def epgu_request(self, format, message):
+        data = None
         message = message.decode('utf-8')
-        # TODO: повесить на celery, если ЕПГУ не нужен мгновенный ответ
+        # TODO: повесить на celery, если ЕПГУ не нужен мгновенный ответ (просто дать ответ, а выполнить асинхронно)
         if format == 'HL7':
             data = self.__parse_hl7(message)
         elif format == 'XML':
             data = self.__parse_xml(message)
 
+        if data:
+            if data.get('operation') == 'add':
+                result = self.__add_by_epgu(data)
+            elif data.get('operation') == 'delete':
+                result = self.__delete_by_epgu(data)
+        return result
 
 
 

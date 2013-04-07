@@ -138,7 +138,8 @@ class ScheduleServer(ServiceBase):
 class EPGUGateServer(ServiceBase):
     @srpc(soap_models.RequestType, _body_style='bare',
           _in_variable_names=dict(parameters='Request'),
-          _returns=soap_models.ResponseType, _out_variable_name='Response', _throws=soap_models.ErrorResponseType)
+          # _returns=soap_models.ResponseType, _out_variable_name='Response',
+          _throws=soap_models.ErrorResponseType)
     def Request(parameters):
         obj = EPGUWorker()
         try:
@@ -147,9 +148,9 @@ class EPGUGateServer(ServiceBase):
             message = ''.join(MessageData.message)
             result = obj.epgu_request(format=_format, message=message)
         except Exception, e:
-            return []
-        else:
-            return result
+            pass
+        # else:
+            # return result
 
 
 class Server(object):
