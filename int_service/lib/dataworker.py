@@ -1391,7 +1391,7 @@ class EPGUWorker(object):
     def __update_epgu_specialities(self, specialities):
         result = []
         for speciality in specialities:
-            db_speciality = self.session.query(EPGU_Speciality).filter(EPGU_Speciality.name == speciality.name).one()
+            db_speciality = self.session.query(EPGU_Speciality).filter(EPGU_Speciality.name == speciality.name).first()
             if not db_speciality:
                 epgu_speciality = EPGU_Speciality(name=speciality.name, keyEPGU=speciality.id)
                 self.session.add(epgu_speciality)
