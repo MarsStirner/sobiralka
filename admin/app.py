@@ -7,6 +7,7 @@ from admin.database import Session
 from admin import views
 
 app = Flask(__name__)
+app.debug = True
 app.secret_key = FLASK_SECRET_KEY
 admin = Admin(app, name=u'Управление ИС')
 
