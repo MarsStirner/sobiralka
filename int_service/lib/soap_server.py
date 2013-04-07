@@ -178,7 +178,8 @@ class Server(object):
         )
         epgu_gate_app = Application(
             [EPGUGateServer],
-            tns='http://erGateService.er.atc.ru/ws',
+            tns=SOAP_NAMESPACE,
+            # tns='http://erGateService.er.atc.ru/ws',
             name='GateService',
             interface=Wsdl11(),
             in_protocol=Soap11(),
