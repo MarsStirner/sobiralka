@@ -20,11 +20,7 @@ from dataworker import DataWorker, EPGUWorker
 import soap_models
 import version
 
-logging.basicConfig(level=logging.INFO)
-logging.getLogger('spyne.protocol.soap').setLevel(logging.DEBUG)
-logging.getLogger('wsgiref.simple_server').setLevel(logging.DEBUG)
-logging.getLogger('spyne.service').setLevel(logging.DEBUG)
-logging.getLogger('spyne.server.wsgi').setLevel(logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
 
 
 class CustomWsgiMounter(WsgiMounter):
