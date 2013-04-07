@@ -1854,7 +1854,7 @@ class EPGUWorker(object):
 
             elif cmp(operation_code, del_code) == 0:
                 operation = 'delete'
-                slot_id = data['ARQ'][0][1]
+                slot_id = data['ARQ'][0][2]
                 result = dict(operation=operation,
                               slot_id=slot_id,)
         return result
