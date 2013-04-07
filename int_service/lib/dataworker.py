@@ -1840,7 +1840,7 @@ class EPGUWorker(object):
             operation_code = data['MSH'][0][8]
             if cmp(operation_code, add_code) == 0:
                 operation = 'add'
-                slot_id = data['ARQ'][0][1]
+                slot_id = data['ARQ'][0][1][0]
                 timeslot = datetime.datetime.strptime(data['ARQ'][0][11][0], '%Y%m%d%H%M%S')
                 patient = dict(lastName=data['PID'][0][5][0],
                                firstName=data['PID'][0][5][1],
@@ -1854,7 +1854,7 @@ class EPGUWorker(object):
 
             elif cmp(operation_code, del_code) == 0:
                 operation = 'delete'
-                slot_id = data['ARQ'][0][2]
+                slot_id = data['ARQ'][0][2][0]
                 result = dict(operation=operation,
                               slot_id=slot_id,)
         return result
