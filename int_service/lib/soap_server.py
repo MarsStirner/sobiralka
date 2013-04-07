@@ -20,7 +20,7 @@ from dataworker import DataWorker, EPGUWorker
 import soap_models
 import version
 
-logging.basicConfig(level=logging.CRITICAL)
+# logging.basicConfig(level=logging.CRITICAL)
 
 
 class CustomWsgiMounter(WsgiMounter):
@@ -152,7 +152,6 @@ class EPGUGateServer(ServiceBase):
 class Server(object):
 
     def __init__(self):
-        logging.basicConfig(level=logging.DEBUG)
         info_app = Application(
             [InfoServer],
             tns=SOAP_NAMESPACE,
