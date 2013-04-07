@@ -20,7 +20,7 @@ from dataworker import DataWorker, EPGUWorker
 import soap_models
 import version
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.CRITICAL)
 
 
 class CustomWsgiMounter(WsgiMounter):
