@@ -20,6 +20,12 @@ from dataworker import DataWorker, EPGUWorker
 import soap_models
 import version
 
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('spyne.protocol.soap').setLevel(logging.DEBUG)
+logging.getLogger('wsgiref.simple_server').setLevel(logging.DEBUG)
+logging.getLogger('spyne.service').setLevel(logging.DEBUG)
+logging.getLogger('spyne.server.wsgi').setLevel(logging.DEBUG)
+
 
 class CustomWsgiMounter(WsgiMounter):
     """
@@ -130,23 +136,26 @@ class ScheduleServer(ServiceBase):
 
 
 class EPGUGateServer(ServiceBase):
-    @srpc(soap_models.RequestType,
+    @srpc(soap_models.RequestType, _body_style='bare',
           _in_variable_names=dict(parameters='Request'),
           _returns=soap_models.ResponseType, _out_variable_name='Response', _throws=soap_models.ErrorResponseType)
-    def sendRequest(parameters):
+    def Request(parameters):
         obj = EPGUWorker()
         try:
-            pass
+            MessageData = parameters.MessageData
+            _format = str(MessageData.format)
+            message = ''.join(MessageData.message)
+            result = obj.epgu_request(format=_format, message=message)
         except Exception, e:
             return []
         else:
-            return []
+            return result
 
 
 class Server(object):
 
     def __init__(self):
-        logging.basicConfig()
+        logging.basicConfig(level=logging.DEBUG)
         info_app = Application(
             [InfoServer],
             tns=SOAP_NAMESPACE,
@@ -173,7 +182,7 @@ class Server(object):
         )
         epgu_gate_app = Application(
             [EPGUGateServer],
-            tns=SOAP_NAMESPACE,
+            tns='http://erGateService.er.atc.ru/ws',
             name='GateService',
             interface=Wsdl11(),
             in_protocol=Soap11(),

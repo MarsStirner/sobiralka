@@ -9,6 +9,8 @@ try:
 except ImportError:
     import simplejson as json
 
+import hl7
+
 from sqlalchemy import or_, and_, func
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
@@ -1853,3 +1855,32 @@ class EPGUWorker(object):
         self.sync_specialities()
         self.sync_locations()
         self.sync_schedule()
+
+    def __parse_hl7(self, message):
+        add_code = ['SRM', 'S01', 'SRM_S01']
+        del_code = ['SRM', 'S04', 'SRM_S01']
+
+        data = hl7.parse(message)
+        if data:
+            operation_code = data['MSH'][0][8]
+            if cmp(operation_code, add_code) == 0:
+                operation = 'add'
+
+            elif cmp(operation_code, del_code) == 0:
+                operation = 'delete'
+        return {}
+
+    def __parse_xml(self, message):
+        return None
+
+    def epgu_request(self, format, message):
+        message = message.decode('utf-8')
+        # TODO: повесить на celery, если ЕПГУ не нужен мгновенный ответ
+        if format == 'HL7':
+            data = self.__parse_hl7(message)
+        elif format == 'XML':
+            data = self.__parse_xml(message)
+
+
+
+

@@ -746,7 +746,7 @@ class MessageRequestType(ComplexModel):
 class RequestType(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    MessageData = MessageRequestType.customize(min_occurs=1, max_occurs=1, doc=u'Перечень найденных регионов')
+    MessageData = MessageRequestType.customize(min_occurs=1, max_occurs=1, nillable=False, doc=u'Перечень найденных регионов')
 
     def __init__(self):
         super(RequestType, self).__init__(doc=u'Входящий запрос')
@@ -782,7 +782,7 @@ class Error(ComplexModel):
 class MessageErrorResponseType(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    Error = Error.customize(min_occurs=1, max_occurs=1)
+    Error = Error.customize(min_occurs=1, max_occurs=1, nillable=False)
     Error.Annotations.doc = u'Указывается код в случае возникновения ошибки'
     errorMessage = String(min_occurs=0, max_occurs=1)
     errorMessage.Annotations.doc = u'Указывается код в случае возникновения ошибки'
@@ -794,7 +794,7 @@ class MessageErrorResponseType(ComplexModel):
 class ErrorResponseType(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    MessageData = MessageErrorResponseType.customize(min_occurs=1, max_occurs=1)
+    MessageData = MessageErrorResponseType.customize(min_occurs=1, max_occurs=1, nillable=False)
 
     def __init__(self):
         super(ErrorResponseType, self).__init__(doc=u'Ответ в случае возникновения ошибки')
