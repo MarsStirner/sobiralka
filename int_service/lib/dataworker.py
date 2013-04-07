@@ -1558,7 +1558,7 @@ class EPGUWorker(object):
         return reservation_time
 
     def __get_service_types(self, doctor, epgu_speciality_id):
-        return [doctor.speciality[0].epgu_service_type.keyEPGU]
+        return [doctor.speciality[0].epgu_service_type]
         # return (self.session.query(EPGU_Service_Type).
         #         filter(EPGU_Service_Type.epgu_speciality_id == epgu_speciality_id).
         #         all())
