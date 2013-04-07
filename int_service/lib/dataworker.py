@@ -1646,7 +1646,7 @@ class EPGUWorker(object):
         epgu_result = self.proxy_client.PutLocationSchedule(
             hospital,
             doctor.keyEPGU,
-            rules, )
+            rules)
         applied_schedule = getattr(epgu_result, 'applied-schedule', None)
         if applied_schedule:
             applied_rules = getattr(applied_schedule, 'applied-rules', None)
