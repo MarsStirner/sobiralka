@@ -1621,25 +1621,31 @@ class EPGUWorker(object):
                     continue
 
                 hospital = dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
+                self.__log(u'Синхронизация очередей для %s' % lpu.name)
                 locations = self.__get_all_locations(hospital=hospital)
                 if locations:
                     for location in locations:
                         doctor = self.__get_doctor_by_location(location, lpu.id)
                         if doctor and doctor.keyEPGU != location['keyEPGU']:
                             self.__update_doctor(doctor, dict(keyEPGU=location['keyEPGU']))
+                            self.__log(u'Для %s %s %s получен keyEPGU (%s)' %
+                                       (doctor.lastName, doctor.firstName, doctor.patrName, location['keyEPGU']))
                         elif not doctor:
                             self.__delete_location_epgu(hospital, location['keyEPGU'])
+                            self.__log(u'Для %s не найден на ЕПГУ, удалена очередь (%s)' %
+                                       (location['prefix'].split('-')[0].strip(), location['keyEPGU']))
 
                 non_epgu_doctors = (self.session.query(Personal).
                                     options(joinedload(Personal.speciality)).
                                     filter(and_(Personal.keyEPGU == None, Personal.lpuId == lpu.id)).
                                     all())
                 if non_epgu_doctors:
-                    self.__log(u'Синхронизация очередей для %s' % lpu.name)
                     for doctor in non_epgu_doctors:
                         location_id = self.__post_location_epgu(hospital, doctor)
                         if location_id:
                             self.__update_doctor(doctor, dict(keyEPGU=location_id))
+                            self.__log(u'Для %s %s %s отправлена очередь, получен keyEPGU (%s)' %
+                                       (doctor.lastName, doctor.firstName, doctor.patrName, location_id))
                 self.__log('----------------------------')
 
     def __link_activate_schedule(self, hospital, doctor, rules):
