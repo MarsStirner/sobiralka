@@ -183,13 +183,14 @@ class Server(object):
         )
         epgu_gate_app = Application(
             [EPGUGateServer],
-            tns='http://erGateService.er.atc.ru/ws',
+            # tns='http://erGateService.er.atc.ru/ws',
+            tns=SOAP_NAMESPACE,
             name='GateService',
             interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
-        self.applications = WsgiMounter({
+        self.applications = CustomWsgiMounter({
             'info': info_app,
             'list': list_app,
             'schedule': schedule_app,

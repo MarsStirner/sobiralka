@@ -453,7 +453,10 @@ class EnqueueWorker(object):
             if doctor:
                 speciality = doctor.speciality[0].name
 
-        hospital_uid_from = kwargs.get('hospitalUidFrom', 0)
+        hospital_uid_from = kwargs.get('hospitalUidFrom')
+        if not hospital_uid_from:
+            hospital_uid_from = 0
+
         start, end = self.__get_dates_period(kwargs.get('startDate'), kwargs.get('endDate'))
 
         proxy_client = Clients.provider(lpu.protocol, lpu.proxy.split(';')[0])
