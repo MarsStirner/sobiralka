@@ -11,7 +11,7 @@ except ImportError:
 
 import hl7
 
-from sqlalchemy import or_, and_, func
+from sqlalchemy import or_, and_, func, not_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.exc import InvalidRequestError
@@ -1623,8 +1623,10 @@ class EPGUWorker(object):
                 hospital = dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
                 self.__log(u'Синхронизация очередей для %s' % lpu.name)
                 locations = self.__get_all_locations(hospital=hospital)
+                _exists_locations_id = []
                 if locations:
                     for location in locations:
+                        _exists_locations_id.append(location['keyEPGU'])
                         doctor = self.__get_doctor_by_location(location, lpu.id)
                         if doctor and doctor.keyEPGU != location['keyEPGU']:
                             self.__update_doctor(doctor, dict(keyEPGU=location['keyEPGU']))
@@ -1635,17 +1637,20 @@ class EPGUWorker(object):
                             self.__log(u'Для %s не найден на ЕПГУ, удалена очередь (%s)' %
                                        (location['prefix'].split('-')[0].strip(), location['keyEPGU']))
 
-                non_epgu_doctors = (self.session.query(Personal).
-                                    options(joinedload(Personal.speciality)).
-                                    filter(and_(Personal.keyEPGU == None, Personal.lpuId == lpu.id)).
-                                    all())
-                if non_epgu_doctors:
-                    for doctor in non_epgu_doctors:
+                add_epgu_doctors = (
+                    self.session.query(Personal).
+                    options(joinedload(Personal.speciality)).
+                    filter(Personal.lpuId == lpu.id).
+                    filter(
+                        or_(Personal.keyEPGU == None, not_(Personal.keyEPGU.in_(_exists_locations_id)))).
+                    all())
+                if add_epgu_doctors:
+                    for doctor in add_epgu_doctors:
                         location_id = self.__post_location_epgu(hospital, doctor)
                         if location_id:
                             self.__update_doctor(doctor, dict(keyEPGU=location_id))
                             self.__log(u'Для %s %s %s отправлена очередь, получен keyEPGU (%s)' %
-                                       (doctor.lastName, doctor.firstName, doctor.patrName, location_id))
+                                       (doctor.LastName, doctor.FirstName, doctor.PatrName, location_id))
                 self.__log('----------------------------')
 
     def __link_activate_schedule(self, hospital, doctor, rules):
