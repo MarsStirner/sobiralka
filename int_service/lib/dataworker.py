@@ -1078,10 +1078,13 @@ class PersonalWorker(object):
             _speciality = value.Personal.speciality[0]
             if _speciality.id not in specialities:
                 specialities.append(_speciality.id)
+                keyEPGU = None
+                if _speciality.epgu_speciality:
+                    keyEPGU = _speciality.epgu_speciality.keyEPGU
                 speciality = {'speciality': _speciality.name,
                               'ticketsPerMonths': -1,
                               'ticketsAvailable': -1,
-                              'nameEPGU': _speciality.epgu_speciality.keyEPGU,
+                              'nameEPGU': keyEPGU,
                               }
 
                 if lpu_specialities:
