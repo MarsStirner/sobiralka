@@ -851,6 +851,10 @@ class ClientIntramed(AbstractClient):
 class ClientKorus30(AbstractClient):
     """Класс клиента для взаимодействия с КС в ядре"""
 
+    class Struct:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
     def __init__(self, url):
         self.url = url
         url_parsed = urlparse(self.url)
@@ -1249,7 +1253,7 @@ class ClientKorus30(AbstractClient):
                 elif len(patients) == 0:
                     return {'result': False, 'error_code': int(is_exceptions.IS_PatientNotRegistered()), }
                 else:
-                    patient = patients[0]
+                    patient = self.Struct(success=True, patientId=patients[0].id)
 
         except NotFoundException, e:
             print e.error_msg
