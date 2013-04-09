@@ -507,7 +507,7 @@ class ClientKorus20(AbstractClient):
             )
             exception_code = int(patient.message.split()[0])
 
-            if exception_code == int(is_exceptions.IS_PatientNotRegistered):
+            if exception_code == int(is_exceptions.IS_PatientNotRegistered()):
                 if not patient.success and hospital_uid_from and hospital_uid_from != '0':
                     patient = self.addPatient(**kwargs)
 
@@ -1245,9 +1245,9 @@ class ClientKorus30(AbstractClient):
             else:
                 patients = self.findPatients(**patient_params)
                 if len(patients) > 1:
-                    return {'result': False, 'error_code': int(is_exceptions.IS_FoundMultiplePatients), }
+                    return {'result': False, 'error_code': int(is_exceptions.IS_FoundMultiplePatients()), }
                 elif len(patients) == 0:
-                    return {'result': False, 'error_code': int(is_exceptions.IS_PatientNotRegistered), }
+                    return {'result': False, 'error_code': int(is_exceptions.IS_PatientNotRegistered()), }
                 else:
                     patient = patients[0]
 
