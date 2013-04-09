@@ -60,7 +60,6 @@ class UnitsParentForId(Base):
     ChildId = Column(BigInteger, primary_key=True)
 
     __table_args__ = (ForeignKeyConstraint([LpuId, OrgId], [LPU_Units.lpuId, LPU_Units.orgId]),
-                      ForeignKeyConstraint([LpuId, ChildId], [LPU_Units.lpuId, LPU_Units.orgId]),
                       {'mysql_engine': 'InnoDB'})
 
     lpu = relationship(LPU)
