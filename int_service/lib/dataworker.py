@@ -1188,7 +1188,7 @@ class UpdateWorker(object):
                     if address is None:
                         address = ''
 
-                    if not getattr(unit, 'parentId') and not getattr(unit, 'parent_id'):
+                    if not getattr(unit, 'parentId', None) and not getattr(unit, 'parent_id', None):
                         self.session.add(LPU_Units(
                             lpuId=lpu.id,
                             orgId=unit.id,
