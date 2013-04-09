@@ -278,7 +278,7 @@ class ClientKorus20(AbstractClient):
                             else datetime.datetime.combine(kwargs.get('date'), schedule.endTime)
                         ),
                         'status': 'free' if timeslot.available else 'locked',
-                        'office': str(schedule.office),
+                        'office': schedule.office,
                         'patientId': timeslot.patientId,
                         'patientInfo': timeslot.patientInfo,
                     })

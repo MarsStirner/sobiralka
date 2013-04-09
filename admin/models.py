@@ -89,10 +89,6 @@ class Enqueue(Base):
     ticket_id = Column(BigInteger)
     keyEPGU = Column(String(100))
 
-    def __init__(self, error, data):
-        self.Error = error
-        self.Data = data
-
 
 class EPGU_Speciality(Base):
     """Mapping for epgu_specialities table"""

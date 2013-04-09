@@ -773,8 +773,8 @@ class EnqueueWorker(object):
         if _enqueue and _enqueue['result'] is True:
             ticket_uid = _enqueue.get('ticketUid').split('/')
             enqueue_id = self.__add_ticket(
-                error=_enqueue.get('error_code'),
-                data=json.dumps({
+                Error=_enqueue.get('error_code'),
+                Data=json.dumps({
                     'ticketUID': _enqueue.get('ticketUid'),
                     'timeslotStart': timeslot_start.strftime('%Y-%m-%d %H:%M:%S'),
                     'hospitalUid': kwargs.get('hospitalUid'),
@@ -797,8 +797,8 @@ class EnqueueWorker(object):
                 slot_unique_key=kwargs.get('epgu_slot_id'))
         else:
             enqueue_id = self.__add_ticket(
-                error=_enqueue.get('error_code'),
-                data=json.dumps({
+                Error=_enqueue.get('error_code'),
+                Data=json.dumps({
                     'ticketUID': _enqueue.get('ticketUid'),
                     'timeslotStart': timeslot_start.strftime('%Y-%m-%d %H:%M:%S'),
                     'hospitalUid': kwargs.get('hospitalUid'),
