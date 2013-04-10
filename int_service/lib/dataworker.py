@@ -1169,15 +1169,15 @@ class UpdateWorker(object):
                 units = proxy_client.listHospitals(infis_code=lpu.key)
             except WebFault, e:
                 print e
-                self.__log('Ошибка: %s' % e)
+                self.__log(u'Ошибка: %s' % e)
                 return False
             except TypeError, e:
                 print e
-                self.__log('Ошибка: %s' % e)
+                self.__log(u'Ошибка: %s' % e)
                 return False
             except Exception, e:
                 print e
-                self.__log('Ошибка: %s' % e)
+                self.__log(u'Ошибка: %s' % e)
                 return False
             else:
                 for unit in units:
@@ -1206,7 +1206,7 @@ class UpdateWorker(object):
                         print e
                         self.__log(u'Ошибка при добавлении в UnitsParentForId: %s' % e)
 
-                    self.__log('%s: %s' % (unit.id, unit.name))
+                    self.__log(u'%s: %s' % (unit.id, unit.name))
 
         return return_units
 
@@ -1268,7 +1268,7 @@ class UpdateWorker(object):
 
                                     self.__add_personal_speciality(personal.id, speciality.id)
 
-                                    self.__log('%s: %s %s %s (%s)' % (doctor.id,
+                                    self.__log(u'%s: %s %s %s (%s)' % (doctor.id,
                                                                       doctor.firstName,
                                                                       doctor.lastName,
                                                                       doctor.patrName,
@@ -1310,7 +1310,7 @@ class UpdateWorker(object):
         # shutdown_session()
         if error:
             self.__log(u'Ошибка обновления: %s' % error)
-            self.__log('----------------------------')
+            self.__log(u'----------------------------')
         return False
 
     def __success_update(self):
@@ -1359,7 +1359,7 @@ class UpdateWorker(object):
                 else:
                     self.__success_update()
                     self.__log(u'Обновление прошло успешно!')
-                    self.__log('----------------------------')
+                    self.__log(u'----------------------------')
         return shutdown_session()
 
 
@@ -1386,7 +1386,7 @@ class EPGUWorker(object):
         # shutdown_session()
         if error:
             self.__log(u'Ошибка синхронизации: %s' % error)
-            self.__log('----------------------------')
+            self.__log(u'----------------------------')
         return False
 
     def __success_update(self):
@@ -1410,7 +1410,7 @@ class EPGUWorker(object):
                 else:
                     self.__log(getattr(epgu_result, 'error', None))
                 self.__log(u'Синхронизированы специальности и услуги по ЛПУ %s' % lpu.name)
-                self.__log('----------------------------')
+                self.__log(u'----------------------------')
 
     def __update_epgu_specialities(self, specialities):
         result = []
@@ -1461,7 +1461,7 @@ class EPGUWorker(object):
                                                              keyEPGU=_methods.id))
                         self.session.commit()
                 self.__log(u'Методы оплаты синхронизированы')
-                self.__log('----------------------------')
+                self.__log(u'----------------------------')
             else:
                 self.__log(getattr(epgu_result, 'error', None))
 
@@ -1478,7 +1478,7 @@ class EPGUWorker(object):
                         self.session.add(EPGU_Reservation_Type(name=_type.name, code=_type.code, keyEPGU=_type.id))
                         self.session.commit()
                 self.__log(u'Типы резервирования синхронизированы')
-                self.__log('----------------------------')
+                self.__log(u'----------------------------')
             else:
                 self.__log(getattr(epgu_result, 'error', None))
 
@@ -1679,7 +1679,7 @@ class EPGUWorker(object):
                             self.__update_doctor(doctor, dict(keyEPGU=location_id))
                             self.__log(u'Для %s %s %s отправлена очередь, получен keyEPGU (%s)' %
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, location_id))
-                self.__log('----------------------------')
+                self.__log(u'----------------------------')
 
     def __link_activate_schedule(self, hospital, doctor, rules):
         epgu_result = self.proxy_client.PutLocationSchedule(
@@ -1862,7 +1862,7 @@ class EPGUWorker(object):
                     self.__log(getattr(epgu_result, 'error', None))
             self.session.commit()
             self.__log(u'ЛПУ синхронизированы')
-            self.__log('----------------------------')
+            self.__log(u'----------------------------')
 
     def sync_data(self):
         self.sync_hospitals()

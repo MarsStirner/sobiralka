@@ -3,9 +3,9 @@
 DEBUG = True
 
 #Параметры подключения к БД
-DB_HOST = 'localhost'
+DB_HOST = '10.1.2.107'
 DB_PORT = 3306
-DB_USER = 'soap_user'
+DB_USER = 'tmis'
 DB_PASSWORD = 'q1w2e3r4t5'
 DB_NAME = 'soap_dev'
 
@@ -13,7 +13,7 @@ DB_NAME = 'soap_dev'
 SYSTEM_USER = 'is_user'
 
 #Хост и порт, по которым будет доступе ИС
-SOAP_SERVER_HOST = '192.168.0.127'
+SOAP_SERVER_HOST = '127.0.0.1'
 SOAP_SERVER_PORT = 9910
 
 #Хост, по которому будет доступен административный интерфейс ИСа
