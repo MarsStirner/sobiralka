@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import or_, and_, func, not_
 from sqlalchemy import Column, Table, Integer, BigInteger, String, Unicode, Text, UnicodeText, Enum, ForeignKey, Boolean
 from sqlalchemy import ForeignKeyConstraint, UniqueConstraint, Index
 from sqlalchemy.orm import relationship, backref
@@ -49,6 +50,10 @@ class LPU_Units(Base):
     __table_args__ = (Index('lpu_org', lpuId, orgId), {'mysql_engine': 'InnoDB'})
 
     lpu = relationship(LPU, backref=backref('lpu_units', order_by=id))
+    parent = relationship(
+        'UnitsParentForId',
+        primaryjoin='and_(LPU_Units.orgId==UnitsParentForId.ChildId, LPU_Units.lpuId==UnitsParentForId.LpuId)',
+        lazy='joined')
 
 
 class UnitsParentForId(Base):
@@ -69,11 +74,11 @@ class UnitsParentForId(Base):
         primaryjoin='and_(LPU_Units.orgId==UnitsParentForId.OrgId, LPU_Units.lpuId==UnitsParentForId.LpuId)',
     )
 
-    children = relationship(
-        LPU_Units,
-        backref=backref('parent', uselist=False),
-        primaryjoin="and_(LPU_Units.orgId==UnitsParentForId.ChildId, LPU_Units.lpuId==UnitsParentForId.LpuId)"
-    )
+    # children = relationship(
+    #     LPU_Units,
+    #     backref=backref('parent', uselist=False),
+    #     primaryjoin="and_(LPU_Units.orgId==UnitsParentForId.ChildId, LPU_Units.lpuId==UnitsParentForId.LpuId)"
+    # )
 
 
 class Enqueue(Base):
@@ -153,9 +158,21 @@ class Speciality(Base):
     epgu_speciality_id = Column(Integer, ForeignKey('epgu_speciality.id'), nullable=True, index=True)
     epgu_speciality = relationship(EPGU_Speciality, lazy='joined')
     epgu_service_type_id = Column(Integer, ForeignKey('epgu_service_type.id'), nullable=True, index=True)
-    epgu_service_type = relationship(EPGU_Service_Type, lazy='joined',)
+    epgu_service_type = relationship(EPGU_Service_Type, lazy='joined')
 
     __mapper_args__ = {'order_by': name}
+
+
+class Personal_KeyEPGU(Base):
+    """Mapping for Personal_KeyUPGU"""
+    __tablename__ = 'personal_keyepgu'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+    doctor_id = Column(BigInteger, primary_key=True, autoincrement=False)
+    lpuId = Column(BigInteger, primary_key=True, autoincrement=False)
+    orgId = Column(BigInteger, primary_key=True, autoincrement=False)
+    keyEPGU = Column(String(45))
+
+    UniqueConstraint(doctor_id, lpuId, orgId)
 
 
 class Personal(Base):
@@ -172,11 +189,18 @@ class Personal(Base):
     LastName = Column(Unicode(32), nullable=False)
     PatrName = Column(Unicode(32), nullable=False)
     office = Column(Unicode(8), nullable=True)
-    keyEPGU = Column(String(45))
+    # keyEPGU = Column(String(45))
 
     lpu = relationship(LPU, backref=backref('personal', order_by=id))
     speciality = relationship(Speciality, secondary='personal_speciality', backref=backref('personal'), lazy='joined')
     UniqueConstraint(doctor_id, lpuId, orgId)
+
+    __table_args__ = (
+        ForeignKeyConstraint([doctor_id, lpuId, orgId],
+                             [Personal_KeyEPGU.doctor_id, Personal_KeyEPGU.lpuId, Personal_KeyEPGU.orgId]),
+        {'mysql_engine': 'InnoDB'})
+
+    key_epgu = relationship(Personal_KeyEPGU, lazy='joined')
 
 #    lpu_units = relationship("LPU_Units", backref=backref('personal', order_by=id))
 #    ForeignKeyConstraint(
@@ -193,6 +217,7 @@ class Personal(Base):
 #     Column('personal_id', BigInteger, ForeignKey('personal.id', ondelete='CASCADE'), primary_key=True),
 #     Column('speciality_id', Integer, ForeignKey('speciality.id', ondelete='CASCADE'), primary_key=True)
 # )
+
 
 class Personal_Specialities(Base):
     """Mapping for many-to-many relations between Personal and Specialities"""

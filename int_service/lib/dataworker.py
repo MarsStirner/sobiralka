@@ -19,7 +19,7 @@ from suds import WebFault
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
 from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality, Regions, LPU_Specialities
-from admin.models import Personal_Specialities, EPGU_Speciality, EPGU_Service_Type
+from admin.models import Personal_Specialities, EPGU_Speciality, EPGU_Service_Type, Personal_KeyEPGU
 from admin.models import EPGU_Payment_Method, EPGU_Reservation_Type
 from service_clients import Clients, ClientEPGU
 from is_exceptions import exception_by_code, IS_ConnectionError
@@ -378,7 +378,7 @@ class LPU_UnitsWorker(object):
                 query_lpu_units = query_lpu_units.join(i)
 
         query_lpu_units = query_lpu_units.outerjoin(LPU_Units.lpu)
-        query_lpu_units = query_lpu_units.outerjoin(LPU_Units.parent, aliased=True)
+        # query_lpu_units = query_lpu_units.outerjoin(LPU_Units.parent, aliased=True)
         #.filter(LPU_Units.lpuId == UnitsParentForId.OrgId)
 
         if len(lpu_units_ids):
@@ -1024,7 +1024,7 @@ class PersonalWorker(object):
                 },
                 'hospitalUid': str(person.lpuId) + '/' + str(person.orgId),
                 'speciality': person.speciality[0].name,
-                'keyEPGU': person.keyEPGU,
+                'keyEPGU': person.key_epgu.keyEPGU,
             })
 
             result['hospitals'].append({
@@ -1239,7 +1239,22 @@ class UpdateWorker(object):
                                     if not speciality:
                                         continue
 
+                                    key_epgu = self.session.query(Personal_KeyEPGU).filter(
+                                        Personal_KeyEPGU.doctor_id == doctor.id,
+                                        Personal_KeyEPGU.lpuId == lpu.id,
+                                        Personal_KeyEPGU.orgId == unit.id
+                                    ).first()
+
+                                    if not key_epgu:
+                                        key_epgu = Personal_KeyEPGU(
+                                            doctor_id=doctor.id,
+                                            lpuId=lpu.id,
+                                            orgId=unit.id
+                                        )
+                                        self.session.add(key_epgu)
+
                                     personal = Personal(
+                                        # key_epgu=key_epgu,
                                         doctor_id=doctor.id,
                                         lpuId=lpu.id,
                                         orgId=unit.id,
@@ -1500,6 +1515,8 @@ class EPGUWorker(object):
         # Заново выбираем, т.к. не работает update commit с текущим пользователем (видимо, Session его забывает)
         doctor = self.session.query(Personal).get(doctor.id)
         for k, v in data.items():
+            if k == 'keyEPGU':
+                doctor.key_epgu.keyEPGU = v
             if hasattr(doctor, k):
                 setattr(doctor, k, v)
         self.session.commit()
@@ -1637,7 +1654,7 @@ class EPGUWorker(object):
                     for location in locations:
                         _exists_locations_id.append(location['keyEPGU'])
                         doctor = self.__get_doctor_by_location(location, lpu.id)
-                        if doctor and doctor.keyEPGU != location['keyEPGU']:
+                        if doctor and doctor.key_epgu.keyEPGU != location['keyEPGU']:
                             self.__update_doctor(doctor, dict(keyEPGU=location['keyEPGU']))
                             self.__log(u'Для %s %s %s получен keyEPGU (%s)' %
                                        (doctor.lastName, doctor.firstName, doctor.patrName, location['keyEPGU']))
@@ -1651,7 +1668,9 @@ class EPGUWorker(object):
                     options(joinedload(Personal.speciality)).
                     filter(Personal.lpuId == lpu.id).
                     filter(
-                        or_(Personal.keyEPGU == None, not_(Personal.keyEPGU.in_(_exists_locations_id)))).
+                        or_(
+                            Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU == None),
+                            not_(Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU.in_(_exists_locations_id))))).
                     all())
                 if add_epgu_doctors:
                     for doctor in add_epgu_doctors:
@@ -1665,7 +1684,7 @@ class EPGUWorker(object):
     def __link_activate_schedule(self, hospital, doctor, rules):
         epgu_result = self.proxy_client.PutLocationSchedule(
             hospital,
-            doctor.keyEPGU,
+            doctor.key_epgu.keyEPGU,
             rules)
         applied_schedule = getattr(epgu_result, 'applied-schedule', None)
         if applied_schedule:
@@ -1679,7 +1698,7 @@ class EPGUWorker(object):
                          getattr(applied_rule, 'end-date'),
                          getattr(applied_rule, 'rule-id')))
 
-            epgu_result = self.proxy_client.PutActivateLocation(hospital, doctor.keyEPGU)
+            epgu_result = self.proxy_client.PutActivateLocation(hospital, doctor.key_epgu.keyEPGU)
             location = getattr(epgu_result, 'location', None)
             if location:
                 self.__log(u'Очередь %s (%s) активирована' % (location.prefix, location.id))
@@ -1707,7 +1726,7 @@ class EPGUWorker(object):
 
             self.epgu_appoint_patient(
                 hospital=hospital,
-                doctor=dict(location_id=doctor.keyEPGU, epgu_service_type=service_type.keyEPGU),
+                doctor=dict(location_id=doctor.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU),
                 patient=patient,
                 timeslot=patient_slot['date_time']
             )
@@ -1758,7 +1777,9 @@ class EPGUWorker(object):
         start_date = today - datetime.timedelta(days=(today.isoweekday() - 1))
         end_date = start_date + datetime.timedelta(weeks=self.schedule_weeks_period)
         enqueue_dw = EnqueueWorker()
-        epgu_doctors = self.session.query(Personal).filter(Personal.keyEPGU != None).all()
+        epgu_doctors = self.session.query(Personal).filter(
+            Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
+        ).all()
         for doctor in epgu_doctors:
             params = {
                 'hospitalUid': '%s/%s' % (doctor.lpuId, doctor.orgId),
@@ -1884,7 +1905,9 @@ class EPGUWorker(object):
 
     def __add_by_epgu(self, params):
         try:
-            doctor = self.session.query(Personal).filter(Personal.keyEPGU == params.get('doctor_keyEPGU')).one()
+            doctor = self.session.query(Personal).filter(
+                Personal.key_epgu.keyEPGU == params.get('doctor_keyEPGU')
+            ).one()
             hospital = doctor.lpu
         except MultipleResultsFound, e:
             print e
@@ -1918,7 +1941,7 @@ class EPGUWorker(object):
             except AttributeError, e:
                 print e
                 return None
-            _doctor = dict(location_id=doctor.keyEPGU, epgu_service_type=service_type.keyEPGU)
+            _doctor = dict(location_id=doctor.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
             _patient = dict(firstName=patient['fio'].firstName,
                             lastName=patient['fio'].lastName,
                             patronymic=patient['fio'].patronymic,
