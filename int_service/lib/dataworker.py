@@ -4,6 +4,7 @@ import exceptions
 import urllib2
 import datetime
 import time
+import sys
 try:
     import json
 except ImportError:
@@ -25,6 +26,13 @@ from service_clients import Clients, ClientEPGU
 from is_exceptions import exception_by_code, IS_ConnectionError
 
 from admin.database import Session, shutdown_session
+
+import logging
+h1 = logging.StreamHandler(sys.stdout)
+rootLogger = logging.getLogger()
+rootLogger.addHandler(h1)
+logger = logging.getLogger("my.logger")
+logger.setLevel(logging.DEBUG)
 
 
 class DataWorker(object):
@@ -1383,6 +1391,7 @@ class EPGUWorker(object):
 
     def __log(self, msg):
         if msg:
+            logger.debug(msg)
             self.msg.append(msg)
 
     def __get_token(self):
@@ -1944,12 +1953,17 @@ class EPGUWorker(object):
         return None
 
     def __add_by_epgu(self, params):
+        logger.debug(params)
         try:
             doctor = self.session.query(Personal).filter(
                 Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU == params.get('doctor_keyEPGU'))
             ).one()
+
+            logger.debug(doctor)
+
             if doctor:
                 hospital = self.session.query(LPU).filter(LPU.id == doctor.lpuId).one()
+                logger.debug(hospital)
         except MultipleResultsFound, e:
             print e
         except NoResultFound, e:
