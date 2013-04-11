@@ -504,6 +504,7 @@ class ClientKorus20(AbstractClient):
                 lastName=person.get('lastName'),
                 firstName=person.get('firstName'),
                 patrName=person.get('patronymic'),
+                birthDate=birthDate
             )
             exception_code = int(patient.message.split()[0])
 
