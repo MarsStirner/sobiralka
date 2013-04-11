@@ -1860,6 +1860,25 @@ class EPGUWorker(object):
                 if busy_by_patients:
                     self.__appoint_patients(hospital[doctor.lpuId], doctor, busy_by_patients)
 
+    def activate_locations(self):
+        lpu_dw = LPUWorker()
+        lpu_list = lpu_dw.get_list()
+        hospital = dict()
+        if lpu_list:
+            for lpu in lpu_list:
+                hospital[lpu.id] = dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
+
+        epgu_doctors = self.session.query(Personal).filter(
+            Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
+        ).all()
+        for doctor in epgu_doctors:
+            epgu_result = self.proxy_client.PutActivateLocation(hospital[doctor.lpuId], doctor.key_epgu.keyEPGU)
+            location = getattr(epgu_result, 'location', None)
+            if location:
+                self.__log(u'Очередь %s (%s) активирована' % (location.prefix, location.id))
+            else:
+                self.__log(getattr(epgu_result, 'error', None))
+
     def sync_hospitals(self):
         lpu_list = self.session.query(LPU).filter(or_(~LPU.keyEPGU, LPU.keyEPGU == None))
         if lpu_list:

@@ -110,6 +110,17 @@ class SyncEPGUAdmin(BaseView):
             msg = [u'Ошибка обновления БД']
         return self.render('update_process.html', result_msg=msg)
 
+    @expose('/activate_locations/', methods=('POST',))
+    def activate_locations(self):
+        if request.form['do_update']:
+            data_worker = EPGUWorker()
+            data_worker.activate_locations()
+            msg = data_worker.msg
+            del data_worker
+        else:
+            msg = [u'Ошибка обновления БД']
+        return self.render('update_process.html', result_msg=msg)
+
     @expose('/update_schedules/', methods=('POST',))
     def sync_schedules(self):
         if request.form['do_update']:
