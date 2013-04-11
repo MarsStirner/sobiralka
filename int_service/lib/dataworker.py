@@ -1421,7 +1421,7 @@ class EPGUWorker(object):
         for speciality in specialities:
             db_speciality = self.session.query(EPGU_Speciality).filter(EPGU_Speciality.name == speciality.name).first()
             if not db_speciality:
-                epgu_speciality = EPGU_Speciality(name=speciality.name, keyEPGU=speciality.id)
+                epgu_speciality = EPGU_Speciality(name=speciality.name, keyEPGU=str(speciality.id))
                 self.session.add(epgu_speciality)
                 result.append(epgu_speciality)
             elif not db_speciality.keyEPGU:
@@ -1442,7 +1442,7 @@ class EPGUWorker(object):
                               filter(EPGU_Service_Type.keyEPGU == service.id).count())
                     if not exists:
                         self.session.add(EPGU_Service_Type(name=service.name,
-                                                           keyEPGU=service.id,
+                                                           keyEPGU=str(service.id),
                                                            code=service.code,
                                                            recid=service.recid,
                                                            epgu_speciality_id=epgu_speciality.id))
@@ -1462,7 +1462,7 @@ class EPGUWorker(object):
                             count()):
                         self.session.add(EPGU_Payment_Method(name=_methods.name,
                                                              default=(_methods.default == 'true'),
-                                                             keyEPGU=_methods.id))
+                                                             keyEPGU=str(_methods.id)))
                         self.session.commit()
                 self.__log(u'Методы оплаты синхронизированы')
                 self.__log(u'----------------------------')
@@ -1479,7 +1479,7 @@ class EPGUWorker(object):
                     if not (self.session.query(EPGU_Reservation_Type).
                             filter(EPGU_Reservation_Type.keyEPGU == _type.id).
                             count()):
-                        self.session.add(EPGU_Reservation_Type(name=_type.name, code=_type.code, keyEPGU=_type.id))
+                        self.session.add(EPGU_Reservation_Type(name=_type.name, code=_type.code, keyEPGU=str(_type.id)))
                         self.session.commit()
                 self.__log(u'Типы резервирования синхронизированы')
                 self.__log(u'----------------------------')
@@ -1659,7 +1659,7 @@ class EPGUWorker(object):
                         _exists_locations_id.append(location['keyEPGU'])
                         doctor = self.__get_doctor_by_location(location, lpu.id)
                         if doctor and doctor.key_epgu.keyEPGU != location['keyEPGU']:
-                            self.__update_doctor(doctor, dict(keyEPGU=location['keyEPGU']))
+                            self.__update_doctor(doctor, dict(keyEPGU=str(location['keyEPGU'])))
                             self.__log(u'Для %s %s %s получен keyEPGU (%s)' %
                                        (doctor.lastName, doctor.firstName, doctor.patrName, location['keyEPGU']))
                         elif not doctor:
@@ -1680,7 +1680,7 @@ class EPGUWorker(object):
                     for doctor in add_epgu_doctors:
                         location_id = self.__post_location_epgu(hospital, doctor)
                         if location_id:
-                            self.__update_doctor(doctor, dict(keyEPGU=location_id))
+                            self.__update_doctor(doctor, dict(keyEPGU=str(location_id)))
                             self.__log(u'Для %s %s %s отправлена очередь, получен keyEPGU (%s)' %
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, location_id))
                 self.__log(u'----------------------------')
