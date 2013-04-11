@@ -1385,6 +1385,12 @@ class EPGUWorker(object):
         if msg:
             self.msg.append(msg)
 
+    def __get_token(self):
+        lpu_token = self.session.query(LPU.token).filter(LPU.token != None).first()
+        if lpu_token:
+            return lpu_token.token
+        return None
+
     def __failed_update(self, error=""):
         self.session.rollback()
         # shutdown_session()
@@ -1485,12 +1491,6 @@ class EPGUWorker(object):
                 self.__log(u'----------------------------')
             else:
                 self.__log(getattr(epgu_result, 'error', None))
-
-    def __get_token(self):
-        lpu_token = self.session.query(LPU.token).filter(LPU.token != None).first()
-        if lpu_token:
-            return lpu_token.token
-        return None
 
     def __get_doctor_by_location(self, location, lpu_id):
         doctor = None
