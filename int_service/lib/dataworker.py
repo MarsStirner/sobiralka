@@ -4,6 +4,7 @@ import exceptions
 import urllib2
 import datetime
 import time
+import logging
 try:
     import json
 except ImportError:
@@ -17,7 +18,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.exc import InvalidRequestError
 from suds import WebFault
 
-from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
+from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, DEBUG
 from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality, Regions, LPU_Specialities
 from admin.models import Personal_Specialities, EPGU_Speciality, EPGU_Service_Type, Personal_KeyEPGU
 from admin.models import EPGU_Payment_Method, EPGU_Reservation_Type
@@ -25,6 +26,8 @@ from service_clients import Clients, ClientEPGU
 from is_exceptions import exception_by_code, IS_ConnectionError
 
 from admin.database import Session, shutdown_session
+if DEBUG:
+    logging.basicConfig(level=logging.DEBUG)
 
 
 class DataWorker(object):
@@ -1448,9 +1451,11 @@ class EPGUWorker(object):
 
     def sync_payment_methods(self):
         auth_token = self.__get_token()
+        logging.debug(auth_token)
         if auth_token:
             epgu_result = self.proxy_client.GetPaymentMethods(auth_token=auth_token)
             payment_methods = getattr(epgu_result, 'payment-method', None)
+            logging.debug(payment_methods)
             if payment_methods:
                 for _methods in payment_methods:
                     if not (self.session.query(EPGU_Payment_Method).
@@ -1467,9 +1472,11 @@ class EPGUWorker(object):
 
     def sync_reservation_types(self):
         auth_token = self.__get_token()
+        logging.debug(auth_token)
         if auth_token:
             epgu_result = self.proxy_client.GetReservationTypes(auth_token=auth_token)
             reservation_types = getattr(epgu_result, 'reservation-type', None)
+            logging.debug(reservation_types)
             if reservation_types:
                 for _type in reservation_types:
                     if not (self.session.query(EPGU_Reservation_Type).
