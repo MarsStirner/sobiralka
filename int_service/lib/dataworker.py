@@ -1742,7 +1742,7 @@ class EPGUWorker(object):
             key_epgu = self.session.query(Personal_KeyEPGU).filter(
                 Personal_KeyEPGU.lpuId == doctor.lpuId,
                 Personal_KeyEPGU.orgId == doctor.orgId,
-                Personal_KeyEPGU.doctor_id == doctor.id
+                Personal_KeyEPGU.doctor_id == doctor.doctor_id
             ).one()
             self.epgu_appoint_patient(
                 hospital=hospital,
