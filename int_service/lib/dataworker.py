@@ -1942,7 +1942,8 @@ class EPGUWorker(object):
             doctor = self.session.query(Personal).filter(
                 Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU == params.get('doctor_keyEPGU'))
             ).one()
-            hospital = doctor.lpu
+            if doctor:
+                hospital = self.session.query(LPU).filter(LPU.id == doctor.lpuId).one()
         except MultipleResultsFound, e:
             print e
         except NoResultFound, e:
