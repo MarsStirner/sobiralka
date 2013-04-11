@@ -1667,7 +1667,7 @@ class EPGUWorker(object):
                         if doctor and doctor.key_epgu.keyEPGU != location['keyEPGU']:
                             self.__update_doctor(doctor, dict(keyEPGU=str(location['keyEPGU'])))
                             self.__log(u'Для %s %s %s получен keyEPGU (%s)' %
-                                       (doctor.lastName, doctor.firstName, doctor.patrName, location['keyEPGU']))
+                                       (doctor.LastName, doctor.FirstName, doctor.PatrName, location['keyEPGU']))
                         elif not doctor:
                             self.__delete_location_epgu(hospital, location['keyEPGU'])
                             self.__log(u'Для %s не найден на ЕПГУ, удалена очередь (%s)' %
@@ -1711,6 +1711,7 @@ class EPGUWorker(object):
                              getattr(applied_rule, 'end-date', ''),
                              getattr(applied_rule, 'rule-id', '')))
 
+            # TODO: На Celery с задержкой
             epgu_result = self.proxy_client.PutActivateLocation(hospital, doctor.key_epgu.keyEPGU)
             location = getattr(epgu_result, 'location', None)
             if location:
