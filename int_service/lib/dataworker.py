@@ -1368,6 +1368,10 @@ class EPGUWorker(object):
     session = Session()
     proxy_client = ClientEPGU()
 
+    class Struct:
+        def __init__(self, **kwargs):
+            self.__dict__.update(kwargs)
+
     def __init__(self):
         self.msg = []
         self.time_table_period = 90  # TODO: вынести в настройки
@@ -1883,9 +1887,9 @@ class EPGUWorker(object):
                 operation = 'add'
                 slot_id = data['ARQ'][0][1][0]
                 timeslot = datetime.datetime.strptime(data['ARQ'][0][11][0], '%Y%m%d%H%M%S')
-                patient = dict(lastName=data['PID'][0][5][0],
-                               firstName=data['PID'][0][5][1],
-                               patronymic=data['PID'][0][5][2])
+                patient = self.Struct(lastName=data['PID'][0][5][0],
+                                      firstName=data['PID'][0][5][1],
+                                      patronymic=data['PID'][0][5][2])
                 doctor_keyEPGU = data['AIP'][0][3][0]
                 result = dict(operation=operation,
                               slot_id=slot_id,
