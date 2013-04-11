@@ -1919,13 +1919,20 @@ class EPGUWorker(object):
             print e
             return None
         else:
+            slot_id = params.get('slot_id')
+            if slot_id:
+                ticket_exists = self.session.query(Enqueue).filter(Enqueue.keyEPGU == slot_id).count()
+                if ticket_exists:
+                    self.__log(u'Талончик с keyEPGU=%s уже существует' % slot_id)
+                    return False
+
             enqueue_dw = EnqueueWorker()
             _enqueue = enqueue_dw.enqueue(
                 person=params.get('patient'),
                 hospitalUid='%i/%i' % (doctor.lpuId, doctor.orgId),
                 doctorUid=doctor.doctor_id,
                 timeslotStart=params.get('timeslot'),
-                epgu_slot_id=params.get('slot_id')
+                epgu_slot_id=slot_id
             )
             if _enqueue and _enqueue['result'] is True:
                 return True
@@ -1972,12 +1979,11 @@ class EPGUWorker(object):
             print e
             return None
         else:
-            data = json.load(enqueue.Data)
+            data = json.loads(enqueue.Data)
             if data['hospitalUid']:
                 enqueue_dw = EnqueueWorker()
-                result = enqueue_dw.dequeue(
-                    dict(hospitalUid=data['hospitalUid'], ticketUid='%s/%s' % (enqueue.ticket_id, enqueue.patient_id))
-                )
+                result = enqueue_dw.dequeue(hospitalUid=data['hospitalUid'],
+                                            ticketUid='%s/%s' % (enqueue.ticket_id, enqueue.patient_id))
         return result
 
     def epgu_request(self, format, message):
@@ -1996,6 +2002,3 @@ class EPGUWorker(object):
             elif data.get('operation') == 'delete':
                 result = self.__delete_by_epgu(data)
         return result
-
-
-
