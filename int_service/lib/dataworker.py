@@ -1726,6 +1726,7 @@ class EPGUWorker(object):
         for patient_slot in patient_slots:
             try:
                 service_type = doctor.speciality[0].epgu_service_type
+                service_type_keyEPGU = service_type.keyEPGU
             except AttributeError, e:
                 print e
                 self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
@@ -1746,7 +1747,7 @@ class EPGUWorker(object):
             ).one()
             self.epgu_appoint_patient(
                 hospital=hospital,
-                doctor=dict(location_id=key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU),
+                doctor=dict(location_id=key_epgu.keyEPGU, epgu_service_type=service_type_keyEPGU),
                 patient=patient,
                 timeslot=patient_slot['date_time']
             )
