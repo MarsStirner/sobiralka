@@ -1386,9 +1386,9 @@ class EPGUWorker(object):
             self.msg.append(msg)
 
     def __get_token(self):
-        lpu_token = self.session.query(LPU.token).filter(LPU.token != None).first()
-        if lpu_token:
-            return lpu_token.token
+        lpu = self.session.query(LPU).filter(LPU.token != None).first()
+        if lpu:
+            return lpu.token
         return None
 
     def __failed_update(self, error=""):
