@@ -1933,9 +1933,14 @@ class EPGUWorker(object):
                 operation = 'add'
                 slot_id = data['ARQ'][0][1][0]
                 timeslot = datetime.datetime.strptime(data['ARQ'][0][11][0], '%Y%m%d%H%M%S')
-                patient = self.Struct(lastName=data['PID'][0][5][0],
-                                      firstName=data['PID'][0][5][1],
-                                      patronymic=data['PID'][0][5][2])
+                lastName = data['PID'][0][5][0]
+                firstName = data['PID'][0][5][1]
+                patronymic = data['PID'][0][5][2]
+                if not lastName or not firstName:
+                    return None
+                patient = self.Struct(lastName=lastName,
+                                      firstName=firstName,
+                                      patronymic=patronymic)
                 doctor_keyEPGU = data['AIP'][0][3][0]
                 result = dict(operation=operation,
                               slot_id=slot_id,
