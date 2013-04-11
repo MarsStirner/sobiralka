@@ -17,7 +17,7 @@ from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.exc import InvalidRequestError
 from suds import WebFault
 
-from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT
+from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, DEBUG
 from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality, Regions, LPU_Specialities
 from admin.models import Personal_Specialities, EPGU_Speciality, EPGU_Service_Type, Personal_KeyEPGU
 from admin.models import EPGU_Payment_Method, EPGU_Reservation_Type
@@ -1702,12 +1702,14 @@ class EPGUWorker(object):
             if applied_rules:
                 for applied_rule in getattr(applied_rules, 'applied-rule', []):
                     if applied_rule:
+                        if DEBUG:
+                            print applied_rule
                         self.__log(
                             u'Очереди (%s) назначено расписание с %s по %s (%s)' %
-                            (getattr(applied_schedule, 'location-id'),
-                             getattr(applied_rule, 'start-date'),
-                             getattr(applied_rule, 'end-date'),
-                             getattr(applied_rule, 'rule-id')))
+                            (getattr(applied_schedule, 'location-id', ''),
+                             getattr(applied_rule, 'start-date', ''),
+                             getattr(applied_rule, 'end-date', ''),
+                             getattr(applied_rule, 'rule-id', '')))
 
             epgu_result = self.proxy_client.PutActivateLocation(hospital, doctor.key_epgu.keyEPGU)
             location = getattr(epgu_result, 'location', None)
