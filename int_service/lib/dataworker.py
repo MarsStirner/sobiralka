@@ -1392,7 +1392,7 @@ class EPGUWorker(object):
     def __log(self, msg):
         if msg:
             logger.debug(msg)
-            self.msg.append(msg)
+            self.msg.append(unicode(msg))
 
     def __get_token(self):
         lpu_token = self.session.query(LPU.token).filter(and_(LPU.token != '', LPU.token != None)).first()
