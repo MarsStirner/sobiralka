@@ -1594,9 +1594,13 @@ class EPGUWorker(object):
         #         all())
 
     def __post_location_epgu(self, hospital, doctor):
-        epgu_speciality = None
-        if doctor.speciality and isinstance(doctor.speciality, list):
-            epgu_speciality = doctor.speciality[0].epgu_speciality
+        if not doctor.speciality or not isinstance(doctor.speciality, list):
+            self.__log(
+                u'Не найдена специальность у врача %s %s %s (id=%s)' %
+                (doctor.LastName, doctor.FirstName, doctor.PatrName, doctor.doctor_id))
+            return None
+
+        epgu_speciality = doctor.speciality[0].epgu_speciality
         if not epgu_speciality:
             self.__log(
                 u'Нет соответствия специальности %s на ЕПГУ для врача %s %s %s (id=%s)' %
