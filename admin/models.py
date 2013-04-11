@@ -191,7 +191,7 @@ class Personal(Base):
     office = Column(Unicode(8), nullable=True)
     # keyEPGU = Column(String(45))
 
-    lpu = relationship(LPU, backref=backref('personal', order_by=id))
+    lpu = relationship(LPU, backref=backref('personal', order_by=id, lazy='joined'))
     speciality = relationship(Speciality, secondary='personal_speciality', backref=backref('personal'), lazy='joined')
     UniqueConstraint(doctor_id, lpuId, orgId)
 
