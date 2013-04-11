@@ -1739,9 +1739,14 @@ class EPGUWorker(object):
             else:
                 patient['patronymic'] = patronymic
 
+            key_epgu = self.session.query(Personal_KeyEPGU).filter(
+                Personal_KeyEPGU.lpuId == doctor.lpuId,
+                Personal_KeyEPGU.orgId == doctor.orgId,
+                Personal_KeyEPGU.doctor_id == doctor.id
+            ).one()
             self.epgu_appoint_patient(
                 hospital=hospital,
-                doctor=dict(location_id=doctor.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU),
+                doctor=dict(location_id=key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU),
                 patient=patient,
                 timeslot=patient_slot['date_time']
             )
