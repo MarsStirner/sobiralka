@@ -1795,7 +1795,7 @@ class EPGUWorker(object):
                 hospital[lpu.id] = dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
 
         today = datetime.datetime.today().date()
-        start_date = today - datetime.timedelta(days=(today.isoweekday() - 1))
+        start_date = today - datetime.timedelta(days=(today.isoweekday() - 1)) + datetime.timedelta(weeks=1)
         end_date = start_date + datetime.timedelta(weeks=self.schedule_weeks_period)
         enqueue_dw = EnqueueWorker()
         epgu_doctors = self.session.query(Personal).filter(
