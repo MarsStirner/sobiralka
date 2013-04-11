@@ -28,6 +28,7 @@ from is_exceptions import exception_by_code, IS_ConnectionError
 from admin.database import Session, shutdown_session
 
 import logging
+logging.basicConfig(level=logging.DEBUG)
 h1 = logging.StreamHandler(sys.stdout)
 rootLogger = logging.getLogger()
 rootLogger.addHandler(h1)
