@@ -1962,9 +1962,7 @@ class EPGUWorker(object):
 
             logger.debug(doctor)
 
-            if doctor:
-                hospital = self.session.query(LPU).filter(LPU.id == doctor.lpuId).one()
-                logger.debug(hospital)
+            hospital_param = dict(auth_token=doctor.lpu.token, place_id=doctor.lpu.keyEPGU)
         except MultipleResultsFound, e:
             print e
         except NoResultFound, e:
@@ -1990,7 +1988,7 @@ class EPGUWorker(object):
                 return True
             else:
                 self.epgu_delete_slot(
-                    hospital=dict(auth_token=hospital.token, place_id=hospital.keyEPGU),
+                    hospital=hospital_param,
                     slot_id=params.get('slot_id'))
 
     def send_enqueue(self, hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
