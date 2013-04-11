@@ -1511,8 +1511,8 @@ class EPGUWorker(object):
                      Personal.PatrName.ilike('%s%%' % patrname),
                      Personal.speciality.any(Speciality.epgu_speciality.has(EPGU_Speciality.keyEPGU == location['epgu_speciality'])),
                      )
-            ).group_by(Personal.doctor_id).one()
-            # ).group_by(Personal.doctor_id).first()
+            # ).group_by(Personal.doctor_id).one()
+            ).group_by(Personal.doctor_id).first()
             # TODO: Как быть, если есть тёзка?
         return doctor
 
