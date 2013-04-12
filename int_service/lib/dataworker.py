@@ -1677,17 +1677,21 @@ class EPGUWorker(object):
                 self.__log(u'Синхронизация очередей для %s' % lpu.name)
                 locations = self.__get_all_locations(hospital=hospital)
                 _exists_locations_id = []
+                _synced_doctor = []
                 if locations:
                     for location in locations:
+                        # TODO: перевести _exists_locations_id на id с keyEPGU
                         _exists_locations_id.append(location['keyEPGU'])
                         doctor = self.__get_doctor_by_location(location, lpu.id)
                         if doctor and doctor.key_epgu.keyEPGU == location['keyEPGU']:
                             self.__log(u'Для %s %s %s keyEPGU (%s) в ИС и на ЕПГУ совпадают' %
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, location['keyEPGU']))
+                            _synced_doctor.append(doctor.id)
                         elif doctor and doctor.key_epgu.keyEPGU != location['keyEPGU']:
                             self.__update_doctor(doctor, dict(keyEPGU=str(location['keyEPGU'])))
                             self.__log(u'Для %s %s %s получен keyEPGU (%s)' %
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, location['keyEPGU']))
+                            _synced_doctor.append(doctor.id)
                         elif not doctor:
                             self.__delete_location_epgu(hospital, location['keyEPGU'])
                             self.__log(u'Для %s не найден на ЕПГУ, удалена очередь (%s)' %
@@ -1695,12 +1699,16 @@ class EPGUWorker(object):
 
                 add_epgu_doctors = (
                     self.session.query(Personal).
-                    options(joinedload(Personal.speciality)).
+                    # options(joinedload(Personal.speciality)).
                     filter(Personal.lpuId == lpu.id).
                     filter(
                         or_(
                             Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU == None),
-                            not_(Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU.in_(_exists_locations_id))))).
+                            not_(Personal.id.in_(_synced_doctor)))).
+                    # filter(
+                    #     or_(
+                    #         Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU == None),
+                    #         not_(Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU.in_(_exists_locations_id))))).
                     all())
                 if add_epgu_doctors:
                     for doctor in add_epgu_doctors:
@@ -1805,19 +1813,42 @@ class EPGUWorker(object):
             self.__log(getattr(epgu_result, 'error', None))
         return _hash
 
+    def __post_rules(self, start_date, week_number, hospital, doctor, days):
+        rule_start = start_date + datetime.timedelta(weeks=(week_number - 1))
+        rule_end = rule_start + datetime.timedelta(days=6)
+        epgu_result = self.proxy_client.PostRules(
+            hospital=hospital,
+            doctor=u'%s %s.%s.' % (doctor.LastName, doctor.FirstName[0:1], doctor.PatrName[0:1]),
+            period='%s-%s' % (rule_start.strftime('%d.%m.%Y'), rule_end.strftime('%d.%m.%Y'), ),
+            days=days)
+        rule = getattr(epgu_result, 'rule', None)
+        if rule:
+            self.__log(
+                u'На ЕПГУ отправлено расписание для %s %s %s (%s-%s)' %
+                (doctor.LastName,
+                 doctor.FirstName,
+                 doctor.PatrName,
+                 rule_start.strftime('%d.%m.%Y'),
+                 rule_end.strftime('%d.%m.%Y')))
+            return dict(id=rule.id, start=rule_start, end=rule_end)
+        else:
+            self.__log(getattr(epgu_result, 'error', None))
+
     def sync_schedule(self):
-        lpu_dw = LPUWorker()
-        lpu_list = lpu_dw.get_list()
+        lpu_list = self.session.query(LPU).filter(LPU.keyEPGU != '', LPU.keyEPGU != None).all()
         hospital = dict()
         if lpu_list:
             for lpu in lpu_list:
                 hospital[lpu.id] = dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
+        else:
+            self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
+            return False
 
         today = datetime.datetime.today().date()
         start_date = today - datetime.timedelta(days=(today.isoweekday() - 1)) + datetime.timedelta(weeks=1)
         end_date = start_date + datetime.timedelta(weeks=self.schedule_weeks_period)
         enqueue_dw = EnqueueWorker()
-        epgu_doctors = self.session.query(Personal).filter(
+        epgu_doctors = self.session.query(Personal).filter(Personal.lpuId.in_(hospital.keys())).filter(
             Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
         ).all()
         for doctor in epgu_doctors:
@@ -1838,38 +1869,17 @@ class EPGUWorker(object):
                 for timeslot in schedule['timeslots']:
                     if timeslot['start'].date() >= start_date + datetime.timedelta(weeks=week_number):
                         if days:
-                            rule_start = start_date + datetime.timedelta(weeks=(week_number - 1))
-                            rule_end = rule_start + datetime.timedelta(days=6)
-                            epgu_result = self.proxy_client.PostRules(
-                                hospital=hospital[doctor.lpuId],
-                                doctor=u'%s %s.%s.' % (doctor.LastName, doctor.FirstName[0:1], doctor.PatrName[0:1]),
-                                period='%s-%s' % (rule_start.strftime('%d.%m.%Y'), rule_end.strftime('%d.%m.%Y'), ),
-                                days=days)
-                            rule = getattr(epgu_result, 'rule', None)
-                            if rule:
-                                doctor_rules.append(
-                                    dict(
-                                        id=rule.id,
-                                        start=rule_start,
-                                        end=rule_end,
-                                    ))
-                                self.__log(
-                                    u'На ЕПГУ отправлено расписание для %s %s %s (%s-%s)' %
-                                    (doctor.LastName,
-                                     doctor.FirstName,
-                                     doctor.PatrName,
-                                     rule_start.strftime('%d.%m.%Y'),
-                                     rule_end.strftime('%d.%m.%Y')))
-                            else:
-                                self.__log(getattr(epgu_result, 'error', None))
+                            epgu_rule = self.__post_rules(start_date, week_number, hospital[doctor.lpuId], doctor, days)
+                            if epgu_rule:
+                                doctor_rules.append(epgu_rule)
                             days = []
                         week_number += week_number
 
+                    interval.append(dict(start=timeslot['start'].time().strftime('%H:%M'),
+                                         end=timeslot['finish'].time().strftime('%H:%M')))
                     if previous_day is not None and previous_day != timeslot['start'].date():
                         days.append(dict(date=timeslot['start'], interval=interval))
                         interval = []
-                    interval.append(dict(start=timeslot['start'].time().strftime('%H:%M'),
-                                         end=timeslot['finish'].time().strftime('%H:%M')))
 
                     previous_day = timeslot['start'].date()
 
@@ -1878,6 +1888,10 @@ class EPGUWorker(object):
                             dict(date_time=timeslot['start'],
                                  patient=dict(id=timeslot['patientId'], fio=timeslot['patientInfo'])
                                  ))
+                if days:
+                    epgu_rule = self.__post_rules(start_date, week_number, hospital[doctor.lpuId], doctor, days)
+                    if epgu_rule:
+                        doctor_rules.append(epgu_rule)
 
                 if doctor_rules:
                     self.__link_activate_schedule(hospital[doctor.lpuId], doctor, doctor_rules)
@@ -1886,14 +1900,16 @@ class EPGUWorker(object):
                     self.__appoint_patients(hospital[doctor.lpuId], doctor, busy_by_patients)
 
     def activate_locations(self):
-        lpu_dw = LPUWorker()
-        lpu_list = lpu_dw.get_list()
+        lpu_list = self.session.query(LPU).filter(LPU.keyEPGU != '', LPU.keyEPGU != None).all()
         hospital = dict()
         if lpu_list:
             for lpu in lpu_list:
                 hospital[lpu.id] = dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
+        else:
+            self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
+            return False
 
-        epgu_doctors = self.session.query(Personal).filter(
+        epgu_doctors = self.session.query(Personal).filter(Personal.lpuId.in_(hospital.keys())).filter(
             Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
         ).all()
         for doctor in epgu_doctors:
