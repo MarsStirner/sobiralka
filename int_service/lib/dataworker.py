@@ -1749,9 +1749,9 @@ class EPGUWorker(object):
                         self.__log(
                             u'Очереди (%s) назначено расписание с %s по %s (%s)' %
                             (getattr(applied_schedule, 'location-id', ''),
-                             getattr(applied_rule, 'start-date', ''),
-                             getattr(applied_rule, 'end-date', ''),
-                             getattr(applied_rule, 'rule-id', '')))
+                             getattr(applied_rule, 'start-date'),
+                             getattr(applied_rule, 'end-date'),
+                             getattr(applied_rule, 'rule-id')))
 
             # TODO: На Celery с задержкой
             epgu_result = self.proxy_client.PutActivateLocation(hospital, doctor.key_epgu.keyEPGU)
@@ -1882,17 +1882,9 @@ class EPGUWorker(object):
                 week_number = 1
                 previous_day = None
                 for timeslot in schedule['timeslots']:
-                    if timeslot['start'].date() >= (start_date + datetime.timedelta(weeks=week_number)):
-                        #TODO: понять, как будет с Интрамедом
-                        if timeslot['status'] == 'disabled':
-                            continue
-
-                        if days:
-                            epgu_rule = self.__post_rules(start_date, week_number, hospital[doctor.lpuId], doctor, days)
-                            if epgu_rule:
-                                doctor_rules.append(epgu_rule)
-                            days = []
-                        week_number += week_number
+                    #TODO: понять, как будет с Интрамедом
+                    if timeslot['status'] == 'disabled':
+                        continue
 
                     if previous_day is not None and previous_day.date() != timeslot['start'].date():
                         days.append(dict(date=previous_day, interval=interval))
@@ -1902,6 +1894,14 @@ class EPGUWorker(object):
                                          end=timeslot['finish'].time().strftime('%H:%M')))
 
                     previous_day = timeslot['start']
+
+                    if timeslot['start'].date() >= (start_date + datetime.timedelta(weeks=week_number)):
+                        if days:
+                            epgu_rule = self.__post_rules(start_date, week_number, hospital[doctor.lpuId], doctor, days)
+                            if epgu_rule:
+                                doctor_rules.append(epgu_rule)
+                            days = []
+                        week_number += week_number
 
                     if timeslot['patientId'] and timeslot['patientInfo']:
                         busy_by_patients.append(
