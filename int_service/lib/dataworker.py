@@ -32,7 +32,7 @@ import logging
 if DEBUG:
     logging.basicConfig(level=logging.ERROR)
 else:
-    logging.basicConfig(level=logging.ERROR)
+    logging.basicConfig(level=logging.CRITICAL)
 h1 = logging.StreamHandler(sys.stdout)
 rootLogger = logging.getLogger()
 rootLogger.addHandler(h1)
