@@ -1166,8 +1166,8 @@ class UpdateWorker(object):
 
         self.session.commit()
 
-    def __check_unit_exists(self, unit_id):
-        return self.session.query(LPU_Units).filter(LPU_Units.orgId == unit_id).count()
+    def __check_unit_exists(self, lpu_id, unit_id):
+        return self.session.query(LPU_Units).filter(LPU_Units.lpuId == lpu_id, LPU_Units.orgId == unit_id).count()
 
     def __update_unit_parents(self, units, lpu):
         for unit in units:
@@ -1175,12 +1175,13 @@ class UpdateWorker(object):
                 continue
             try:
                 if hasattr(unit, 'parentId') and unit.parentId:
-                    if self.__check_unit_exists(unit.parentId) > 0:
+                    if self.__check_unit_exists(lpu.id, unit.parentId) > 0:
                         self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parentId, ChildId=unit.id))
+                        self.session.commit()
                 elif hasattr(unit, 'parent_id') and unit.parent_id:
-                    if self.__check_unit_exists(unit.parent_id) > 0:
+                    if self.__check_unit_exists(lpu.id, unit.parent_id) > 0:
                         self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parent_id, ChildId=unit.id))
-                self.session.commit()
+                        self.session.commit()
             except Exception, e:
                 print e
                 self.__log(u'Ошибка при добавлении в UnitsParentForId: %s' % e)
