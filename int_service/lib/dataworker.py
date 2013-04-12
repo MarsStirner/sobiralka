@@ -1166,6 +1166,20 @@ class UpdateWorker(object):
 
         self.session.commit()
 
+    def __update_unit_parents(self, units, lpu):
+        for unit in units:
+            if not unit.name:
+                continue
+            try:
+                if hasattr(unit, 'parentId') and unit.parentId:
+                    self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parentId, ChildId=unit.id))
+                elif hasattr(unit, 'parent_id') and unit.parent_id:
+                    self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parent_id, ChildId=unit.id))
+                self.session.commit()
+            except Exception, e:
+                print e
+                self.__log(u'Ошибка при добавлении в UnitsParentForId: %s' % e)
+
     def __update_lpu_units(self, lpu):
         """Обновляет информацию о потразделениях"""
         return_units = []
@@ -1206,18 +1220,11 @@ class UpdateWorker(object):
                             name=unicode(unit.name),
                             address=unicode(address)
                         ))
+                        self.session.commit()
                         return_units.append(unit)
-
-                    try:
-                        if hasattr(unit, 'parentId') and unit.parentId:
-                            self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parentId, ChildId=unit.id))
-                        elif hasattr(unit, 'parent_id') and unit.parent_id:
-                            self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parent_id, ChildId=unit.id))
-                    except Exception, e:
-                        print e
-                        self.__log(u'Ошибка при добавлении в UnitsParentForId: %s' % e)
-
                     self.__log(u'%s: %s' % (unit.id, unit.name))
+
+                self.__update_unit_parents(units, lpu)
 
         return return_units
 
