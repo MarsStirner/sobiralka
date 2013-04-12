@@ -174,6 +174,8 @@ class ClientKorus20(AbstractClient):
             result = self.client.service.getPersonnel(**params)
         except WebFault, e:
             print e
+        except Exception, e:
+            print e
         else:
             return result
         return None
