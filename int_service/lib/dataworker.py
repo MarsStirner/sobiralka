@@ -1216,9 +1216,7 @@ class UpdateWorker(object):
                     if not unit.name:
                         continue
 
-                    address = getattr(unit, 'address')
-                    if address is None:
-                        address = ''
+                    address = getattr(unit, 'address', '')
 
                     if not getattr(unit, 'parentId', None) and not getattr(unit, 'parent_id', None):
                         self.session.add(LPU_Units(
@@ -1776,8 +1774,9 @@ class EPGUWorker(object):
             patient = dict(firstName=fio_list[1], lastName=fio_list[0], id=patient_slot['patient']['id'])
             try:
                 patronymic = fio_list[2]
-            except IndexError:
-                pass
+            except IndexError, e:
+                print e
+                patient['patronymic'] = u''
             else:
                 patient['patronymic'] = patronymic
 
@@ -1883,9 +1882,9 @@ class EPGUWorker(object):
                 for timeslot in schedule['timeslots']:
                     if timeslot['start'].date() >= start_date + datetime.timedelta(weeks=week_number):
                         if days:
-                            epgu_rule = self.__post_rules(start_date, week_number, hospital[doctor.lpuId], doctor, days)
-                            if epgu_rule:
-                                doctor_rules.append(epgu_rule)
+                            # epgu_rule = self.__post_rules(start_date, week_number, hospital[doctor.lpuId], doctor, days)
+                            # if epgu_rule:
+                            #     doctor_rules.append(epgu_rule)
                             days = []
                         week_number += week_number
 
@@ -1902,10 +1901,10 @@ class EPGUWorker(object):
                             dict(date_time=timeslot['start'],
                                  patient=dict(id=timeslot['patientId'], fio=timeslot['patientInfo'])
                                  ))
-                if days:
-                    epgu_rule = self.__post_rules(start_date, week_number, hospital[doctor.lpuId], doctor, days)
-                    if epgu_rule:
-                        doctor_rules.append(epgu_rule)
+                # if days:
+                #     epgu_rule = self.__post_rules(start_date, week_number, hospital[doctor.lpuId], doctor, days)
+                #     if epgu_rule:
+                #         doctor_rules.append(epgu_rule)
 
                 if doctor_rules:
                     self.__link_activate_schedule(hospital[doctor.lpuId], doctor, doctor_rules)
