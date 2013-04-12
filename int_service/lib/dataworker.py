@@ -134,6 +134,8 @@ class LPUWorker(object):
         if okato_code:
             query_lpu = query_lpu.filter(LPU.OKATO.like('%' + okato_code + '%'))
 
+        query_lpu = query_lpu.order_by(LPU.name)
+
         return query_lpu.all()
 
     def get_lpu_by_address(self, **kwargs):
@@ -1216,14 +1218,16 @@ class UpdateWorker(object):
                     if not unit.name:
                         continue
 
-                    address = getattr(unit, 'address', '')
+                    address = getattr(unit, 'address', None)
+                    if not address:
+                        address = ''
 
                     if not getattr(unit, 'parentId', None) and not getattr(unit, 'parent_id', None):
                         self.session.add(LPU_Units(
                             lpuId=lpu.id,
                             orgId=unit.id,
                             name=unicode(unit.name),
-                            address=unicode(address)
+                            address=address
                         ))
                         self.session.commit()
                         self.__log(u'%s: %s' % (unit.id, unit.name))
