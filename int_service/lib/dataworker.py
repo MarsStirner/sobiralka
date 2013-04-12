@@ -1745,13 +1745,13 @@ class EPGUWorker(object):
             if applied_rules:
                 for applied_rule in getattr(applied_rules, 'applied-rule', []):
                     if applied_rule:
-                        print applied_rule
+                        applied_rule = dict(applied_rule)
                         self.__log(
                             u'Очереди (%s) назначено расписание с %s по %s (%s)' %
                             (getattr(applied_schedule, 'location-id', ''),
-                             getattr(applied_rule, 'start-date'),
-                             getattr(applied_rule, 'end-date'),
-                             getattr(applied_rule, 'rule-id')))
+                             applied_rule.get('start-date', ''),
+                             applied_rule.get('end-date', ''),
+                             applied_rule.get('rule-id', '')))
 
             # TODO: На Celery с задержкой
             epgu_result = self.proxy_client.PutActivateLocation(hospital, doctor.key_epgu.keyEPGU)
