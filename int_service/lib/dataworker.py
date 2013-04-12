@@ -25,7 +25,7 @@ from admin.models import EPGU_Payment_Method, EPGU_Reservation_Type
 from service_clients import Clients, ClientEPGU
 from is_exceptions import exception_by_code, IS_ConnectionError
 
-from admin.database import Session, shutdown_session
+from admin.database import Session, Session2, shutdown_session
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -1374,7 +1374,7 @@ class UpdateWorker(object):
 
 class EPGUWorker(object):
     """Класс взаимодействия с ЕПГУ"""
-    session = Session()
+    session = Session2()
     proxy_client = ClientEPGU()
 
     class Struct:
@@ -1388,6 +1388,7 @@ class EPGUWorker(object):
         self.default_phone = '+79011111111'
 
     def __del__(self):
+        shutdown_session(self.session)
         self.session.close()
 
     def __log(self, msg):

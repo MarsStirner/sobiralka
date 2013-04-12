@@ -7,6 +7,7 @@ from settings import DB_CONNECT_STRING
 
 engine = create_engine(DB_CONNECT_STRING, convert_unicode=True)
 Session = scoped_session(sessionmaker(bind=engine))
+Session2 = scoped_session(sessionmaker(bind=engine))
 #Base = declarative_base()
 Base.query = Session.query_property()
 
@@ -21,5 +22,5 @@ def init_db():
     Session.commit()
 
 
-def shutdown_session(exception=None):
-    Session.remove()
+def shutdown_session(session=Session, exception=None):
+    session.remove()
