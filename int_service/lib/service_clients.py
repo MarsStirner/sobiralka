@@ -31,7 +31,7 @@ class Clients(object):
     def provider(cls, client_type, proxy_url):
         logging.basicConfig(level=logging.ERROR)
         if settings.DEBUG:
-            logging.getLogger('suds.client').setLevel(logging.ERROR)
+            logging.getLogger('suds.client').setLevel(logging.CRITICAL)
             logging.getLogger('Thrift_Client').setLevel(logging.DEBUG)
         else:
             logging.getLogger('suds.client').setLevel(logging.CRITICAL)
