@@ -1166,19 +1166,25 @@ class UpdateWorker(object):
 
         self.session.commit()
 
+    def __check_unit_exists(self, unit_id):
+        return self.session.query(LPU_Units).filter(LPU_Units.orgId == unit_id).count()
+
     def __update_unit_parents(self, units, lpu):
         for unit in units:
             if not unit.name:
                 continue
             try:
                 if hasattr(unit, 'parentId') and unit.parentId:
-                    self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parentId, ChildId=unit.id))
+                    if self.__check_unit_exists(unit.parentId) > 0:
+                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parentId, ChildId=unit.id))
                 elif hasattr(unit, 'parent_id') and unit.parent_id:
-                    self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parent_id, ChildId=unit.id))
+                    if self.__check_unit_exists(unit.parent_id) > 0:
+                        self.session.add(UnitsParentForId(LpuId=lpu.id, OrgId=unit.parent_id, ChildId=unit.id))
                 self.session.commit()
             except Exception, e:
                 print e
                 self.__log(u'Ошибка при добавлении в UnitsParentForId: %s' % e)
+                self.session.rollback()
 
     def __update_lpu_units(self, lpu):
         """Обновляет информацию о потразделениях"""
