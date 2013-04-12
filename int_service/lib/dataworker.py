@@ -1881,10 +1881,14 @@ class EPGUWorker(object):
                 previous_day = None
                 for timeslot in schedule['timeslots']:
                     if timeslot['start'].date() >= start_date + datetime.timedelta(weeks=week_number):
+                        #TODO: понять, как будет с Интрамедом
+                        if timeslot['status'] == 'disabled':
+                            continue
+
                         if days:
-                            # epgu_rule = self.__post_rules(start_date, week_number, hospital[doctor.lpuId], doctor, days)
-                            # if epgu_rule:
-                            #     doctor_rules.append(epgu_rule)
+                            epgu_rule = self.__post_rules(start_date, week_number, hospital[doctor.lpuId], doctor, days)
+                            if epgu_rule:
+                                doctor_rules.append(epgu_rule)
                             days = []
                         week_number += week_number
 
@@ -1901,10 +1905,10 @@ class EPGUWorker(object):
                             dict(date_time=timeslot['start'],
                                  patient=dict(id=timeslot['patientId'], fio=timeslot['patientInfo'])
                                  ))
-                # if days:
-                #     epgu_rule = self.__post_rules(start_date, week_number, hospital[doctor.lpuId], doctor, days)
-                #     if epgu_rule:
-                #         doctor_rules.append(epgu_rule)
+                if days:
+                    epgu_rule = self.__post_rules(start_date, week_number, hospital[doctor.lpuId], doctor, days)
+                    if epgu_rule:
+                        doctor_rules.append(epgu_rule)
 
                 if doctor_rules:
                     self.__link_activate_schedule(hospital[doctor.lpuId], doctor, doctor_rules)

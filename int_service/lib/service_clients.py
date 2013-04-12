@@ -272,6 +272,12 @@ class ClientKorus20(AbstractClient):
             if schedule and hasattr(schedule, 'tickets'):
                 result = []
                 for key, timeslot in enumerate(schedule.tickets):
+                    if timeslot.available:
+                        status = 'free'
+                    elif timeslot.patientId:
+                        status = 'locked'
+                    else:
+                        status = 'disabled'
                     result.append({
                         'start': datetime.datetime.combine(kwargs.get('date'), timeslot.time),
                         'finish': (
@@ -279,7 +285,7 @@ class ClientKorus20(AbstractClient):
                             if key < (len(schedule.tickets) - 1)
                             else datetime.datetime.combine(kwargs.get('date'), schedule.endTime)
                         ),
-                        'status': 'free' if timeslot.available else 'locked',
+                        'status': status,
                         'office': schedule.office,
                         'patientId': timeslot.patientId,
                         'patientInfo': timeslot.patientInfo,
