@@ -1696,8 +1696,7 @@ class EPGUWorker(object):
                 _synced_doctor = []
                 if locations:
                     for location in locations:
-                        # TODO: перевести _exists_locations_id на id с keyEPGU
-                        _exists_locations_id.append(location['keyEPGU'])
+                        # _exists_locations_id.append(location['keyEPGU'])
                         doctor = self.__get_doctor_by_location(location, lpu.id)
                         if doctor and doctor.key_epgu.keyEPGU == location['keyEPGU']:
                             self.__log(u'Для %s %s %s keyEPGU (%s) в ИС и на ЕПГУ совпадают' %
@@ -1746,8 +1745,7 @@ class EPGUWorker(object):
             if applied_rules:
                 for applied_rule in getattr(applied_rules, 'applied-rule', []):
                     if applied_rule:
-                        if DEBUG:
-                            print applied_rule
+                        print applied_rule
                         self.__log(
                             u'Очереди (%s) назначено расписание с %s по %s (%s)' %
                             (getattr(applied_schedule, 'location-id', ''),
@@ -1884,7 +1882,7 @@ class EPGUWorker(object):
                 week_number = 1
                 previous_day = None
                 for timeslot in schedule['timeslots']:
-                    if timeslot['start'].date() >= start_date + datetime.timedelta(weeks=week_number):
+                    if timeslot['start'].date() >= (start_date + datetime.timedelta(weeks=week_number)):
                         #TODO: понять, как будет с Интрамедом
                         if timeslot['status'] == 'disabled':
                             continue
@@ -1896,19 +1894,24 @@ class EPGUWorker(object):
                             days = []
                         week_number += week_number
 
-                    interval.append(dict(start=timeslot['start'].time().strftime('%H:%M'),
-                                         end=timeslot['finish'].time().strftime('%H:%M')))
-                    if previous_day is not None and previous_day != timeslot['start'].date():
-                        days.append(dict(date=timeslot['start'], interval=interval))
+                    if previous_day is not None and previous_day.date() != timeslot['start'].date():
+                        days.append(dict(date=previous_day, interval=interval))
                         interval = []
 
-                    previous_day = timeslot['start'].date()
+                    interval.append(dict(start=timeslot['start'].time().strftime('%H:%M'),
+                                         end=timeslot['finish'].time().strftime('%H:%M')))
+
+                    previous_day = timeslot['start']
 
                     if timeslot['patientId'] and timeslot['patientInfo']:
                         busy_by_patients.append(
                             dict(date_time=timeslot['start'],
                                  patient=dict(id=timeslot['patientId'], fio=timeslot['patientInfo'])
                                  ))
+
+                # For last iteration
+                if interval:
+                    days.append(dict(date=previous_day, interval=interval))
                 if days:
                     epgu_rule = self.__post_rules(start_date, week_number, hospital[doctor.lpuId], doctor, days)
                     if epgu_rule:
