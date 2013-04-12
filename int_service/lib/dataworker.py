@@ -28,12 +28,14 @@ from is_exceptions import exception_by_code, IS_ConnectionError
 from admin.database import Session, Session2, shutdown_session
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
+
+if DEBUG:
+    logging.basicConfig(level=logging.ERROR)
+else:
+    logging.basicConfig(level=logging.ERROR)
 h1 = logging.StreamHandler(sys.stdout)
 rootLogger = logging.getLogger()
 rootLogger.addHandler(h1)
-logger = logging.getLogger("my.logger")
-logger.setLevel(logging.DEBUG)
 
 
 class DataWorker(object):
@@ -1388,12 +1390,10 @@ class EPGUWorker(object):
         self.default_phone = '+79011111111'
 
     def __del__(self):
-        shutdown_session(self.session)
-        self.session.close()
+        shutdown_session()
 
     def __log(self, msg):
         if msg:
-            logger.debug(msg)
             if isinstance(msg, list):
                 for m in msg:
                     self.msg.append(m)
@@ -1681,7 +1681,10 @@ class EPGUWorker(object):
                     for location in locations:
                         _exists_locations_id.append(location['keyEPGU'])
                         doctor = self.__get_doctor_by_location(location, lpu.id)
-                        if doctor and doctor.key_epgu.keyEPGU != location['keyEPGU']:
+                        if doctor and doctor.key_epgu.keyEPGU == location['keyEPGU']:
+                            self.__log(u'Для %s %s %s keyEPGU (%s) в ИС и на ЕПГУ совпадают' %
+                                       (doctor.LastName, doctor.FirstName, doctor.PatrName, location['keyEPGU']))
+                        elif doctor and doctor.key_epgu.keyEPGU != location['keyEPGU']:
                             self.__update_doctor(doctor, dict(keyEPGU=str(location['keyEPGU'])))
                             self.__log(u'Для %s %s %s получен keyEPGU (%s)' %
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, location['keyEPGU']))
@@ -1965,13 +1968,10 @@ class EPGUWorker(object):
         return None
 
     def __add_by_epgu(self, params):
-        logger.debug(params)
         try:
             doctor = self.session.query(Personal).filter(
                 Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU == params.get('doctor_keyEPGU'))
             ).one()
-
-            logger.debug(doctor)
 
             hospital_param = dict(auth_token=doctor.lpu.token, place_id=doctor.lpu.keyEPGU)
         except MultipleResultsFound, e:
