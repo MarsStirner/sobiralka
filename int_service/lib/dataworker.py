@@ -1227,8 +1227,8 @@ class UpdateWorker(object):
                             address=unicode(address)
                         ))
                         self.session.commit()
+                        self.__log(u'%s: %s' % (unit.id, unit.name))
                         return_units.append(unit)
-                    self.__log(u'%s: %s' % (unit.id, unit.name))
 
                 self.__update_unit_parents(units, lpu)
 
