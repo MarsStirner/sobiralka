@@ -2083,7 +2083,7 @@ class EPGUWorker(object):
                                                            timeslot=timeslot)
         if slot_unique_key:
             # _enqueue = self.session.query(Enqueue).get(enqueue_id)
-            _enqueue = self.session.query(Enqueue).filter(id=enqueue_id).one()
+            _enqueue = self.session.query(Enqueue).filter(Enqueue.id == enqueue_id).one()
             print '_enqueue %s' % _enqueue
             if _enqueue:
                 _enqueue.keyEPGU = slot_unique_key
