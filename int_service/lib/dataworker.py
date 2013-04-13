@@ -1620,9 +1620,15 @@ class EPGUWorker(object):
             nearest_monday = today + datetime.timedelta(days=(7 - today.isoweekday() + 1))
         return nearest_monday
 
-    def __get_reservation_time(self, doctor, date=None):
-        reservation_time = None
+    def __get_min_reservation_time(self, timeslots):
+        if timeslots:
+            times = list()  # TODO: set() is better
+            for timeslot in timeslots:
+                times.append((timeslot['finish'] - timeslot['start']).seconds / 60)
+            return min(times)
+        return None
 
+    def __get_reservation_time(self, doctor, date=None):
         enqueue_dw = EnqueueWorker()
         if date is None:
             date = self.__get_nearest_monday()
@@ -1634,9 +1640,8 @@ class EPGUWorker(object):
         }
         result = enqueue_dw.get_info(**params)
         if result['timeslots']:
-            timeslot = result['timeslots'][0]
-            reservation_time = (timeslot['finish'] - timeslot['start']).seconds / 60
-        return reservation_time
+            return self.__get_min_reservation_time(result['timeslots'])
+        return None
 
     def __get_service_types(self, doctor, epgu_speciality_id):
         return [doctor.speciality[0].epgu_service_type]
@@ -1822,6 +1827,7 @@ class EPGUWorker(object):
             )
 
     def epgu_appoint_patient(self, hospital, doctor, patient, timeslot):
+        # TODO: На Celery с задержкой
         slot_unique_key = None
         epgu_result = self.proxy_client.PostReserve(
             hospital=hospital,
