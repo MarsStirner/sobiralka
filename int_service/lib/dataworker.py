@@ -2058,6 +2058,7 @@ class EPGUWorker(object):
     def send_enqueue(self, hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
 
         print 'send_enqueue %s' % slot_unique_key
+        print 'enqueue_id %s' % enqueue_id
         if not slot_unique_key:
             if not hospital.token or not hospital.keyEPGU:
                 return None
@@ -2082,8 +2083,10 @@ class EPGUWorker(object):
                                                            timeslot=timeslot)
         if slot_unique_key:
             _enqueue = self.session.query(Enqueue).get(enqueue_id)
+            print '_enqueue %s' % _enqueue
             if _enqueue:
                 _enqueue.keyEPGU = slot_unique_key
+                print '_enqueue %s' % _enqueue
                 self.session.commit()
 
     def __delete_by_epgu(self, params):
