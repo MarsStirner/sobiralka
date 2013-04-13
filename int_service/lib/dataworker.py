@@ -1722,6 +1722,7 @@ class EPGUWorker(object):
                         # _exists_locations_id.append(location['keyEPGU'])
                         doctor = self.__get_doctor_by_location(location, lpu.id)
                         if doctor and doctor.key_epgu.keyEPGU == location['keyEPGU']:
+                            #TODO: !! Update reservation_time in EPGU
                             self.__log(u'Для %s %s %s keyEPGU (%s) в ИС и на ЕПГУ совпадают' %
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, location['keyEPGU']))
                             _synced_doctor.append(doctor.id)
