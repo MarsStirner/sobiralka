@@ -1986,6 +1986,7 @@ class EPGUWorker(object):
         data = hl7.parse(message)
         if data:
             operation_code = data['MSH'][0][8]
+            print data['ARQ'][0]
             if cmp(operation_code, add_code) == 0:
                 operation = 'add'
                 slot_id = data['ARQ'][0][1][0]
@@ -2032,6 +2033,7 @@ class EPGUWorker(object):
             if slot_id:
                 ticket_exists = self.session.query(Enqueue).filter(Enqueue.keyEPGU == slot_id).count()
                 if ticket_exists:
+                    print u'Талончик с keyEPGU=%s уже существует' % slot_id
                     self.__log(u'Талончик с keyEPGU=%s уже существует' % slot_id)
                     return False
 
