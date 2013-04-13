@@ -1784,7 +1784,7 @@ class EPGUWorker(object):
                             _synced_doctor.append(doctor.id)
                             result = self.__put_edit_location_epgu(hospital, doctor, location['keyEPGU'])
                             if result:
-                                self.__log(u'Очередь обновлена (%s) в ИС и на ЕПГУ совпадают' % location['keyEPGU'])
+                                self.__log(u'Очередь обновлена (%s)' % location['keyEPGU'])
                         elif doctor and doctor.key_epgu.keyEPGU != location['keyEPGU']:
                             self.__update_doctor(doctor, dict(keyEPGU=str(location['keyEPGU'])))
                             self.__log(u'Для %s %s %s получен keyEPGU (%s)' %
@@ -1792,7 +1792,7 @@ class EPGUWorker(object):
                             _synced_doctor.append(doctor.id)
                             result = self.__put_edit_location_epgu(hospital, doctor, location['keyEPGU'])
                             if result:
-                                self.__log(u'Очередь обновлена (%s) в ИС и на ЕПГУ совпадают' % location['keyEPGU'])
+                                self.__log(u'Очередь обновлена (%s)' % location['keyEPGU'])
                         elif not doctor:
                             self.__delete_location_epgu(hospital, location['keyEPGU'])
                             self.__log(u'Для %s не найден на ЕПГУ, удалена очередь (%s)' %
