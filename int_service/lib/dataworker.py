@@ -856,6 +856,21 @@ class EnqueueWorker(object):
             return enqueue.id
         return None
 
+    def update_enqueue(self, enqueue_id, data):
+        """Обновляет информацию о талончике в БД ИС"""
+        try:
+            enqueue = self.session.query(Enqueue).get(enqueue_id)
+            for k, v in data.items():
+                if hasattr(enqueue, k):
+                    setattr(enqueue, k, v)
+        except exceptions.ValueError, e:
+            print e
+            self.session.rollback()
+        else:
+            self.session.commit()
+            return enqueue.id
+        return None
+
     def dequeue(self, **kwargs):
         """Отменяет запись на приём
 
@@ -2083,13 +2098,9 @@ class EPGUWorker(object):
                                                            patient=_patient,
                                                            timeslot=timeslot)
         if slot_unique_key:
-            # _enqueue = self.session.query(Enqueue).get(enqueue_id)
-            _enqueue = self.session.query(Enqueue).get(enqueue_id)
+            enqueue_dw = EnqueueWorker()
+            _enqueue = enqueue_dw.update_enqueue(enqueue_id, dict(keyEPGU=slot_unique_key))
             print '_enqueue %s' % _enqueue
-            if _enqueue:
-                _enqueue.keyEPGU = slot_unique_key
-                print '_enqueue %s' % _enqueue
-                self.session.commit()
 
     def __delete_by_epgu(self, params):
         try:
