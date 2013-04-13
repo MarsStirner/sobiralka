@@ -37,6 +37,8 @@ h1 = logging.StreamHandler(sys.stdout)
 rootLogger = logging.getLogger()
 rootLogger.addHandler(h1)
 
+logging.basicConfig(level=logging.DEBUG)
+
 
 class DataWorker(object):
     """Provider class for current DataWorkers"""
@@ -1989,13 +1991,6 @@ class EPGUWorker(object):
             if cmp(operation_code, add_code) == 0:
                 operation = 'add'
                 slot_id = data['ARQ'][0][1][0]
-
-                print data['ARQ'][0]
-                print data['ARQ'][0][0]
-                print data['ARQ'][0][1]
-                print data['ARQ'][0][2]
-
-                print 'current %s' % slot_id
                 timeslot = datetime.datetime.strptime(data['ARQ'][0][11][0], '%Y%m%d%H%M%S')
                 lastName = data['PID'][0][5][0]
                 firstName = data['PID'][0][5][1]
@@ -2016,15 +2011,8 @@ class EPGUWorker(object):
                 operation = 'delete'
                 slot_id = data['ARQ'][0][2][0]
 
-                print data['ARQ'][0]
-                print data['ARQ'][0][0]
-                print data['ARQ'][0][1]
-                print data['ARQ'][0][2]
-
-                print 'current %s' % slot_id
-
                 result = dict(operation=operation,
-                              slot_id=slot_id,)
+                              slot_id=slot_id)
         return result
 
     def __parse_xml(self, message):
@@ -2044,6 +2032,7 @@ class EPGUWorker(object):
             return None
         else:
             slot_id = params.get('slot_id')
+            print 'add_by_epgu %s' % slot_id
             if slot_id:
                 ticket_exists = self.session.query(Enqueue).filter(Enqueue.keyEPGU == slot_id).count()
                 if ticket_exists:
@@ -2067,6 +2056,8 @@ class EPGUWorker(object):
                     slot_id=params.get('slot_id'))
 
     def send_enqueue(self, hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
+
+        print 'send_enqueue %s' % slot_unique_key
         if not slot_unique_key:
             if not hospital.token or not hospital.keyEPGU:
                 return None
