@@ -110,7 +110,8 @@ def exception_by_code(code):
         401: IS_NoTicketsAvailable,
     }
     try:
-        num_code = int(code.split()[0])
+        if code and not isinstance(code, int):
+            num_code = int(code.split()[0])
     except ValueError:
         return code
     else:
