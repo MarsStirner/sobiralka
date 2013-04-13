@@ -1780,6 +1780,7 @@ class EPGUWorker(object):
                              getattr(applied_rule, 'rule-id')))
 
             # TODO: На Celery с задержкой
+            time.sleep(3)
             epgu_result = self.proxy_client.PutActivateLocation(hospital, doctor.key_epgu.keyEPGU)
             location = getattr(epgu_result, 'location', None)
             if location:
