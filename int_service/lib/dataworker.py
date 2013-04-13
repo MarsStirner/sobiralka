@@ -798,6 +798,7 @@ class EnqueueWorker(object):
                 patient_id=_enqueue.get('patient_id'),
                 ticket_id=int(ticket_uid[0]),
             )
+
             result = {'result': _enqueue.get('result'),
                       'message': exception_by_code(_enqueue.get('error_code')),
                       'ticketUid': _enqueue.get('ticketUid')}
@@ -820,13 +821,13 @@ class EnqueueWorker(object):
                     'doctorUid': doctor_uid,
                 }),
             )
+
             result = {
                 'result': _enqueue.get('result'),
                 'message': exception_by_code(_enqueue.get('error_code')),
                 'ticketUid': 'e' + str(enqueue_id)
             }
 
-        shutdown_session()
         return result
 
     def __delete_epgu_slot(self, hospital, patient_id, ticket_id):
@@ -2083,7 +2084,7 @@ class EPGUWorker(object):
                                                            timeslot=timeslot)
         if slot_unique_key:
             # _enqueue = self.session.query(Enqueue).get(enqueue_id)
-            _enqueue = self.session.query(Enqueue).filter(Enqueue.id == enqueue_id).one()
+            _enqueue = self.session.query(Enqueue).get(enqueue_id)
             print '_enqueue %s' % _enqueue
             if _enqueue:
                 _enqueue.keyEPGU = slot_unique_key
