@@ -1760,6 +1760,81 @@ class ClientEPGU():
             return getattr(result.AppData, 'errors', None)
         return None
 
+    def PutEditLocation(self, hospital, doctor, service_types, can_write=None):
+        """Используется для редактировани очереди в федеральной регистратуре (на ЕПГУ)
+
+        Args:
+            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
+                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
+                 'auth_token': token ЛПУ
+                }
+            doctor: (обязательный) словарь с информацией о враче, вида:
+                {'prefix': название очереди (ФИО?),
+                 'location_id': идентификатор врача (очереди),
+                 'medical_specialization_id': код специальности (Speciality.nameEPGU),
+                 'cabinet_number': номер кабинета ,
+                 'time_table_period': количество дней на которое будет доступно расписание
+                    (Определяется максимальной датой, на которую доступно расписание для данного врача.
+                    Данный параметр можно вынести в файл настроек. По умолчанию значение 90)
+                 'reservation_time': время (в минутах) приема врача
+                    (необходимо высчитывать время приема для каждого врача индивидуально как разницу между началом и
+                    окончанием приема одного пациента на первый день получаемого расписания),
+                 'reserved_time_for_slot': время между талонами на прием (?равно времени указанном в reservation_time),
+                 'reservation_type_id': идентификатор типа записи, полученный в GetServiceType,
+                 'payment_method_id': идентификатор вида оплаты, полученный в GetPaymentMethods,
+                }
+            service_types: (обязательный) список кодов мед. услуг из GetServiceType, вида:
+                ['4f882b9c2bcfa5145a0006e8', ]
+            can_write: (необязательный) строка через запятую без пробелов из тех,
+                кто имеет доступ к записи в данную очередь. если массив пустой, то записаться никто не сможет.
+                если параметр не присылать, то по умолчанию доступ к записи имеют все
+                (возможные значения: registry, epgu, call_center, terminal, mis);
+
+        Returns:
+            Словарь с информацией о созданной записи, вида:
+            {'created-at': '2012-09-12T14:59:04+04:00',
+             'id': '50506af8bb4d3371b8028ea3',
+             'medical-specialization-id': '4f882b982bcfa5145a000383'
+            }
+
+        """
+        try:
+            params = dict()
+            try:
+                params['prefix'] = doctor['prefix']
+                params['medical_specialization_id'] = doctor['medical_specialization_id']
+                params['cabinet_number'] = doctor['cabinet_number']
+                params['time_table_period'] = doctor['time_table_period']
+                params['reservation_time'] = doctor['reservation_time']
+                params['reserved_time_for_slot'] = doctor['reserved_time_for_slot']
+                params['reservation_type_id'] = doctor['reservation_type_id']
+                params['payment_method_id'] = doctor['payment_method_id']
+
+                service_type_ids = dict()
+                for k, service_type in enumerate(service_types):
+                    service_type_ids['st%d' % k] = service_type
+                params['service_types_ids'] = service_type_ids
+
+                params['params'] = {':place_id': hospital['place_id'],
+                                    'auth_token': hospital['auth_token'],
+                                    ':location_id': doctor['location_id']}
+            except AttributeError, e:
+                print e
+                return None
+            else:
+                message = self.__generate_message(dict(location=params))
+                result = self.__send('PutEditLocation', message)
+        except WebFault, e:
+            print e
+        except Exception, e:
+            print e
+        else:
+            location = getattr(result.AppData, 'location', None)
+            if location:
+                return location
+            return getattr(result.AppData, 'errors', None)
+        return None
+
     def PostRules(self, hospital, doctor, period, days, can_write=None):
         """Добавляет расписание на ЕПГУ
 

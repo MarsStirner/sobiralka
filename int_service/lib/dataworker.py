@@ -1704,6 +1704,62 @@ class EPGUWorker(object):
             self.__log(getattr(epgu_result, 'error', None))
         return None
 
+    def __put_edit_location_epgu(self, hospital, doctor, location_id):
+        if not doctor.speciality or not isinstance(doctor.speciality, list):
+            self.__log(
+                u'Не найдена специальность у врача %s %s %s (id=%s)' %
+                (doctor.LastName, doctor.FirstName, doctor.PatrName, doctor.doctor_id))
+            return None
+
+        epgu_speciality = doctor.speciality[0].epgu_speciality
+        if not epgu_speciality:
+            self.__log(
+                u'Нет соответствия специальности %s на ЕПГУ для врача %s %s %s (id=%s)' %
+                (doctor.speciality[0].name, doctor.LastName, doctor.FirstName, doctor.PatrName, doctor.doctor_id))
+            return None
+
+        try:
+            epgu_service_types = self.__get_service_types(doctor, epgu_speciality.id)
+        except AttributeError, e:
+            print e
+            self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
+            return None
+
+        params = dict(hospital=hospital)
+        payment_method = self.session.query(EPGU_Payment_Method).filter(EPGU_Payment_Method.default == True).one()
+
+        #TODO: reservation_type  = automatic + сделать настройку в админке
+        reservation_type = (self.session.query(EPGU_Reservation_Type).
+                            filter(EPGU_Reservation_Type.code == 'automatic').
+                            one())
+        reservation_time = self.__get_reservation_time(doctor)
+        if not reservation_time:
+            self.__log(u'Не заведено расписание для %s %s %s (id=%s)' %
+                       (doctor.LastName, doctor.FirstName, doctor.PatrName, doctor.doctor_id))
+            return None
+
+        params['doctor'] = dict(
+            prefix=u'%s %s.%s.' % (doctor.LastName, doctor.FirstName[0:1], doctor.PatrName[0:1]),
+            location_id=location_id,
+            medical_specialization_id=epgu_speciality.keyEPGU,
+            cabinet_number=doctor.office,
+            time_table_period=self.time_table_period,
+            reservation_time=reservation_time,
+            reserved_time_for_slot=reservation_time,
+            reservation_type_id=reservation_type.keyEPGU,
+            payment_method_id=payment_method.keyEPGU,
+        )
+        params['service_types'] = []
+        for service_type in epgu_service_types:
+            params['service_types'].append(service_type.keyEPGU)
+        epgu_result = self.proxy_client.PutEditLocation(**params)
+        location_id = getattr(epgu_result, 'id', None)
+        if location_id:
+            return location_id
+        else:
+            self.__log(getattr(epgu_result, 'error', None))
+        return None
+
     def sync_locations(self):
         lpu_dw = LPUWorker()
         lpu_list = lpu_dw.get_list()
@@ -1726,11 +1782,17 @@ class EPGUWorker(object):
                             self.__log(u'Для %s %s %s keyEPGU (%s) в ИС и на ЕПГУ совпадают' %
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, location['keyEPGU']))
                             _synced_doctor.append(doctor.id)
+                            result = self.__put_edit_location_epgu(hospital, doctor, location['keyEPGU'])
+                            if result:
+                                self.__log(u'Очередь обновлена (%s) в ИС и на ЕПГУ совпадают' % location['keyEPGU'])
                         elif doctor and doctor.key_epgu.keyEPGU != location['keyEPGU']:
                             self.__update_doctor(doctor, dict(keyEPGU=str(location['keyEPGU'])))
                             self.__log(u'Для %s %s %s получен keyEPGU (%s)' %
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, location['keyEPGU']))
                             _synced_doctor.append(doctor.id)
+                            result = self.__put_edit_location_epgu(hospital, doctor, location['keyEPGU'])
+                            if result:
+                                self.__log(u'Очередь обновлена (%s) в ИС и на ЕПГУ совпадают' % location['keyEPGU'])
                         elif not doctor:
                             self.__delete_location_epgu(hospital, location['keyEPGU'])
                             self.__log(u'Для %s не найден на ЕПГУ, удалена очередь (%s)' %
