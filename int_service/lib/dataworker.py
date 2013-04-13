@@ -1743,18 +1743,16 @@ class EPGUWorker(object):
         if applied_schedule:
             applied_rules = getattr(applied_schedule, 'applied-rules', None)
             if applied_rules:
-                if isinstance(applied_rules, list):
-                    for _applied_rule in applied_rules:
-                        applied_rule = getattr(_applied_rule, 'applied-rule')
-                        if applied_rule:
-                            self.__log(
-                                u'Очереди (%s) назначено расписание с %s по %s (%s)' %
-                                (getattr(applied_schedule, 'location-id', ''),
-                                 getattr(applied_rule, 'start-date'),
-                                 getattr(applied_rule, 'end-date'),
-                                 getattr(applied_rule, 'rule-id')))
+                applied_rule = getattr(applied_rules, 'applied-rule')
+                if isinstance(applied_rule, list):
+                    for _applied_rule in applied_rule:
+                        self.__log(
+                            u'Очереди (%s) назначено расписание с %s по %s (%s)' %
+                            (getattr(applied_schedule, 'location-id', ''),
+                             getattr(_applied_rule, 'start-date'),
+                             getattr(_applied_rule, 'end-date'),
+                             getattr(_applied_rule, 'rule-id')))
                 else:
-                    applied_rule = getattr(applied_rules, 'applied-rule')
                     if applied_rule:
                         self.__log(
                             u'Очереди (%s) назначено расписание с %s по %s (%s)' %
