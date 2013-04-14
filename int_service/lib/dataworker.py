@@ -1954,6 +1954,8 @@ class EPGUWorker(object):
         hospital = dict()
         if lpu_list:
             for lpu in lpu_list:
+                if not lpu.token:
+                    continue
                 hospital[lpu.id] = dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
         else:
             self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
