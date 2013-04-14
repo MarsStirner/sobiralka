@@ -1821,12 +1821,14 @@ class EPGUWorker(object):
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, location_id))
                 self.__log(u'----------------------------')
 
-    def __link_activate_schedule(self, hospital, doctor, rules):
+    def __link_activate_schedule(self, hospital, location_id, rules):
+        print (hospital, location_id, rules)
         epgu_result = self.proxy_client.PutLocationSchedule(
             hospital,
-            doctor.key_epgu.keyEPGU,
+            location_id,
             rules)
         applied_schedule = getattr(epgu_result, 'applied-schedule', None)
+        print applied_schedule
         if applied_schedule:
             applied_rules = getattr(applied_schedule, 'applied-rules', None)
             if applied_rules:
@@ -1850,7 +1852,7 @@ class EPGUWorker(object):
 
             # TODO: На Celery с задержкой
             time.sleep(3)
-            epgu_result = self.proxy_client.PutActivateLocation(hospital, doctor.key_epgu.keyEPGU)
+            epgu_result = self.proxy_client.PutActivateLocation(hospital, location_id)
             location = getattr(epgu_result, 'location', None)
             if location:
                 self.__log(u'Очередь %s (%s) активирована' % (location.prefix, location.id))
@@ -1970,6 +1972,8 @@ class EPGUWorker(object):
                 'startDate': start_date,
                 'endDate': end_date,
             }
+            location_id = doctor.key_epgu.keyEPGU
+
             schedule = enqueue_dw.get_info(**params)
             if schedule:
                 doctor_rules = []
@@ -2015,7 +2019,7 @@ class EPGUWorker(object):
                         doctor_rules.append(epgu_rule)
 
                 if doctor_rules:
-                    self.__link_activate_schedule(hospital[doctor.lpuId], doctor, doctor_rules)
+                    self.__link_activate_schedule(hospital[doctor.lpuId], location_id, doctor_rules)
 
                 if busy_by_patients:
                     self.__appoint_patients(hospital[doctor.lpuId], doctor, busy_by_patients)
