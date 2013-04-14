@@ -1749,6 +1749,7 @@ class EPGUWorker(object):
             reservation_type_id=reservation_type.keyEPGU,
             payment_method_id=payment_method.keyEPGU,
         )
+        print params
         params['service_types'] = []
         for service_type in epgu_service_types:
             params['service_types'].append(service_type.keyEPGU)
