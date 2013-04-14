@@ -505,6 +505,7 @@ class ClientKorus20(AbstractClient):
             )
 
             if not patient.success and hospital_uid_from and hospital_uid_from != '0':
+                # TODO: запись с ЕПГУ тоже должна проходить?
                 patient = self.addPatient(**kwargs)
         else:
             patient = self.findPatient(
@@ -518,6 +519,7 @@ class ClientKorus20(AbstractClient):
 
             if exception_code == int(is_exceptions.IS_PatientNotRegistered()):
                 if not patient.success and hospital_uid_from and hospital_uid_from != '0':
+                # TODO: запись с ЕПГУ тоже должна проходить?
                     patient = self.addPatient(**kwargs)
 
         if patient.success and patient.patientId:

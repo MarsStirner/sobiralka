@@ -1896,6 +1896,7 @@ class EPGUWorker(object):
     def epgu_appoint_patient(self, hospital, doctor, patient, timeslot):
         # TODO: На Celery с задержкой
         slot_unique_key = None
+        #TODO: вывод талончиков в логи
         epgu_result = self.proxy_client.PostReserve(
             hospital=hospital,
             doctor_id=doctor['location_id'],
@@ -1951,6 +1952,7 @@ class EPGUWorker(object):
 
     def sync_schedule(self):
         lpu_list = self.session.query(LPU).filter(LPU.keyEPGU != '', LPU.keyEPGU != None).all()
+        #TODO: распараллелить по ЛПУ? и вызывать из Celery после апдейта location
         hospital = dict()
         if lpu_list:
             for lpu in lpu_list:
@@ -1962,7 +1964,7 @@ class EPGUWorker(object):
             return False
 
         today = datetime.datetime.today().date()
-        start_date = today - datetime.timedelta(days=(today.isoweekday() - 1)) + datetime.timedelta(weeks=1)
+        start_date = today - datetime.timedelta(days=(today.isoweekday() - 1))  # + datetime.timedelta(weeks=1)
         end_date = start_date + datetime.timedelta(weeks=self.schedule_weeks_period)
         enqueue_dw = EnqueueWorker()
         epgu_doctors = self.session.query(Personal).filter(Personal.lpuId.in_(hospital.keys())).filter(
@@ -2032,6 +2034,8 @@ class EPGUWorker(object):
         hospital = dict()
         if lpu_list:
             for lpu in lpu_list:
+                if not lpu.token:
+                    continue
                 hospital[lpu.id] = dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
         else:
             self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
