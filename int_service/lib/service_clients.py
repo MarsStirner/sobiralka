@@ -1263,6 +1263,7 @@ class ClientKorus30(AbstractClient):
                 patient = self.findPatient(**patient_params)
             else:
                 patients = self.findPatients(**patient_params)
+                print patients
                 if len(patients) > 1:
                     return {'result': False, 'error_code': int(is_exceptions.IS_FoundMultiplePatients()), }
                 elif len(patients) == 0 and hospital_uid_from == '0':
