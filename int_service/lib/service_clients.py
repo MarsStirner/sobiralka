@@ -505,7 +505,7 @@ class ClientKorus20(AbstractClient):
             )
 
             if not patient.success and hospital_uid_from and hospital_uid_from != '0':
-                # TODO: запись с ЕПГУ тоже должна проходить?
+                # TODO: запись с ЕПГУ тоже должна проходить? НЕТ! Без доп. идентификации нельзя.
                 patient = self.addPatient(**kwargs)
         else:
             patient = self.findPatient(
