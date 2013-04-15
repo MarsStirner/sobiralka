@@ -1158,8 +1158,9 @@ class ClientKorus30(AbstractClient):
         )
         try:
             result = self.client.addPatient(params)
-            print result
         except WebFault, e:
+            print e
+        except Exception, e:
             print e
         else:
             return result
@@ -1275,12 +1276,16 @@ class ClientKorus30(AbstractClient):
         except TException, e:
             print e
             return {'result': False, 'error_code': e.message, }
+        except Exception, e:
+            print e
+            return {'result': False, 'error_code': e}
 
         print 'addPatient with params'
         print patient_params
 
         if not patient.success and hospital_uid_from and hospital_uid_from != '0':
             patient = self.addPatient(**patient_params)
+            print patient
 
         if patient and patient.success and patient.patientId:
             patient_id = patient.patientId
