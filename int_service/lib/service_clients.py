@@ -1268,6 +1268,7 @@ class ClientKorus30(AbstractClient):
                 elif len(patients) == 0:
                     if hospital_uid_from == '0':
                         return {'result': False, 'error_code': int(is_exceptions.IS_PatientNotRegistered()), }
+                    patient = self.Struct(success=False, patientId=None)
                 else:
                     patient = self.Struct(success=True, patientId=patients[0].id)
 
