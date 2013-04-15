@@ -1964,6 +1964,7 @@ class EPGUWorker(object):
             return False
 
         today = datetime.datetime.today().date()
+        # TODO: get nearest monday for start_date?
         start_date = today - datetime.timedelta(days=(today.isoweekday() - 1))  # + datetime.timedelta(weeks=1)
         end_date = start_date + datetime.timedelta(weeks=self.schedule_weeks_period)
         enqueue_dw = EnqueueWorker()

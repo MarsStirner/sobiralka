@@ -1153,7 +1153,7 @@ class ClientKorus30(AbstractClient):
             firstName=kwargs.get('firstName'),
             patrName=kwargs.get('patronymic'),
             #omiPolicy = kwargs['omiPolicyNumber'],
-            birthDate=kwargs.get('birthday'),
+            birthDate=kwargs.get('birthDate'),
             sex=int(kwargs.get('sex', 0)),
         )
         try:
@@ -1254,6 +1254,8 @@ class ClientKorus30(AbstractClient):
         if birthDate:
             patient_params['birthDate'] = calendar.timegm(birthDate.timetuple()) * 1000
 
+        print 'Korus30 ENQUEUE'
+
         try:
             if 'birthDate' in patient_params and 'document' in patient_params:
                 patient = self.findPatient(**patient_params)
@@ -1272,6 +1274,9 @@ class ClientKorus30(AbstractClient):
         except TException, e:
             print e
             return {'result': False, 'error_code': e.message, }
+
+        print 'addPatient with params'
+        print patient_params
 
         if not patient.success and hospital_uid_from and hospital_uid_from != '0':
             patient = self.addPatient(**patient_params)
