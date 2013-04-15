@@ -1265,14 +1265,15 @@ class ClientKorus30(AbstractClient):
                 patients = self.findPatients(**patient_params)
                 if len(patients) > 1:
                     return {'result': False, 'error_code': int(is_exceptions.IS_FoundMultiplePatients()), }
-                elif len(patients) == 0:
+                elif len(patients) == 0 and hospital_uid_from == '0':
                     return {'result': False, 'error_code': int(is_exceptions.IS_PatientNotRegistered()), }
                 else:
                     patient = self.Struct(success=True, patientId=patients[0].id)
 
         except NotFoundException, e:
-            print e.error_msg
-            return {'result': False, 'error_code': e.error_msg.decode('utf-8'), }
+            print e
+            if hospital_uid_from == '0':
+                return {'result': False, 'error_code': e.error_msg.decode('utf-8'), }
         except TException, e:
             print e
             return {'result': False, 'error_code': e.message, }
@@ -1280,10 +1281,9 @@ class ClientKorus30(AbstractClient):
             print e
             return {'result': False, 'error_code': e}
 
-        print 'addPatient with params'
-        print patient_params
-
         if not patient.success and hospital_uid_from and hospital_uid_from != '0':
+            print 'addPatient with params'
+            print patient_params
             patient = self.addPatient(**patient_params)
             print patient
 
