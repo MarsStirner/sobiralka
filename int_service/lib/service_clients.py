@@ -1158,6 +1158,7 @@ class ClientKorus30(AbstractClient):
         )
         try:
             result = self.client.addPatient(params)
+            print result
         except WebFault, e:
             print e
         else:
