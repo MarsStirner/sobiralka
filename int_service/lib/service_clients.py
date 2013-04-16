@@ -1143,7 +1143,7 @@ class ClientKorus30(AbstractClient):
             person: словарь с данными о пациенте (обязательный):
                 {'lastName': фамилия
                 'firstName': имя
-                'patronymic': отчество
+                'patrName': отчество
                 }
             birthDate: дата рождения (необязательный)
 
@@ -1151,7 +1151,7 @@ class ClientKorus30(AbstractClient):
         params = AddPatientParameters(
             lastName=kwargs.get('lastName'),
             firstName=kwargs.get('firstName'),
-            patrName=kwargs.get('patronymic'),
+            patrName=kwargs.get('patrName'),
             #omiPolicy = kwargs['omiPolicyNumber'],
             birthDate=kwargs.get('birthDate'),
             sex=int(kwargs.get('sex', 0)),
