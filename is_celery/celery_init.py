@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from celery import Celery
+from celery.schedules import crontab
 from settings import DB_CONNECT_STRING
 
 celery = Celery('is_celery')
@@ -9,17 +10,31 @@ celery.conf.update(
     BROKER_URL='sqla+%s' % DB_CONNECT_STRING,
     CELERY_RESULT_BACKEND="database",
     CELERY_RESULT_DBURI=DB_CONNECT_STRING,
+    CELERY_RESULT_ENGINE_OPTIONS={"echo": True},
     # CELERY_TASK_SERIALIZER = 'json'
     # CELERY_RESULT_SERIALIZER='json',
     CELERY_TIMEZONE='Europe/Moscow',
     CELERY_ENABLE_UTC=True,
+    CELERY_DISABLE_RATE_LIMITS=True,
     # CELERY_IMPORTS=("is_celery.tasks", ),
-    CELERY_INCLUDE=('int_service.lib.dataworker', ),
+    CELERY_INCLUDE=('is_celery.tasks', ),
     # CELERY_SEND_TASK_ERROR_EMAILS = True
     # ADMINS = (('Admin', 'admin@localhost'), )
     CELERYD_MAX_TASKS_PER_CHILD=5,
-    CELERY_TASK_RESULT_EXPIRES=3600,
+    CELERY_TASK_RESULT_EXPIRES=None,
+)
 
+celery.conf.update(
+    CELERYBEAT_SCHEDULE={
+        'update_db_every_3_hours': {
+            'task': 'is_celery.tasks.update_db',
+            'schedule': crontab(minute=0, hour='6,9,12,15,18,21'),
+        },
+        'periodical_sync_schedules': {
+            'task': 'is_celery.tasks.sync_schedule_task',
+            'schedule': crontab(minute=0, hour=1, day_of_week='sunday'),
+        },
+    }
 )
 
 if __name__ == '__main__':

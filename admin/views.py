@@ -7,6 +7,7 @@ from wtforms.fields import SelectField, BooleanField
 
 from admin.models import LPU, Regions, Speciality, EPGU_Speciality, EPGU_Service_Type
 from int_service.lib.dataworker import UpdateWorker, EPGUWorker
+from is_celery.tasks import sync_schedule_task
 
 
 class LPUAdmin(ModelView):
@@ -124,10 +125,12 @@ class SyncEPGUAdmin(BaseView):
     @expose('/update_schedules/', methods=('POST',))
     def sync_schedules(self):
         if request.form['do_update']:
-            data_worker = EPGUWorker()
-            data_worker.sync_schedule()
-            msg = data_worker.msg
-            del data_worker
+            sync_schedule_task.delay()
+            msg = [u'Синхронизация запущена в фоновом режиме']
+            # data_worker = EPGUWorker()
+            # data_worker.sync_schedule()
+            # msg = data_worker.msg
+            # del data_worker
         else:
             msg = [u'Ошибка обновления БД']
         return self.render('update_process.html', result_msg=msg)

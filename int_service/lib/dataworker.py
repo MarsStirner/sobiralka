@@ -17,11 +17,6 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.exc import InvalidRequestError
 from suds import WebFault
-from celery import group, chain
-from celery.signals import task_postrun
-from celery.contrib.methods import task_method
-from celery.utils.log import get_task_logger
-from is_celery.celery_init import celery
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, DEBUG
 from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality, Regions, LPU_Specialities
@@ -34,11 +29,9 @@ from admin.database import Session, Session2, shutdown_session
 
 import logging
 
-task_logger = get_task_logger(__name__)
-
 if DEBUG:
     logging.basicConfig(level=logging.ERROR)
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 else:
     logging.basicConfig(level=logging.CRITICAL)
     logging.getLogger('sqlalchemy.engine').setLevel(logging.CRITICAL)
@@ -2232,9 +2225,7 @@ class EPGUWorker(object):
         return result
 
     # SYNC SCHEDULE TASKS
-    @celery.task(filter=task_method)
-    def appoint_patients(self, parent_task_returns, hospital, doctor):
-        patient_slots = parent_task_returns.get('patient_slots')
+    def appoint_patients(self, patient_slots, hospital, doctor):
         if not patient_slots:
             return None
         for patient_slot in patient_slots:
@@ -2267,19 +2258,15 @@ class EPGUWorker(object):
                 timeslot=patient_slot['date_time']
             )
 
-    @celery.task(filter=task_method)
-    def activate_location(self, parent_task_returns, hospital, location_id):
+    def activate_location(self, hospital, location_id):
         epgu_result = self.proxy_client.PutActivateLocation(hospital, location_id)
         location = getattr(epgu_result, 'location', None)
         if location:
             self.__log(u'Очередь %s (%s) активирована' % (location.prefix, location.id))
         else:
             self.__log(getattr(epgu_result, 'error', None))
-        return parent_task_returns
 
-    @celery.task(filter=task_method)
-    def link_schedule(self, parent_task_returns, hospital, location_id):
-        rules = parent_task_returns.get('rules')
+    def link_schedule(self, rules, hospital, location_id):
         if not rules:
             return None
         print (hospital, location_id, rules)
@@ -2311,9 +2298,8 @@ class EPGUWorker(object):
                              getattr(applied_rule, 'rule-id')))
         else:
             self.__log(getattr(epgu_result, 'error', None))
-        return parent_task_returns
+        return self.msg
 
-    @celery.task(filter=task_method)
     def doctor_schedule_task(self, doctor, hospital_dict):
         today = datetime.datetime.today().date()
         # TODO: get nearest monday for start_date?
@@ -2378,42 +2364,38 @@ class EPGUWorker(object):
             # if busy_by_patients:
             #     self.__appoint_patients(hospital_dict, doctor, busy_by_patients)
 
-        return dict(rules=doctor_rules, patient_slots=busy_by_patients)
+        return doctor_rules, busy_by_patients
 
-    @celery.task(filter=task_method)
-    def lpu_schedule_task(self, hospital_id, hospital_dict):
-        epgu_doctors = self.session.query(Personal).filter(Personal.lpuId == hospital_id).filter(
-            Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
-        ).all()
-        if epgu_doctors:
-            group(
-                chain(
-                    self.doctor_schedule_task.s(doctor, hospital_dict),
-                    self.link_schedule.s(hospital_dict, doctor.key_epgu.keyEPGU),
-                    self.activate_location.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=5),
-                    self.appoint_patients.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=5)
-                )() for doctor in epgu_doctors).apply_async()
-
-    @celery.task(filter=task_method)
-    def sync_schedule_task(self):
-        lpu_list = (self.session.query(LPU).
-                    filter(LPU.keyEPGU != '',
-                           LPU.keyEPGU != None,
-                           LPU.token != '',
-                           LPU.token != None).
-                    all())
-        if lpu_list:
-            res = group(
-                self.lpu_schedule_task.s(
-                    lpu.id,
-                    dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
-                ) for lpu in lpu_list).apply_async()
-            print res.get()
-            print self.msg
-        else:
-            self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
-            return False
-
-    @task_postrun.connect
-    def close_session(*args, **kwargs):
-        shutdown_session()
+    # def lpu_schedule_task(self, hospital_id, hospital_dict):
+    #     epgu_doctors = self.session.query(Personal).filter(Personal.lpuId == hospital_id).filter(
+    #         Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
+    #     ).all()
+    #     obj = EPGUWorker()
+    #     if epgu_doctors:
+    #         group(
+    #             [chain(
+    #                 obj.doctor_schedule_task.s(doctor, hospital_dict),
+    #                 obj.link_schedule.s(hospital_dict, doctor.key_epgu.keyEPGU),
+    #                 obj.activate_location.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=5),
+    #                 obj.appoint_patients.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=5)
+    #             ) for doctor in epgu_doctors])()
+    #
+    # def sync_schedule_task(self):
+    #     lpu_list = (self.session.query(LPU).
+    #                 filter(LPU.keyEPGU != '',
+    #                        LPU.keyEPGU != None,
+    #                        LPU.token != '',
+    #                        LPU.token != None).
+    #                 all())
+    #     if lpu_list:
+    #         obj = EPGUWorker()
+    #         res = group([
+    #             obj.lpu_schedule_task.s(
+    #                 lpu.id,
+    #                 dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
+    #             ) for lpu in lpu_list])()
+    #         # print res.get()
+    #         # print self.msg
+    #     else:
+    #         self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
+    #         return False
