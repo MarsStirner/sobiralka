@@ -1645,6 +1645,8 @@ class EPGUWorker(object):
         return None
 
     def __get_service_types(self, doctor, epgu_speciality_id):
+        if not doctor.speciality[0].epgu_service_type:
+            raise exceptions.ValueError
         return [doctor.speciality[0].epgu_service_type]
         # return (self.session.query(EPGU_Service_Type).
         #         filter(EPGU_Service_Type.epgu_speciality_id == epgu_speciality_id).
@@ -1670,9 +1672,9 @@ class EPGUWorker(object):
             print e
             self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
             return None
-        if not epgu_service_types:
-            self.__log(u'Не указана специальность для врача %s %s %s (id=%s)' %
-                       (doctor.LastName, doctor.FirstName, doctor.PatrName, doctor.doctor_id))
+        except exceptions.ValueError, e:
+            print e
+            self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
             return None
 
         params = dict(hospital=hospital)
