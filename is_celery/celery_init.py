@@ -30,6 +30,10 @@ celery.conf.update(
             'task': 'is_celery.tasks.update_db',
             'schedule': crontab(minute=0, hour='6,9,12,15,18,21'),
         },
+        'periodical_sync_locations': {
+            'task': 'is_celery.tasks.sync_locations',
+            'schedule': crontab(minute=10, hour=0, day_of_week='sunday'),
+        },
         'periodical_sync_schedules': {
             'task': 'is_celery.tasks.sync_schedule_task',
             'schedule': crontab(minute=0, hour=1, day_of_week='sunday'),

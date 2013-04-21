@@ -86,6 +86,12 @@ def sync_schedule_task():
         return False
 
 
+@celery.task
+def sync_locations():
+    epgu_dw = EPGUWorker()
+    epgu_dw.sync_locations()
+
+
 @task_postrun.connect
 def close_session(*args, **kwargs):
     shutdown_session()
