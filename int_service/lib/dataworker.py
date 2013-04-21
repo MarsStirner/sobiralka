@@ -1670,6 +1670,10 @@ class EPGUWorker(object):
             print e
             self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
             return None
+        if not epgu_service_types:
+            self.__log(u'Не указана специальность для врача %s %s %s (id=%s)' %
+                       (doctor.LastName, doctor.FirstName, doctor.PatrName, doctor.doctor_id))
+            return None
 
         params = dict(hospital=hospital)
         payment_method = self.session.query(EPGU_Payment_Method).filter(EPGU_Payment_Method.default == True).one()
