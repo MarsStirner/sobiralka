@@ -427,7 +427,7 @@ class EnqueueWorker(object):
     session = Session()
     # session.autocommit = True
     model = Enqueue
-    SCHEDULE_DAYS_DELTA = 14
+    SCHEDULE_DAYS_DELTA = 60  # 14
 
     def __del__(self):
         self.session.close()
