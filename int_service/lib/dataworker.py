@@ -1899,7 +1899,6 @@ class EPGUWorker(object):
             )
 
     def epgu_appoint_patient(self, hospital, doctor, patient, timeslot):
-        # TODO: На Celery с задержкой?
         slot_unique_key = None
         epgu_result = self.proxy_client.PostReserve(
             hospital=hospital,
@@ -1921,8 +1920,8 @@ class EPGUWorker(object):
             if slot:
                 slot_unique_key = getattr(slot, 'unique-key')
                 self.__log(u'На ЕПГУ добавлен талончик для %s %s %s (%s %s), ID очереди=%s, получен keyEPGU (%s)'
-                           % (patient['lastName'],
-                              patient['firstName'],
+                           % (patient['surname'],
+                              patient['name'],
                               patient['patronymic'],
                               timeslot.date().strftime('%d.%m.%Y'),
                               timeslot.time().strftime('%H:%M'),
