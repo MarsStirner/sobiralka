@@ -1313,8 +1313,16 @@ class ClientKorus30(AbstractClient):
         else:
             try:
                 result = self.client.enqueuePatient(params)
+                print result
             except WebFault, e:
                 print e
+            except Exception, e:
+                print e
+                return {
+                    'result': False,
+                    'error_code': e.message.decode('utf-8'),
+                    'ticketUid': '',
+                }
             else:
                 if result.success:
                     return {
