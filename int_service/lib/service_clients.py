@@ -1252,6 +1252,8 @@ class ClientKorus30(AbstractClient):
         if omiPolicy:
             patient_params['omiPolicy'] = omiPolicy
         if document:
+            if 'serial' in document:
+                document['serial'] = document['serial'].encode('utf-8')
             patient_params['document'] = document
         if birthDate:
             patient_params['birthDate'] = calendar.timegm(birthDate.timetuple()) * 1000
