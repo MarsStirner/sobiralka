@@ -63,6 +63,7 @@ def lpu_schedule_task(hospital_id, hospital_dict):
                 activate_location.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=5),
                 appoint_patients.s(hospital_dict, doctor).set(countdown=5)
             ) for doctor in epgu_doctors])()
+    shutdown_session()
 
 
 @celery.task
@@ -81,8 +82,10 @@ def sync_schedule_task():
             ) for lpu in lpu_list])()
         # print res.get()
         # print self.msg
+        shutdown_session()
     else:
         # self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
+        shutdown_session()
         return False
 
 

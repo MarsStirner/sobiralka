@@ -428,6 +428,7 @@ class EnqueueWorker(object):
     # session.autocommit = True
     model = Enqueue
     SCHEDULE_DAYS_DELTA = 60  # 14
+    #TODO: вернуть меньшее количество дней, но на стороне сайта и ТК передавать даты начала и окончания
 
     def __del__(self):
         self.session.close()
