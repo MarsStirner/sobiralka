@@ -102,3 +102,7 @@ http://IP_ADSRESS:8888/admin/lpuview/
 ```
 fab update_db
 ```
+
+Настроить и запустить supervisor для периодических задач
+-----------
+http://thomassileo.com/blog/2012/08/20/how-to-keep-celery-running-with-supervisor/
