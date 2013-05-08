@@ -19,12 +19,13 @@ virtualenv_bin_path = os.path.join(project_dir_path, virtualenv, 'bin')
 
 def prepare_virtual_env():
     #Установка виртуального окружения и инструмента работы с пакетами Python
-    local('easy_install virtualenv pip')
+    local('easy_install virtualenv')
     #Создаём и активируем виртульное окружение для проекта
     with lcd(project_dir_path):
         with settings(warn_only=True):
             local('rm -R  %s' % virtualenv)
         local('virtualenv %s' % virtualenv)
+        local('%s pip' % os.path.join(virtualenv_bin_path, 'easy_install'))
         # local(os.path.join(virtualenv_bin_path, 'activate'))
 
 
