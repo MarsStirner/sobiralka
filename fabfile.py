@@ -77,9 +77,10 @@ def _get_apache_config_dir():
 def _enable_configs(config_dir, project_dir_name):
     if config_dir.find('sites-available') > -1:
         enable_config_dir = config_dir.replace('sites-available', 'sites-enabled')
-        local('ln -s %s/%s.conf %s/%s.conf' % (config_dir, project_dir_name, enable_config_dir, project_dir_name))
-        local('ln -s %s/admin_%s.conf %s/admin_%s.conf' %
-              (config_dir, project_dir_name, enable_config_dir, project_dir_name))
+        with settings(warn_only=True):
+            local('ln -s %s/%s.conf %s/%s.conf' % (config_dir, project_dir_name, enable_config_dir, project_dir_name))
+            local('ln -s %s/admin_%s.conf %s/admin_%s.conf' %
+                (config_dir, project_dir_name, enable_config_dir, project_dir_name))
 
 
 def configure_webserver():
