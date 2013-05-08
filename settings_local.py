@@ -20,3 +20,5 @@ SOAP_SERVER_PORT = 9910
 SOAP_ADMIN_HOST = '127.0.0.1'
 
 FLASK_SECRET_KEY = 'ohp%)%6vyq05mr2sc#rb$oe@we&$un534**tb04#^z99iq)(y='
+
+EPGU_SERVICE_URL = ''
