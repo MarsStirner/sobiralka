@@ -1360,9 +1360,9 @@ class ClientKorus30(AbstractClient):
 
 class ClientEPGU():
     """Класс клиента для взаимодействия с ЕПГУ"""
-    url = settings.EPGU_SERVICE_URL
 
     def __init__(self):
+        self.url = settings.EPGU_SERVICE_URL
         if settings.DEBUG:
             self.client = Client(self.url, cache=None)
         else:
