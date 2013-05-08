@@ -15,10 +15,16 @@ from spyne.model.primitive import NATIVE_MAP, Mandatory, AnyDict, String
 from spyne.decorator import srpc, rpc
 from spyne.model.complex import Array, Iterable, ComplexModel
 
-from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, SOAP_NAMESPACE
-from dataworker import DataWorker
+from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, SOAP_NAMESPACE, DEBUG
+from dataworker import DataWorker, EPGUWorker
 import soap_models
 import version
+
+# if DEBUG:
+#     logging.basicConfig(level=logging.DEBUG)
+#     logging.getLogger('spyne.protocol.soap').setLevel(logging.DEBUG)
+#     logging.getLogger('spyne.service').setLevel(logging.DEBUG)
+#     logging.getLogger('spyne.server.wsgi').setLevel(logging.DEBUG)
 
 
 class CustomWsgiMounter(WsgiMounter):
@@ -117,8 +123,10 @@ class ScheduleServer(ServiceBase):
     def setTicketReadStatus(self):
         pass
 
-    def cancel(self):
-        pass
+    @srpc(soap_models.CancelRequest, _returns=soap_models.CancelResponse)
+    def cancel(parameters):
+        obj = DataWorker.provider('enqueue')
+        return obj.dequeue(**vars(parameters))
 
     def sendRequest(self):
         pass
@@ -127,10 +135,28 @@ class ScheduleServer(ServiceBase):
         pass
 
 
+class EPGUGateServer(ServiceBase):
+    @srpc(soap_models.RequestType, _body_style='bare',
+          _in_variable_names=dict(parameters='Request'),
+          _returns=soap_models.ResponseType, _out_variable_name='Response',
+          _throws=soap_models.ErrorResponseType)
+    def Request(parameters):
+        obj = EPGUWorker()
+        try:
+            MessageData = parameters.MessageData
+            _format = str(MessageData.format)
+            message = ''.join(MessageData.message)
+            result = obj.epgu_request(format=_format, message=message)
+        except Exception, e:
+            print e
+            return []
+        else:
+            return result
+
+
 class Server(object):
 
     def __init__(self):
-        logging.basicConfig()
         info_app = Application(
             [InfoServer],
             tns=SOAP_NAMESPACE,
@@ -155,10 +181,19 @@ class Server(object):
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
+        epgu_gate_app = Application(
+            [EPGUGateServer],
+            tns='http://erGateService.er.atc.ru/ws',
+            name='GateService',
+            interface=Wsdl11(),
+            in_protocol=Soap11(),
+            out_protocol=Soap11()
+        )
         self.applications = CustomWsgiMounter({
             'info': info_app,
             'list': list_app,
             'schedule': schedule_app,
+            'gate': epgu_gate_app,
         })
 
     def run(self):
