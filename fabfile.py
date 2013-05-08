@@ -134,7 +134,7 @@ def install_requirements():
     with settings(warn_only=True):
         local('apt-get install python-mysqldb')
     with settings(warn_only=True):
-        local('apt-get install python-module-mysqldb')
+        local('apt-get install python-module-MySQLdb')
     with lcd(code_dir_path):
         local('%s install -r requirements.txt' % os.path.join(virtualenv_bin_path, 'pip'))
 
