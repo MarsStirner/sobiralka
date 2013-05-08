@@ -9,7 +9,7 @@ from urlparse import urlparse
 from abc import ABCMeta, abstractmethod, abstractproperty
 from suds.client import Client
 #from suds.plugin import MessagePlugin
-from suds.cache import DocumentCache
+#from suds.cache import DocumentCache
 from suds import WebFault
 import is_exceptions
 import settings
