@@ -293,7 +293,7 @@ class LPUWorker(object):
                 'name': lpu_item.name,
                 'type': lpu_item.type,
                 'phone': lpu_item.phone,
-                'email': lpu_item.email,
+                'email': lpu_item.email if lpu_item.email else '',
                 'siteURL': '',
                 'schedule': lpu_item.schedule,
                 'buildings': units,
