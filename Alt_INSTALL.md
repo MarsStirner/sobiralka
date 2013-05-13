@@ -76,6 +76,8 @@ SOAP_SERVER_PORT = 9910
 
 #Хост, по которому будет доступен административный интерфейс ИСа
 SOAP_ADMIN_HOST = '127.0.0.1'
+
+EPGU_SERVICE_URL = 'http://adapter-fer.rosminzdrav.ru/misAdapterService/ws/MisAdapterService?wsdl'
 ```
 
 **Автоматическая установка ИС и зависимостей**
