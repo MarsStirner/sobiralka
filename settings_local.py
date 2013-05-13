@@ -21,4 +21,4 @@ SOAP_ADMIN_HOST = '127.0.0.1'
 
 FLASK_SECRET_KEY = 'ohp%)%6vyq05mr2sc#rb$oe@we&$un534**tb04#^z99iq)(y='
 
-EPGU_SERVICE_URL = ''
+EPGU_SERVICE_URL = 'http://adapter-fer.rosminzdrav.ru/misAdapterService/ws/MisAdapterService?wsdl'
