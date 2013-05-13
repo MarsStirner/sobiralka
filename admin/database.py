@@ -7,6 +7,8 @@ from settings import DB_CONNECT_STRING
 
 engine = create_engine(DB_CONNECT_STRING, convert_unicode=True)
 Session = scoped_session(sessionmaker(bind=engine))
+Session2 = scoped_session(sessionmaker(bind=engine))
+Tasks_Session = scoped_session(sessionmaker(bind=engine))
 #Base = declarative_base()
 Base.query = Session.query_property()
 
@@ -15,7 +17,7 @@ def init_db():
     # import all modules here that might define models so that
     # they will be registered properly on the metadata.  Otherwise
     # you will have to import them first before calling init_db()
-    from admin.models import LPU, LPU_Units, Enqueue, Personal, Speciality, UnitsParentForId, Regions
+    from admin.models import *
     # Session.begin()
     Base.metadata.create_all(bind=engine)
     Session.commit()
@@ -23,3 +25,5 @@ def init_db():
 
 def shutdown_session(exception=None):
     Session.remove()
+    Session2.remove()
+    Tasks_Session.remove()

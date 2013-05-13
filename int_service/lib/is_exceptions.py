@@ -22,9 +22,15 @@ class IS_ConnectionError(ISError):
 class IS_PatientNotRegistered(ISError):
     message = u'Пациент не зарегистрирован в выбранном ЛПУ'
 
+    def __int__(self):
+        return 200
+
 
 class IS_FoundMultiplePatients(ISError):
     message = u'Найдено более одного пациента по указанным данным'
+
+    def __int__(self):
+        return 201
 
 
 class IS_NoSuchPatientTypeId(ISError):
@@ -104,7 +110,8 @@ def exception_by_code(code):
         401: IS_NoTicketsAvailable,
     }
     try:
-        num_code = int(code.split()[0])
+        if code and not isinstance(code, int):
+            num_code = int(code.split()[0])
     except ValueError:
         return code
     else:

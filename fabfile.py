@@ -19,12 +19,13 @@ virtualenv_bin_path = os.path.join(project_dir_path, virtualenv, 'bin')
 
 def prepare_virtual_env():
     #Установка виртуального окружения и инструмента работы с пакетами Python
-    local('easy_install virtualenv pip')
+    local('easy_install virtualenv')
     #Создаём и активируем виртульное окружение для проекта
     with lcd(project_dir_path):
         with settings(warn_only=True):
             local('rm -R  %s' % virtualenv)
         local('virtualenv %s' % virtualenv)
+        local('%s pip' % os.path.join(virtualenv_bin_path, 'easy_install'))
         # local(os.path.join(virtualenv_bin_path, 'activate'))
 
 
@@ -77,9 +78,10 @@ def _get_apache_config_dir():
 def _enable_configs(config_dir, project_dir_name):
     if config_dir.find('sites-available') > -1:
         enable_config_dir = config_dir.replace('sites-available', 'sites-enabled')
-        local('ln -s %s/%s.conf %s/%s.conf' % (config_dir, project_dir_name, enable_config_dir, project_dir_name))
-        local('ln -s %s/admin_%s.conf /%s/admin_%s.conf' %
-              (config_dir, project_dir_name, enable_config_dir, project_dir_name))
+        with settings(warn_only=True):
+            local('ln -s %s/%s.conf %s/%s.conf' % (config_dir, project_dir_name, enable_config_dir, project_dir_name))
+            local('ln -s %s/admin_%s.conf %s/admin_%s.conf' %
+                (config_dir, project_dir_name, enable_config_dir, project_dir_name))
 
 
 def configure_webserver():
@@ -134,7 +136,7 @@ def install_requirements():
     with settings(warn_only=True):
         local('apt-get install python-mysqldb')
     with settings(warn_only=True):
-        local('apt-get install python-module-mysqldb')
+        local('apt-get install python-module-MySQLdb')
     with lcd(code_dir_path):
         local('%s install -r requirements.txt' % os.path.join(virtualenv_bin_path, 'pip'))
 

@@ -1,6 +1,6 @@
 # coding: utf-8 -*-
 
-from spyne.model.primitive import String, Unicode, Integer, Date, DateTime, Boolean
+from spyne.model.primitive import String, Unicode, Integer, Date, DateTime, Boolean, Long
 from spyne.model.complex import Array, ComplexModel
 from spyne.model.enum import Enum
 from spyne.model.binary import ByteArray
@@ -76,7 +76,7 @@ class Hospital(ComplexModel):
 class GetHospitalInfoRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    hospitalUid = String.customize(nillable=True, minOccurs=0, doc=u'Один или несколько идентификаторов ЛПУ')
+    hospitalUid = String.customize(nillable=True, min_occurs=0, doc=u'Один или несколько идентификаторов ЛПУ')
 
     def __init__(self):
         super(GetHospitalInfoRequest, self).__init__(doc=u'Параметры запроса для получения подробной информация о ЛПУ')
@@ -345,7 +345,7 @@ class ListDoctorsResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     doctors = DoctorInfo.customize(
-        nillable=True, minOccurs=0,
+        nillable=True, min_occurs=0,
         max_occurs='unbounded', doc=u'Перечень объектов, содержащих информацию о найденных врачах'
     )
     hospitals = HospitalInfo.customize(
@@ -524,8 +524,9 @@ Ticket_Statuses = Enum(
     'canceled',
     'rescheduled',
     'substituted',
-    type_name='SessionStatuses',
+    type_name='TicketStatuses',
 )
+
 
 class TicketStatus(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
@@ -721,3 +722,79 @@ class GetVersionResponse(ComplexModel):
 
     def __init__(self):
         super(GetVersionResponse, self).__init__(doc=u'Получение версии ИС')
+
+
+RequestFormatType = Enum(
+    'XML',
+    'HL7',
+    type_name='RequestFormatType',
+)
+
+
+class MessageRequestType(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    format = RequestFormatType.customize(min_occurs=1, max_occurs=1, doc=u'Допустимые форматы входных сообщений')
+    message = ByteArray.customize(
+        min_occurs=1, max_occurs=1, doc=u'Сообщение в формате HL7 или XML, закодированное в base64'
+    )
+
+    def __init__(self):
+        super(MessageRequestType, self).__init__(doc=u'Содержит входные данные для вызова REST сервиса ЭлРег')
+
+
+class RequestType(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    MessageData = MessageRequestType.customize(min_occurs=1, max_occurs=1, nillable=False, doc=u'Перечень найденных регионов')
+
+    def __init__(self):
+        super(RequestType, self).__init__(doc=u'Входящий запрос')
+
+
+class MessageResponseType(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    response = ByteArray.customize(min_occurs=1, nillable=False)
+
+    def __init__(self):
+        super(MessageResponseType, self).__init__(doc=u'Ответ в формате HL7, закодированный в base64')
+
+
+class ResponseType(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    MessageData = MessageResponseType.customize(min_occurs=1, max_occurs=1, nillable=False)
+
+    def __init__(self):
+        super(ResponseType, self).__init__(doc=u'Возвращаемый ответ')
+
+
+class Error(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    errorCode = Long(min_occurs=1, max_occurs=1, nillable=False)
+
+    def __init__(self):
+        super(Error, self).__init__(doc=u'Контейнер сообщения об ошибке')
+
+
+class MessageErrorResponseType(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    Error = Error.customize(min_occurs=1, max_occurs=1, nillable=False)
+    Error.Annotations.doc = u'Указывается код в случае возникновения ошибки'
+    errorMessage = String(min_occurs=0, max_occurs=1)
+    errorMessage.Annotations.doc = u'Указывается код в случае возникновения ошибки'
+
+    def __init__(self):
+        super(MessageErrorResponseType, self).__init__(doc=u'Содержит сообщение об ошибке')
+
+
+class ErrorResponseType(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    MessageData = MessageErrorResponseType.customize(min_occurs=1, max_occurs=1, nillable=False)
+
+    def __init__(self):
+        super(ErrorResponseType, self).__init__(doc=u'Ответ в случае возникновения ошибки')

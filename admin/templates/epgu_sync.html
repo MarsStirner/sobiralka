@@ -1,0 +1,109 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+<h2>Синхронизация с ЕПГУ</h2>
+<div class="row-fluid">
+    <div class="span6">
+        <h4>Обновить справочники</h4>
+        <h6>(ЛПУ, методы оплаты, типы резервирования)</h6>
+        <form id="update_common_data" method="POST">
+            <div class="control-group">
+                <div class="controls">
+                    <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
+                    <a href="/admin/" class="btn">Отмена</a>
+                </div>
+            </div>
+        </form>
+        <blockquote style="border-color: #B94A48;"><div id="result_update_common_data"></div></blockquote>
+    </div>
+    <div class="span6">
+        <h4>Синхронизировать очереди</h4>
+        <form id="update_locations" method="POST">
+            <div class="control-group">
+                <div class="controls">
+                    <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
+                    <a href="/admin/" class="btn">Отмена</a>
+                </div>
+            </div>
+        </form>
+        <blockquote style="border-color: #B94A48;"><div id="result_update_locations"></div></blockquote>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span6">
+        <h4>Обновить специальности и услуги</h4>
+        <form id="update_specialities" method="POST">
+            <div class="control-group">
+                <div class="controls">
+                    <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
+                    <a href="/admin/" class="btn">Отмена</a>
+                </div>
+            </div>
+        </form>
+        <blockquote style="border-color: #B94A48;"><div id="result_update_specialities"></div></blockquote>
+    </div>
+    <div class="span6">
+        <h4>Синхронизировать расписания</h4>
+        <form id="update_schedules" method="POST">
+            <div class="control-group">
+                <div class="controls">
+                    <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
+                    <a href="/admin/" class="btn">Отмена</a>
+                </div>
+            </div>
+        </form>
+        <blockquote style="border-color: #B94A48;"><div id="result_update_schedules"></div></blockquote>
+    </div>
+</div>
+<div class="loader"></div>
+
+<script type=text/javascript src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        $("body").on({
+            ajaxStart: function() {
+                $(this).addClass("loading");
+            },
+            ajaxStop: function() {
+                $(this).removeClass("loading");
+            }
+        });
+        $('form').each(function(){
+            var $this = $(this);
+            $this.submit(function(){
+                $this.hide();
+                var data = {};
+                $this.find('input').each(function(){
+                    data[$(this).attr('name')] = $(this).val();
+                });
+                switch ($this.attr('id')){
+                    case 'update_common_data':
+                        $.post("{{ url_for('.sync_common_data') }}", data, function(res) {
+                            $('#result_' + $this.attr('id')).html(res);
+                        });
+                        break;
+
+                    case 'update_specialities':
+                        $.post("{{ url_for('.sync_specialities') }}", data, function(res) {
+                            $('#result_' + $this.attr('id')).html(res);
+                        });
+                        break;
+
+                    case 'update_locations':
+                        $.post("{{ url_for('.sync_locations') }}", data, function(res) {
+                            $('#result_' + $this.attr('id')).html(res);
+                        });
+                        break;
+
+                    case 'update_schedules':
+                        $.post("{{ url_for('.sync_schedules') }}", data, function(res) {
+                            $('#result_' + $this.attr('id')).html(res);
+                        });
+                        break;
+                }
+                return false;
+            });
+        });
+    });
+</script>
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/style.css') }}">
+{% endblock %}

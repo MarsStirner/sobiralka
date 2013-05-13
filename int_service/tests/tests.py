@@ -208,7 +208,7 @@ class TestListWSDL(unittest.TestCase):
             self.assertListEqual(hospitals.hospitals, result)
 
     def testFindOrgStructureByAddressKorus30(self):
-        client = ClientKorus30('http://10.2.1.58:7911')
+        client = ClientKorus30('http://192.168.1.101:7911')
         hospitals = client.findOrgStructureByAddress(
             pointKLADR = '4800000100000',
             streetKLADR = '48000001000030800',

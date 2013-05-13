@@ -3,6 +3,7 @@
 
 from int_service.lib.soap_server import Server
 
+
 def main():
     server = Server()
     server.run()

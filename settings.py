@@ -14,6 +14,8 @@ SOAP_ADMIN_HOST = '127.0.0.1'
 SOAP_NAMESPACE = 'tns'
 FLASK_SECRET_KEY = ''
 
+EPGU_SERVICE_URL = ''
+
 from settings_local import *
 
 DB_CONNECT_STRING = 'mysql://%s:%s@%s:%s/%s?charset=utf8' % (DB_USER , DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)

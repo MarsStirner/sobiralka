@@ -2,8 +2,11 @@ Flask
 wtforms
 Flask-WTF
 Flask-Admin
+Flask-BabelEx
+Celery
+supervisor
 #Flask-Login
-spyne==2.9.3
+spyne>=2.9.4
 SQLAlchemy
 #Flask-SQLAlchemy
 pytz
@@ -13,3 +16,4 @@ simplejson
 thrift
 twisted
 mysql-python
+-e git+http://github.com/johnpaulett/python-hl7/#egg=python-hl7
