@@ -113,5 +113,7 @@ http://thomassileo.com/blog/2012/08/20/how-to-keep-celery-running-with-superviso
 * Замечание
 -----------
 В случае, если используется версия python отличная от 2.7, необходимо отредактировать конфиги apache:
+
 sites-available/%PROJECT_NAME%.conf
+
 sites-available/admin_%PROJECT_NAME%.conf
