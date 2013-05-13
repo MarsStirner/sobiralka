@@ -13,6 +13,7 @@
 * Web-Server Apache + mod_wsgi
 * git
 * zlib
+* C-compiler
 
 Установка
 -----------
