@@ -115,10 +115,15 @@ def _parse_config(s):
              ('%PROJECT_NAME%', project_dir_name),
              ('%PROJECT_CODE_ROOT%', code_dir_path),
              ('%SYSTEM_USER%', SYSTEM_USER),
-             ('%SOAP_ADMIN_HOST%', SOAP_ADMIN_HOST)]
+             ('%SOAP_ADMIN_HOST%', SOAP_ADMIN_HOST),
+             ('%PYTHON_VERSION%', _get_python_version())]
     for search, replace in edits:
         s = s.replace(search, replace)
     return s
+
+
+def _get_python_version():
+    return '%s.%s' % (sys.version_info[0], sys.version_info[1])
 
 
 def activate_web_config():
