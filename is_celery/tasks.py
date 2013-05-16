@@ -88,7 +88,7 @@ def sync_schedule_task():
         shutdown_session()
         return False
 
-sync_schedule_task()
+
 @celery.task
 def sync_locations():
     epgu_dw = EPGUWorker()
