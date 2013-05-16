@@ -7,18 +7,15 @@
 Системные требования
 -----------
 
-* Серверная ОС семейства Linux
-* Python 2.7
-* MySQL 5
-* Web-Server Apache + mod_wsgi
-* git
+* ОС AltLinux
+
+### Необходимое ПО, поставляемое с дистрибутивом AltLinux
+
+* Python 2.6 и выше
+* Web-Server Apache2 + apache2-mod_wsgi
 * zlib
-* C-compiler (gcc)
 
-Установка
------------
-
-Описанная ниже установка и настройка ПО производится из консоли Linux. Используется root-доступ.
+### Устанавливаемое ПО
 
 **Update системы**
 
@@ -27,10 +24,25 @@ apt-get update
 apt-get upgrade
 ```
 
+* C-compiler (gcc) ```apt-get install gcc```
+* MySQL 5 (Server, Client) ```apt-get install mysql```
+* git (для случая, когда проект скачивается из репозитория) ```apt-get install git```
+* python-module-setuptools ```apt-get install python-module-setuptools```
+* 
+
+**Необходимо учесть, что указанные пакеты требуют установки дополнительного ПО для разрешения соответствующих зависимостей**
+
+
+Установка ИС
+-----------
+
+Описанная ниже установка и настройка ПО производится из консоли Linux. Используется root-доступ.
+
+
 **Установка виртуального окружения и инструмента работы с пакетами Python**
 
 ```
-apt-get -y install mysql-client libmysqlclient-devel python python-dev python-module-setuptools libxml2-devel libxslt-devel
+apt-get -y install libmysqlclient-devel python-dev  libxml2-devel libxslt-devel
 ```
 
 **Установка fabric для автоматического разворачивания проекта**
@@ -109,11 +121,3 @@ fab update_db
 Настроить и запустить supervisor для периодических задач
 -----------
 http://thomassileo.com/blog/2012/08/20/how-to-keep-celery-running-with-supervisor/
-
-* Замечание
------------
-В случае, если используется версия python отличная от 2.7, необходимо отредактировать конфиги apache:
-
-sites-available/%PROJECT_NAME%.conf
-
-sites-available/admin_%PROJECT_NAME%.conf
