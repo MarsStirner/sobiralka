@@ -76,6 +76,8 @@ SOAP_SERVER_PORT = 9910
 
 #Хост, по которому будет доступен административный интерфейс ИСа
 SOAP_ADMIN_HOST = '127.0.0.1'
+
+EPGU_SERVICE_URL = 'http://adapter-fer.rosminzdrav.ru/misAdapterService/ws/MisAdapterService?wsdl'
 ```
 
 **Автоматическая установка ИС и зависимостей**
@@ -111,5 +113,7 @@ http://thomassileo.com/blog/2012/08/20/how-to-keep-celery-running-with-superviso
 * Замечание
 -----------
 В случае, если используется версия python отличная от 2.7, необходимо отредактировать конфиги apache:
+
 sites-available/%PROJECT_NAME%.conf
+
 sites-available/admin_%PROJECT_NAME%.conf
