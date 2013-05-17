@@ -116,6 +116,8 @@ source .virtualenv/bin/activate
 * suds (https://pypi.python.org/pypi/suds/)
 * simplejson (https://pypi.python.org/pypi/simplejson/)
 * thrift (https://pypi.python.org/pypi/thrift/)
+* lxml (https://pypi.python.org/pypi/lxml/)
+* python-hl7 (https://pypi.python.org/pypi/hl7/)
 
 #### Перенос исходников ИС на сервер
 
