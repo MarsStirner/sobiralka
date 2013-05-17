@@ -24,16 +24,15 @@ apt-get update
 apt-get upgrade
 ```
 
-* C-compiler (gcc) ```apt-get install gcc4.5``` (установить подходящую версию)
+* C-compiler (gcc) ```apt-get install gcc4.4``` (установить подходящую версию, в данном случае 4.4)
  * binutils
- * cpp4.5
+ * cpp4.4
  * gcc-common
  * glibc
  * glibc-devel
  * glibc-kernheaders
  * glibc-timezones
  * kernel-headers-common
- * libmpc
  * libmprf
  * tzdata
 * MySQL 5 (MySQL-server, MySQL-client) ```apt-get install MySQL-server``` ```apt-get install MySQL-client```
@@ -43,14 +42,6 @@ apt-get upgrade
  * libxslt
 * libmysqlclient-devel ```apt-get install libmysqlclient-devel```
 
-**Пакеты для установке из Интернета**
-
-* git (для случая, когда проект скачивается по интернету из репозитория) ```apt-get install git```
-* python-module-setuptools (для случая, когда модули python устанавливаются из Интернета) ```apt-get install python-module-setuptools```
- * libinfo-devel
- * libncurses
- * libncurses-devel
- * python-dev
 
 **Во вложенных пунктах указаны зависимости, которые потребуется разрешить**
 
@@ -67,8 +58,6 @@ apt-get upgrade
 apt-get install python-module-virtualenv
 ```
 
-**Перенос исходников ИС на сервер**
-
 Используем директорию /srv/ для обеспечения защищенной установки ИС. Вместо /srv можно использовать любую удобную директорию на сервере (например, /var/www/webapps).
 
 При этом, следуя инструкции, необходимо подразумевать, что вместо /srv необходимо указывать Вашу директорию.
@@ -77,18 +66,57 @@ apt-get install python-module-virtualenv
 
 ```
 cd /srv/my_project
-git clone https://github.com/KorusConsulting/sobiralka.git
 ```
-при этом необходимо наличие github аккаунта с правами доступа в корпоративный репозиторий
 
-**Если доступа к репозиторию нет, но есть архив с исходниками проекта - достаточно распаковать его в отведенную директорию.**
+#### Установка python-модулей в виртуальное окружение
 
-
-**Установка fabric для автоматического разворачивания проекта**
+**Создание и активация виртуального окружения**
 
 ```
-easy_install fabric
+virtualenv .virtualenv
+source .virtualenv/bin/activate
 ```
+
+**Общий принцип установки python-модулей**
+
+* Заливаем во временную директорию (например /srv/my_project/tmp) архив модуля, скаченный с https://pypi.python.org/
+* Распаковываем архив и переходим в директорию модуля 
+ * ```tar xvfz *.tar.gz``` или ```unzip *.zip```
+ * ```cd unpacked_module_dir```
+* Выполняем ```python setup.py install```
+
+**Перечень модулей для установки**
+
+* fabric (https://pypi.python.org/pypi/Fabric/)
+ * pycrypto>=2.6 (https://pypi.python.org/pypi/pycrypto/)
+ * paramiko>=1.10.1 (https://pypi.python.org/pypi/paramiko/)
+* Flask (https://pypi.python.org/pypi/Flask/)
+ * Jinja2>=2.4 (https://pypi.python.org/pypi/Jinja2/)
+ * Werkzeug>=0.7 (https://pypi.python.org/pypi/Werkzeug/)
+* WTForms (https://pypi.python.org/pypi/WTForms/)
+* Flask-WTF (https://pypi.python.org/pypi/Flask-WTF/)
+* Flask-Admin (https://pypi.python.org/pypi/Flask-Admin/)
+* Flask-BabelEx (https://pypi.python.org/pypi/Flask-BabelEx/)
+ * speaklater (https://pypi.python.org/pypi/speaklater/)
+ * pytz (https://pypi.python.org/pypi/pytz/)
+ * Babel (https://pypi.python.org/pypi/Babel/)
+* Celery (https://pypi.python.org/pypi/celery/)
+ * amqp (https://pypi.python.org/pypi/amqp/)
+ * python-dateutil (https://pypi.python.org/pypi/python-dateutil/)
+ * billiard (https://pypi.python.org/pypi/billiard/)
+ * ordereddict (https://pypi.python.org/pypi/ordereddict/)
+ * importlib (https://pypi.python.org/pypi/importlib/)
+ * kombu (https://pypi.python.org/pypi/kombu/)
+ * anyjson (https://pypi.python.org/pypi/anyjson/)
+ * six (https://pypi.python.org/pypi/six/)
+* supervisor
+ * meld3 (https://pypi.python.org/pypi/meld3/)
+* spyne (https://pypi.python.org/pypi/spyne/)
+* SQLAlchemy ()
+
+#### Перенос исходников ИС на сервер
+
+Распаковать архив https://github.com/KorusConsulting/sobiralka/archive/master.zip в директорию проекта (/srv/my_project)
 
 
 Настройка конфига ИС
