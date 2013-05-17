@@ -7,9 +7,9 @@
 Системные требования
 -----------
 
-* ОС AltLinux
+* ОС ALTLinux
 
-### Необходимое ПО, поставляемое с дистрибутивом AltLinux
+### Необходимое ПО, поставляемое с дистрибутивом ALTLinux
 
 * Python 2.6 и выше
 * Web-Server Apache2 + apache2-mod_wsgi
@@ -24,13 +24,17 @@ apt-get update
 apt-get upgrade
 ```
 
-* C-compiler (gcc) ```apt-get install gcc```
-* MySQL 5 (Server, Client) ```apt-get install mysql```
-* git (для случая, когда проект скачивается из репозитория) ```apt-get install git```
-* python-module-setuptools ```apt-get install python-module-setuptools```
-* 
+* C-compiler (gcc) ```apt-get install gcc4.5``` (установить подходящую версию, в указанном случае gcc4.5)
+* MySQL 5 (MySQL-server, MySQL-client) ```apt-get install MySQL-server``` ```apt-get install MySQL-client```
+* python-module-MySQLdb ```apt-get install python-module-MySQLdb```
+* libxml2-devel ```apt-get install libxml2-devel```
+* libxslt-devel ```apt-get install libxslt-devel```
+* libmysqlclient-devel ```apt-get install libmysqlclient-devel```
 
-**Необходимо учесть, что указанные пакеты требуют установки дополнительного ПО для разрешения соответствующих зависимостей**
+**Пакеты для установки из Интернета**
+
+* git ```apt-get install git```
+* python-module-setuptools ```apt-get install python-module-setuptools```
 
 
 Установка ИС
@@ -39,19 +43,7 @@ apt-get upgrade
 Описанная ниже установка и настройка ПО производится из консоли Linux. Используется root-доступ.
 
 
-**Установка виртуального окружения и инструмента работы с пакетами Python**
-
-```
-apt-get -y install libmysqlclient-devel python-dev  libxml2-devel libxslt-devel
-```
-
-**Установка fabric для автоматического разворачивания проекта**
-
-```
-easy_install fabric
-```
-
-**Перенос исходников ИС на сервер**
+### Перенос исходников ИС на сервер
 
 Используем директорию /srv/ для обеспечения защищенной установки ИС. Вместо /srv можно использовать любую удобную директорию на сервере (например, /var/www/webapps).
 
@@ -66,6 +58,14 @@ git clone https://github.com/KorusConsulting/sobiralka.git
 при этом необходимо наличие github аккаунта с правами доступа в корпоративный репозиторий
 
 **Если доступа к репозиторию нет, но есть архив с исходниками проекта - достаточно распаковать его в отведенную директорию.**
+
+
+### Установка fabric для автоматического развёртывания проекта
+
+```
+easy_install fabric
+```
+
 
 Настройка конфига ИС
 -----------
