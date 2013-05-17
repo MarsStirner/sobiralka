@@ -112,7 +112,7 @@ def configure_supervisor():
         config_file = open('%s/fabric_inc/supervisord.conf' % code_dir_path, 'r')
         config = _parse_config(config_file.read())
         config_file.close()
-        supervisor_config_file = open('%s/supervisord.conf' % code_dir_path, 'r')
+        supervisor_config_file = open('%s/supervisord.conf' % code_dir_path, 'w')
         supervisor_config_file.write(config)
         supervisor_config_file.close()
         local('supervisord')
