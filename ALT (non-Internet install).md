@@ -41,7 +41,7 @@ apt-get upgrade
 * libxslt-devel ```apt-get install libxslt-devel```
  * libxslt
 * libmysqlclient-devel ```apt-get install libmysqlclient-devel```
-* zlib-devel
+* zlib-devel ```apt-get install zlib-devel```
 
 
 **Во вложенных пунктах указаны зависимости, которые потребуется разрешить**
