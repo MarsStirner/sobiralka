@@ -147,10 +147,10 @@ SOAP_ADMIN_HOST = '127.0.0.1'
 EPGU_SERVICE_URL = 'http://adapter-fer.rosminzdrav.ru/misAdapterService/ws/MisAdapterService?wsdl'
 ```
 
-**Автоматическая установка ИС и зависимостей**
+### Автоматическая установка ИС
 
 ```
-fab deploy
+fab alt_deploy
 ```
 В процессе установки потребуется ввести логин/пароль администратора MySQL, из-под которого будет создан пользователь БД для ИС.
 
