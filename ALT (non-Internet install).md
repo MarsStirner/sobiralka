@@ -150,7 +150,7 @@ EPGU_SERVICE_URL = 'http://adapter-fer.rosminzdrav.ru/misAdapterService/ws/MisAd
 **Автоматическая установка ИС и зависимостей**
 
 ```
-fab deploy
+fab alt_deploy
 ```
 В процессе установки потребуется ввести логин/пароль администратора MySQL, из-под которого будет создан пользователь БД для ИС.
 
