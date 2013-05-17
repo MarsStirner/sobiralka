@@ -115,7 +115,7 @@ def configure_supervisor():
         supervisor_config_file = open('%s/supervisord.conf' % code_dir_path, 'w')
         supervisor_config_file.write(config)
         supervisor_config_file.close()
-        local('supervisord')
+        local('supervisord -c %s/supervisord.conf' % code_dir_path)
 
 
 def _parse_config(s):
