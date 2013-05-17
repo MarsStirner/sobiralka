@@ -30,6 +30,7 @@ apt-get upgrade
 * libxml2-devel ```apt-get install libxml2-devel```
 * libxslt-devel ```apt-get install libxslt-devel```
 * libmysqlclient-devel ```apt-get install libmysqlclient-devel```
+* zlib-devel ```apt-get install zlib-devel```
 
 **Пакеты для установки из Интернета**
 
@@ -117,7 +118,3 @@ http://IP_ADSRESS:8888/admin/lpuview/
 ```
 fab update_db
 ```
-
-Настроить и запустить supervisor для периодических задач
------------
-http://thomassileo.com/blog/2012/08/20/how-to-keep-celery-running-with-supervisor/

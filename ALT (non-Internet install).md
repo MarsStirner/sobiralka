@@ -41,6 +41,7 @@ apt-get upgrade
 * libxslt-devel ```apt-get install libxslt-devel```
  * libxslt
 * libmysqlclient-devel ```apt-get install libmysqlclient-devel```
+* zlib-devel ```apt-get install zlib-devel```
 
 
 **Во вложенных пунктах указаны зависимости, которые потребуется разрешить**
@@ -116,6 +117,8 @@ source .virtualenv/bin/activate
 * suds (https://pypi.python.org/pypi/suds/)
 * simplejson (https://pypi.python.org/pypi/simplejson/)
 * thrift (https://pypi.python.org/pypi/thrift/)
+* lxml (https://pypi.python.org/pypi/lxml/)
+* python-hl7 (https://pypi.python.org/pypi/hl7/)
 
 #### Перенос исходников ИС на сервер
 
@@ -172,7 +175,3 @@ http://IP_ADSRESS:8888/admin/lpuview/
 ```
 fab update_db
 ```
-
-Настроить и запустить supervisor для периодических задач
------------
-http://thomassileo.com/blog/2012/08/20/how-to-keep-celery-running-with-supervisor/
