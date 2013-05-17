@@ -112,7 +112,10 @@ source .virtualenv/bin/activate
 * supervisor
  * meld3 (https://pypi.python.org/pypi/meld3/)
 * spyne (https://pypi.python.org/pypi/spyne/)
-* SQLAlchemy ()
+* SQLAlchemy (https://pypi.python.org/pypi/SQLAlchemy/)
+* suds (https://pypi.python.org/pypi/suds/)
+* simplejson (https://pypi.python.org/pypi/simplejson/)
+* thrift (https://pypi.python.org/pypi/thrift/)
 
 #### Перенос исходников ИС на сервер
 
