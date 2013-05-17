@@ -109,10 +109,10 @@ def configure_webserver():
 
 def configure_supervisor():
     with lcd(project_dir_path):
-        config_file = open('%s/fabric_inc/supervisor.conf' % code_dir_path, 'r')
+        config_file = open('%s/fabric_inc/supervisord.conf' % code_dir_path, 'r')
         config = _parse_config(config_file.read())
         config_file.close()
-        supervisor_config_file = open('%s/supervisor.conf' % code_dir_path, 'r')
+        supervisor_config_file = open('%s/supervisord.conf' % code_dir_path, 'r')
         supervisor_config_file.write(config)
         supervisor_config_file.close()
         local('supervisord')
