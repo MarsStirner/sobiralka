@@ -147,7 +147,7 @@ SOAP_ADMIN_HOST = '127.0.0.1'
 EPGU_SERVICE_URL = 'http://adapter-fer.rosminzdrav.ru/misAdapterService/ws/MisAdapterService?wsdl'
 ```
 
-**Автоматическая установка ИС и зависимостей**
+**Автоматическая установка ИС**
 
 ```
 fab alt_deploy
