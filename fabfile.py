@@ -164,6 +164,16 @@ def deploy():
     print green(u'Установка прошла успешно!')
 
 
+def alt_deploy():
+    configure_db()
+    prepare_directories()
+    create_system_user()
+    configure_webserver()
+    activate_web_config()
+    restore_database()
+    print green(u'Установка прошла успешно!')
+    
+
 def update_db():
     restore_database()
     print green(u'Обновление базы данных прошло успешно!')
