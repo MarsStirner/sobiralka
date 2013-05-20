@@ -21,7 +21,8 @@ celery.conf.update(
     # CELERY_SEND_TASK_ERROR_EMAILS = True
     # ADMINS = (('Admin', 'admin@localhost'), )
 #    CELERYD_MAX_TASKS_PER_CHILD=5,
-#    CELERY_TASK_RESULT_EXPIRES=None,
+    CELERY_TASK_RESULT_EXPIRES=172800,
+    CELERY_DEFAULT_DELIVERY_MODE = 'transient',
 )
 
 celery.conf.update(
