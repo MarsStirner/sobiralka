@@ -7,18 +7,15 @@
 Системные требования
 -----------
 
-* Серверная ОС семейства Linux
-* Python 2.7
-* MySQL 5
-* Web-Server Apache + mod_wsgi
-* git
+* ОС ALTLinux
+
+### Необходимое ПО, поставляемое с дистрибутивом ALTLinux
+
+* Python 2.6 и выше
+* Web-Server Apache2 + apache2-mod_wsgi
 * zlib
-* C-compiler (gcc)
 
-Установка
------------
-
-Описанная ниже установка и настройка ПО производится из консоли Linux. Используется root-доступ.
+### Устанавливаемое ПО
 
 **Update системы**
 
@@ -27,19 +24,27 @@ apt-get update
 apt-get upgrade
 ```
 
-**Установка виртуального окружения и инструмента работы с пакетами Python**
+* C-compiler (gcc) ```apt-get install gcc4.5``` (установить подходящую версию, в указанном случае gcc4.5)
+* MySQL 5 (MySQL-server, MySQL-client) ```apt-get install MySQL-server``` ```apt-get install MySQL-client```
+* python-module-MySQLdb ```apt-get install python-module-MySQLdb```
+* libxml2-devel ```apt-get install libxml2-devel```
+* libxslt-devel ```apt-get install libxslt-devel```
+* libmysqlclient-devel ```apt-get install libmysqlclient-devel```
+* zlib-devel ```apt-get install zlib-devel```
 
-```
-apt-get -y install mysql-client libmysqlclient-devel python python-dev python-module-setuptools libxml2-devel libxslt-devel
-```
+**Пакеты для установки из Интернета**
 
-**Установка fabric для автоматического разворачивания проекта**
+* git ```apt-get install git```
+* python-module-setuptools ```apt-get install python-module-setuptools```
 
-```
-easy_install fabric
-```
 
-**Перенос исходников ИС на сервер**
+Установка ИС
+-----------
+
+Описанная ниже установка и настройка ПО производится из консоли Linux. Используется root-доступ.
+
+
+### Перенос исходников ИС на сервер
 
 Используем директорию /srv/ для обеспечения защищенной установки ИС. Вместо /srv можно использовать любую удобную директорию на сервере (например, /var/www/webapps).
 
@@ -54,6 +59,14 @@ git clone https://github.com/KorusConsulting/sobiralka.git
 при этом необходимо наличие github аккаунта с правами доступа в корпоративный репозиторий
 
 **Если доступа к репозиторию нет, но есть архив с исходниками проекта - достаточно распаковать его в отведенную директорию.**
+
+
+### Установка fabric для автоматического развёртывания проекта
+
+```
+easy_install fabric
+```
+
 
 Настройка конфига ИС
 -----------
@@ -105,15 +118,3 @@ http://IP_ADSRESS:8888/admin/lpuview/
 ```
 fab update_db
 ```
-
-Настроить и запустить supervisor для периодических задач
------------
-http://thomassileo.com/blog/2012/08/20/how-to-keep-celery-running-with-supervisor/
-
-* Замечание
------------
-В случае, если используется версия python отличная от 2.7, необходимо отредактировать конфиги apache:
-
-sites-available/%PROJECT_NAME%.conf
-
-sites-available/admin_%PROJECT_NAME%.conf

@@ -107,6 +107,17 @@ def configure_webserver():
         _enable_configs(apache_configs_dir, project_dir_name)
 
 
+def configure_supervisor():
+    with lcd(project_dir_path):
+        config_file = open('%s/fabric_inc/supervisord.conf' % code_dir_path, 'r')
+        config = _parse_config(config_file.read())
+        config_file.close()
+        supervisor_config_file = open('%s/supervisord.conf' % code_dir_path, 'w')
+        supervisor_config_file.write(config)
+        supervisor_config_file.close()
+        local('supervisord -c %s/supervisord.conf' % code_dir_path)
+
+
 def _parse_config(s):
     #Заменяем в шаблонах конфигов апача метки переменных на значения, заданные в settings
     edits = [('%SOAP_SERVER_HOST%', SOAP_SERVER_HOST),
@@ -116,6 +127,7 @@ def _parse_config(s):
              ('%PROJECT_CODE_ROOT%', code_dir_path),
              ('%SYSTEM_USER%', SYSTEM_USER),
              ('%SOAP_ADMIN_HOST%', SOAP_ADMIN_HOST),
+             ('%VIRTUALENV_BIN%', virtualenv_bin_path),
              ('%PYTHON_VERSION%', _get_python_version())]
     for search, replace in edits:
         s = s.replace(search, replace)
@@ -161,6 +173,18 @@ def deploy():
     activate_web_config()
     install_requirements()
     restore_database()
+    configure_supervisor()
+    print green(u'Установка прошла успешно!')
+
+
+def alt_deploy():
+    configure_db()
+    prepare_directories()
+    create_system_user()
+    configure_webserver()
+    activate_web_config()
+    restore_database()
+    configure_supervisor()
     print green(u'Установка прошла успешно!')
 
 
