@@ -27,6 +27,8 @@ from is_exceptions import exception_by_code, IS_ConnectionError
 
 from admin.database import Session, Session2, shutdown_session
 
+from is_celery.tasks import send_enqueue_task
+
 import logging
 
 if DEBUG:
@@ -805,8 +807,7 @@ class EnqueueWorker(object):
                       'message': exception_by_code(_enqueue.get('error_code')),
                       'ticketUid': _enqueue.get('ticketUid')}
 
-            epgu_dw = EPGUWorker()
-            epgu_dw.send_enqueue(
+            send_enqueue_task.delay(
                 hospital=lpu_info,
                 doctor=doctor_info,
                 patient=dict(fio=patient, id=_enqueue.get('patient_id')),
@@ -2176,16 +2177,16 @@ class EPGUWorker(object):
             _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
             try:
                 service_type = doctor.speciality[0].epgu_service_type
+                _doctor = dict(location_id=doctor.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
             except AttributeError, e:
                 print e
                 return None
-            _doctor = dict(location_id=doctor.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
+
             _patient = dict(firstName=patient['fio'].firstName,
                             lastName=patient['fio'].lastName,
                             patronymic=patient['fio'].patronymic,
                             id=patient['id'])
 
-            # TODO: CELERY TASK
             epgu_dw = EPGUWorker()
             slot_unique_key = epgu_dw.epgu_appoint_patient(hospital=_hospital,
                                                            doctor=_doctor,

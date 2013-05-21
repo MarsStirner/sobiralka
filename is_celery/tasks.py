@@ -100,6 +100,13 @@ def close_session(*args, **kwargs):
     shutdown_session()
 
 
+#INLINE EPGU TASKS
+@celery.task
+def send_enqueue_task(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
+    epgu_dw = EPGUWorker()
+    epgu_dw.send_enqueue(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key)
+
+
 # UPDATE TASKS
 @celery.task
 def update_db():
