@@ -27,8 +27,6 @@ from is_exceptions import exception_by_code, IS_ConnectionError
 
 from admin.database import Session, Session2, shutdown_session
 
-from is_celery.tasks import send_enqueue_task
-
 import logging
 
 if DEBUG:
@@ -806,6 +804,8 @@ class EnqueueWorker(object):
             result = {'result': _enqueue.get('result'),
                       'message': exception_by_code(_enqueue.get('error_code')),
                       'ticketUid': _enqueue.get('ticketUid')}
+
+            from is_celery.tasks import send_enqueue_task
 
             send_enqueue_task.delay(
                 hospital=lpu_info,
