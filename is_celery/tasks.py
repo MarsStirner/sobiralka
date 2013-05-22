@@ -8,6 +8,7 @@ from is_celery.celery_init import celery
 from int_service.lib.dataworker import EPGUWorker, UpdateWorker
 from admin.database import Tasks_Session as db_session, shutdown_session
 from admin.models import LPU, Personal, Personal_KeyEPGU
+from kombu.transport.sqlalchemy.models import Message
 
 task_logger = get_task_logger(__name__)
 
@@ -98,6 +99,11 @@ def sync_locations():
 @task_postrun.connect
 def close_session(*args, **kwargs):
     shutdown_session()
+
+
+@celery.task
+def clear_broker_messages():
+    db_session.query(Message).filter(Message.visible == 0).delete()
 
 
 # UPDATE TASKS
