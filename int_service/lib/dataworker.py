@@ -311,7 +311,7 @@ class LPUWorker(object):
                 'name': lpu_item.name,
                 'type': lpu_item.type,
                 'phone': lpu_item.phone,
-                'email': lpu_item.email,
+                'email': lpu_item.email if lpu_item.email else '',
                 'siteURL': '',
                 'schedule': lpu_item.schedule,
                 'buildings': units,
@@ -427,7 +427,8 @@ class EnqueueWorker(object):
     session = Session()
     # session.autocommit = True
     model = Enqueue
-    SCHEDULE_DAYS_DELTA = 14
+    SCHEDULE_DAYS_DELTA = 60  # 14
+    #TODO: вернуть меньшее количество дней, но на стороне сайта и ТК передавать даты начала и окончания
 
     def __del__(self):
         self.session.close()
@@ -804,8 +805,8 @@ class EnqueueWorker(object):
                       'message': exception_by_code(_enqueue.get('error_code')),
                       'ticketUid': _enqueue.get('ticketUid')}
 
-            epgu_dw = EPGUWorker()
-            epgu_dw.send_enqueue(
+            send_enqueue_task.delay(
+                self,
                 hospital=lpu_info,
                 doctor=doctor_info,
                 patient=dict(fio=patient, id=_enqueue.get('patient_id')),
@@ -1367,7 +1368,6 @@ class UpdateWorker(object):
     def update_data(self):
         """Основной метод, который производит вызов внутренних методов обновления данных в БД ИС"""
         # self.session.begin()
-        self.__init_database()
         # Update data in tables
         lpu_dw = LPUWorker()
         lpu_list = lpu_dw.get_list()
@@ -1645,6 +1645,8 @@ class EPGUWorker(object):
         return None
 
     def __get_service_types(self, doctor, epgu_speciality_id):
+        if not doctor.speciality[0].epgu_service_type:
+            raise exceptions.ValueError
         return [doctor.speciality[0].epgu_service_type]
         # return (self.session.query(EPGU_Service_Type).
         #         filter(EPGU_Service_Type.epgu_speciality_id == epgu_speciality_id).
@@ -1667,6 +1669,10 @@ class EPGUWorker(object):
         try:
             epgu_service_types = self.__get_service_types(doctor, epgu_speciality.id)
         except AttributeError, e:
+            print e
+            self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
+            return None
+        except exceptions.ValueError, e:
             print e
             self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
             return None
@@ -2170,16 +2176,16 @@ class EPGUWorker(object):
             _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
             try:
                 service_type = doctor.speciality[0].epgu_service_type
+                _doctor = dict(location_id=doctor.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
             except AttributeError, e:
                 print e
                 return None
-            _doctor = dict(location_id=doctor.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
+
             _patient = dict(firstName=patient['fio'].firstName,
                             lastName=patient['fio'].lastName,
                             patronymic=patient['fio'].patronymic,
                             id=patient['id'])
 
-            # TODO: CELERY TASK
             epgu_dw = EPGUWorker()
             slot_unique_key = epgu_dw.epgu_appoint_patient(hospital=_hospital,
                                                            doctor=_doctor,
@@ -2398,3 +2404,13 @@ class EPGUWorker(object):
     #     else:
     #         self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
     #         return False
+
+
+#INLINE EPGU TASKS
+from is_celery.celery_init import celery
+
+
+@celery.task
+def send_enqueue_task(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
+    epgu_dw = EPGUWorker()
+    epgu_dw.send_enqueue(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key)

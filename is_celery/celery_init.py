@@ -20,8 +20,9 @@ celery.conf.update(
     CELERY_INCLUDE=('is_celery.tasks', ),
     # CELERY_SEND_TASK_ERROR_EMAILS = True
     # ADMINS = (('Admin', 'admin@localhost'), )
-    CELERYD_MAX_TASKS_PER_CHILD=5,
-    CELERY_TASK_RESULT_EXPIRES=None,
+#    CELERYD_MAX_TASKS_PER_CHILD=5,
+    CELERY_TASK_RESULT_EXPIRES=172800,
+    CELERY_DEFAULT_DELIVERY_MODE = 'transient',
 )
 
 celery.conf.update(
@@ -32,11 +33,15 @@ celery.conf.update(
         },
         'periodical_sync_locations': {
             'task': 'is_celery.tasks.sync_locations',
-            'schedule': crontab(minute=10, hour=0, day_of_week='sunday'),
+            'schedule': crontab(minute=10, hour=0, day_of_week=0),
         },
         'periodical_sync_schedules': {
             'task': 'is_celery.tasks.sync_schedule_task',
-            'schedule': crontab(minute=0, hour=1, day_of_week='sunday'),
+            'schedule': crontab(minute=0, hour=1, day_of_week=0),
+        },
+        'periodical_clear_broker': {
+            'task': 'is_celery.tasks.clear_broker_messages',
+            'schedule': crontab(minute=0, hour=1, day_of_week=6),
         },
     }
 )

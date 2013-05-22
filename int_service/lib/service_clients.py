@@ -8,8 +8,8 @@ import logging
 from urlparse import urlparse
 from abc import ABCMeta, abstractmethod, abstractproperty
 from suds.client import Client
-from suds.plugin import MessagePlugin
-from suds.cache import DocumentCache
+#from suds.plugin import MessagePlugin
+#from suds.cache import DocumentCache
 from suds import WebFault
 import is_exceptions
 import settings
@@ -1252,6 +1252,8 @@ class ClientKorus30(AbstractClient):
         if omiPolicy:
             patient_params['omiPolicy'] = omiPolicy
         if document:
+            if 'serial' in document:
+                document['serial'] = document['serial'].encode('utf-8')
             patient_params['document'] = document
         if birthDate:
             patient_params['birthDate'] = calendar.timegm(birthDate.timetuple()) * 1000
@@ -1311,8 +1313,16 @@ class ClientKorus30(AbstractClient):
         else:
             try:
                 result = self.client.enqueuePatient(params)
+                print result
             except WebFault, e:
                 print e
+            except Exception, e:
+                print e
+                return {
+                    'result': False,
+                    'error_code': e.message.decode('utf-8'),
+                    'ticketUid': '',
+                }
             else:
                 if result.success:
                     return {
@@ -1350,9 +1360,9 @@ class ClientKorus30(AbstractClient):
 
 class ClientEPGU():
     """Класс клиента для взаимодействия с ЕПГУ"""
-    url = settings.EPGU_SERVICE_URL
 
     def __init__(self):
+        self.url = settings.EPGU_SERVICE_URL
         if settings.DEBUG:
             self.client = Client(self.url, cache=None)
         else:

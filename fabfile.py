@@ -19,12 +19,13 @@ virtualenv_bin_path = os.path.join(project_dir_path, virtualenv, 'bin')
 
 def prepare_virtual_env():
     #Установка виртуального окружения и инструмента работы с пакетами Python
-    local('easy_install virtualenv pip')
+    local('easy_install virtualenv')
     #Создаём и активируем виртульное окружение для проекта
     with lcd(project_dir_path):
         with settings(warn_only=True):
             local('rm -R  %s' % virtualenv)
         local('virtualenv %s' % virtualenv)
+        local('%s pip' % os.path.join(virtualenv_bin_path, 'easy_install'))
         # local(os.path.join(virtualenv_bin_path, 'activate'))
 
 
@@ -77,9 +78,10 @@ def _get_apache_config_dir():
 def _enable_configs(config_dir, project_dir_name):
     if config_dir.find('sites-available') > -1:
         enable_config_dir = config_dir.replace('sites-available', 'sites-enabled')
-        local('ln -s %s/%s.conf %s/%s.conf' % (config_dir, project_dir_name, enable_config_dir, project_dir_name))
-        local('ln -s %s/admin_%s.conf /%s/admin_%s.conf' %
-              (config_dir, project_dir_name, enable_config_dir, project_dir_name))
+        with settings(warn_only=True):
+            local('ln -s %s/%s.conf %s/%s.conf' % (config_dir, project_dir_name, enable_config_dir, project_dir_name))
+            local('ln -s %s/admin_%s.conf %s/admin_%s.conf' %
+                (config_dir, project_dir_name, enable_config_dir, project_dir_name))
 
 
 def configure_webserver():
@@ -105,6 +107,17 @@ def configure_webserver():
         _enable_configs(apache_configs_dir, project_dir_name)
 
 
+def configure_supervisor():
+    with lcd(project_dir_path):
+        config_file = open('%s/fabric_inc/supervisord.conf' % code_dir_path, 'r')
+        config = _parse_config(config_file.read())
+        config_file.close()
+        supervisor_config_file = open('%s/supervisord.conf' % code_dir_path, 'w')
+        supervisor_config_file.write(config)
+        supervisor_config_file.close()
+        local('supervisord -c %s/supervisord.conf' % code_dir_path)
+
+
 def _parse_config(s):
     #Заменяем в шаблонах конфигов апача метки переменных на значения, заданные в settings
     edits = [('%SOAP_SERVER_HOST%', SOAP_SERVER_HOST),
@@ -113,10 +126,16 @@ def _parse_config(s):
              ('%PROJECT_NAME%', project_dir_name),
              ('%PROJECT_CODE_ROOT%', code_dir_path),
              ('%SYSTEM_USER%', SYSTEM_USER),
-             ('%SOAP_ADMIN_HOST%', SOAP_ADMIN_HOST)]
+             ('%SOAP_ADMIN_HOST%', SOAP_ADMIN_HOST),
+             ('%VIRTUALENV_BIN%', virtualenv_bin_path),
+             ('%PYTHON_VERSION%', _get_python_version())]
     for search, replace in edits:
         s = s.replace(search, replace)
     return s
+
+
+def _get_python_version():
+    return '%s.%s' % (sys.version_info[0], sys.version_info[1])
 
 
 def activate_web_config():
@@ -134,7 +153,7 @@ def install_requirements():
     with settings(warn_only=True):
         local('apt-get install python-mysqldb')
     with settings(warn_only=True):
-        local('apt-get install python-module-mysqldb')
+        local('apt-get install python-module-MySQLdb')
     with lcd(code_dir_path):
         local('%s install -r requirements.txt' % os.path.join(virtualenv_bin_path, 'pip'))
 
@@ -154,6 +173,18 @@ def deploy():
     activate_web_config()
     install_requirements()
     restore_database()
+    configure_supervisor()
+    print green(u'Установка прошла успешно!')
+
+
+def alt_deploy():
+    configure_db()
+    prepare_directories()
+    create_system_user()
+    configure_webserver()
+    activate_web_config()
+    restore_database()
+    configure_supervisor()
     print green(u'Установка прошла успешно!')
 
 

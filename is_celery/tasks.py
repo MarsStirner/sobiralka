@@ -8,6 +8,7 @@ from is_celery.celery_init import celery
 from int_service.lib.dataworker import EPGUWorker, UpdateWorker
 from admin.database import Tasks_Session as db_session, shutdown_session
 from admin.models import LPU, Personal, Personal_KeyEPGU
+from kombu.transport.sqlalchemy.models import Message
 
 task_logger = get_task_logger(__name__)
 
@@ -63,6 +64,7 @@ def lpu_schedule_task(hospital_id, hospital_dict):
                 activate_location.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=5),
                 appoint_patients.s(hospital_dict, doctor).set(countdown=5)
             ) for doctor in epgu_doctors])()
+    shutdown_session()
 
 
 @celery.task
@@ -81,8 +83,10 @@ def sync_schedule_task():
             ) for lpu in lpu_list])()
         # print res.get()
         # print self.msg
+        shutdown_session()
     else:
         # self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
+        shutdown_session()
         return False
 
 
@@ -95,6 +99,11 @@ def sync_locations():
 @task_postrun.connect
 def close_session(*args, **kwargs):
     shutdown_session()
+
+
+@celery.task
+def clear_broker_messages():
+    db_session.query(Message).filter(Message.visible == 0).delete()
 
 
 # UPDATE TASKS
