@@ -104,6 +104,7 @@ def close_session(*args, **kwargs):
 @celery.task
 def clear_broker_messages():
     db_session.query(Message).filter(Message.visible == 0).delete()
+    db_session.commit()
 
 
 # UPDATE TASKS
