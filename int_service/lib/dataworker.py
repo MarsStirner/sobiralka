@@ -805,8 +805,8 @@ class EnqueueWorker(object):
                       'message': exception_by_code(_enqueue.get('error_code')),
                       'ticketUid': _enqueue.get('ticketUid')}
 
-            epgu_dw = EPGUWorker()
-            epgu_dw.send_enqueue(
+            send_enqueue_task.delay(
+                self,
                 hospital=lpu_info,
                 doctor=doctor_info,
                 patient=dict(fio=patient, id=_enqueue.get('patient_id')),
@@ -2176,16 +2176,16 @@ class EPGUWorker(object):
             _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
             try:
                 service_type = doctor.speciality[0].epgu_service_type
+                _doctor = dict(location_id=doctor.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
             except AttributeError, e:
                 print e
                 return None
-            _doctor = dict(location_id=doctor.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
+
             _patient = dict(firstName=patient['fio'].firstName,
                             lastName=patient['fio'].lastName,
                             patronymic=patient['fio'].patronymic,
                             id=patient['id'])
 
-            # TODO: CELERY TASK
             epgu_dw = EPGUWorker()
             slot_unique_key = epgu_dw.epgu_appoint_patient(hospital=_hospital,
                                                            doctor=_doctor,
@@ -2404,3 +2404,13 @@ class EPGUWorker(object):
     #     else:
     #         self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
     #         return False
+
+
+#INLINE EPGU TASKS
+from is_celery.celery_init import celery
+
+
+@celery.task
+def send_enqueue_task(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
+    epgu_dw = EPGUWorker()
+    epgu_dw.send_enqueue(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key)
