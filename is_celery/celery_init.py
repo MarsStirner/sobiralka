@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 from celery import Celery
 from celery.schedules import crontab
-from settings import DB_CONNECT_STRING
+from settings import DB_CONNECT_STRING, DEBUG
 
 celery = Celery('is_celery')
 
@@ -10,7 +10,7 @@ celery.conf.update(
     BROKER_URL='sqla+%s' % DB_CONNECT_STRING,
     CELERY_RESULT_BACKEND="database",
     CELERY_RESULT_DBURI=DB_CONNECT_STRING,
-    CELERY_RESULT_ENGINE_OPTIONS={"echo": True},
+    CELERY_RESULT_ENGINE_OPTIONS={"echo": DEBUG},
     # CELERY_TASK_SERIALIZER = 'json'
     # CELERY_RESULT_SERIALIZER='json',
     CELERY_TIMEZONE='Europe/Moscow',
