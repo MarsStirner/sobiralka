@@ -331,7 +331,11 @@ class LPUWorker(object):
             result.proxy = result.proxy.split(';')[0]
             if result.protocol in ('intramed', 'samson', 'korus20'):
                 # Проверка для soap-сервисов на доступность, неактуально для thrift (т.е. для korus30)
-                if not self.__check_proxy(result.proxy):
+                try:
+                    if not self.__check_proxy(result.proxy):
+                        return None
+                except IS_ConnectionError, e:
+                    print e
                     return None
             return result
         return None
