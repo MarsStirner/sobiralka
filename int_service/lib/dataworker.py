@@ -331,13 +331,18 @@ class LPUWorker(object):
             result.proxy = result.proxy.split(';')[0]
             if result.protocol in ('intramed', 'samson', 'korus20'):
                 # Проверка для soap-сервисов на доступность, неактуально для thrift (т.е. для korus30)
-                if urllib2.urlopen(result.proxy).getcode() == 200:
-                    return result
-                else:
-                    raise WebFault
-            else:
-                return result
+                if not self.__check_proxy(result.proxy):
+                    return None
+            return result
         return None
+
+    def __check_proxy(self, proxy):
+        try:
+            if urllib2.urlopen(proxy).getcode() == 200:
+                return True
+        except urllib2.URLError:
+            raise IS_ConnectionError(host=proxy)
+        return False
 
     def get_uid_by_code(self, code):
         """
