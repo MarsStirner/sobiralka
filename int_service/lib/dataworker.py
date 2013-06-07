@@ -815,7 +815,6 @@ class EnqueueWorker(object):
                       'ticketUid': _enqueue.get('ticketUid')}
 
             send_enqueue_task.delay(
-                self,
                 hospital=lpu_info,
                 doctor=doctor_info,
                 patient=dict(fio=patient, id=_enqueue.get('patient_id')),
