@@ -777,14 +777,14 @@ class EnqueueWorker(object):
             raise exceptions.LookupError
             return {}
 
+        person_fio = dict(firstName=patient.firstName,
+                          lastName=patient.lastName,
+                          patronymic=patient.patronymic)
+
         # Отправляет запрос на SOAP КС для записи пациента
         _enqueue = proxy_client.enqueue(
             serverId=lpu_info.key,
-            person={
-                'firstName': patient.firstName,
-                'lastName': patient.lastName,
-                'patronymic': patient.patronymic,
-            },
+            person=person_fio,
             omiPolicyNumber=omi_policy_number,
             document=document,
             birthday=birthday,
@@ -813,11 +813,16 @@ class EnqueueWorker(object):
             result = {'result': _enqueue.get('result'),
                       'message': exception_by_code(_enqueue.get('error_code')),
                       'ticketUid': _enqueue.get('ticketUid')}
+            # Call Task send_enqueue to epgu
+
+            task_hospital = dict(auth_token=lpu_info.token, place_id=lpu_info.keyEPGU)
+            service_type = doctor_info.speciality[0].epgu_service_type
+            task_doctor = dict(location_id=doctor_info.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
 
             send_enqueue_task.delay(
-                hospital=lpu_info,
-                doctor=doctor_info,
-                patient=dict(fio=patient, id=_enqueue.get('patient_id')),
+                hospital=task_hospital,
+                doctor=task_doctor,
+                patient=dict(fio=person_fio, id=_enqueue.get('patient_id')),
                 timeslot=timeslot_start,
                 enqueue_id=enqueue_id,
                 slot_unique_key=kwargs.get('epgu_slot_id'))
@@ -2178,25 +2183,17 @@ class EPGUWorker(object):
         print 'send_enqueue %s' % slot_unique_key
         print 'enqueue_id %s' % enqueue_id
         if not slot_unique_key:
-            if not hospital.token or not hospital.keyEPGU:
+            if not hospital['auth_token'] or not hospital['place_id']:
                 return None
 
-            _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
-            try:
-                service_type = doctor.speciality[0].epgu_service_type
-                _doctor = dict(location_id=doctor.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
-            except AttributeError, e:
-                print e
-                return None
-
-            _patient = dict(firstName=patient['fio'].firstName,
-                            lastName=patient['fio'].lastName,
-                            patronymic=patient['fio'].patronymic,
+            _patient = dict(firstName=patient['fio']['firstName'],
+                            lastName=patient['fio']['lastName'],
+                            patronymic=patient['fio']['patronymic'],
                             id=patient['id'])
 
             epgu_dw = EPGUWorker()
-            slot_unique_key = epgu_dw.epgu_appoint_patient(hospital=_hospital,
-                                                           doctor=_doctor,
+            slot_unique_key = epgu_dw.epgu_appoint_patient(hospital=hospital,
+                                                           doctor=doctor,
                                                            patient=_patient,
                                                            timeslot=timeslot)
         if slot_unique_key:
