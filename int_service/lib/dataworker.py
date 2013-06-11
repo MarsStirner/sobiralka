@@ -797,6 +797,10 @@ class EnqueueWorker(object):
         )
 
         if _enqueue and _enqueue['result'] is True:
+            task_hospital = dict(auth_token=lpu_info.token, place_id=lpu_info.keyEPGU)
+            service_type = doctor_info.speciality[0].epgu_service_type
+            task_doctor = dict(location_id=doctor_info.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
+
             ticket_uid = _enqueue.get('ticketUid').split('/')
             enqueue_id = self.__add_ticket(
                 Error=_enqueue.get('error_code'),
@@ -813,11 +817,8 @@ class EnqueueWorker(object):
             result = {'result': _enqueue.get('result'),
                       'message': exception_by_code(_enqueue.get('error_code')),
                       'ticketUid': _enqueue.get('ticketUid')}
-            # Call Task send_enqueue to epgu
 
-            task_hospital = dict(auth_token=lpu_info.token, place_id=lpu_info.keyEPGU)
-            service_type = doctor_info.speciality[0].epgu_service_type
-            task_doctor = dict(location_id=doctor_info.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
+            # Call Task send_enqueue to epgu
 
             send_enqueue_task.delay(
                 hospital=task_hospital,
@@ -862,11 +863,11 @@ class EnqueueWorker(object):
         """Добавляет информацию о талончике в БД ИС"""
         try:
             enqueue = Enqueue(**kwargs)
+            self.session.add(enqueue)
         except exceptions.ValueError, e:
             print e
             self.session.rollback()
         else:
-            self.session.add(enqueue)
             self.session.commit()
             return enqueue.id
         return None
