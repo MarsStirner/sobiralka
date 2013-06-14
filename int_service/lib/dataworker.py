@@ -2207,6 +2207,7 @@ class EPGUWorker(object):
         print 'enqueue_id %s' % enqueue_id
         if not slot_unique_key:
             if not hospital['auth_token'] or not hospital['place_id']:
+                print 'hospital_auth_token: %s | hospital_place_id: %s' % (hospital['auth_token'], hospital['place_id'])
                 return None
 
             _patient = dict(firstName=patient['fio']['firstName'],
@@ -2218,6 +2219,7 @@ class EPGUWorker(object):
                                                         doctor=doctor,
                                                         patient=_patient,
                                                         timeslot=timeslot)
+            print slot_unique_key
         if slot_unique_key:
             enqueue_dw = EnqueueWorker(self.session)
             _enqueue = enqueue_dw.update_enqueue(enqueue_id, dict(keyEPGU=slot_unique_key))
