@@ -1965,8 +1965,10 @@ class EPGUWorker(object):
                               slot_unique_key))
             else:
                 self.__log(getattr(epgu_result, 'error', None))
+                print getattr(epgu_result, 'error', None)
         else:
             self.__log(getattr(epgu_result, 'error', None))
+            print getattr(epgu_result, 'error', None)
         return slot_unique_key
 
     def epgu_delete_slot(self, hospital, slot_id):
