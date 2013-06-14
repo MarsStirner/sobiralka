@@ -80,9 +80,14 @@ class RegionsWorker(object):
 
 class LPUWorker(object):
     """Класс для работы с информацией по ЛПУ"""
-    session = Session()
     # session.autocommit = True
     model = LPU
+
+    def __init__(self, session=None):
+        if session is not None and isinstance(session, ScopedSession):
+            self.session = session
+        else:
+            self.session = Session()
 
     def __del__(self):
         self.session.close()
@@ -1396,7 +1401,7 @@ class UpdateWorker(object):
         """Основной метод, который производит вызов внутренних методов обновления данных в БД ИС"""
         # self.session.begin()
         # Update data in tables
-        lpu_dw = LPUWorker()
+        lpu_dw = LPUWorker(self.session)
         lpu_list = lpu_dw.get_list()
         if lpu_list:
             for lpu in lpu_list:
