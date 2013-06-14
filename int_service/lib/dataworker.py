@@ -16,6 +16,7 @@ from sqlalchemy import or_, and_, func, not_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 from sqlalchemy.exc import InvalidRequestError
+from sqlalchemy.orm.scoping import ScopedSession
 from suds import WebFault
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, DEBUG
@@ -25,7 +26,7 @@ from admin.models import EPGU_Payment_Method, EPGU_Reservation_Type
 from service_clients import Clients, ClientEPGU
 from is_exceptions import exception_by_code, IS_ConnectionError
 
-from admin.database import Session, Session2, shutdown_session
+from admin.database import Session, Session2, Tasks_Session, shutdown_session
 
 import logging
 
@@ -433,11 +434,16 @@ class LPU_UnitsWorker(object):
 
 
 class EnqueueWorker(object):
-    session = Session()
     # session.autocommit = True
     model = Enqueue
     SCHEDULE_DAYS_DELTA = 60  # 14
     #TODO: вернуть меньшее количество дней, но на стороне сайта и ТК передавать даты начала и окончания
+
+    def __init__(self, session=None):
+        if session is not None and isinstance(session, ScopedSession):
+            self.session = session
+        else:
+            self.session = Session()
 
     def __del__(self):
         self.session.close()
@@ -855,9 +861,12 @@ class EnqueueWorker(object):
                           one())
         _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
         if enqueue_record:
-            # TODO: CELERY TASK
-            epgu_dw = EPGUWorker()
-            epgu_dw.epgu_delete_slot(_hospital, enqueue_record.keyEPGU)
+            # # TODO: CELERY TASK
+            # epgu_dw = EPGUWorker()
+            # epgu_dw.epgu_delete_slot(_hospital, enqueue_record.keyEPGU)
+
+            # Call task delete slot in EPGU
+            epgu_delete_slot_task.delay(_hospital, enqueue_record.keyEPGU)
 
     def __add_ticket(self, **kwargs):
         """Добавляет информацию о талончике в БД ИС"""
@@ -1154,10 +1163,14 @@ class PersonalWorker(object):
 
 class UpdateWorker(object):
     """Класс для импорта данных в ИС из КС"""
-    session = Session()
 
-    def __init__(self):
+    def __init__(self, session=None):
         self.msg = []
+
+        if session is not None and isinstance(session, ScopedSession):
+            self.session = session
+        else:
+            self.session = Session()
 
     def __del__(self):
         self.session.close()
@@ -1425,18 +1438,22 @@ class UpdateWorker(object):
 
 class EPGUWorker(object):
     """Класс взаимодействия с ЕПГУ"""
-    session = Session2()
-    proxy_client = ClientEPGU()
 
     class Struct:
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
 
-    def __init__(self):
+    def __init__(self, session=None):
         self.msg = []
         self.time_table_period = 90  # TODO: вынести в настройки
         self.schedule_weeks_period = 3  # TODO: вынести в настройки
         self.default_phone = '+79011111111'
+
+        self.proxy_client = ClientEPGU()
+        if session is not None and isinstance(session, ScopedSession):
+            self.session = session
+        else:
+            self.session = Session2()
 
     def __del__(self):
         shutdown_session()
@@ -1644,7 +1661,7 @@ class EPGUWorker(object):
         return None
 
     def __get_reservation_time(self, doctor, date=None):
-        enqueue_dw = EnqueueWorker()
+        enqueue_dw = EnqueueWorker(self.session)
         if date is None:
             date = self.__get_nearest_monday()
         params = {
@@ -1992,7 +2009,7 @@ class EPGUWorker(object):
         # TODO: get nearest monday for start_date?
         start_date = today - datetime.timedelta(days=(today.isoweekday() - 1))  # + datetime.timedelta(weeks=1)
         end_date = start_date + datetime.timedelta(weeks=self.schedule_weeks_period)
-        enqueue_dw = EnqueueWorker()
+        enqueue_dw = EnqueueWorker(self.session)
         epgu_doctors = self.session.query(Personal).filter(Personal.lpuId.in_(hospital.keys())).filter(
             Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
         ).all()
@@ -2164,7 +2181,7 @@ class EPGUWorker(object):
                     self.__log(u'Талончик с keyEPGU=%s уже существует' % slot_id)
                     return False
 
-            enqueue_dw = EnqueueWorker()
+            enqueue_dw = EnqueueWorker(self.session)
             _enqueue = enqueue_dw.enqueue(
                 person=params.get('patient'),
                 hospitalUid='%i/%i' % (doctor.lpuId, doctor.orgId),
@@ -2192,13 +2209,12 @@ class EPGUWorker(object):
                             patronymic=patient['fio']['patronymic'],
                             id=patient['id'])
 
-            epgu_dw = EPGUWorker()
-            slot_unique_key = epgu_dw.epgu_appoint_patient(hospital=hospital,
-                                                           doctor=doctor,
-                                                           patient=_patient,
-                                                           timeslot=timeslot)
+            slot_unique_key = self.epgu_appoint_patient(hospital=hospital,
+                                                        doctor=doctor,
+                                                        patient=_patient,
+                                                        timeslot=timeslot)
         if slot_unique_key:
-            enqueue_dw = EnqueueWorker()
+            enqueue_dw = EnqueueWorker(self.session)
             _enqueue = enqueue_dw.update_enqueue(enqueue_id, dict(keyEPGU=slot_unique_key))
             print '_enqueue %s' % _enqueue
 
@@ -2213,7 +2229,7 @@ class EPGUWorker(object):
         else:
             data = json.loads(enqueue.Data)
             if data['hospitalUid']:
-                enqueue_dw = EnqueueWorker()
+                enqueue_dw = EnqueueWorker(self.session)
                 result = enqueue_dw.dequeue(hospitalUid=data['hospitalUid'],
                                             ticketUid='%s/%s' % (enqueue.ticket_id, enqueue.patient_id))
         return result
@@ -2316,7 +2332,7 @@ class EPGUWorker(object):
         # TODO: get nearest monday for start_date?
         start_date = today - datetime.timedelta(days=(today.isoweekday() - 1))  # + datetime.timedelta(weeks=1)
         end_date = start_date + datetime.timedelta(weeks=self.schedule_weeks_period)
-        enqueue_dw = EnqueueWorker()
+        enqueue_dw = EnqueueWorker(self.session)
         params = {
             'hospitalUid': '%s/%s' % (doctor.lpuId, doctor.orgId),
             'doctorUid': doctor.doctor_id,
@@ -2418,5 +2434,10 @@ from is_celery.celery_init import celery
 
 @celery.task
 def send_enqueue_task(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
-    epgu_dw = EPGUWorker()
+    epgu_dw = EPGUWorker(Tasks_Session())
     epgu_dw.send_enqueue(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key)
+
+@celery.task
+def epgu_delete_slot_task(_hospital, enqueue_keyEPGU):
+    epgu_dw = EPGUWorker(Tasks_Session())
+    epgu_dw.epgu_delete_slot(_hospital, enqueue_keyEPGU)

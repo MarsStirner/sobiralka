@@ -21,7 +21,7 @@ def appoint_patients(parent_task_returns, hospital, doctor):
     rules, patient_slots = parent_task_returns
     if not patient_slots:
         return None
-    epgu_dw = EPGUWorker()
+    epgu_dw = EPGUWorker(db_session)
     epgu_dw.appoint_patients(patient_slots, hospital, doctor)
     return epgu_dw.msg
 
@@ -30,7 +30,7 @@ def appoint_patients(parent_task_returns, hospital, doctor):
 def activate_location(parent_task_returns, hospital, location_id):
     if not parent_task_returns:
         return None
-    epgu_dw = EPGUWorker()
+    epgu_dw = EPGUWorker(db_session)
     epgu_dw.activate_location(hospital, location_id)
     return parent_task_returns
 
@@ -40,14 +40,14 @@ def link_schedule(parent_task_returns, hospital, location_id):
     rules, busy_by_patients = parent_task_returns
     if not rules:
         return None
-    epgu_dw = EPGUWorker()
+    epgu_dw = EPGUWorker(db_session)
     epgu_dw.link_schedule(rules, hospital, location_id)
     return parent_task_returns
 
 
 @celery.task
 def doctor_schedule_task(doctor, hospital_dict):
-    epgu_dw = EPGUWorker()
+    epgu_dw = EPGUWorker(db_session)
     return epgu_dw.doctor_schedule_task(doctor, hospital_dict)
 
 
@@ -92,7 +92,7 @@ def sync_schedule_task():
 
 @celery.task
 def sync_locations():
-    epgu_dw = EPGUWorker()
+    epgu_dw = EPGUWorker(db_session)
     epgu_dw.sync_locations()
 
 
@@ -110,5 +110,5 @@ def clear_broker_messages():
 # UPDATE TASKS
 @celery.task
 def update_db():
-    data_worker = UpdateWorker()
+    data_worker = UpdateWorker(db_session)
     data_worker.update_data()
