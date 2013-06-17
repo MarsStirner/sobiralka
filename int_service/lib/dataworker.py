@@ -26,7 +26,7 @@ from admin.models import EPGU_Payment_Method, EPGU_Reservation_Type
 from service_clients import Clients, ClientEPGU
 from is_exceptions import exception_by_code, IS_ConnectionError
 
-from admin.database import Session, Session2, Tasks_Session, shutdown_session
+from admin.database import Session, Session2, init_task_session, shutdown_session
 
 import logging
 
@@ -1130,7 +1130,7 @@ class PersonalWorker(object):
             if len(lpu_list):
                 proxy_client = Clients.provider(lpu_list[0].protocol, lpu_list[0].proxy.split(';')[0])
             elif len(lpu_units_list):
-                proxy_client = Clients.provider(lpu_units_list[0].lpu.protocol, 
+                proxy_client = Clients.provider(lpu_units_list[0].lpu.protocol,
                                                 lpu_units_list[0].lpu.proxy.split(';')[0])
             if proxy_client:
                 lpu_specialities = proxy_client.getSpecialities(hospital_uid_from)
@@ -2443,10 +2443,14 @@ from is_celery.celery_init import celery
 
 @celery.task
 def send_enqueue_task(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
-    epgu_dw = EPGUWorker(Tasks_Session())
+    Task_Session = init_task_session()
+    epgu_dw = EPGUWorker(Task_Session())
     epgu_dw.send_enqueue(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key)
+    Task_Session.remove()
 
 @celery.task
 def epgu_delete_slot_task(_hospital, enqueue_keyEPGU):
-    epgu_dw = EPGUWorker(Tasks_Session())
+    Task_Session = init_task_session()
+    epgu_dw = EPGUWorker(Task_Session())
     epgu_dw.epgu_delete_slot(_hospital, enqueue_keyEPGU)
+    Task_Session.remove()
