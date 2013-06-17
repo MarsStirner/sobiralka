@@ -6,11 +6,16 @@ from celery.signals import task_postrun
 from celery.utils.log import get_task_logger
 from is_celery.celery_init import celery
 from int_service.lib.dataworker import EPGUWorker, UpdateWorker
-from admin.database import Tasks_Session as db_session, shutdown_session
+from admin.database import init_task_session
 from admin.models import LPU, Personal, Personal_KeyEPGU
 from kombu.transport.sqlalchemy.models import Message
 
 task_logger = get_task_logger(__name__)
+db_session = init_task_session()
+
+
+def shutdown_session():
+    db_session.remove()
 
 
 # SYNC SCHEDULE TASKS
