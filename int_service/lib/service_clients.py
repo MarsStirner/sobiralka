@@ -14,6 +14,7 @@ from suds import WebFault
 import is_exceptions
 import settings
 import urllib2
+import socket
 
 from jinja2 import Environment, PackageLoader
 
@@ -1362,26 +1363,31 @@ class ClientKorus30(AbstractClient):
 class ClientEPGU():
     """Класс клиента для взаимодействия с ЕПГУ"""
 
-    def __check_url(self, url):
-        try:
-            if urllib2.urlopen(url).getcode() == 200:
-                return True
-        except urllib2.URLError:
-            print 'Can`t connect: %s' % url
-        return False
-
     def __init__(self):
         self.url = settings.EPGU_SERVICE_URL
         self.client = None
-        if self.__check_url(self.url):
-            if settings.DEBUG:
-                self.client = Client(self.url, cache=None)
-            else:
-                self.client = Client(self.url)
-
         self.jinja2env = Environment(loader=PackageLoader('int_service', 'templates'))
 
+    def __check_url(self, url):
+        try:
+            if urllib2.urlopen(url, timeout=2).getcode() == 200:
+                return True
+        except urllib2.URLError, e:
+            print e
+        except socket.timeout, e:
+            print e
+        return False
+
+    def __init_client(self):
+        if not self.client:
+            if self.__check_url(self.url):
+                if settings.DEBUG:
+                    self.client = Client(self.url, cache=None)
+                else:
+                    self.client = Client(self.url)
+
     def __send(self, method, message=None):
+        self.__init_client()
         params = dict()
         params['messageCode'] = method
         if message:
