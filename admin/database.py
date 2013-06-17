@@ -8,9 +8,13 @@ from settings import DB_CONNECT_STRING
 engine = create_engine(DB_CONNECT_STRING, convert_unicode=True)
 Session = scoped_session(sessionmaker(bind=engine))
 Session2 = scoped_session(sessionmaker(bind=engine))
-Tasks_Session = scoped_session(sessionmaker(bind=engine))
 #Base = declarative_base()
 Base.query = Session.query_property()
+
+
+def init_task_session():
+    task_engine = create_engine(DB_CONNECT_STRING, convert_unicode=True)
+    return scoped_session(sessionmaker(bind=task_engine))
 
 
 def init_db():
@@ -26,4 +30,3 @@ def init_db():
 def shutdown_session(exception=None):
     Session.remove()
     Session2.remove()
-    Tasks_Session.remove()
