@@ -14,7 +14,7 @@ Base.query = Session.query_property()
 
 def init_task_session():
     task_engine = create_engine(DB_CONNECT_STRING, convert_unicode=True)
-    return scoped_session(sessionmaker(bind=task_engine))
+    return scoped_session(sessionmaker(bind=task_engine, autocommit=True))
 
 
 def init_db():
