@@ -2441,14 +2441,15 @@ class EPGUWorker(object):
 from is_celery.celery_init import celery
 
 
-@celery.task
+@celery.task(interval_start=5, interval_step=5)
 def send_enqueue_task(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
     Task_Session = init_task_session()
     epgu_dw = EPGUWorker(Task_Session())
     epgu_dw.send_enqueue(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key)
     Task_Session.remove()
 
-@celery.task
+
+@celery.task(interval_start=5, interval_step=5)
 def epgu_delete_slot_task(_hospital, enqueue_keyEPGU):
     Task_Session = init_task_session()
     epgu_dw = EPGUWorker(Task_Session())
