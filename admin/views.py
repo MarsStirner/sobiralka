@@ -8,7 +8,10 @@ from wtforms.fields import SelectField, BooleanField
 from admin.models import LPU, Regions, Speciality, EPGU_Speciality, EPGU_Service_Type
 from int_service.lib.dataworker import UpdateWorker, EPGUWorker
 from is_celery.tasks import sync_schedule_task
-from admin.database import Tasks_Session as db_session
+from admin.database import init_task_session
+
+Task_Session = init_task_session()
+db_session = Task_Session()
 
 
 class LPUAdmin(ModelView):

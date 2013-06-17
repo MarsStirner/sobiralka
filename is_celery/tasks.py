@@ -11,11 +11,12 @@ from admin.models import LPU, Personal, Personal_KeyEPGU
 from kombu.transport.sqlalchemy.models import Message
 
 task_logger = get_task_logger(__name__)
-db_session = init_task_session()
+Task_Session = init_task_session()
+db_session = Task_Session()
 
 
 def shutdown_session():
-    db_session.remove()
+    Task_Session.remove()
 
 
 # SYNC SCHEDULE TASKS
