@@ -70,7 +70,7 @@ def lpu_schedule_task(hospital_id, hospital_dict):
                 activate_location.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=10),
                 appoint_patients.s(hospital_dict, doctor).set(countdown=5)
             ) for doctor in epgu_doctors])()
-    shutdown_session()
+    # shutdown_session()
 
 
 @celery.task

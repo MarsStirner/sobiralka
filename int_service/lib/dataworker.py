@@ -30,16 +30,16 @@ from admin.database import Session, Session2, init_task_session, shutdown_sessio
 
 import logging
 
-if DEBUG:
-    logging.basicConfig(level=logging.ERROR)
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
-else:
-    logging.basicConfig(level=logging.CRITICAL)
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.CRITICAL)
-
 h1 = logging.StreamHandler(sys.stdout)
 rootLogger = logging.getLogger()
 rootLogger.addHandler(h1)
+
+if DEBUG:
+    logging.basicConfig(level=logging.INFO)
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+else:
+    logging.basicConfig(level=logging.ERROR)
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 
 
 class DataWorker(object):
@@ -854,7 +854,7 @@ class EnqueueWorker(object):
                 'message': exception_by_code(_enqueue.get('error_code')),
                 'ticketUid': 'e' + str(enqueue_id)
             }
-
+        shutdown_session()
         return result
 
     def __delete_epgu_slot(self, hospital, patient_id, ticket_id):
@@ -881,6 +881,9 @@ class EnqueueWorker(object):
         except exceptions.ValueError, e:
             print e
             self.session.rollback()
+        except exceptions.Exception, e:
+            print e
+            self.session.rollback()
         else:
             self.session.commit()
             return enqueue.id
@@ -894,6 +897,9 @@ class EnqueueWorker(object):
                 if hasattr(enqueue, k):
                     setattr(enqueue, k, v)
         except exceptions.ValueError, e:
+            print e
+            self.session.rollback()
+        except exceptions.Exception, e:
             print e
             self.session.rollback()
         else:
@@ -2444,14 +2450,20 @@ from is_celery.celery_init import celery
 @celery.task(interval_start=5, interval_step=5)
 def send_enqueue_task(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
     Task_Session = init_task_session()
-    epgu_dw = EPGUWorker(Task_Session())
-    epgu_dw.send_enqueue(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key)
+    try:
+        epgu_dw = EPGUWorker(Task_Session())
+        epgu_dw.send_enqueue(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key)
+    except exceptions.Exception, e:
+        print e
     Task_Session.remove()
 
 
 @celery.task(interval_start=5, interval_step=5)
 def epgu_delete_slot_task(_hospital, enqueue_keyEPGU):
     Task_Session = init_task_session()
-    epgu_dw = EPGUWorker(Task_Session())
-    epgu_dw.epgu_delete_slot(_hospital, enqueue_keyEPGU)
+    try:
+        epgu_dw = EPGUWorker(Task_Session())
+        epgu_dw.epgu_delete_slot(_hospital, enqueue_keyEPGU)
+    except exceptions.Exception, e:
+        print e
     Task_Session.remove()
