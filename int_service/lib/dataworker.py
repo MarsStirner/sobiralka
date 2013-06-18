@@ -766,6 +766,7 @@ class EnqueueWorker(object):
             if len(hospital_uid) > 1:
                 dw = LPUWorker()
                 lpu_info = dw.get_by_id(hospital_uid[0])
+                task_hospital = dict(auth_token=lpu_info.token, place_id=lpu_info.keyEPGU)
                 proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
             else:
                 shutdown_session()
@@ -780,6 +781,9 @@ class EnqueueWorker(object):
 
         person_dw = PersonalWorker()
         doctor_info = person_dw.get_doctor(lpu_unit=hospital_uid, doctor_id=doctor_uid)
+
+        service_type = doctor_info.speciality[0].epgu_service_type
+        task_doctor = dict(location_id=doctor_info.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
 
         hospital_uid_from = kwargs.get('hospitalUidFrom', '0')
 
@@ -808,9 +812,6 @@ class EnqueueWorker(object):
         )
 
         if _enqueue and _enqueue['result'] is True:
-            task_hospital = dict(auth_token=lpu_info.token, place_id=lpu_info.keyEPGU)
-            service_type = doctor_info.speciality[0].epgu_service_type
-            task_doctor = dict(location_id=doctor_info.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
 
             ticket_uid = _enqueue.get('ticketUid').split('/')
             enqueue_id = self.__add_ticket(
@@ -2213,9 +2214,9 @@ class EPGUWorker(object):
 
         print 'send_enqueue %s' % slot_unique_key
         print 'enqueue_id %s' % enqueue_id
+        print 'hospital_auth_token: %s | hospital_place_id: %s' % (hospital['auth_token'], hospital['place_id'])
         if not slot_unique_key:
             if not hospital['auth_token'] or not hospital['place_id']:
-                print 'hospital_auth_token: %s | hospital_place_id: %s' % (hospital['auth_token'], hospital['place_id'])
                 return None
 
             _patient = dict(firstName=patient['fio']['firstName'],
