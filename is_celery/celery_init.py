@@ -3,12 +3,17 @@ from __future__ import absolute_import
 from celery import Celery
 from celery.schedules import crontab
 from settings import DB_CONNECT_STRING, DEBUG
+from sqlalchemy.pool import NullPool
 
 celery = Celery('is_celery')
 
 celery.conf.update(
     BROKER_URL='sqla+%s' % DB_CONNECT_STRING,
-    BROKER_TRANSPORT_OPTIONS={'pool_recycle': 600},
+    BROKER_TRANSPORT_OPTIONS=dict(pool_recycle=600,
+                                  convert_unicode=True,
+                                  echo_pool=True, echo=True,
+                                  poolclass=NullPool,
+                                  ),
     CELERY_RESULT_BACKEND="database",
     CELERY_RESULT_DBURI=DB_CONNECT_STRING,
     CELERY_RESULT_ENGINE_OPTIONS={"echo": DEBUG},
