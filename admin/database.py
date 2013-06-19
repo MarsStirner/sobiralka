@@ -13,7 +13,7 @@ Base.query = Session.query_property()
 
 
 def init_task_session():
-    task_engine = create_engine(DB_CONNECT_STRING, convert_unicode=True, pool_recycle=3600, pool_size=10)
+    task_engine = create_engine(DB_CONNECT_STRING, convert_unicode=True, pool_recycle=600)
     return scoped_session(sessionmaker(bind=task_engine))
 
 

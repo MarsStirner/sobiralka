@@ -8,6 +8,7 @@ celery = Celery('is_celery')
 
 celery.conf.update(
     BROKER_URL='sqla+%s' % DB_CONNECT_STRING,
+    BROKER_TRANSPORT_OPTIONS={'pool_recycle': 600},
     CELERY_RESULT_BACKEND="database",
     CELERY_RESULT_DBURI=DB_CONNECT_STRING,
     CELERY_RESULT_ENGINE_OPTIONS={"echo": DEBUG},
