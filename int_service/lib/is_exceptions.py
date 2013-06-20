@@ -112,7 +112,12 @@ def exception_by_code(code):
     try:
         if code and not isinstance(code, int):
             num_code = int(code.split()[0])
+        elif isinstance(code, int):
+            num_code = code
     except ValueError:
+        return code
+    except Exception, e:
+        print e
         return code
     else:
         return exc[num_code].message if num_code in exc else code
