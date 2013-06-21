@@ -114,6 +114,8 @@ def exception_by_code(code):
             num_code = int(code.split()[0])
         elif isinstance(code, int):
             num_code = code
+        else:
+            return code
     except ValueError:
         return code
     except Exception, e:
