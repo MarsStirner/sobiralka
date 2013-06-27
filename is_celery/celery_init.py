@@ -11,7 +11,6 @@ celery.conf.update(
     BROKER_URL='sqla+%s' % DB_CONNECT_STRING,
     BROKER_TRANSPORT_OPTIONS=dict(pool_recycle=600,
                                   convert_unicode=True,
-                                  echo_pool=True, echo=True,
                                   poolclass=NullPool,
                                   ),
     CELERY_RESULT_BACKEND="database",
