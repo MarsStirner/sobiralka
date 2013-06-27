@@ -74,6 +74,37 @@ def lpu_schedule_task(hospital_id, hospital_dict):
 
 
 @celery.task
+def lpu_tickets_task(hospital_id, hospital_dict):
+    epgu_doctors = db_session.query(Personal).filter(Personal.lpuId == hospital_id).filter(
+        Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
+    ).all()
+    if epgu_doctors:
+        group([appoint_patients.s(hospital_dict, doctor) for doctor in epgu_doctors])()
+
+
+@celery.task
+def sync_tickets_task():
+    lpu_list = (db_session.query(LPU).
+                filter(LPU.keyEPGU != '',
+                       LPU.keyEPGU != None,
+                       LPU.token != '',
+                       LPU.token != None).
+                all())
+    if lpu_list:
+        res = group([
+            lpu_tickets_task.s(
+                lpu.id,
+                dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
+            ) for lpu in lpu_list])()
+        # print res.get()
+        shutdown_session()
+    else:
+        # self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
+        shutdown_session()
+        return False
+
+
+@celery.task
 def sync_schedule_task():
     lpu_list = (db_session.query(LPU).
                 filter(LPU.keyEPGU != '',

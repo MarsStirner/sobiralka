@@ -44,6 +44,10 @@ celery.conf.update(
             'task': 'is_celery.tasks.sync_schedule_task',
             'schedule': crontab(minute=0, hour=1, day_of_week=0),
         },
+        'periodical_sync_tickets': {
+            'task': 'is_celery.tasks.sync_tickets_task',
+            'schedule': crontab(minute=0, hour=1),
+        },
         'periodical_clear_broker': {
             'task': 'is_celery.tasks.clear_broker_messages',
             'schedule': crontab(minute=0, hour=1, day_of_week=6),
