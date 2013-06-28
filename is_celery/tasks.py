@@ -79,7 +79,9 @@ def lpu_tickets_task(hospital_id, hospital_dict):
         Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
     ).all()
     if epgu_doctors:
-        group([appoint_patients.s(hospital_dict, doctor) for doctor in epgu_doctors])()
+        epgu_dw = EPGUWorker(db_session)
+        group([appoint_patients.s((None, epgu_dw.get_doctor_tickets(doctor)), hospital_dict, doctor)
+               for doctor in epgu_doctors])()
 
 
 @celery.task

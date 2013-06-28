@@ -2409,6 +2409,35 @@ class EPGUWorker(object):
 
         return doctor_rules, busy_by_patients
 
+    def get_doctor_tickets(self, doctor):
+        today = datetime.datetime.today().date()
+        # TODO: get nearest monday for start_date?
+        start_date = today - datetime.timedelta(days=(today.isoweekday() - 1))  # + datetime.timedelta(weeks=1)
+        end_date = start_date + datetime.timedelta(weeks=self.schedule_weeks_period)
+        enqueue_dw = EnqueueWorker(self.session)
+        params = {
+            'hospitalUid': '%s/%s' % (doctor.lpuId, doctor.orgId),
+            'doctorUid': doctor.doctor_id,
+            'startDate': start_date,
+            'endDate': end_date,
+        }
+
+        schedule = enqueue_dw.get_info(**params)
+        busy_by_patients = []
+        if schedule:
+            for timeslot in schedule['timeslots']:
+                #TODO: понять, как будет с Интрамедом
+                if timeslot['status'] == 'disabled':
+                    continue
+
+                if timeslot['patientId'] and timeslot['patientInfo']:
+                    busy_by_patients.append(
+                        dict(date_time=timeslot['start'],
+                             patient=dict(id=timeslot['patientId'], fio=timeslot['patientInfo'])
+                        ))
+
+        return busy_by_patients
+
     # def lpu_schedule_task(self, hospital_id, hospital_dict):
     #     epgu_doctors = self.session.query(Personal).filter(Personal.lpuId == hospital_id).filter(
     #         Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
