@@ -1656,10 +1656,11 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            places = getattr(result.AppData, 'places', None)
-            if places:
-                return places
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                places = getattr(result.AppData, 'places', None)
+                if places:
+                    return places
+                return getattr(result.AppData, 'errors', None)
         return None
 
     def GetLocations(self, hospital, service_type_id=None, page=1):
