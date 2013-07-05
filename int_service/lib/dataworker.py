@@ -1845,7 +1845,7 @@ class EPGUWorker(object):
                                 self.__log(u'Очередь обновлена (%s)' % location['keyEPGU'])
                         elif not doctor:
                             self.__delete_location_epgu(hospital, location['keyEPGU'])
-                            self.__log(u'Для %s не найден на ЕПГУ, удалена очередь (%s)' %
+                            self.__log(u'%s не найден в БД ИС, на ЕПГУ удалена очередь (%s)' %
                                        (location['prefix'].split('-')[0].strip(), location['keyEPGU']))
 
                 add_epgu_doctors = (
