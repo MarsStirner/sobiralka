@@ -783,7 +783,8 @@ class EnqueueWorker(object):
         doctor_info = person_dw.get_doctor(lpu_unit=hospital_uid, doctor_id=doctor_uid)
 
         service_type = doctor_info.speciality[0].epgu_service_type
-        task_doctor = dict(location_id=doctor_info.key_epgu.keyEPGU, epgu_service_type=service_type.keyEPGU)
+        task_doctor = dict(location_id=getattr(doctor_info.key_epgu, 'keyEPGU', None),
+                           epgu_service_type=getattr(service_type, 'keyEPGU', None))
 
         hospital_uid_from = kwargs.get('hospitalUidFrom', '0')
 
