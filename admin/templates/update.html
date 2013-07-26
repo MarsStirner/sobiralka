@@ -20,6 +20,9 @@
             },
             ajaxStop: function() {
                 $(this).removeClass("loading");
+            },
+            ajaxError: function(event, jqxhr, settings, exception) {
+                $('#result').html(exception);
             }
         });
         $('#update_form').submit(function(){
