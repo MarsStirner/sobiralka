@@ -76,17 +76,22 @@
 <script type=text/javascript src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <script type="text/javascript">
     $(document).ready(function(){
+        var id = "";
         $("body").on({
             ajaxStart: function() {
                 $(this).addClass("loading");
             },
             ajaxStop: function() {
                 $(this).removeClass("loading");
+            },
+            ajaxError: function(event, jqxhr, settings, exception) {
+                $('#result_' + id).html(exception);
             }
         });
         $('form').each(function(){
             var $this = $(this);
             $this.submit(function(){
+                id = $this.attr('id');
                 $this.hide();
                 var data = {};
                 $this.find('input').each(function(){
