@@ -299,7 +299,10 @@ class LPUWorker(object):
             for lpu_units_item in lpu_units_dw.get_list(uid=lpu_units, lpu_id=lpu_item.id):
                 uid = str(lpu_units_item.lpuId) + '/' + str(lpu_units_item.orgId)
                 if lpu_units_item.parent:
-                    uid += '/' + str(lpu_units_item.parent.OrgId)
+                    try:
+                        uid += '/' + str(getattr(lpu_units_item.parent[0], 'OrgId', 0))
+                    except IndexError:
+                        uid += '/0'
                 else:
                     uid += '/0'
 
