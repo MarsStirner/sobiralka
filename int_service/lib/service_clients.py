@@ -1993,10 +1993,11 @@ class ClientEPGU():
         except Exception, e:
             print e
         else:
-            errors = getattr(result.AppData, 'errors', None)
-            if errors:
-                return errors
-            return result.AppData
+            if result is not None:
+                errors = getattr(result.AppData, 'errors', None)
+                if errors:
+                    return errors
+                return result.AppData
         return None
 
     def PutActivateLocation(self, hospital, location_id):
