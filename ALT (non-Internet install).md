@@ -58,6 +58,7 @@ apt-get upgrade
 ```
 apt-get install python-module-virtualenv
 ```
+(https://pypi.python.org/pypi/virtualenv)
 
 Используем директорию /srv/ для обеспечения защищенной установки ИС. Вместо /srv можно использовать любую удобную директорию на сервере (например, /var/www/webapps).
 
