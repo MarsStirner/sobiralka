@@ -1,18 +1,13 @@
 # -*- coding: utf-8 -*-
 import requests
 from flask import json
+from datetime import datetime
 
 _codes = {
     0: u'Ошибка при работе с сервисом',
     1: u'По переданным данным пациент не найден в БД ТФОМС',
     2: u'Пациент найден в БД ТФОМС',
-    4: u'Полис найден, несовпадение ФИО, даты рождения'
-}
-
-# From TMIS to TFOMS types
-_policy_types_mapping = {
-    2: 1,
-    4: 3
+    3: u'Полис найден, несовпадение ФИО, даты рождения'
 }
 
 
@@ -64,7 +59,8 @@ class TFOMSClient(object):
             self.is_available = True
 
     def __login(self, login, password):
-        r = requests.post(self.service_url, data=json.dumps(dict(login=login, password=password)))
+        url = '{}/login'.format(self.service_url)
+        r = requests.post(url, data=json.dumps(dict(login=login, password=password)))
         if r.status_code == requests.codes.ok:
             if r.cookies['session']:
                 self.cookies = dict(session=r.cookies['session'])
@@ -75,7 +71,8 @@ class TFOMSClient(object):
 
     def __check(self, **kwargs):
         if self.is_logined:
-            r = requests.post(self.service_url, data=json.dumps(kwargs), cookies=self.cookies)
+            url = '{}/check'.format(self.service_url)
+            r = requests.post(url, data=json.dumps(kwargs), cookies=self.cookies)
             if r.status_code == requests.codes.ok:
                 if r.content == 'true':
                     return True
@@ -85,7 +82,8 @@ class TFOMSClient(object):
 
     def __search(self, **kwargs):
         if self.is_logined:
-            r = requests.post(self.service_url, data=json.dumps(kwargs), cookies=self.cookies)
+            url = '{}/search'.format(self.service_url)
+            r = requests.post(url, data=json.dumps(kwargs), cookies=self.cookies)
             if r.status_code == requests.codes.ok:
                 try:
                     result = r.json()
@@ -105,8 +103,10 @@ class TFOMSClient(object):
         policy = dict()
         if 'policy_type' not in data:
             raise AttributeError
-        policy['policy_doctype'] = _policy_types_mapping[int(data['policy_type'])]
-        if 'series' in data:
+        policy['policy_doctype'] = int(data['policy_type'])
+        if 'serial' in data:
+            policy['policy_series'] = data['serial']
+        elif 'series' in data:
             policy['policy_series'] = data['series']
         policy['policy_number'] = data['number']
         return policy
@@ -117,7 +117,7 @@ class TFOMSClient(object):
         patient['firstName'] = data['firstName'].upper()
         patient['midname'] = data['patrName'].upper()
         if 'birthDate' in data:
-            patient['birthdate'] = data['birthDate']  # TODO: TO DATE
+            patient['birthdate'] = datetime.strftime(data['birthDate'], '%d.%m.%Y')
         return patient
 
     def search_patient(self, patient_data):

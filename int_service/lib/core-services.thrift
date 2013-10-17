@@ -147,6 +147,21 @@ struct Contact{
 
 //Type definitions for input params
 
+/**
+ * Policy
+ * Структура с данными о полисе
+ * @param serial            1)Серия полиса
+ * @param number            2)Номер полиса
+ * @param typeCode          3)Код типа полиса
+ * @param insurerInfisCode  4)Инфис-код страховой организации
+ */
+struct Policy{
+1:optional string serial;
+2:required string number;
+3:required string typeCode;
+4:optional string insurerInfisCode;
+}
+
 struct FindOrgStructureByAddressParameters{
 1:required string pointKLADR;
 2:optional string streetKLADR="";
@@ -178,9 +193,9 @@ struct GetTimeWorkAndStatusParameters{
  * @param patrName			Отчество пациента
  * @param birthDate			Дата рождения пациента
  * @param sex				Пол пациента
- * @param docSerial			Серия документа
- * @param docNumber			Номер документа
- * @param docTypeCode		Код типа документа
+ * @param documentSerial	Серия документа
+ * @param documentNumber	Номер документа
+ * @param documentTypeCode	Код типа документа
  * @param policySerial		Серия полиса
  * @param policyNumber		Номер полиса
  * @param policyTypeCode	Код типа полиса
@@ -194,9 +209,9 @@ struct AddPatientParameters{
 4:optional timestamp birthDate;
 5:optional i32 sex;
 //Version 2
-6:optional string docSerial;
-7:optional string docNumber;
-8:optional string docTypeCode;
+6:required string documentSerial;
+7:required string documentNumber;
+8:required string documentTypeCode;
 9:optional string policySerial;
 10:optional string policyNumber;
 11:optional string policyTypeCode;
@@ -234,6 +249,17 @@ struct FindMultiplePatientsParameters{
 }
 
 /**
+ * ChangePolicyParameters
+ * Структура с данными для изменения/добавления полиса указанного клиента
+ * @param patientId         1)Идентификатор пациента, которому нужно добавить/изменить полис
+ * @param policy            2)Структура с данными для нового полиса
+ */
+struct ChangePolicyParameters{
+1:required i32 patientId;
+2:required Policy policy;
+}
+
+/**
  * FindPatientByPolicyAndDocumentParameters 	
  * Структура с данными для поиска пациента по ФИО, полису и документу
  * @param lastName			1)Фамилия пациента
@@ -241,9 +267,9 @@ struct FindMultiplePatientsParameters{
  * @param patrName			3)Отчество пациента
  * @param sex				4)Пол пациента
  * @param birthDate			5)Дата рождения пациента
- * @param docSerial			6)Серия документа
- * @param docNumber			7)Номер документа
- * @param docTypeCode		8)Код типа документа
+ * @param documentSerial	6)Серия документа
+ * @param documentNumber	7)Номер документа
+ * @param documentTypeCode	8)Код типа документа
  * @param policySerial		9)Серия полиса
  * @param policyNumber		10)Номер полиса
  * @param policyTypeCode	11)Код типа полиса
@@ -258,7 +284,7 @@ struct FindPatientByPolicyAndDocumentParameters{
 6:required string documentSerial;
 7:required string documentNumber;
 8:required string documentTypeCode;
-9:required string policySerial;
+9:optional string policySerial;
 10:required string policyNumber;
 11:required string policyTypeCode;
 12:optional string policyInsurerInfisCode;
@@ -292,6 +318,11 @@ exception AnotherPolicyException{
 exception NotUniqueException{
 	1:string message;
 	2:i32 code;
+}
+
+exception PolicyTypeNotFoundException{
+    1:string message;
+    2:i32 code;
 }
 
 //Service to be generated from here
@@ -351,6 +382,16 @@ PatientStatus findPatientByPolicyAndDocument(1:FindPatientByPolicyAndDocumentPar
 		4:AnotherPolicyException anotherPolExc,
 		5:NotUniqueException nUniqueExc
 	);
+
+/**
+ * Добавление/ изменение полиса клиента
+ * @param params                    1) Параметры для добавления полиса (struct ChangePolicyParameters)
+ * @return успешность замены/добавления полиса
+ * @throws PolicyTypeNotFoundException когда нету типа полиса с переданным кодом
+ * @throws NotFoundException когда нету пациента с переданным идентификатором
+ */
+bool changePatientPolicy(1:ChangePolicyParameters params)
+    throws (1:PolicyTypeNotFoundException ptnfExc, 2:NotFoundException nfExc);
 
 map<i32,PatientInfo> getPatientInfo(1:list<i32> patientIds)
 throws (1:NotFoundException exc, 2:SQLException excsql);

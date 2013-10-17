@@ -35,6 +35,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print '  PatientStatus findPatient(FindPatientParameters params)'
   print '   findPatients(FindMultiplePatientsParameters params)'
   print '  PatientStatus findPatientByPolicyAndDocument(FindPatientByPolicyAndDocumentParameters params)'
+  print '  bool changePatientPolicy(ChangePolicyParameters params)'
   print '   getPatientInfo( patientIds)'
   print '   getPatientContacts(i32 patientId)'
   print '   getPatientOrgStructures(i32 parentId)'
@@ -164,6 +165,12 @@ elif cmd == 'findPatientByPolicyAndDocument':
     print 'findPatientByPolicyAndDocument requires 1 args'
     sys.exit(1)
   pp.pprint(client.findPatientByPolicyAndDocument(eval(args[0]),))
+
+elif cmd == 'changePatientPolicy':
+  if len(args) != 1:
+    print 'changePatientPolicy requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.changePatientPolicy(eval(args[0]),))
 
 elif cmd == 'getPatientInfo':
   if len(args) != 1:

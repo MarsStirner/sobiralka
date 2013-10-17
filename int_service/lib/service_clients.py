@@ -27,8 +27,21 @@ from core_services.ttypes import FindPatientParameters, FindMultiplePatientsPara
 from core_services.ttypes import SQLException, NotFoundException, TException
 from core_services.ttypes import AnotherPolicyException, InvalidDocumentException, InvalidPersonalInfoException
 from core_services.ttypes import FindPatientByPolicyAndDocumentParameters, NotUniqueException
+from core_services.ttypes import ChangePolicyParameters, Policy, PolicyTypeNotFoundException
 
 from tfoms_service import TFOMSClient, AnswerCodes
+
+# From rbPolicyType.id to rbPolicyType.code (с сайта приходит id в Korus30 необходимо передавать code),
+# а Korus20 работает с id
+# TODO: необходимо избавиться от этого костыля!
+# TODO: для начала изменить на сайте, потом перенести в Korus20 обратное сопоставление, как только старые КС выпиляться
+# костыль будет не нужен
+_policy_types_mapping = {
+    1: 2,
+    2: 1,
+    3: 4,
+    4: 3
+}
 
 
 class Clients(object):
@@ -885,6 +898,8 @@ class ClientKorus30(AbstractClient):
         transport.open()
 
     def __unicode_result(self, data):
+        # DEPRECATED
+        # TODO: убрать метод, после проверки
         for element in data:
             for attr, value in element.__dict__.iteritems():
                 if isinstance(value, basestring):
@@ -910,7 +925,8 @@ class ClientKorus30(AbstractClient):
         except WebFault, e:
             print e
         else:
-            return self.__unicode_result(result)
+            #return self.__unicode_result(result)
+            return result
         return None
 
     def listDoctors(self, **kwargs):
@@ -933,7 +949,8 @@ class ClientKorus30(AbstractClient):
         except WebFault, e:
             print e
         else:
-            return self.__unicode_result(result)
+            #return self.__unicode_result(result)
+            return result
         return None
 
     def getSpecialities(self, hospital_uid_from):
@@ -942,7 +959,8 @@ class ClientKorus30(AbstractClient):
         except WebFault, e:
             print e
         else:
-            return self.__unicode_result(result)
+            #return self.__unicode_result(result)
+            return result
         return None
 
     def findOrgStructureByAddress(self, **kwargs):
@@ -978,7 +996,8 @@ class ClientKorus30(AbstractClient):
             except NotFoundException:
                 return []
             else:
-                return self.__unicode_result(result)
+                #return self.__unicode_result(result)
+                return result
         else:
             raise exceptions.AttributeError
         return None
@@ -1038,7 +1057,8 @@ class ClientKorus30(AbstractClient):
             except WebFault, e:
                 print e
             else:
-                return self.__unicode_result(result['list'])
+                #return self.__unicode_result(result['list'])
+                return result['list']
         else:
             raise exceptions.ValueError
         return None
@@ -1054,7 +1074,7 @@ class ClientKorus30(AbstractClient):
         server_id = kwargs.get('serverId')
         patient_id = kwargs.get('patientId')
         if server_id and patient_id:
-            params = PatientInfo(infisCode = server_id, patientId = patient_id,)
+            params = PatientInfo(infisCode=server_id, patientId=patient_id)
             try:
                 result = self.client.getPatientInfo(params)
             except WebFault, e:
@@ -1215,10 +1235,10 @@ class ClientKorus30(AbstractClient):
                         'start': date_time_by_date + datetime.timedelta(seconds=timeslot.time/1000),
                         'finish': finish,
                         'status': status,
-                        'office': str(schedule.office).decode('utf-8'),
+                        'office': str(schedule.office),
                         'patientId': timeslot.patientId if hasattr(timeslot, 'patientId') else None,
                         'patientInfo': (
-                            timeslot.patientInfo.decode('utf-8')
+                            timeslot.patientInfo
                             if hasattr(timeslot, 'patientInfo') and timeslot.patientInfo
                             else None
                         ),
@@ -1261,12 +1281,12 @@ class ClientKorus30(AbstractClient):
             raise exceptions.AttributeError
 
         patient_params = {'serverId': data.get('serverId'),
-                          'lastName': person.get('lastName').encode('utf-8'),
-                          'firstName': person.get('firstName').encode('utf-8'),
-                          'patrName': person.get('patronymic').encode('utf-8'),
+                          'lastName': person.get('lastName').title(),
+                          'firstName': person.get('firstName').title(),
+                          'patrName': person.get('patronymic').title(),
                           'sex': data.get('sex', 0)}
 
-        omiPolicy = data.get('omiPolicyNumber', '').encode('utf-8')
+        omiPolicy = data.get('omiPolicyNumber', '')
         document = data.get('document')
         birthDate = data.get('birthday')
 
@@ -1274,7 +1294,7 @@ class ClientKorus30(AbstractClient):
             patient_params['omiPolicy'] = omiPolicy
         if document:
             if 'serial' in document:
-                document['serial'] = document['serial'].encode('utf-8')
+                document['serial'] = document['serial']
             patient_params['document'] = document
         if birthDate:
             patient_params['birthDate'] = calendar.timegm(birthDate.timetuple()) * 1000
@@ -1305,7 +1325,7 @@ class ClientKorus30(AbstractClient):
         except NotFoundException, e:
             print e
             if hospital_uid_from == '0':
-                patient.message = e.error_msg.decode('utf-8')
+                patient.message = e.error_msg
                 #return {'result': False, 'error_code': e.error_msg.decode('utf-8')}
             return patient
         except TException, e:
@@ -1323,18 +1343,31 @@ class ClientKorus30(AbstractClient):
             patient = self.addPatient(**patient_params)
         return patient
 
+    def __update_policy(self, patient_id, data):
+        policy_params = dict()
+        if data['policySerial']:
+            policy_params['serial'] = data['policySerial']
+        policy_params['number'] = data['policyNumber']
+        policy_params['typeCode'] = data['policyTypeCode']
+        policy_params['insurerInfisCode'] = data['policyInsurerInfisCode']
+        policy = Policy(**policy_params)
+        update_policy_params = ChangePolicyParameters(patientId=patient_id,
+                                                      policy=policy)
+        return self.client.changePatientPolicy(update_policy_params)
+
     def __prepare_tfoms_data(self, tfoms_data):
         """"Mapping данных, полученных из ТФОМС в словарь для поиска в БД ЛПУ"""
         params = dict()
-        params['lastName'] = tfoms_data.get('lastname', '').encode('utf-8')
-        params['firstName'] = tfoms_data.get('firstName', '').encode('utf-8')
-        params['patrName'] = tfoms_data.get('midname', '').encode('utf-8')
+        params['lastName'] = tfoms_data.get('lastname', '').title()
+        params['firstName'] = tfoms_data.get('firstName', '').title()
+        params['patrName'] = tfoms_data.get('midname', '').title()
         params['sex'] = tfoms_data.get('sex', 0)
-        params['birthDate'] = calendar.timegm(tfoms_data.get('birthdate').timetuple()) * 1000
-        params['documentSerial'] = tfoms_data.get('doc_series', '').encode('utf-8')
+        birthDate = datetime.datetime.strptime(tfoms_data.get('birthdate'), '%d.%m.%Y')
+        params['birthDate'] = calendar.timegm(birthDate.timetuple()) * 1000
+        params['documentSerial'] = tfoms_data.get('doc_series', '')
         params['documentNumber'] = tfoms_data.get('doc_number', '')
         params['documentTypeCode'] = str(tfoms_data.get('doc_code', ''))
-        params['policySerial'] = tfoms_data.get('policy_series', '').encode('utf-8')
+        params['policySerial'] = tfoms_data.get('policy_series', '')
         params['policyNumber'] = tfoms_data.get('policy_number', '')
         params['policyTypeCode'] = str(tfoms_data.get('policy_doctype', ''))
         params['policyInsurerInfisCode'] = tfoms_data.get('insurance_orgcode', '')
@@ -1342,6 +1375,12 @@ class ClientKorus30(AbstractClient):
 
     def __get_patient_by_tfoms_data(self, tfoms_data):
         patient = self.Struct(success=False, patientId=None, message=None)
+        if isinstance(tfoms_data, list) and len(tfoms_data) == 1:
+            tfoms_data = tfoms_data[0]
+        else:
+            patient.message = u'''Идентифицировать пациента по имеющимся данным невозможно,
+            необходимо обратиться в регистратуру медицинского учреждения для обновления анкетных данных'''
+            return patient
         params = self.__prepare_tfoms_data(tfoms_data)
         try:
             patient = self.client.findPatientByPolicyAndDocument(FindPatientByPolicyAndDocumentParameters(**params))
@@ -1349,7 +1388,8 @@ class ClientKorus30(AbstractClient):
             try:
                 patient = self.client.addPatient(AddPatientParameters(**params))
                 patient.message = u'''Пациент не был ранее зарегистрирован в выбранном медицинском учреждении,
-                требуется обратиться в регистратуру для регистрации перед обращением к врачу'''
+                перед обращением к врачу требуется обратиться в регистратуру для подтверждения записи
+                и получения карточки'''
             except WebFault, e:
                 print e
             except Exception, e:
@@ -1363,8 +1403,22 @@ class ClientKorus30(AbstractClient):
         except AnotherPolicyException, e:
             patient.patientId = e.patientId
             patient.success = True
-            patient.message = u'''Номер полиса не совпал.
-            Вам требуется обратиться в регистратуру медицинского учреждения перед обращением к врачу'''
+            try:
+                result = self.__update_policy(patient.patientId, params)
+            except PolicyTypeNotFoundException, e:
+                print e
+                patient.message = u'''Перед посещением врача Вам необходимо обратиться
+                                    в регистратуру медицинского учреждения для обновления анкетных данных'''
+            except NotFoundException, e:
+                print e
+                patient.message = u'''Перед посещением врача Вам необходимо обратиться
+                                    в регистратуру медицинского учреждения для обновления анкетных данных'''
+            else:
+                if result is False:
+                    patient.message = u'''Перед посещением врача Вам необходимо обратиться
+                                        в регистратуру медицинского учреждения для обновления анкетных данных'''
+            #patient.message = u'''Введён неактуальный номер полиса. Перед обращением к врачу требуется обратиться
+            #в регистратуру медицинского учреждения для обновления анкетных данных'''
         except NotUniqueException, e:
             patient.message = u'''Идентифицировать пациента по имеющимся данным невозможно,
             необходимо обратиться в регистратуру медицинского учреждения для обновления анкетных данных'''
@@ -1398,24 +1452,23 @@ class ClientKorus30(AbstractClient):
         4. Если сервис ТФОМС вернул ошибку, то работаем с БД ЛПУ по старой схеме.
         """
         patient = self.Struct(success=False, patientId=None, message=None)
-        if tfoms_data is None or tfoms_data['status'] == AnswerCodes(0):
+        if tfoms_data is None or tfoms_data['status'].code == AnswerCodes(0).code:
             patient = self.__get_patient_by_lpu(data)
-        elif tfoms_data['status'] == AnswerCodes(1):
+        elif tfoms_data['status'].code == AnswerCodes(1).code:
             patient = self.__get_patient_by_lpu(data)
-            if patient.success is False and patient.message is None:
+            #if patient.success is False and patient.message is None:
+            if patient.success is False:
                 patient.message = u'''Такого пациента нет ни в базе застрахованных по ОМС лиц,
-                                  ни в базе медицинского учреждения и необходимо сначала получить полис,
-                                  а потом зарегистрироваться в нужном медицинском учреждении в регистратуре'''
-        elif tfoms_data['status'] == AnswerCodes(2) and tfoms_data['data']:
+                                  ни в базе медицинского учреждения. Необходимо получить полис,
+                                  а затем зарегистрироваться в регистратуре выбранного медицинского учреждения '''
+        elif tfoms_data['status'].code == AnswerCodes(2).code and tfoms_data['data']:
             patient = self.__get_patient_by_lpu(data)
             if patient.success is False and patient.patientId is None:
                 patient = self.__get_patient_by_tfoms_data(tfoms_data['data'])
-
-        elif tfoms_data == AnswerCodes(3):
-            patient.message = u'''Данные в базе застрахованных по ОМС лиц не совпадают с введенными
-                                и запись на прием выполнена быть не может,
-                                проверьте корректность введенных данных
-                                или обратитесь в регистратуру выбранного медицинского учреждения'''
+        elif tfoms_data['status'].code == AnswerCodes(3).code:
+            patient.message = u'''Введенные не совпадают с данными в базе лиц застрахованных по ОМС.
+            Запись на прием не может быть выполнена, проверьте корректность введенных данных
+            или обратитесь в регистратуру выбранного медицинского учреждения'''
         return patient
 
     def __enqueue_patient(self, patient_id, data):
@@ -1441,19 +1494,28 @@ class ClientKorus30(AbstractClient):
             except Exception, e:
                 print e
                 return {'result': False,
-                        'error_code': e.message.decode('utf-8'),
+                        'error_code': e.message,
                         'ticketUid': ''}
             else:
                 if result.success:
                     return {'result': True,
-                            'error_code': result.message.decode('utf-8'),
+                            'error_code': result.message,
                             'ticketUid': str(result.queueId) + '/' + str(patient_id),
                             'patient_id': patient_id}
                 else:
                     return {'result': False,
-                            'error_code': result.message.decode('utf-8'),
+                            'error_code': result.message,
                             'ticketUid': ''}
         return None
+
+    def __update_policy_type_code(self, data):
+        document = data.get('document')
+        if document and 'policy_type' in document:
+            try:
+                data['document']['policy_type'] = str(_policy_types_mapping[int(data['document']['policy_type'])])
+            except NameError:
+                pass
+        return data
 
     def enqueue(self, **kwargs):
         """Записывает пациента на приём
@@ -1466,7 +1528,8 @@ class ClientKorus30(AbstractClient):
             hospitalUidFrom: id ЛПУ, из которого производится запись (необязательный)
 
         """
-
+        # TODO: избавиться от костыля.
+        kwargs = self.__update_policy_type_code(kwargs)
         ################################################################
         # Search in TFOMS
         ################################################################
@@ -1478,11 +1541,16 @@ class ClientKorus30(AbstractClient):
             print e
         ################################################################
 
-        patient = self.__get_patient(kwargs, tfoms_params)
+        patient = self.__get_patient(kwargs, tfoms_result)
         if patient and patient.success and patient.patientId:
-            return self.__enqueue_patient(patient.patientId, kwargs)
+            result = self.__enqueue_patient(patient.patientId, kwargs)
+            if patient.message:
+                result.update(dict(message=patient.message))
+            return result
         else:
-            return {'result': False, 'error_code': patient.message.decode('utf-8'), }
+            return {'result': False,
+                    'message': getattr(patient, 'message', ''),
+                    'error_code': getattr(patient, 'message', '')}
 
     def dequeue(self, server_id, patient_id, ticket_id):
         if server_id and patient_id and ticket_id:
@@ -1490,7 +1558,7 @@ class ClientKorus30(AbstractClient):
                 result = self.client.dequeuePatient(patientId=patient_id, queueId=ticket_id)
             except NotFoundException, e:
                 print e.error_msg
-                return {'success': False, 'comment': e.error_msg.decode('utf-8'), }
+                return {'success': False, 'comment': e.error_msg, }
             except TException, e:
                 print e
                 return {'success': False, 'comment': e.message, }
