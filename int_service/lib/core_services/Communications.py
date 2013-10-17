@@ -3,7 +3,7 @@
 #
 # DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 #
-#  options string: py
+#  options string: py:new_style,utf8strings
 #
 
 from thrift.Thrift import TType, TMessageType, TException, TApplicationException
@@ -17,7 +17,7 @@ except:
   fastbinary = None
 
 
-class Iface:
+class Iface(object):
   def getOrganisationInfo(self, infisCode):
     """
     Parameters:
@@ -96,6 +96,22 @@ class Iface:
 
   def findPatients(self, params):
     """
+    Parameters:
+     - params
+    """
+    pass
+
+  def findPatientByPolicyAndDocument(self, params):
+    """
+    Поиск пациента по данным из ТФОМС
+    @param params Параметры поиска
+    @return Статус нахождения пациента
+    @throws NotFoundException когда не найдено ни одного пациента по заданным параметрам
+    @throws InvalidPersonalInfo когда по полису или документу найдены пациент(ы) в БД ЛПУ, но (ФИО/пол/др) отличаются от переданных
+    @throws InvalidDocumentException когда не найдено совпадений по полису и документу, но пациент с таким (ФИО/пол/др) уже есть в БД ЛПУ
+    @throws AnotherPolicyException когда пациент найден и документы совпали, но его полис отличается от запрошенного
+    @throws NotUniqueException когда по запрошенным параметрам невозможно выделить единственного пациента
+
     Parameters:
      - params
     """
@@ -541,6 +557,55 @@ class Client(Iface):
       raise result.excsql
     raise TApplicationException(TApplicationException.MISSING_RESULT, "findPatients failed: unknown result");
 
+  def findPatientByPolicyAndDocument(self, params):
+    """
+    Поиск пациента по данным из ТФОМС
+    @param params Параметры поиска
+    @return Статус нахождения пациента
+    @throws NotFoundException когда не найдено ни одного пациента по заданным параметрам
+    @throws InvalidPersonalInfo когда по полису или документу найдены пациент(ы) в БД ЛПУ, но (ФИО/пол/др) отличаются от переданных
+    @throws InvalidDocumentException когда не найдено совпадений по полису и документу, но пациент с таким (ФИО/пол/др) уже есть в БД ЛПУ
+    @throws AnotherPolicyException когда пациент найден и документы совпали, но его полис отличается от запрошенного
+    @throws NotUniqueException когда по запрошенным параметрам невозможно выделить единственного пациента
+
+    Parameters:
+     - params
+    """
+    self.send_findPatientByPolicyAndDocument(params)
+    return self.recv_findPatientByPolicyAndDocument()
+
+  def send_findPatientByPolicyAndDocument(self, params):
+    self._oprot.writeMessageBegin('findPatientByPolicyAndDocument', TMessageType.CALL, self._seqid)
+    args = findPatientByPolicyAndDocument_args()
+    args.params = params
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_findPatientByPolicyAndDocument(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = findPatientByPolicyAndDocument_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    if result.success is not None:
+      return result.success
+    if result.nfExc is not None:
+      raise result.nfExc
+    if result.invInfoExc is not None:
+      raise result.invInfoExc
+    if result.invDocExc is not None:
+      raise result.invDocExc
+    if result.anotherPolExc is not None:
+      raise result.anotherPolExc
+    if result.nUniqueExc is not None:
+      raise result.nUniqueExc
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "findPatientByPolicyAndDocument failed: unknown result");
+
   def getPatientInfo(self, patientIds):
     """
     Parameters:
@@ -791,6 +856,7 @@ class Processor(Iface, TProcessor):
     self._processMap["addPatient"] = Processor.process_addPatient
     self._processMap["findPatient"] = Processor.process_findPatient
     self._processMap["findPatients"] = Processor.process_findPatients
+    self._processMap["findPatientByPolicyAndDocument"] = Processor.process_findPatientByPolicyAndDocument
     self._processMap["getPatientInfo"] = Processor.process_getPatientInfo
     self._processMap["getPatientContacts"] = Processor.process_getPatientContacts
     self._processMap["getPatientOrgStructures"] = Processor.process_getPatientOrgStructures
@@ -986,6 +1052,28 @@ class Processor(Iface, TProcessor):
     oprot.writeMessageEnd()
     oprot.trans.flush()
 
+  def process_findPatientByPolicyAndDocument(self, seqid, iprot, oprot):
+    args = findPatientByPolicyAndDocument_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = findPatientByPolicyAndDocument_result()
+    try:
+      result.success = self._handler.findPatientByPolicyAndDocument(args.params)
+    except NotFoundException as nfExc:
+      result.nfExc = nfExc
+    except InvalidPersonalInfoException as invInfoExc:
+      result.invInfoExc = invInfoExc
+    except InvalidDocumentException as invDocExc:
+      result.invDocExc = invDocExc
+    except AnotherPolicyException as anotherPolExc:
+      result.anotherPolExc = anotherPolExc
+    except NotUniqueException as nUniqueExc:
+      result.nUniqueExc = nUniqueExc
+    oprot.writeMessageBegin("findPatientByPolicyAndDocument", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
   def process_getPatientInfo(self, seqid, iprot, oprot):
     args = getPatientInfo_args()
     args.read(iprot)
@@ -1095,7 +1183,7 @@ class Processor(Iface, TProcessor):
 
 # HELPER FUNCTIONS AND STRUCTURES
 
-class getOrganisationInfo_args:
+class getOrganisationInfo_args(object):
   """
   Attributes:
    - infisCode
@@ -1120,7 +1208,7 @@ class getOrganisationInfo_args:
         break
       if fid == 1:
         if ftype == TType.STRING:
-          self.infisCode = iprot.readString();
+          self.infisCode = iprot.readString().decode('utf-8')
         else:
           iprot.skip(ftype)
       else:
@@ -1135,7 +1223,7 @@ class getOrganisationInfo_args:
     oprot.writeStructBegin('getOrganisationInfo_args')
     if self.infisCode is not None:
       oprot.writeFieldBegin('infisCode', TType.STRING, 1)
-      oprot.writeString(self.infisCode)
+      oprot.writeString(self.infisCode.encode('utf-8'))
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -1155,7 +1243,7 @@ class getOrganisationInfo_args:
   def __ne__(self, other):
     return not (self == other)
 
-class getOrganisationInfo_result:
+class getOrganisationInfo_result(object):
   """
   Attributes:
    - success
@@ -1228,7 +1316,7 @@ class getOrganisationInfo_result:
   def __ne__(self, other):
     return not (self == other)
 
-class getOrgStructures_args:
+class getOrgStructures_args(object):
   """
   Attributes:
    - parent_id
@@ -1269,7 +1357,7 @@ class getOrgStructures_args:
           iprot.skip(ftype)
       elif fid == 3:
         if ftype == TType.STRING:
-          self.infisCode = iprot.readString();
+          self.infisCode = iprot.readString().decode('utf-8')
         else:
           iprot.skip(ftype)
       else:
@@ -1292,7 +1380,7 @@ class getOrgStructures_args:
       oprot.writeFieldEnd()
     if self.infisCode is not None:
       oprot.writeFieldBegin('infisCode', TType.STRING, 3)
-      oprot.writeString(self.infisCode)
+      oprot.writeString(self.infisCode.encode('utf-8'))
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -1312,7 +1400,7 @@ class getOrgStructures_args:
   def __ne__(self, other):
     return not (self == other)
 
-class getOrgStructures_result:
+class getOrgStructures_result(object):
   """
   Attributes:
    - success
@@ -1406,7 +1494,7 @@ class getOrgStructures_result:
   def __ne__(self, other):
     return not (self == other)
 
-class getAddresses_args:
+class getAddresses_args(object):
   """
   Attributes:
    - orgStructureId
@@ -1447,7 +1535,7 @@ class getAddresses_args:
           iprot.skip(ftype)
       elif fid == 3:
         if ftype == TType.STRING:
-          self.infisCode = iprot.readString();
+          self.infisCode = iprot.readString().decode('utf-8')
         else:
           iprot.skip(ftype)
       else:
@@ -1470,7 +1558,7 @@ class getAddresses_args:
       oprot.writeFieldEnd()
     if self.infisCode is not None:
       oprot.writeFieldBegin('infisCode', TType.STRING, 3)
-      oprot.writeString(self.infisCode)
+      oprot.writeString(self.infisCode.encode('utf-8'))
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -1490,7 +1578,7 @@ class getAddresses_args:
   def __ne__(self, other):
     return not (self == other)
 
-class getAddresses_result:
+class getAddresses_result(object):
   """
   Attributes:
    - success
@@ -1584,7 +1672,7 @@ class getAddresses_result:
   def __ne__(self, other):
     return not (self == other)
 
-class findOrgStructureByAddress_args:
+class findOrgStructureByAddress_args(object):
   """
   Attributes:
    - params
@@ -1645,7 +1733,7 @@ class findOrgStructureByAddress_args:
   def __ne__(self, other):
     return not (self == other)
 
-class findOrgStructureByAddress_result:
+class findOrgStructureByAddress_result(object):
   """
   Attributes:
    - success
@@ -1738,7 +1826,7 @@ class findOrgStructureByAddress_result:
   def __ne__(self, other):
     return not (self == other)
 
-class getPersonnel_args:
+class getPersonnel_args(object):
   """
   Attributes:
    - orgStructureId
@@ -1779,7 +1867,7 @@ class getPersonnel_args:
           iprot.skip(ftype)
       elif fid == 3:
         if ftype == TType.STRING:
-          self.infisCode = iprot.readString();
+          self.infisCode = iprot.readString().decode('utf-8')
         else:
           iprot.skip(ftype)
       else:
@@ -1802,7 +1890,7 @@ class getPersonnel_args:
       oprot.writeFieldEnd()
     if self.infisCode is not None:
       oprot.writeFieldBegin('infisCode', TType.STRING, 3)
-      oprot.writeString(self.infisCode)
+      oprot.writeString(self.infisCode.encode('utf-8'))
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -1822,7 +1910,7 @@ class getPersonnel_args:
   def __ne__(self, other):
     return not (self == other)
 
-class getPersonnel_result:
+class getPersonnel_result(object):
   """
   Attributes:
    - success
@@ -1916,7 +2004,7 @@ class getPersonnel_result:
   def __ne__(self, other):
     return not (self == other)
 
-class getTotalTicketsAvailability_args:
+class getTotalTicketsAvailability_args(object):
   """
   Attributes:
    - params
@@ -1977,7 +2065,7 @@ class getTotalTicketsAvailability_args:
   def __ne__(self, other):
     return not (self == other)
 
-class getTotalTicketsAvailability_result:
+class getTotalTicketsAvailability_result(object):
   """
   Attributes:
    - success
@@ -2063,7 +2151,7 @@ class getTotalTicketsAvailability_result:
   def __ne__(self, other):
     return not (self == other)
 
-class getTicketsAvailability_args:
+class getTicketsAvailability_args(object):
   """
   Attributes:
    - params
@@ -2124,7 +2212,7 @@ class getTicketsAvailability_args:
   def __ne__(self, other):
     return not (self == other)
 
-class getTicketsAvailability_result:
+class getTicketsAvailability_result(object):
   """
   Attributes:
    - success
@@ -2218,7 +2306,7 @@ class getTicketsAvailability_result:
   def __ne__(self, other):
     return not (self == other)
 
-class getWorkTimeAndStatus_args:
+class getWorkTimeAndStatus_args(object):
   """
   Attributes:
    - params
@@ -2279,7 +2367,7 @@ class getWorkTimeAndStatus_args:
   def __ne__(self, other):
     return not (self == other)
 
-class getWorkTimeAndStatus_result:
+class getWorkTimeAndStatus_result(object):
   """
   Attributes:
    - success
@@ -2365,7 +2453,7 @@ class getWorkTimeAndStatus_result:
   def __ne__(self, other):
     return not (self == other)
 
-class addPatient_args:
+class addPatient_args(object):
   """
   Attributes:
    - params
@@ -2426,7 +2514,7 @@ class addPatient_args:
   def __ne__(self, other):
     return not (self == other)
 
-class addPatient_result:
+class addPatient_result(object):
   """
   Attributes:
    - success
@@ -2499,7 +2587,7 @@ class addPatient_result:
   def __ne__(self, other):
     return not (self == other)
 
-class findPatient_args:
+class findPatient_args(object):
   """
   Attributes:
    - params
@@ -2560,7 +2648,7 @@ class findPatient_args:
   def __ne__(self, other):
     return not (self == other)
 
-class findPatient_result:
+class findPatient_result(object):
   """
   Attributes:
    - success
@@ -2646,7 +2734,7 @@ class findPatient_result:
   def __ne__(self, other):
     return not (self == other)
 
-class findPatients_args:
+class findPatients_args(object):
   """
   Attributes:
    - params
@@ -2707,7 +2795,7 @@ class findPatients_args:
   def __ne__(self, other):
     return not (self == other)
 
-class findPatients_result:
+class findPatients_result(object):
   """
   Attributes:
    - success
@@ -2801,7 +2889,193 @@ class findPatients_result:
   def __ne__(self, other):
     return not (self == other)
 
-class getPatientInfo_args:
+class findPatientByPolicyAndDocument_args(object):
+  """
+  Attributes:
+   - params
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRUCT, 'params', (FindPatientByPolicyAndDocumentParameters, FindPatientByPolicyAndDocumentParameters.thrift_spec), None, ), # 1
+  )
+
+  def __init__(self, params=None,):
+    self.params = params
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRUCT:
+          self.params = FindPatientByPolicyAndDocumentParameters()
+          self.params.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('findPatientByPolicyAndDocument_args')
+    if self.params is not None:
+      oprot.writeFieldBegin('params', TType.STRUCT, 1)
+      self.params.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class findPatientByPolicyAndDocument_result(object):
+  """
+  Attributes:
+   - success
+   - nfExc
+   - invInfoExc
+   - invDocExc
+   - anotherPolExc
+   - nUniqueExc
+  """
+
+  thrift_spec = (
+    (0, TType.STRUCT, 'success', (PatientStatus, PatientStatus.thrift_spec), None, ), # 0
+    (1, TType.STRUCT, 'nfExc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
+    (2, TType.STRUCT, 'invInfoExc', (InvalidPersonalInfoException, InvalidPersonalInfoException.thrift_spec), None, ), # 2
+    (3, TType.STRUCT, 'invDocExc', (InvalidDocumentException, InvalidDocumentException.thrift_spec), None, ), # 3
+    (4, TType.STRUCT, 'anotherPolExc', (AnotherPolicyException, AnotherPolicyException.thrift_spec), None, ), # 4
+    (5, TType.STRUCT, 'nUniqueExc', (NotUniqueException, NotUniqueException.thrift_spec), None, ), # 5
+  )
+
+  def __init__(self, success=None, nfExc=None, invInfoExc=None, invDocExc=None, anotherPolExc=None, nUniqueExc=None,):
+    self.success = success
+    self.nfExc = nfExc
+    self.invInfoExc = invInfoExc
+    self.invDocExc = invDocExc
+    self.anotherPolExc = anotherPolExc
+    self.nUniqueExc = nUniqueExc
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.STRUCT:
+          self.success = PatientStatus()
+          self.success.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 1:
+        if ftype == TType.STRUCT:
+          self.nfExc = NotFoundException()
+          self.nfExc.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRUCT:
+          self.invInfoExc = InvalidPersonalInfoException()
+          self.invInfoExc.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRUCT:
+          self.invDocExc = InvalidDocumentException()
+          self.invDocExc.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRUCT:
+          self.anotherPolExc = AnotherPolicyException()
+          self.anotherPolExc.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.STRUCT:
+          self.nUniqueExc = NotUniqueException()
+          self.nUniqueExc.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('findPatientByPolicyAndDocument_result')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.STRUCT, 0)
+      self.success.write(oprot)
+      oprot.writeFieldEnd()
+    if self.nfExc is not None:
+      oprot.writeFieldBegin('nfExc', TType.STRUCT, 1)
+      self.nfExc.write(oprot)
+      oprot.writeFieldEnd()
+    if self.invInfoExc is not None:
+      oprot.writeFieldBegin('invInfoExc', TType.STRUCT, 2)
+      self.invInfoExc.write(oprot)
+      oprot.writeFieldEnd()
+    if self.invDocExc is not None:
+      oprot.writeFieldBegin('invDocExc', TType.STRUCT, 3)
+      self.invDocExc.write(oprot)
+      oprot.writeFieldEnd()
+    if self.anotherPolExc is not None:
+      oprot.writeFieldBegin('anotherPolExc', TType.STRUCT, 4)
+      self.anotherPolExc.write(oprot)
+      oprot.writeFieldEnd()
+    if self.nUniqueExc is not None:
+      oprot.writeFieldBegin('nUniqueExc', TType.STRUCT, 5)
+      self.nUniqueExc.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getPatientInfo_args(object):
   """
   Attributes:
    - patientIds
@@ -2869,7 +3143,7 @@ class getPatientInfo_args:
   def __ne__(self, other):
     return not (self == other)
 
-class getPatientInfo_result:
+class getPatientInfo_result(object):
   """
   Attributes:
    - success
@@ -2965,7 +3239,7 @@ class getPatientInfo_result:
   def __ne__(self, other):
     return not (self == other)
 
-class getPatientContacts_args:
+class getPatientContacts_args(object):
   """
   Attributes:
    - patientId
@@ -3025,7 +3299,7 @@ class getPatientContacts_args:
   def __ne__(self, other):
     return not (self == other)
 
-class getPatientContacts_result:
+class getPatientContacts_result(object):
   """
   Attributes:
    - success
@@ -3106,7 +3380,7 @@ class getPatientContacts_result:
   def __ne__(self, other):
     return not (self == other)
 
-class getPatientOrgStructures_args:
+class getPatientOrgStructures_args(object):
   """
   Attributes:
    - parentId
@@ -3166,7 +3440,7 @@ class getPatientOrgStructures_args:
   def __ne__(self, other):
     return not (self == other)
 
-class getPatientOrgStructures_result:
+class getPatientOrgStructures_result(object):
   """
   Attributes:
    - success
@@ -3247,7 +3521,7 @@ class getPatientOrgStructures_result:
   def __ne__(self, other):
     return not (self == other)
 
-class enqueuePatient_args:
+class enqueuePatient_args(object):
   """
   Attributes:
    - params
@@ -3308,7 +3582,7 @@ class enqueuePatient_args:
   def __ne__(self, other):
     return not (self == other)
 
-class enqueuePatient_result:
+class enqueuePatient_result(object):
   """
   Attributes:
    - success
@@ -3394,7 +3668,7 @@ class enqueuePatient_result:
   def __ne__(self, other):
     return not (self == other)
 
-class getPatientQueue_args:
+class getPatientQueue_args(object):
   """
   Attributes:
    - parentId
@@ -3454,7 +3728,7 @@ class getPatientQueue_args:
   def __ne__(self, other):
     return not (self == other)
 
-class getPatientQueue_result:
+class getPatientQueue_result(object):
   """
   Attributes:
    - success
@@ -3548,7 +3822,7 @@ class getPatientQueue_result:
   def __ne__(self, other):
     return not (self == other)
 
-class dequeuePatient_args:
+class dequeuePatient_args(object):
   """
   Attributes:
    - patientId
@@ -3620,7 +3894,7 @@ class dequeuePatient_args:
   def __ne__(self, other):
     return not (self == other)
 
-class dequeuePatient_result:
+class dequeuePatient_result(object):
   """
   Attributes:
    - success
@@ -3706,7 +3980,7 @@ class dequeuePatient_result:
   def __ne__(self, other):
     return not (self == other)
 
-class getSpecialities_args:
+class getSpecialities_args(object):
   """
   Attributes:
    - hospitalUidFrom
@@ -3731,7 +4005,7 @@ class getSpecialities_args:
         break
       if fid == 1:
         if ftype == TType.STRING:
-          self.hospitalUidFrom = iprot.readString();
+          self.hospitalUidFrom = iprot.readString().decode('utf-8')
         else:
           iprot.skip(ftype)
       else:
@@ -3746,7 +4020,7 @@ class getSpecialities_args:
     oprot.writeStructBegin('getSpecialities_args')
     if self.hospitalUidFrom is not None:
       oprot.writeFieldBegin('hospitalUidFrom', TType.STRING, 1)
-      oprot.writeString(self.hospitalUidFrom)
+      oprot.writeString(self.hospitalUidFrom.encode('utf-8'))
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -3766,7 +4040,7 @@ class getSpecialities_args:
   def __ne__(self, other):
     return not (self == other)
 
-class getSpecialities_result:
+class getSpecialities_result(object):
   """
   Attributes:
    - success

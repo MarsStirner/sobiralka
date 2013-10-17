@@ -172,19 +172,19 @@ struct GetTimeWorkAndStatusParameters{
 }
 
 /**
- * AddPatientParameters 	Структура для создания нового пациента
- * @param lastName			Фамилия пациента
- * @param firstName			Имя пациента
- * @param patrName			Отчество пациента
- * @param birthDate			Дата рождения пациента
- * @param sex				Пол пациента
- * @param docSerial			Серия документа
- * @param docNumber			Номер документа
- * @param docTypeCode		Код типа документа
- * @param policySerial		Серия полиса
- * @param policyNumber		Номер полиса
- * @param policyTypeCode	Код типа полиса
- * @param policyInsurerInfisCode	Инфис код страховой, полис которой представлен выше
+ * AddPatientParameters 	РЎС‚СЂСѓРєС‚СѓСЂР° РґР»СЏ СЃРѕР·РґР°РЅРёСЏ РЅРѕРІРѕРіРѕ РїР°С†РёРµРЅС‚Р°
+ * @param lastName			Р¤Р°РјРёР»РёСЏ РїР°С†РёРµРЅС‚Р°
+ * @param firstName			РРјСЏ РїР°С†РёРµРЅС‚Р°
+ * @param patrName			РћС‚С‡РµСЃС‚РІРѕ РїР°С†РёРµРЅС‚Р°
+ * @param birthDate			Р”Р°С‚Р° СЂРѕР¶РґРµРЅРёСЏ РїР°С†РёРµРЅС‚Р°
+ * @param sex				РџРѕР» РїР°С†РёРµРЅС‚Р°
+ * @param docSerial			РЎРµСЂРёСЏ РґРѕРєСѓРјРµРЅС‚Р°
+ * @param docNumber			РќРѕРјРµСЂ РґРѕРєСѓРјРµРЅС‚Р°
+ * @param docTypeCode		РљРѕРґ С‚РёРїР° РґРѕРєСѓРјРµРЅС‚Р°
+ * @param policySerial		РЎРµСЂРёСЏ РїРѕР»РёСЃР°
+ * @param policyNumber		РќРѕРјРµСЂ РїРѕР»РёСЃР°
+ * @param policyTypeCode	РљРѕРґ С‚РёРїР° РїРѕР»РёСЃР°
+ * @param policyInsurerInfisCode	РРЅС„РёСЃ РєРѕРґ СЃС‚СЂР°С…РѕРІРѕР№, РїРѕР»РёСЃ РєРѕС‚РѕСЂРѕР№ РїСЂРµРґСЃС‚Р°РІР»РµРЅ РІС‹С€Рµ
  */
  
 struct AddPatientParameters{
@@ -235,19 +235,19 @@ struct FindMultiplePatientsParameters{
 
 /**
  * FindPatientByPolicyAndDocumentParameters 	
- * Структура с данными для поиска пациента по ФИО, полису и документу
- * @param lastName			1)Фамилия пациента
- * @param firstName			2)Имя пациента
- * @param patrName			3)Отчество пациента
- * @param sex				4)Пол пациента
- * @param birthDate			5)Дата рождения пациента
- * @param docSerial			6)Серия документа
- * @param docNumber			7)Номер документа
- * @param docTypeCode		8)Код типа документа
- * @param policySerial		9)Серия полиса
- * @param policyNumber		10)Номер полиса
- * @param policyTypeCode	11)Код типа полиса
- * @param policyInsurerInfisCode	12)Инфис код страховой, полис которой представлен выше
+ * РЎС‚СЂСѓРєС‚СѓСЂР° СЃ РґР°РЅРЅС‹РјРё РґР»СЏ РїРѕРёСЃРєР° РїР°С†РёРµРЅС‚Р° РїРѕ Р¤РРћ, РїРѕР»РёСЃСѓ Рё РґРѕРєСѓРјРµРЅС‚Сѓ
+ * @param lastName			1)Р¤Р°РјРёР»РёСЏ РїР°С†РёРµРЅС‚Р°
+ * @param firstName			2)РРјСЏ РїР°С†РёРµРЅС‚Р°
+ * @param patrName			3)РћС‚С‡РµСЃС‚РІРѕ РїР°С†РёРµРЅС‚Р°
+ * @param sex				4)РџРѕР» РїР°С†РёРµРЅС‚Р°
+ * @param birthDate			5)Р”Р°С‚Р° СЂРѕР¶РґРµРЅРёСЏ РїР°С†РёРµРЅС‚Р°
+ * @param docSerial			6)РЎРµСЂРёСЏ РґРѕРєСѓРјРµРЅС‚Р°
+ * @param docNumber			7)РќРѕРјРµСЂ РґРѕРєСѓРјРµРЅС‚Р°
+ * @param docTypeCode		8)РљРѕРґ С‚РёРїР° РґРѕРєСѓРјРµРЅС‚Р°
+ * @param policySerial		9)РЎРµСЂРёСЏ РїРѕР»РёСЃР°
+ * @param policyNumber		10)РќРѕРјРµСЂ РїРѕР»РёСЃР°
+ * @param policyTypeCode	11)РљРѕРґ С‚РёРїР° РїРѕР»РёСЃР°
+ * @param policyInsurerInfisCode	12)РРЅС„РёСЃ РєРѕРґ СЃС‚СЂР°С…РѕРІРѕР№, РїРѕР»РёСЃ РєРѕС‚РѕСЂРѕР№ РїСЂРµРґСЃС‚Р°РІР»РµРЅ РІС‹С€Рµ
  */
 struct FindPatientByPolicyAndDocumentParameters{
 1:required string lastName;
@@ -334,14 +334,14 @@ list<Patient> findPatients(1:FindMultiplePatientsParameters params)
 throws (1:NotFoundException exc, 2:SQLException excsql);
 
 /**
- * Поиск пациента по данным из ТФОМС
- * @param params Параметры поиска
- * @return Статус нахождения пациента
- * @throws NotFoundException когда не найдено ни одного пациента по заданным параметрам
- * @throws InvalidPersonalInfo когда по полису или документу найдены пациент(ы) в БД ЛПУ, но (ФИО/пол/др) отличаются от переданных
- * @throws InvalidDocumentException когда не найдено совпадений по полису и документу, но пациент с таким (ФИО/пол/др) уже есть в БД ЛПУ
- * @throws AnotherPolicyException когда пациент найден и документы совпали, но его полис отличается от запрошенного
- * @throws NotUniqueException когда по запрошенным параметрам невозможно выделить единственного пациента
+ * РџРѕРёСЃРє РїР°С†РёРµРЅС‚Р° РїРѕ РґР°РЅРЅС‹Рј РёР· РўР¤РћРњРЎ
+ * @param params РџР°СЂР°РјРµС‚СЂС‹ РїРѕРёСЃРєР°
+ * @return РЎС‚Р°С‚СѓСЃ РЅР°С…РѕР¶РґРµРЅРёСЏ РїР°С†РёРµРЅС‚Р°
+ * @throws NotFoundException РєРѕРіРґР° РЅРµ РЅР°Р№РґРµРЅРѕ РЅРё РѕРґРЅРѕРіРѕ РїР°С†РёРµРЅС‚Р° РїРѕ Р·Р°РґР°РЅРЅС‹Рј РїР°СЂР°РјРµС‚СЂР°Рј
+ * @throws InvalidPersonalInfo РєРѕРіРґР° РїРѕ РїРѕР»РёСЃСѓ РёР»Рё РґРѕРєСѓРјРµРЅС‚Сѓ РЅР°Р№РґРµРЅС‹ РїР°С†РёРµРЅС‚(С‹) РІ Р‘Р” Р›РџРЈ, РЅРѕ (Р¤РРћ/РїРѕР»/РґСЂ) РѕС‚Р»РёС‡Р°СЋС‚СЃСЏ РѕС‚ РїРµСЂРµРґР°РЅРЅС‹С…
+ * @throws InvalidDocumentException РєРѕРіРґР° РЅРµ РЅР°Р№РґРµРЅРѕ СЃРѕРІРїР°РґРµРЅРёР№ РїРѕ РїРѕР»РёСЃСѓ Рё РґРѕРєСѓРјРµРЅС‚Сѓ, РЅРѕ РїР°С†РёРµРЅС‚ СЃ С‚Р°РєРёРј (Р¤РРћ/РїРѕР»/РґСЂ) СѓР¶Рµ РµСЃС‚СЊ РІ Р‘Р” Р›РџРЈ
+ * @throws AnotherPolicyException РєРѕРіРґР° РїР°С†РёРµРЅС‚ РЅР°Р№РґРµРЅ Рё РґРѕРєСѓРјРµРЅС‚С‹ СЃРѕРІРїР°Р»Рё, РЅРѕ РµРіРѕ РїРѕР»РёСЃ РѕС‚Р»РёС‡Р°РµС‚СЃСЏ РѕС‚ Р·Р°РїСЂРѕС€РµРЅРЅРѕРіРѕ
+ * @throws NotUniqueException РєРѕРіРґР° РїРѕ Р·Р°РїСЂРѕС€РµРЅРЅС‹Рј РїР°СЂР°РјРµС‚СЂР°Рј РЅРµРІРѕР·РјРѕР¶РЅРѕ РІС‹РґРµР»РёС‚СЊ РµРґРёРЅСЃС‚РІРµРЅРЅРѕРіРѕ РїР°С†РёРµРЅС‚Р°
  */
 PatientStatus findPatientByPolicyAndDocument(1:FindPatientByPolicyAndDocumentParameters params)
 	throws (

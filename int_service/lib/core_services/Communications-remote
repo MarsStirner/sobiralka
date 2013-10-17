@@ -4,7 +4,7 @@
 #
 # DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 #
-#  options string: py
+#  options string: py:new_style,utf8strings
 #
 
 import sys
@@ -34,6 +34,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print '  PatientStatus addPatient(AddPatientParameters params)'
   print '  PatientStatus findPatient(FindPatientParameters params)'
   print '   findPatients(FindMultiplePatientsParameters params)'
+  print '  PatientStatus findPatientByPolicyAndDocument(FindPatientByPolicyAndDocumentParameters params)'
   print '   getPatientInfo( patientIds)'
   print '   getPatientContacts(i32 patientId)'
   print '   getPatientOrgStructures(i32 parentId)'
@@ -157,6 +158,12 @@ elif cmd == 'findPatients':
     print 'findPatients requires 1 args'
     sys.exit(1)
   pp.pprint(client.findPatients(eval(args[0]),))
+
+elif cmd == 'findPatientByPolicyAndDocument':
+  if len(args) != 1:
+    print 'findPatientByPolicyAndDocument requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.findPatientByPolicyAndDocument(eval(args[0]),))
 
 elif cmd == 'getPatientInfo':
   if len(args) != 1:

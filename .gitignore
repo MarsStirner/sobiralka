@@ -1,5 +1,5 @@
 .idea
-#settings_local.py
+settings_local.py
 *.pyc
 *.pyo
 .fuse_*

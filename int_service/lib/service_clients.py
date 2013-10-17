@@ -25,6 +25,10 @@ from core_services.ttypes import GetTimeWorkAndStatusParameters, EnqueuePatientP
 from core_services.ttypes import AddPatientParameters, FindOrgStructureByAddressParameters
 from core_services.ttypes import FindPatientParameters, FindMultiplePatientsParameters, PatientInfo
 from core_services.ttypes import SQLException, NotFoundException, TException
+from core_services.ttypes import AnotherPolicyException, InvalidDocumentException, InvalidPersonalInfoException
+from core_services.ttypes import FindPatientByPolicyAndDocumentParameters, NotUniqueException
+
+from tfoms_service import TFOMSClient, AnswerCodes
 
 
 class Clients(object):
@@ -1222,34 +1226,49 @@ class ClientKorus30(AbstractClient):
                 return result
         return []
 
-    def enqueue(self, **kwargs):
-        """Записывает пациента на приём
+    def __prepare_tfoms_params(self, data):
+        """Подготавливает словарь параметров для осуществления поиска в ТФОМС"""
+        person = data.get('person')
+        params = {'lastName': person.get('lastName'),
+                  'firstName': person.get('firstName'),
+                  'patrName': person.get('patronymic')}
 
-        Args:
-            person: словарь с данными о пациенте (обязательный):
-                {'lastName': фамилия
-                'firstName': имя
-                'patronymic': отчество
-                }
-            hospitalUidFrom: id ЛПУ, из которого производится запись (необязательный)
+        document = data.get('document')
+        birthDate = data.get('birthday')
 
-        """
-        hospital_uid_from = kwargs.get('hospitalUidFrom')
-        person = kwargs.get('person')
+        if document:
+            params.update(document)
+        if birthDate:
+            params['birthDate'] = birthDate
+
+        return params
+
+    def __check_by_tfoms(self, patient):
+        """Проверка пациента в ТФОМС"""
+        tfoms_client = TFOMSClient(settings.TFOMS_SERVICE_HOST,
+                                   settings.TFOMS_SERVICE_PORT,
+                                   settings.TFOMS_SERVICE_USER,
+                                   settings.TFOMS_SERVICE_PASSWORD)
+        if tfoms_client.is_available and tfoms_client.is_logined:
+            return tfoms_client.search_patient(patient)
+        else:
+            return None
+
+    def __prepare_patient_params(self, data):
+        """Подготовка словаря параметров пациента для поиска в ЛПУ"""
+        person = data.get('person')
         if person is None:
             raise exceptions.AttributeError
-            return {}
 
-        patient_params = {'serverId': kwargs.get('serverId'),
+        patient_params = {'serverId': data.get('serverId'),
                           'lastName': person.get('lastName').encode('utf-8'),
                           'firstName': person.get('firstName').encode('utf-8'),
                           'patrName': person.get('patronymic').encode('utf-8'),
-                          'sex': kwargs.get('sex', 0)
-                          }
+                          'sex': data.get('sex', 0)}
 
-        omiPolicy = kwargs.get('omiPolicyNumber').encode('utf-8') if hasattr(kwargs, 'omiPolicyNumber') else ''
-        document = kwargs.get('document')
-        birthDate = kwargs.get('birthday')
+        omiPolicy = data.get('omiPolicyNumber', '').encode('utf-8')
+        document = data.get('document')
+        birthDate = data.get('birthday')
 
         if omiPolicy:
             patient_params['omiPolicy'] = omiPolicy
@@ -1259,55 +1278,156 @@ class ClientKorus30(AbstractClient):
             patient_params['document'] = document
         if birthDate:
             patient_params['birthDate'] = calendar.timegm(birthDate.timetuple()) * 1000
+        return patient_params
 
-        print 'Korus30 ENQUEUE'
+    def __get_patient_by_lpu(self, data):
+        """Поиск пациента в БД ЛПУ. Добавление его при записи между ЛПУ"""
 
+        patient_params = self.__prepare_patient_params(data)
+        hospital_uid_from = data.get('hospitalUidFrom')
+        patient = self.Struct(success=False, patientId=None, message=None)
         try:
             if 'birthDate' in patient_params and 'document' in patient_params:
                 patient = self.findPatient(**patient_params)
             else:
                 patients = self.findPatients(**patient_params)
                 if len(patients) > 1:
-                    return {'result': False, 'error_code': int(is_exceptions.IS_FoundMultiplePatients()), }
+                    patient.message = int(is_exceptions.IS_FoundMultiplePatients())
+                    #return {'result': False, 'error_code': int(is_exceptions.IS_FoundMultiplePatients()), }
+                    return patient
                 elif len(patients) == 0:
                     if hospital_uid_from == '0':
-                        return {'result': False, 'error_code': int(is_exceptions.IS_PatientNotRegistered()), }
-                    patient = self.Struct(success=False, patientId=None)
+                        patient.message = int(is_exceptions.IS_PatientNotRegistered())
+                        #return {'result': False, 'error_code': int(is_exceptions.IS_PatientNotRegistered()), }
+                        return patient
                 else:
                     patient = self.Struct(success=True, patientId=patients[0].id)
-
         except NotFoundException, e:
             print e
             if hospital_uid_from == '0':
-                return {'result': False, 'error_code': e.error_msg.decode('utf-8'), }
+                patient.message = e.error_msg.decode('utf-8')
+                #return {'result': False, 'error_code': e.error_msg.decode('utf-8')}
+            return patient
         except TException, e:
             print e
-            return {'result': False, 'error_code': e.message, }
+            patient.message = e.message
+            #return {'result': False, 'error_code': e.message}
+            return patient
         except Exception, e:
             print e
-            return {'result': False, 'error_code': e}
+            patient.message = e
+            #return {'result': False, 'error_code': e}
+            return patient
 
         if not patient.success and hospital_uid_from and hospital_uid_from != '0':
-            print 'addPatient with params'
-            print patient_params
             patient = self.addPatient(**patient_params)
-            print patient
+        return patient
 
-        if patient and patient.success and patient.patientId:
-            patient_id = patient.patientId
-        else:
-        #            raise exceptions.LookupError
-            return {'result': False, 'error_code': patient.message.decode('utf-8'), }
+    def __prepare_tfoms_data(self, tfoms_data):
+        """"Mapping данных, полученных из ТФОМС в словарь для поиска в БД ЛПУ"""
+        params = dict()
+        params['lastName'] = tfoms_data.get('lastname', '').encode('utf-8')
+        params['firstName'] = tfoms_data.get('firstName', '').encode('utf-8')
+        params['patrName'] = tfoms_data.get('midname', '').encode('utf-8')
+        params['sex'] = tfoms_data.get('sex', 0)
+        params['birthDate'] = calendar.timegm(tfoms_data.get('birthdate').timetuple()) * 1000
+        params['documentSerial'] = tfoms_data.get('doc_series', '').encode('utf-8')
+        params['documentNumber'] = tfoms_data.get('doc_number', '')
+        params['documentTypeCode'] = str(tfoms_data.get('doc_code', ''))
+        params['policySerial'] = tfoms_data.get('policy_series', '').encode('utf-8')
+        params['policyNumber'] = tfoms_data.get('policy_number', '')
+        params['policyTypeCode'] = str(tfoms_data.get('policy_doctype', ''))
+        params['policyInsurerInfisCode'] = tfoms_data.get('insurance_orgcode', '')
+        return params
 
+    def __get_patient_by_tfoms_data(self, tfoms_data):
+        patient = self.Struct(success=False, patientId=None, message=None)
+        params = self.__prepare_tfoms_data(tfoms_data)
         try:
-            date_time = kwargs.get('timeslotStart', datetime.datetime.now())
+            patient = self.client.findPatientByPolicyAndDocument(FindPatientByPolicyAndDocumentParameters(**params))
+        except NotFoundException, e:
+            try:
+                patient = self.client.addPatient(AddPatientParameters(**params))
+                patient.message = u'''Пациент не был ранее зарегистрирован в выбранном медицинском учреждении,
+                требуется обратиться в регистратуру для регистрации перед обращением к врачу'''
+            except WebFault, e:
+                print e
+            except Exception, e:
+                print e
+        except InvalidPersonalInfoException, e:
+            patient.message = u'''Идентифицировать пациента по имеющимся данным невозможно,
+            необходимо обратиться в регистратуру медицинского учреждения для обновления анкетных данных'''
+        except InvalidDocumentException, e:
+            patient.message = u'''Идентифицировать пациента по имеющимся данным невозможно,
+            необходимо обратиться в регистратуру медицинского учреждения для обновления анкетных данных'''
+        except AnotherPolicyException, e:
+            patient.patientId = e.patientId
+            patient.success = True
+            patient.message = u'''Номер полиса не совпал.
+            Вам требуется обратиться в регистратуру медицинского учреждения перед обращением к врачу'''
+        except NotUniqueException, e:
+            patient.message = u'''Идентифицировать пациента по имеющимся данным невозможно,
+            необходимо обратиться в регистратуру медицинского учреждения для обновления анкетных данных'''
+        return patient
+
+    def __get_patient(self, data, tfoms_data=None):
+        """Получение ID пациента в БД ЛПУ
+        1. Пациент найден в ТФОМС:
+            1.1. Если пациент найден в ЛПУ, то возвращается его ID
+            1.2. Если пациент найден в ЛПУ, но полис не совпадает, то проверяем его по документам полученным из ТФОМС,
+            если найден по документам, то обновляем его полис в БД ЛПУ и возвращаем ID пациента
+            (должны уведомить пользователя о несовпадении полиса и необходимости перед обращением к врачу
+            обратиться в регистратуру)
+            1.3. Если пациент найден в ЛПУ по ФИО, но ни один документ не совпал
+            (или найдено несколько пациентов с такими данными), то вернуть ошибку
+            "Идентифицировать пациента по имеющимся данным невозможно,
+            необходимо обратиться в регистратуру медицинского учреждения для обновления анкетных данных"
+            1.4. Если в БД ЛПУ не найден пациент и не найден ни один из документов,
+            то создаём нового пациента по данным, полученным из ТФОМС.
+            Возвращаем его ID, уведомляем о том, что
+            "пациент не был ранее зарегистрирован в выбранном медицинском учреждении
+            и требуется обратиться в регистратуру для регистрации перед обращением к врачу"
+        2. Если пациент не найден в ТФОМС, тогда работаем с БД ЛПУ по старой схеме.
+        Уточнение: если пациент не найден в БД ЛПУ, вернуть сообщение:
+        "такого пациента нет ни в базе застрахованных по ОМС лиц,
+        ни в базе медицинского учреждения и необходимо сначала получить полис,
+        а потом зарегистрироваться в нужном медицинском учреждении в регистратуре"
+        3. В ТФОМС найден полис, но не совпали ФИО или Д.Р., то в БД ЛПУ не ищем, возвращаем сообщение:
+        "данные в базе застрахованных по ОМС лиц не совпадают с введенными и запись на прием выполнена быть не может,
+        проверьте корректность введенных данных или обратитесь в регистратуру выбранного медицинского учреждения"
+        4. Если сервис ТФОМС вернул ошибку, то работаем с БД ЛПУ по старой схеме.
+        """
+        patient = self.Struct(success=False, patientId=None, message=None)
+        if tfoms_data is None or tfoms_data['status'] == AnswerCodes(0):
+            patient = self.__get_patient_by_lpu(data)
+        elif tfoms_data['status'] == AnswerCodes(1):
+            patient = self.__get_patient_by_lpu(data)
+            if patient.success is False and patient.message is None:
+                patient.message = u'''Такого пациента нет ни в базе застрахованных по ОМС лиц,
+                                  ни в базе медицинского учреждения и необходимо сначала получить полис,
+                                  а потом зарегистрироваться в нужном медицинском учреждении в регистратуре'''
+        elif tfoms_data['status'] == AnswerCodes(2) and tfoms_data['data']:
+            patient = self.__get_patient_by_lpu(data)
+            if patient.success is False and patient.patientId is None:
+                patient = self.__get_patient_by_tfoms_data(tfoms_data['data'])
+
+        elif tfoms_data == AnswerCodes(3):
+            patient.message = u'''Данные в базе застрахованных по ОМС лиц не совпадают с введенными
+                                и запись на прием выполнена быть не может,
+                                проверьте корректность введенных данных
+                                или обратитесь в регистратуру выбранного медицинского учреждения'''
+        return patient
+
+    def __enqueue_patient(self, patient_id, data):
+        try:
+            date_time = data.get('timeslotStart', datetime.datetime.now())
             params = EnqueuePatientParameters(
-#                serverId = kwargs.get('serverId'),
                 patientId=int(patient_id),
-                personId=int(kwargs.get('doctorUid')),
+                personId=int(data.get('doctorUid')),
                 dateTime=int(calendar.timegm(date_time.timetuple()) * 1000),
-                note=kwargs.get('E-mail', 'E-mail'),
-                hospitalUidFrom=kwargs.get('hospitalUidFrom'),
+                note=data.get('E-mail', 'E-mail'),
+                hospitalUidFrom=data.get('hospitalUidFrom'),
+#               serverId = data.get('serverId'),
             )
         except Exception, e:
             print e
@@ -1320,26 +1440,49 @@ class ClientKorus30(AbstractClient):
                 print e
             except Exception, e:
                 print e
-                return {
-                    'result': False,
-                    'error_code': e.message.decode('utf-8'),
-                    'ticketUid': '',
-                }
+                return {'result': False,
+                        'error_code': e.message.decode('utf-8'),
+                        'ticketUid': ''}
             else:
                 if result.success:
-                    return {
-                        'result': True,
-                        'error_code': result.message.decode('utf-8'),
-                        'ticketUid': str(result.queueId) + '/' + str(patient_id),
-                        'patient_id': patient_id,
-                    }
+                    return {'result': True,
+                            'error_code': result.message.decode('utf-8'),
+                            'ticketUid': str(result.queueId) + '/' + str(patient_id),
+                            'patient_id': patient_id}
                 else:
-                    return {
-                        'result': False,
-                        'error_code': result.message.decode('utf-8'),
-                        'ticketUid': '',
-                    }
+                    return {'result': False,
+                            'error_code': result.message.decode('utf-8'),
+                            'ticketUid': ''}
         return None
+
+    def enqueue(self, **kwargs):
+        """Записывает пациента на приём
+
+        Args:
+            person: словарь с данными о пациенте (обязательный):
+                {'lastName': фамилия
+                'firstName': имя
+                'patronymic': отчество}
+            hospitalUidFrom: id ЛПУ, из которого производится запись (необязательный)
+
+        """
+
+        ################################################################
+        # Search in TFOMS
+        ################################################################
+        tfoms_result = None
+        tfoms_params = self.__prepare_tfoms_params(kwargs)
+        try:
+            tfoms_result = self.__check_by_tfoms(tfoms_params)
+        except Exception, e:
+            print e
+        ################################################################
+
+        patient = self.__get_patient(kwargs, tfoms_params)
+        if patient and patient.success and patient.patientId:
+            return self.__enqueue_patient(patient.patientId, kwargs)
+        else:
+            return {'result': False, 'error_code': patient.message.decode('utf-8'), }
 
     def dequeue(self, server_id, patient_id, ticket_id):
         if server_id and patient_id and ticket_id:
