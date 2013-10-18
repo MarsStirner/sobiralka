@@ -1344,6 +1344,7 @@ class ClientKorus30(AbstractClient):
         return patient
 
     def __update_policy(self, patient_id, data):
+        data = self.__update_policy_type_code(data, 'core')
         policy_params = dict()
         if data['policySerial']:
             policy_params['serial'] = data['policySerial']
@@ -1519,6 +1520,8 @@ class ClientKorus30(AbstractClient):
                     _policy_types_mapping[int(data['document']['policy_type'])][_type])
             except NameError:
                 pass
+        elif isinstance(data, dict) and 'policyTypeCode' in data:
+            data['policyTypeCode'] = str(_policy_types_mapping[int(data['policyTypeCode'])][_type])
         return data
 
     def enqueue(self, **kwargs):
