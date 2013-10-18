@@ -37,10 +37,10 @@ from tfoms_service import TFOMSClient, AnswerCodes
 # TODO: для начала изменить на сайте, потом перенести в Korus20 обратное сопоставление, как только старые КС выпиляться
 # костыль будет не нужен
 _policy_types_mapping = {
-    1: 2,
-    2: 1,
-    3: 4,
-    4: 'cmiCommonElectron'
+    1: dict(core=2, tfoms=2),
+    2: dict(core=1, tfoms=1),
+    3: dict(core=4, tfoms=4),
+    4: dict(core='cmiCommonElectron', tfoms=3)
 }
 
 
@@ -1511,11 +1511,12 @@ class ClientKorus30(AbstractClient):
                             'ticketUid': ''}
         return None
 
-    def __update_policy_type_code(self, data):
+    def __update_policy_type_code(self, data, _type='core'):
         document = data.get('document')
         if document and 'policy_type' in document:
             try:
-                data['document']['policy_type'] = str(_policy_types_mapping[int(data['document']['policy_type'])])
+                data['document']['policy_type'] = str(
+                    _policy_types_mapping[int(data['document']['policy_type'])][_type])
             except NameError:
                 pass
         return data
@@ -1531,18 +1532,18 @@ class ClientKorus30(AbstractClient):
             hospitalUidFrom: id ЛПУ, из которого производится запись (необязательный)
 
         """
-        # TODO: избавиться от костыля.
-        kwargs = self.__update_policy_type_code(kwargs)
         ################################################################
         # Search in TFOMS
         ################################################################
         tfoms_result = None
-        tfoms_params = self.__prepare_tfoms_params(kwargs)
+        tfoms_params = self.__prepare_tfoms_params(self.__update_policy_type_code(kwargs, 'tfoms'))
         try:
             tfoms_result = self.__check_by_tfoms(tfoms_params)
         except Exception, e:
             print e
         ################################################################
+        # TODO: избавиться от костыля.
+        kwargs = self.__update_policy_type_code(kwargs, 'core')
 
         patient = self.__get_patient(kwargs, tfoms_result)
         if patient and patient.success and patient.patientId:
