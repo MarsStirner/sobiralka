@@ -20,7 +20,7 @@ from jinja2 import Environment, PackageLoader
 
 from thrift.transport import TTransport, TSocket, THttpClient
 from thrift.protocol import TBinaryProtocol, TProtocol
-from core_services.Communications import Client as Thrift_Client
+from core_services.Communications import Client as Thrift_Client, TApplicationException
 from core_services.ttypes import GetTimeWorkAndStatusParameters, EnqueuePatientParameters
 from core_services.ttypes import AddPatientParameters, FindOrgStructureByAddressParameters
 from core_services.ttypes import FindPatientParameters, FindMultiplePatientsParameters, PatientInfo
@@ -1464,7 +1464,10 @@ class ClientKorus30(AbstractClient):
         elif tfoms_data['status'].code == AnswerCodes(2).code and tfoms_data['data']:
             patient = self.__get_patient_by_lpu(data)
             if patient.success is False and patient.patientId is None:
-                patient = self.__get_patient_by_tfoms_data(tfoms_data['data'])
+                try:
+                    patient = self.__get_patient_by_tfoms_data(tfoms_data['data'])
+                except TApplicationException, e:
+                    print e
         elif tfoms_data['status'].code == AnswerCodes(3).code:
             patient.message = u'''Введенные не совпадают с данными в базе лиц застрахованных по ОМС.
             Запись на прием не может быть выполнена, проверьте корректность введенных данных
