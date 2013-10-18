@@ -1354,7 +1354,7 @@ class ClientKorus30(AbstractClient):
         if data['policySerial']:
             policy_params['serial'] = data['policySerial']
         policy_params['number'] = data['policyNumber']
-        policy_params['typeCode'] = _tfoms_to_core_policy_type[int(data['policyTypeCode'])]
+        policy_params['typeCode'] = data['policyTypeCode']
         policy_params['insurerInfisCode'] = data['policyInsurerInfisCode']
         policy = Policy(**policy_params)
         update_policy_params = ChangePolicyParameters(patientId=patient_id,
@@ -1375,7 +1375,7 @@ class ClientKorus30(AbstractClient):
         params['documentTypeCode'] = str(tfoms_data.get('doc_code', ''))
         params['policySerial'] = tfoms_data.get('policy_series', '')
         params['policyNumber'] = tfoms_data.get('policy_number', '')
-        params['policyTypeCode'] = str(tfoms_data.get('policy_doctype', ''))
+        params['policyTypeCode'] = str(_tfoms_to_core_policy_type[int(tfoms_data.get('policy_doctype'))])
         params['policyInsurerInfisCode'] = tfoms_data.get('insurance_orgcode', '')
         return params
 
