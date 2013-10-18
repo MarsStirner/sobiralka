@@ -43,6 +43,12 @@ _policy_types_mapping = {
     4: dict(core='cmiCommonElectron', tfoms=3)
 }
 
+_tfoms_to_core_policy_type = {
+    1: 1,
+    2: 2,
+    3: 'cmiCommonElectron',
+    4: 4,
+}
 
 class Clients(object):
     """Class provider for current Clients"""
@@ -1344,12 +1350,11 @@ class ClientKorus30(AbstractClient):
         return patient
 
     def __update_policy(self, patient_id, data):
-        data = self.__update_policy_type_code(data, 'core')
         policy_params = dict()
         if data['policySerial']:
             policy_params['serial'] = data['policySerial']
         policy_params['number'] = data['policyNumber']
-        policy_params['typeCode'] = data['policyTypeCode']
+        policy_params['typeCode'] = _tfoms_to_core_policy_type[int(data['policyTypeCode'])]
         policy_params['insurerInfisCode'] = data['policyInsurerInfisCode']
         policy = Policy(**policy_params)
         update_policy_params = ChangePolicyParameters(patientId=patient_id,
@@ -1520,8 +1525,6 @@ class ClientKorus30(AbstractClient):
                     _policy_types_mapping[int(data['document']['policy_type'])][_type])
             except NameError:
                 pass
-        elif isinstance(data, dict) and 'policyTypeCode' in data:
-            data['policyTypeCode'] = str(_policy_types_mapping[int(data['policyTypeCode'])][_type])
         return data
 
     def enqueue(self, **kwargs):
