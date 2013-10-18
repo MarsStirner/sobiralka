@@ -40,7 +40,7 @@ _policy_types_mapping = {
     1: 2,
     2: 1,
     3: 4,
-    4: 3
+    4: 'cmiCommonElectron'
 }
 
 
