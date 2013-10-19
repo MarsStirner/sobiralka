@@ -3,6 +3,13 @@ import requests
 from flask import json
 from datetime import datetime
 
+import logging
+import sys
+
+h1 = logging.StreamHandler(sys.stdout)
+logger = logging.getLogger()
+logger.addHandler(h1)
+
 _codes = {
     0: u'Ошибка при работе с сервисом',
     1: u'По переданным данным пациент не найден в БД ТФОМС',
@@ -50,23 +57,32 @@ class TFOMSClient(object):
         self.__is_logined = value
 
     def __check_service(self):
+        logger.debug('CHECK TFOMS_SERVICE')
         try:
             r = requests.get(self.service_url, timeout=0.5)
         except requests.exceptions.Timeout, e:
+            logger.debug(e)
             print e
             self.is_available = False
+            logger.debug('CHECK FAILED')
         else:
+            logger.debug('CHECK SUCCESS')
             self.is_available = True
 
     def __login(self, login, password):
+        logger.debug('LOGIN TFOMS_SERVICE (%s, %s)' % (login, password))
         url = '{}/login'.format(self.service_url)
         r = requests.post(url, data=json.dumps(dict(login=login, password=password)))
         if r.status_code == requests.codes.ok:
+            logger.debug('LOGIN SUCCESS')
             if r.cookies['session']:
+                logger.debug(r.cookies['session'])
                 self.cookies = dict(session=r.cookies['session'])
             return True
         elif r.status_code == requests.codes.unauthorized:
+            logger.debug('LOGIN FAILED')
             return False
+        logger.debug('LOGIN FAILED')
         return False
 
     def __check(self, **kwargs):
@@ -81,16 +97,21 @@ class TFOMSClient(object):
         return None
 
     def __search(self, **kwargs):
+        logger.debug('SEARCH PROCESS')
         if self.is_logined:
             url = '{}/search'.format(self.service_url)
             r = requests.post(url, data=json.dumps(kwargs), cookies=self.cookies)
+            logger.debug(self.cookies)
             if r.status_code == requests.codes.ok:
                 try:
                     result = r.json()
+                    logger.debug(result)
                 except ValueError, e:
+                    logger.debug(e)
                     raise e
                 else:
                     return result
+        logger.debug('NOT LOGINED')
         return None
 
     def check_policy(self, policy):
