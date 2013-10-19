@@ -9,6 +9,7 @@ import sys
 h1 = logging.StreamHandler(sys.stdout)
 logger = logging.getLogger()
 logger.addHandler(h1)
+logging.basicConfig(level=logging.DEBUG)
 
 _codes = {
     0: u'Ошибка при работе с сервисом',

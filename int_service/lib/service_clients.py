@@ -29,7 +29,7 @@ from core_services.ttypes import AnotherPolicyException, InvalidDocumentExceptio
 from core_services.ttypes import FindPatientByPolicyAndDocumentParameters, NotUniqueException
 from core_services.ttypes import ChangePolicyParameters, Policy, PolicyTypeNotFoundException
 
-from tfoms_service import TFOMSClient, AnswerCodes
+from tfoms_service import TFOMSClient, AnswerCodes, logger
 
 # From rbPolicyType.id to rbPolicyType.code (с сайта приходит id в Korus30 необходимо передавать code),
 # а Korus20 работает с id
@@ -1546,6 +1546,7 @@ class ClientKorus30(AbstractClient):
         try:
             tfoms_result = self.__check_by_tfoms(tfoms_params)
         except Exception, e:
+            logger.error(e)
             print e
         ################################################################
         # TODO: избавиться от костыля.
