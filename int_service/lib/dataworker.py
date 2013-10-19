@@ -36,7 +36,7 @@ rootLogger.addHandler(h1)
 
 if DEBUG:
     logging.basicConfig(level=logging.INFO)
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
 else:
     logging.basicConfig(level=logging.ERROR)
     logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
@@ -831,7 +831,8 @@ class EnqueueWorker(object):
             )
 
             result = {'result': _enqueue.get('result'),
-                      'message': exception_by_code(_enqueue.get('error_code')),
+                      #TODO: переработать систему уведомлений
+                      'message': exception_by_code(_enqueue.get('message')),
                       'ticketUid': _enqueue.get('ticketUid')}
 
             # Call Task send_enqueue to epgu
