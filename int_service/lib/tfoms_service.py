@@ -7,6 +7,7 @@ import logging
 import sys
 
 h1 = logging.StreamHandler(sys.stdout)
+h1.setLevel(logging.DEBUG)
 logger = logging.getLogger()
 logger.addHandler(h1)
 logging.basicConfig(level=logging.DEBUG)
