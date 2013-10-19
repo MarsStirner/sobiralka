@@ -1545,6 +1545,7 @@ class ClientKorus30(AbstractClient):
         tfoms_params = self.__prepare_tfoms_params(self.__update_policy_type_code(kwargs, 'tfoms'))
         try:
             tfoms_result = self.__check_by_tfoms(tfoms_params)
+            logger.debug('QUERY TO TFOMS WAS SENT')
         except Exception, e:
             logger.error(e)
             print e
