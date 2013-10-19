@@ -7,7 +7,6 @@ import logging
 import sys
 
 h1 = logging.StreamHandler(sys.stdout)
-logging.basicConfig(level=logging.DEBUG)
 rootLogger = logging.getLogger()
 rootLogger.addHandler(h1)
 logger = logging.getLogger("tfoms.logger")
