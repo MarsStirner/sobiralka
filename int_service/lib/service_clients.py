@@ -1475,7 +1475,7 @@ class ClientKorus30(AbstractClient):
                 except TApplicationException, e:
                     print e
         elif tfoms_data['status'].code == AnswerCodes(3).code:
-            patient.message = u'''Введенные не совпадают с данными в базе лиц застрахованных по ОМС.
+            patient.message = u'''Введенные данные не совпадают с данными в базе лиц застрахованных по ОМС.
             Запись на прием не может быть выполнена, проверьте корректность введенных данных
             или обратитесь в регистратуру выбранного медицинского учреждения'''
         return patient
