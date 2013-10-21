@@ -15,6 +15,7 @@ import is_exceptions
 import settings
 import urllib2
 import socket
+from copy import deepcopy
 
 from jinja2 import Environment, PackageLoader
 
@@ -1542,7 +1543,7 @@ class ClientKorus30(AbstractClient):
         # Search in TFOMS
         ################################################################
         tfoms_result = None
-        tfoms_params = self.__prepare_tfoms_params(self.__update_policy_type_code(kwargs, 'tfoms'))
+        tfoms_params = self.__prepare_tfoms_params(self.__update_policy_type_code(deepcopy(kwargs), 'tfoms'))
         try:
             tfoms_result = self.__check_by_tfoms(tfoms_params)
         except Exception, e:
@@ -1550,7 +1551,7 @@ class ClientKorus30(AbstractClient):
             print e
         ################################################################
         # TODO: избавиться от костыля.
-        kwargs = self.__update_policy_type_code(kwargs, 'core')
+        kwargs = self.__update_policy_type_code(deepcopy(kwargs), 'core')
 
         patient = self.__get_patient(kwargs, tfoms_result)
         if patient and patient.success and patient.patientId:
