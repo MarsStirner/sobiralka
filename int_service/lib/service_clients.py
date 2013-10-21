@@ -1511,7 +1511,7 @@ class ClientKorus30(AbstractClient):
                 if result.success:
                     return {'result': True,
                             'error_code': result.message,
-                            'message': result.message,
+                            'message': result.message if result.message != 'ok.' else '',
                             'ticketUid': str(result.queueId) + '/' + str(patient_id),
                             'patient_id': patient_id}
                 else:
