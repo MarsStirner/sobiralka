@@ -7,10 +7,11 @@ import logging
 import sys
 
 h1 = logging.StreamHandler(sys.stdout)
-h1.setLevel(logging.DEBUG)
-logger = logging.getLogger()
+rootLogger = logging.getLogger()
+rootLogger.addHandler(h1)
+logger = logging.getLogger("tfoms.logger")
 logger.addHandler(h1)
-logging.basicConfig(level=logging.DEBUG)
+logger.setLevel(logging.DEBUG)
 
 _codes = {
     0: u'Ошибка при работе с сервисом',

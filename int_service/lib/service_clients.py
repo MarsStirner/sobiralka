@@ -1242,7 +1242,7 @@ class ClientKorus30(AbstractClient):
                         'start': date_time_by_date + datetime.timedelta(seconds=timeslot.time/1000),
                         'finish': finish,
                         'status': status,
-                        'office': str(schedule.office),
+                        'office': schedule.office,
                         'patientId': timeslot.patientId if hasattr(timeslot, 'patientId') else None,
                         'patientInfo': (
                             timeslot.patientInfo
@@ -1476,7 +1476,7 @@ class ClientKorus30(AbstractClient):
                 except TApplicationException, e:
                     print e
         elif tfoms_data['status'].code == AnswerCodes(3).code:
-            patient.message = u'''Введенные не совпадают с данными в базе лиц застрахованных по ОМС.
+            patient.message = u'''Введенные данные не совпадают с данными в базе лиц застрахованных по ОМС.
             Запись на прием не может быть выполнена, проверьте корректность введенных данных
             или обратитесь в регистратуру выбранного медицинского учреждения'''
         return patient
@@ -1510,6 +1510,7 @@ class ClientKorus30(AbstractClient):
                 if result.success:
                     return {'result': True,
                             'error_code': result.message,
+                            'message': result.message,
                             'ticketUid': str(result.queueId) + '/' + str(patient_id),
                             'patient_id': patient_id}
                 else:
@@ -1546,6 +1547,7 @@ class ClientKorus30(AbstractClient):
         tfoms_params = self.__prepare_tfoms_params(self.__update_policy_type_code(deepcopy(kwargs), 'tfoms'))
         try:
             tfoms_result = self.__check_by_tfoms(tfoms_params)
+            logger.debug('QUERY TO TFOMS WAS SENT')
         except Exception, e:
             logger.error(e)
             print e
@@ -1556,8 +1558,9 @@ class ClientKorus30(AbstractClient):
         patient = self.__get_patient(kwargs, tfoms_result)
         if patient and patient.success and patient.patientId:
             result = self.__enqueue_patient(patient.patientId, kwargs)
-            if patient.message:
-                result.update(dict(message=patient.message))
+            message = getattr(patient, 'message', None)
+            if message:
+                result['message']=message
             return result
         else:
             return {'result': False,
