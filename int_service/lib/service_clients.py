@@ -1560,7 +1560,7 @@ class ClientKorus30(AbstractClient):
             result = self.__enqueue_patient(patient.patientId, kwargs)
             message = getattr(patient, 'message', None)
             if message:
-                result['message']=message
+                result['message'] = message
             return result
         else:
             return {'result': False,
