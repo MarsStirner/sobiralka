@@ -1509,6 +1509,7 @@ class ClientKorus30(AbstractClient):
                 if result.success:
                     return {'result': True,
                             'error_code': result.message,
+                            'message': result.message,
                             'ticketUid': str(result.queueId) + '/' + str(patient_id),
                             'patient_id': patient_id}
                 else:
@@ -1558,7 +1559,7 @@ class ClientKorus30(AbstractClient):
             result = self.__enqueue_patient(patient.patientId, kwargs)
             message = getattr(patient, 'message', None)
             if message:
-                result.update(dict(message=message))
+                result['message']=message
             return result
         else:
             return {'result': False,
