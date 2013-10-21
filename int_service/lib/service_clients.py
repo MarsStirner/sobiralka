@@ -1556,8 +1556,9 @@ class ClientKorus30(AbstractClient):
         patient = self.__get_patient(kwargs, tfoms_result)
         if patient and patient.success and patient.patientId:
             result = self.__enqueue_patient(patient.patientId, kwargs)
-            if patient.message:
-                result.update(dict(message=patient.message))
+            message = getattr(patient, 'message', None)
+            if message:
+                result.update(dict(message=message))
             return result
         else:
             return {'result': False,
