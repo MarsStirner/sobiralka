@@ -578,7 +578,7 @@ class ClientKorus20(AbstractClient):
                 if result.success:
                     return {
                         'result': True,
-                        'message': result.message,
+                        'message': result.message if result.message != '100 ok' else '',
                         'error_code': result.message,
                         'ticketUid': str(result.queueId) + '/' + str(patient_id),
                         'patient_id': patient_id,
@@ -1480,6 +1480,11 @@ class ClientKorus30(AbstractClient):
             patient.message = u'''Введенные данные не совпадают с данными в базе лиц застрахованных по ОМС.
             Запись на прием не может быть выполнена, проверьте корректность введенных данных
             или обратитесь в регистратуру выбранного медицинского учреждения'''
+
+        #Костыль.. убираем сообщение 'ok.' из вывода в результатах записи
+        message = getattr(patient, 'message', None)
+        if message and message == 'ok.':
+            setattr(patient, 'message', '')
         return patient
 
     def __enqueue_patient(self, patient_id, data):
