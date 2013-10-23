@@ -35,8 +35,8 @@ rootLogger = logging.getLogger()
 rootLogger.addHandler(h1)
 
 if DEBUG:
-    logging.basicConfig(level=logging.INFO)
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
+    logging.basicConfig(level=logging.ERROR)
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 else:
     logging.basicConfig(level=logging.ERROR)
     logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
@@ -1870,9 +1870,10 @@ class EPGUWorker(object):
                     for doctor in add_epgu_doctors:
                         location_id = self.__post_location_epgu(hospital, doctor)
                         if location_id:
-                            self.__update_doctor(doctor, dict(keyEPGU=str(location_id)))
-                            self.__log(u'Для %s %s %s отправлена очередь, получен keyEPGU (%s)' %
+                            message = (u'Для %s %s %s отправлена очередь, получен keyEPGU (%s)' %
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, location_id))
+                            self.__update_doctor(doctor, dict(keyEPGU=str(location_id)))
+                            self.__log(message)
                 self.__log(u'----------------------------')
 
     def __link_activate_schedule(self, hospital, location_id, rules):
