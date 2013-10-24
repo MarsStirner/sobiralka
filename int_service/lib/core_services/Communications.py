@@ -131,6 +131,28 @@ class Iface(object):
     """
     pass
 
+  def checkForNewQueueCoupons(self, ):
+    """
+     Запрос на список талончиков, которые появились с момента последнего запроса
+    (для поиска записей на прием к врачу созданных не через КС)
+     @return Список новых талончиков или пустой список, если таких талончиков не найдено то пустой список
+    """
+    pass
+
+  def getFirstFreeTicket(self, personId, dateTime):
+    """
+    Метод для получения первого свободного талончика врача
+    @param personId                  1)Идетификатор врача
+    @param dateTime                  2)Время с которого начинается поиск свободных талончиков
+    @return Структура с данными первого доступного для записи талончика
+    @throws NotFoundException        когда у выьранного врача с этой даты нету свободных талончиков
+
+    Parameters:
+     - personId
+     - dateTime
+    """
+    pass
+
   def getPatientInfo(self, patientIds):
     """
     Parameters:
@@ -660,6 +682,76 @@ class Client(Iface):
       raise result.nfExc
     raise TApplicationException(TApplicationException.MISSING_RESULT, "changePatientPolicy failed: unknown result");
 
+  def checkForNewQueueCoupons(self, ):
+    """
+     Запрос на список талончиков, которые появились с момента последнего запроса
+    (для поиска записей на прием к врачу созданных не через КС)
+     @return Список новых талончиков или пустой список, если таких талончиков не найдено то пустой список
+    """
+    self.send_checkForNewQueueCoupons()
+    return self.recv_checkForNewQueueCoupons()
+
+  def send_checkForNewQueueCoupons(self, ):
+    self._oprot.writeMessageBegin('checkForNewQueueCoupons', TMessageType.CALL, self._seqid)
+    args = checkForNewQueueCoupons_args()
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_checkForNewQueueCoupons(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = checkForNewQueueCoupons_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    if result.success is not None:
+      return result.success
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "checkForNewQueueCoupons failed: unknown result");
+
+  def getFirstFreeTicket(self, personId, dateTime):
+    """
+    Метод для получения первого свободного талончика врача
+    @param personId                  1)Идетификатор врача
+    @param dateTime                  2)Время с которого начинается поиск свободных талончиков
+    @return Структура с данными первого доступного для записи талончика
+    @throws NotFoundException        когда у выьранного врача с этой даты нету свободных талончиков
+
+    Parameters:
+     - personId
+     - dateTime
+    """
+    self.send_getFirstFreeTicket(personId, dateTime)
+    return self.recv_getFirstFreeTicket()
+
+  def send_getFirstFreeTicket(self, personId, dateTime):
+    self._oprot.writeMessageBegin('getFirstFreeTicket', TMessageType.CALL, self._seqid)
+    args = getFirstFreeTicket_args()
+    args.personId = personId
+    args.dateTime = dateTime
+    args.write(self._oprot)
+    self._oprot.writeMessageEnd()
+    self._oprot.trans.flush()
+
+  def recv_getFirstFreeTicket(self, ):
+    (fname, mtype, rseqid) = self._iprot.readMessageBegin()
+    if mtype == TMessageType.EXCEPTION:
+      x = TApplicationException()
+      x.read(self._iprot)
+      self._iprot.readMessageEnd()
+      raise x
+    result = getFirstFreeTicket_result()
+    result.read(self._iprot)
+    self._iprot.readMessageEnd()
+    if result.success is not None:
+      return result.success
+    if result.nfExc is not None:
+      raise result.nfExc
+    raise TApplicationException(TApplicationException.MISSING_RESULT, "getFirstFreeTicket failed: unknown result");
+
   def getPatientInfo(self, patientIds):
     """
     Parameters:
@@ -912,6 +1004,8 @@ class Processor(Iface, TProcessor):
     self._processMap["findPatients"] = Processor.process_findPatients
     self._processMap["findPatientByPolicyAndDocument"] = Processor.process_findPatientByPolicyAndDocument
     self._processMap["changePatientPolicy"] = Processor.process_changePatientPolicy
+    self._processMap["checkForNewQueueCoupons"] = Processor.process_checkForNewQueueCoupons
+    self._processMap["getFirstFreeTicket"] = Processor.process_getFirstFreeTicket
     self._processMap["getPatientInfo"] = Processor.process_getPatientInfo
     self._processMap["getPatientContacts"] = Processor.process_getPatientContacts
     self._processMap["getPatientOrgStructures"] = Processor.process_getPatientOrgStructures
@@ -1141,6 +1235,31 @@ class Processor(Iface, TProcessor):
     except NotFoundException as nfExc:
       result.nfExc = nfExc
     oprot.writeMessageBegin("changePatientPolicy", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_checkForNewQueueCoupons(self, seqid, iprot, oprot):
+    args = checkForNewQueueCoupons_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = checkForNewQueueCoupons_result()
+    result.success = self._handler.checkForNewQueueCoupons()
+    oprot.writeMessageBegin("checkForNewQueueCoupons", TMessageType.REPLY, seqid)
+    result.write(oprot)
+    oprot.writeMessageEnd()
+    oprot.trans.flush()
+
+  def process_getFirstFreeTicket(self, seqid, iprot, oprot):
+    args = getFirstFreeTicket_args()
+    args.read(iprot)
+    iprot.readMessageEnd()
+    result = getFirstFreeTicket_result()
+    try:
+      result.success = self._handler.getFirstFreeTicket(args.personId, args.dateTime)
+    except NotFoundException as nfExc:
+      result.nfExc = nfExc
+    oprot.writeMessageBegin("getFirstFreeTicket", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
     oprot.trans.flush()
@@ -3292,6 +3411,261 @@ class changePatientPolicy_result(object):
   def __ne__(self, other):
     return not (self == other)
 
+class checkForNewQueueCoupons_args(object):
+
+  thrift_spec = (
+  )
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('checkForNewQueueCoupons_args')
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class checkForNewQueueCoupons_result(object):
+  """
+  Attributes:
+   - success
+  """
+
+  thrift_spec = (
+    (0, TType.LIST, 'success', (TType.STRUCT,(QueueCoupon, QueueCoupon.thrift_spec)), None, ), # 0
+  )
+
+  def __init__(self, success=None,):
+    self.success = success
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.LIST:
+          self.success = []
+          (_etype70, _size67) = iprot.readListBegin()
+          for _i71 in xrange(_size67):
+            _elem72 = QueueCoupon()
+            _elem72.read(iprot)
+            self.success.append(_elem72)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('checkForNewQueueCoupons_result')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.LIST, 0)
+      oprot.writeListBegin(TType.STRUCT, len(self.success))
+      for iter73 in self.success:
+        iter73.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getFirstFreeTicket_args(object):
+  """
+  Attributes:
+   - personId
+   - dateTime
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'personId', None, None, ), # 1
+    (2, TType.I64, 'dateTime', None, None, ), # 2
+  )
+
+  def __init__(self, personId=None, dateTime=None,):
+    self.personId = personId
+    self.dateTime = dateTime
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.personId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I64:
+          self.dateTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getFirstFreeTicket_args')
+    if self.personId is not None:
+      oprot.writeFieldBegin('personId', TType.I32, 1)
+      oprot.writeI32(self.personId)
+      oprot.writeFieldEnd()
+    if self.dateTime is not None:
+      oprot.writeFieldBegin('dateTime', TType.I64, 2)
+      oprot.writeI64(self.dateTime)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class getFirstFreeTicket_result(object):
+  """
+  Attributes:
+   - success
+   - nfExc
+  """
+
+  thrift_spec = (
+    (0, TType.STRUCT, 'success', (FreeTicket, FreeTicket.thrift_spec), None, ), # 0
+    (1, TType.STRUCT, 'nfExc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
+  )
+
+  def __init__(self, success=None, nfExc=None,):
+    self.success = success
+    self.nfExc = nfExc
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 0:
+        if ftype == TType.STRUCT:
+          self.success = FreeTicket()
+          self.success.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 1:
+        if ftype == TType.STRUCT:
+          self.nfExc = NotFoundException()
+          self.nfExc.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('getFirstFreeTicket_result')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.STRUCT, 0)
+      self.success.write(oprot)
+      oprot.writeFieldEnd()
+    if self.nfExc is not None:
+      oprot.writeFieldBegin('nfExc', TType.STRUCT, 1)
+      self.nfExc.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
 class getPatientInfo_args(object):
   """
   Attributes:
@@ -3318,10 +3692,10 @@ class getPatientInfo_args(object):
       if fid == 1:
         if ftype == TType.LIST:
           self.patientIds = []
-          (_etype70, _size67) = iprot.readListBegin()
-          for _i71 in xrange(_size67):
-            _elem72 = iprot.readI32();
-            self.patientIds.append(_elem72)
+          (_etype77, _size74) = iprot.readListBegin()
+          for _i78 in xrange(_size74):
+            _elem79 = iprot.readI32();
+            self.patientIds.append(_elem79)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -3338,8 +3712,8 @@ class getPatientInfo_args(object):
     if self.patientIds is not None:
       oprot.writeFieldBegin('patientIds', TType.LIST, 1)
       oprot.writeListBegin(TType.I32, len(self.patientIds))
-      for iter73 in self.patientIds:
-        oprot.writeI32(iter73)
+      for iter80 in self.patientIds:
+        oprot.writeI32(iter80)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -3391,12 +3765,12 @@ class getPatientInfo_result(object):
       if fid == 0:
         if ftype == TType.MAP:
           self.success = {}
-          (_ktype75, _vtype76, _size74 ) = iprot.readMapBegin() 
-          for _i78 in xrange(_size74):
-            _key79 = iprot.readI32();
-            _val80 = PatientInfo()
-            _val80.read(iprot)
-            self.success[_key79] = _val80
+          (_ktype82, _vtype83, _size81 ) = iprot.readMapBegin() 
+          for _i85 in xrange(_size81):
+            _key86 = iprot.readI32();
+            _val87 = PatientInfo()
+            _val87.read(iprot)
+            self.success[_key86] = _val87
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -3425,9 +3799,9 @@ class getPatientInfo_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.MAP, 0)
       oprot.writeMapBegin(TType.I32, TType.STRUCT, len(self.success))
-      for kiter81,viter82 in self.success.items():
-        oprot.writeI32(kiter81)
-        viter82.write(oprot)
+      for kiter88,viter89 in self.success.items():
+        oprot.writeI32(kiter88)
+        viter89.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -3544,11 +3918,11 @@ class getPatientContacts_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype86, _size83) = iprot.readListBegin()
-          for _i87 in xrange(_size83):
-            _elem88 = Contact()
-            _elem88.read(iprot)
-            self.success.append(_elem88)
+          (_etype93, _size90) = iprot.readListBegin()
+          for _i94 in xrange(_size90):
+            _elem95 = Contact()
+            _elem95.read(iprot)
+            self.success.append(_elem95)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -3571,8 +3945,8 @@ class getPatientContacts_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter89 in self.success:
-        iter89.write(oprot)
+      for iter96 in self.success:
+        iter96.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -3685,11 +4059,11 @@ class getPatientOrgStructures_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype93, _size90) = iprot.readListBegin()
-          for _i94 in xrange(_size90):
-            _elem95 = OrgStructuresProperties()
-            _elem95.read(iprot)
-            self.success.append(_elem95)
+          (_etype100, _size97) = iprot.readListBegin()
+          for _i101 in xrange(_size97):
+            _elem102 = OrgStructuresProperties()
+            _elem102.read(iprot)
+            self.success.append(_elem102)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -3712,8 +4086,8 @@ class getPatientOrgStructures_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter96 in self.success:
-        iter96.write(oprot)
+      for iter103 in self.success:
+        iter103.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -3976,11 +4350,11 @@ class getPatientQueue_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype100, _size97) = iprot.readListBegin()
-          for _i101 in xrange(_size97):
-            _elem102 = Queue()
-            _elem102.read(iprot)
-            self.success.append(_elem102)
+          (_etype107, _size104) = iprot.readListBegin()
+          for _i108 in xrange(_size104):
+            _elem109 = Queue()
+            _elem109.read(iprot)
+            self.success.append(_elem109)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -4009,8 +4383,8 @@ class getPatientQueue_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter103 in self.success:
-        iter103.write(oprot)
+      for iter110 in self.success:
+        iter110.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -4285,11 +4659,11 @@ class getSpecialities_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype107, _size104) = iprot.readListBegin()
-          for _i108 in xrange(_size104):
-            _elem109 = Speciality()
-            _elem109.read(iprot)
-            self.success.append(_elem109)
+          (_etype114, _size111) = iprot.readListBegin()
+          for _i115 in xrange(_size111):
+            _elem116 = Speciality()
+            _elem116.read(iprot)
+            self.success.append(_elem116)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -4312,8 +4686,8 @@ class getSpecialities_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter110 in self.success:
-        iter110.write(oprot)
+      for iter117 in self.success:
+        iter117.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
