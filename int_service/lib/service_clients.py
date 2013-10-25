@@ -1610,8 +1610,8 @@ class ClientKorus30(AbstractClient):
                 print e.error_msg
                 return None
             else:
-                result = dict(timeslotStart=datetime.datetime.fromtimestamp(ticket.begDateTime / 1000),
-                              timeslotEnd=datetime.datetime.fromtimestamp(ticket.endDateTime / 1000),
+                result = dict(timeslotStart=datetime.datetime.utcfromtimestamp(ticket.begDateTime / 1000),
+                              timeslotEnd=datetime.datetime.utcfromtimestamp(ticket.endDateTime / 1000),
                               office=ticket.office,
                               doctor_id=ticket.personId)
                 return result
