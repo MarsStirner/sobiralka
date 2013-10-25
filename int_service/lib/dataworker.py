@@ -1671,6 +1671,7 @@ class EPGUWorker(object):
         result = []
         epgu_result = self.proxy_client.GetLocations(hospital)
         locations = getattr(epgu_result, 'locations', None)
+        #TODO: проверить возвращаемое значение, а то возникает ошибка в отсутствии атрибуту location у locations
         if locations:
             result.extend(self.__get_location_data(locations))
             num_pages = int(locations.paginate.num_pages)
@@ -2003,10 +2004,10 @@ class EPGUWorker(object):
                               slot_unique_key))
             else:
                 self.__log(getattr(epgu_result, 'error', None))
-                # print getattr(epgu_result, 'error', '').encode('utf-8')
+                print getattr(epgu_result, 'error', '').encode('utf-8')
         else:
             self.__log(getattr(epgu_result, 'error', None))
-            # print getattr(epgu_result, 'error', '').encode('utf-8')
+            print getattr(epgu_result, 'error', '').encode('utf-8')
         return slot_unique_key
 
     def epgu_delete_slot(self, hospital, slot_id):

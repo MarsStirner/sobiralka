@@ -2037,6 +2037,7 @@ class ClientEPGU():
                 params['reserved_time_for_slot'] = doctor['reserved_time_for_slot']
                 params['reservation_type_id'] = doctor['reservation_type_id']
                 params['payment_method_id'] = doctor['payment_method_id']
+                params['auto_start'] = 1
 
                 if can_write:
                     params['can_write'] = can_write
@@ -2113,6 +2114,7 @@ class ClientEPGU():
                 params['reserved_time_for_slot'] = doctor['reserved_time_for_slot']
                 params['reservation_type_id'] = doctor['reservation_type_id']
                 params['payment_method_id'] = doctor['payment_method_id']
+                params['auto_start'] = 1
 
                 service_type_ids = dict()
                 for k, service_type in enumerate(service_types):
