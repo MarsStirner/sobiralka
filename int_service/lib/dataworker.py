@@ -813,8 +813,7 @@ class EnqueueWorker(object):
         service_type = doctor_info.speciality[0].epgu_service_type
         task_doctor = dict(location_id=getattr(doctor_info.key_epgu, 'keyEPGU', None),
                            epgu_service_type=getattr(service_type, 'keyEPGU', None))
-
-        hospital_uid_from = kwargs.get('hospitalUidFrom', '0')
+        hospital_uid_from = kwargs.get('hospitalUidFrom', '')
 
         if not doctor_info:
             shutdown_session()
