@@ -1605,7 +1605,8 @@ class ClientKorus30(AbstractClient):
             try:
                 ticket = self.client.getFirstFreeTicket(
                     personId=doctor_id,
-                    dateTime=int(calendar.timegm(start.timetuple()) * 1000))
+                    dateTime=int(calendar.timegm(start.timetuple()) * 1000),
+                    hospitalUidFrom='')
             except NotFoundException, e:
                 print e.error_msg
                 return None

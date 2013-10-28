@@ -452,11 +452,29 @@ list<QueueCoupon> checkForNewQueueCoupons();
  * Метод для получения первого свободного талончика врача
  * @param personId                  1)Идетификатор врача
  * @param dateTime                  2)Время с которого начинается поиск свободных талончиков
+ * @param hospitalUidFrom           3)Идентификатор ЛПУ из которого производится запись
  * @return Структура с данными первого доступного для записи талончика
  * @throws NotFoundException        когда у выьранного врача с этой даты нету свободных талончиков
  */
-FreeTicket getFirstFreeTicket(1:i32 personId, 2:timestamp dateTime)
+FreeTicket getFirstFreeTicket(1:i32 personId, 2:timestamp dateTime, 3:string hospitalUidFrom)
     throws (1:NotFoundException nfExc);
+
+/**
+ * Метод для получения расписания врача пачкой
+ * @param personId                  1)Идетификатор врача
+ * @param begDate                   2)Дата начала периода за который получаем расписание
+ * @param endDate                   3)Дата окончания периода за который получаем расписание
+ * @param hospitalUidFrom           4)Идентификатор ЛПУ из которого производится запись
+ * @return map<timestamp, Amb> - карта вида <[Дата приема], [Расписание на эту дату]>,
+ * в случае отсутствия расписания на указанную дату набор ключ-значение опускается
+ * @throws NotFoundException        когда нету такого идентификатора врача
+ */
+map<timestamp, Amb> getPersonSchedule(
+                                    1:i32 personId,
+                                    2:timestamp begDate,
+                                    3:timestamp endDate,
+                                    4:string hospitalUidFrom
+    ) throws (1:NotFoundException nfExc);
 
 map<i32,PatientInfo> getPatientInfo(1:list<i32> patientIds)
 throws (1:NotFoundException exc, 2:SQLException excsql);
