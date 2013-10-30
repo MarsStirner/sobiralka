@@ -619,7 +619,7 @@ class ClientKorus20(AbstractClient):
             try:
                 ticket = self.client.service.getFirstFreeTicket(
                     personId=doctor_id,
-                    dateTime=start,
+                    start=start,
                     hospitalUidFrom='')
             except WebFault, e:
                 print e
