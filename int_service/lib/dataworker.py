@@ -513,6 +513,31 @@ class EnqueueWorker(object):
         shutdown_session()
         return result
 
+    def get_closest_tickets(self, hospitalUid, doctors, start=None):
+        result = list()
+        hospital_uid = hospitalUid
+        if hospital_uid:
+            hospital_uid = hospital_uid.split('/')
+        if isinstance(hospital_uid, list) and len(hospital_uid) > 1:
+            lpu_id = hospital_uid[0]
+        else:
+            shutdown_session()
+            raise exceptions.ValueError
+        lpu_dw = LPUWorker()
+        lpu = lpu_dw.get_by_id(lpu_id)
+        proxy_client = Clients.provider(lpu.protocol, lpu.proxy.split(';')[0])
+        method = 'get_closest_free_ticket'
+        if hasattr(proxy_client, method) and callable(getattr(proxy_client, method)):
+            for doctor_id in doctors:
+                try:
+                    ticket = proxy_client.get_closest_free_ticket(doctor_id, start)
+                except Exception, e:
+                    print e
+                else:
+                    #result[doctor_id] = ticket
+                    result.append(ticket)
+        return dict(tickets=result)
+
     def __get_dates_period(self, start, end):
         if not start:
             start = datetime.date.today()
@@ -788,8 +813,7 @@ class EnqueueWorker(object):
         service_type = doctor_info.speciality[0].epgu_service_type
         task_doctor = dict(location_id=getattr(doctor_info.key_epgu, 'keyEPGU', None),
                            epgu_service_type=getattr(service_type, 'keyEPGU', None))
-
-        hospital_uid_from = kwargs.get('hospitalUidFrom', '0')
+        hospital_uid_from = kwargs.get('hospitalUidFrom', '')
 
         if not doctor_info:
             shutdown_session()

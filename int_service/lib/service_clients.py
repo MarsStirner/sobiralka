@@ -605,6 +605,32 @@ class ClientKorus20(AbstractClient):
             raise exceptions.ValueError
         return None
 
+    def get_closest_free_ticket(self, doctor_id, start=None):
+        """Получение ближайшего свободного талончика
+
+        Args:
+            doctor_id: идентификатор врача в БД ЛПУ, для которого получаем талончик
+            start: дата и время, начиная с которого осуществляется поиск талончика
+
+        """
+        if doctor_id:
+            if start is None:
+                start = datetime.datetime.now()
+            try:
+                ticket = self.client.service.getFirstFreeTicket(
+                    personId=doctor_id,
+                    start=start,
+                    hospitalUidFrom='')
+            except WebFault, e:
+                print e
+            else:
+                result = dict(timeslotStart=ticket.begDateTime,
+                              timeslotEnd=ticket.endDateTime,
+                              office=ticket.office,
+                              doctor_id=ticket.personId)
+                return result
+        return None
+
 
 class ClientIntramed(AbstractClient):
     """Класс клиента для работы с Интрамед"""
@@ -1590,6 +1616,33 @@ class ClientKorus30(AbstractClient):
                 return dict(success=result.success, comment=message)
         else:
             raise exceptions.ValueError
+
+    def get_closest_free_ticket(self, doctor_id, start=None):
+        """Получение ближайшего свободного талончика
+
+        Args:
+            doctor_id: идентификатор врача в БД ЛПУ, для которого получаем талончик
+            start: дата и время, начиная с которого осуществляется поиск талончика
+
+        """
+        if doctor_id:
+            if start is None:
+                start = datetime.datetime.now()
+            try:
+                ticket = self.client.getFirstFreeTicket(
+                    personId=doctor_id,
+                    dateTime=int(calendar.timegm(start.timetuple()) * 1000),
+                    hospitalUidFrom='')
+            except NotFoundException, e:
+                print e.error_msg
+                return None
+            else:
+                result = dict(timeslotStart=datetime.datetime.utcfromtimestamp(ticket.begDateTime / 1000),
+                              timeslotEnd=datetime.datetime.utcfromtimestamp(ticket.endDateTime / 1000),
+                              office=ticket.office,
+                              doctor_id=ticket.personId)
+                return result
+        return None
 
 
 class ClientEPGU():

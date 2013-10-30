@@ -134,6 +134,11 @@ class ScheduleServer(ServiceBase):
     def listNewEnqueue(self):
         pass
 
+    @srpc(soap_models.GetClosestTicketsRequest, _returns=soap_models.GetClosestTicketsResponse)
+    def getClosestTickets(parameters):
+        obj = DataWorker.provider('enqueue')
+        return obj.get_closest_tickets(parameters.hospitalUid, parameters.doctors, parameters.start)
+
 
 class EPGUGateServer(ServiceBase):
     @srpc(soap_models.RequestType, _body_style='bare',

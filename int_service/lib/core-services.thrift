@@ -145,6 +145,54 @@ struct Contact{
 4:optional string note;
 }
 
+/**
+ * CouponStatus
+ * Перечисление статусов талончика на прием к врачу
+ */
+enum CouponStatus{
+// новый талончик
+NEW = 1;
+// отмена старого талончика
+CANCELLED = 2;
+}
+
+
+/**
+ * QueueCoupon
+ * Структура с данными для поллинга новых записей к врачу (чтобы учесть сделанные не через КС)
+ * @param uuid                  1)Уникальный идентификатор талончика (отмененные талончики будут иметь тот-же идентификатор)
+ * @param status                2)Статус талончика (Новый\Отменен)
+ * @param personId              3)Ид врача
+ * @param patient               4)Структура с данными пациента - владельца талончика
+ * @param begDateTime           5)Дата+время начала талончика
+ * @param endDateTime           5)Дата+время окончания талончика
+ * @param office                6)Офис в котором будет принимать врач
+ */
+struct QueueCoupon{
+1:required string uuid;
+2:required CouponStatus status;
+3:required i32 personId;
+4:required Patient patient;
+5:required timestamp begDateTime;
+6:required timestamp endDateTime;
+7:optional string office;
+}
+
+
+/**
+ * FreeTicket
+ * Структура с данными о свободном талончике
+ * @param begDateTime           1)ДатаВремя начала талончика
+ * @param endDateTime           2)ДатаВремя конца талончика
+ * @param office                3)офис врача в котором будет проходить прием
+ * @param personId              4)идентификатор врача
+ */
+struct FreeTicket{
+1:required timestamp begDateTime;
+2:required timestamp endDateTime;
+3:optional string office;
+4:required i32 personId;
+}
 //Type definitions for input params
 
 /**
@@ -209,9 +257,9 @@ struct AddPatientParameters{
 4:optional timestamp birthDate;
 5:optional i32 sex;
 //Version 2
-6:required string documentSerial;
-7:required string documentNumber;
-8:required string documentTypeCode;
+6:optional string documentSerial;
+7:optional string documentNumber;
+8:optional string documentTypeCode;
 9:optional string policySerial;
 10:optional string policyNumber;
 11:optional string policyTypeCode;
@@ -392,6 +440,41 @@ PatientStatus findPatientByPolicyAndDocument(1:FindPatientByPolicyAndDocumentPar
  */
 bool changePatientPolicy(1:ChangePolicyParameters params)
     throws (1:PolicyTypeNotFoundException ptnfExc, 2:NotFoundException nfExc);
+
+/**
+ * Запрос на список талончиков, которые появились с момента последнего запроса
+ *(для поиска записей на прием к врачу созданных не через КС)
+ * @return Список новых талончиков или пустой список, если таких талончиков не найдено то пустой список
+ */
+list<QueueCoupon> checkForNewQueueCoupons();
+
+/**
+ * Метод для получения первого свободного талончика врача
+ * @param personId                  1)Идетификатор врача
+ * @param dateTime                  2)Время с которого начинается поиск свободных талончиков
+ * @param hospitalUidFrom           3)Идентификатор ЛПУ из которого производится запись
+ * @return Структура с данными первого доступного для записи талончика
+ * @throws NotFoundException        когда у выьранного врача с этой даты нету свободных талончиков
+ */
+FreeTicket getFirstFreeTicket(1:i32 personId, 2:timestamp dateTime, 3:string hospitalUidFrom)
+    throws (1:NotFoundException nfExc);
+
+/**
+ * Метод для получения расписания врача пачкой
+ * @param personId                  1)Идетификатор врача
+ * @param begDate                   2)Дата начала периода за который получаем расписание
+ * @param endDate                   3)Дата окончания периода за который получаем расписание
+ * @param hospitalUidFrom           4)Идентификатор ЛПУ из которого производится запись
+ * @return map<timestamp, Amb> - карта вида <[Дата приема], [Расписание на эту дату]>,
+ * в случае отсутствия расписания на указанную дату набор ключ-значение опускается
+ * @throws NotFoundException        когда нету такого идентификатора врача
+ */
+map<timestamp, Amb> getPersonSchedule(
+                                    1:i32 personId,
+                                    2:timestamp begDate,
+                                    3:timestamp endDate,
+                                    4:string hospitalUidFrom
+    ) throws (1:NotFoundException nfExc);
 
 map<i32,PatientInfo> getPatientInfo(1:list<i32> patientIds)
 throws (1:NotFoundException exc, 2:SQLException excsql);
