@@ -1602,7 +1602,7 @@ class ClientKorus30(AbstractClient):
     def dequeue(self, server_id, patient_id, ticket_id):
         if server_id and patient_id and ticket_id:
             try:
-                result = self.client.dequeuePatient(patientId=patient_id, queueId=ticket_id)
+                result = self.client.dequeuePatient(patientId=int(patient_id), queueId=int(ticket_id))
             except NotFoundException, e:
                 print e.error_msg
                 return {'success': False, 'comment': e.error_msg, }
