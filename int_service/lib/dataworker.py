@@ -107,6 +107,7 @@ class LPUWorker(object):
         for i in hospitalUid:
             tmp_list = i.split('/')
             if len(tmp_list) > 1 and int(tmp_list[1]):
+                lpu.append(int(tmp_list[0]))
                 lpu_units.append([int(tmp_list[0]), int(tmp_list[1])])
             else:
                 lpu.append(int(tmp_list[0]))
