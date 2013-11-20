@@ -999,11 +999,12 @@ class PersonalWorker(object):
         speciality = kwargs.get('speciality')
         lastName = kwargs.get('lastName')
         or_list = []
-        if lpu or lpu_units:
-            for item in lpu:
-                or_list.append(and_(Personal.lpuId == item.id,))
+        if lpu_units:
             for item in lpu_units:
                 or_list.append(and_(Personal.lpuId == item.lpuId, Personal.orgId == item.orgId))
+        elif lpu:
+            for item in lpu:
+                or_list.append(and_(Personal.lpuId == item.id,))
 #         else:
                 #TODO: по-хорошему бы расскоментить, чтоб при пустых параметрах была пустота, но сначала нужно изменить код НТК
 # #            raise exceptions.AttributeError
