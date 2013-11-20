@@ -1025,7 +1025,7 @@ class PersonalWorker(object):
         query = query.outerjoin(LPU_Units, Personal.orgId == LPU_Units.orgId).filter(Personal.lpuId == LPU_Units.lpuId)
 
         if speciality:
-            query = query.filter(Speciality.name == speciality)
+            query = query.filter(or_(Speciality.name == speciality, Speciality.name.like(u'%{0}%'.format(speciality))))
         if lastName:
             query = query.filter(Personal.LastName == lastName)
 
