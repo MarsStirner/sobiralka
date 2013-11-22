@@ -1631,10 +1631,12 @@ class ClientKorus30(AbstractClient):
                 start = datetime.datetime.now()
             try:
                 # CORE v2.5.2
+        # quotingType=QuotingType.FROM_PORTAL - т.к. этот метод никто, кроме портала не использует, то можно передавать
                 parameters = ScheduleParameters(personId=doctor_id,
                                                 beginDateTime=int(calendar.timegm(start.timetuple()) * 1000),
                                                 hospitalUidFrom='',
                                                 quotingType=QuotingType.FROM_PORTAL)
+
                 ticket = self.client.getFirstFreeTicket(parameters)
             except NotFoundException, e:
                 print e.error_msg
