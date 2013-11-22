@@ -21,6 +21,11 @@ except:
 class Iface(object):
   def getOrganisationInfo(self, infisCode):
     """
+    получение информации об организации(ЛПУ) по ее инфис-коду
+    @param infisCode                     1)Инфис-код организации
+    @return                              Структуа с информацией об организации
+    @throws NotFoundException             когда в БД ЛПУ нету организации с таким инфис-кодом
+
     Parameters:
      - infisCode
     """
@@ -28,6 +33,14 @@ class Iface(object):
 
   def getOrgStructures(self, parent_id, recursive, infisCode):
     """
+    Получение списка подразделений, входящих в заданное подразделение
+    @param parent_id                     1) идентификатор подразделения, для которого нужно найти дочернии подразделения
+    @param recursive                     2) Флаг рекурсии (выбрать также подразделения, входяшие во все дочерние подразделения)
+    @param infisCode                     3) Инфис-код
+    @return                              Список структур, содержащих информацию о дочерних подразделениях
+    @throws NotFoundException             когда не было найдено ни одного подразделения, удовлетворяющего заданным параметрам
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - parent_id
      - recursive
@@ -37,6 +50,14 @@ class Iface(object):
 
   def getAddresses(self, orgStructureId, recursive, infisCode):
     """
+    Получение адресов запрошенного подразделения
+    @param orgStructureId                1) идетификатор подразделения, для которого требуется найти адреса
+    @param recursive                     2) Флаг рекурсии (выбрать также подразделения, входяшие во все дочерние подразделения)
+    @param infisCode                     3) Инфис-код
+    @return                              Список структур, содержащих информацию об адресах запрошенных подразделений
+    @throws NotFoundException             когда не было найдено ни одного адреса подразделения, удовлетворяющего заданным параметрам
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - orgStructureId
      - recursive
@@ -46,6 +67,12 @@ class Iface(object):
 
   def findOrgStructureByAddress(self, params):
     """
+    Получение списка идентификаторов подразделений, расположенных по указанному адресу
+    @param params                        1) Структура с параметрами поиска подразделений по адресу
+    @return                              Список идентификаторов подразделений, приписанных к запрошенному адресу
+    @throws NotFoundException             когда не было найдено ни одного подразделения, удовлетворяющего заданным параметрам
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - params
     """
@@ -53,6 +80,14 @@ class Iface(object):
 
   def getPersonnel(self, orgStructureId, recursive, infisCode):
     """
+    Получение списка персонала, работающего в запрошенном подразделении
+    @param orgStructureId                1) идентификатор подразделения
+    @param recursive                     2) флаг рекусрии
+    @param infisCode                     3) инфис-код
+    @return                              Список идентификаторов подразделений, приписанных к запрошенному адресу
+    @throws NotFoundException             когда не было найдено ни одного работника, удовлетворяющего заданным параметрам
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - orgStructureId
      - recursive
@@ -62,6 +97,8 @@ class Iface(object):
 
   def getTotalTicketsAvailability(self, params):
     """
+    НЕ РЕАЛИЗОВАНО
+
     Parameters:
      - params
     """
@@ -69,6 +106,8 @@ class Iface(object):
 
   def getTicketsAvailability(self, params):
     """
+    НЕ РЕАЛИЗОВАНО
+
     Parameters:
      - params
     """
@@ -76,6 +115,12 @@ class Iface(object):
 
   def getWorkTimeAndStatus(self, params):
     """
+    Получение расписания врача
+    @param params                        1) Структура с параметрами для получения расписания врача
+    @return                              Структура с расписанием врача (на запрошенный день)
+    @throws NotFoundException             когда не было найдено расписания на запрошенную дату
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - params
     """
@@ -83,6 +128,11 @@ class Iface(object):
 
   def addPatient(self, params):
     """
+    добавление нового пациента в БД ЛПУ
+    @param params                        1) Структура с данными для нового пациента
+    @return                              Структура со сведениями о статусе добавления пациента
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - params
     """
@@ -90,6 +140,12 @@ class Iface(object):
 
   def findPatient(self, params):
     """
+    Поиск пациента в БД ЛПУ по заданным параметрам
+    @param params                        1) Структура с данными для поиска единственного пациента
+    @return                              Структура с данными о результатах посика пациента
+    @throws NotFoundException             //TODO
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - params
     """
@@ -97,6 +153,12 @@ class Iface(object):
 
   def findPatients(self, params):
     """
+    Поиск пациентов в БД ЛПУ по заданным параметрам
+    @param params                        1) Структура с данными для поиска нескольких пациентов
+    @return                              Список структур с данными для найденных пациентов
+    @throws NotFoundException             //TODO
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - params
     """
@@ -105,13 +167,13 @@ class Iface(object):
   def findPatientByPolicyAndDocument(self, params):
     """
     Поиск пациента по данным из ТФОМС
-    @param params Параметры поиска
-    @return Статус нахождения пациента
-    @throws NotFoundException когда не найдено ни одного пациента по заданным параметрам
-    @throws InvalidPersonalInfo когда по полису или документу найдены пациент(ы) в БД ЛПУ, но (ФИО/пол/др) отличаются от переданных
-    @throws InvalidDocumentException когда не найдено совпадений по полису и документу, но пациент с таким (ФИО/пол/др) уже есть в БД ЛПУ
-    @throws AnotherPolicyException когда пациент найден и документы совпали, но его полис отличается от запрошенного
-    @throws NotUniqueException когда по запрошенным параметрам невозможно выделить единственного пациента
+    @param params                        1) Параметры поиска
+    @return                              Статус нахождения пациента
+    @throws NotFoundException            когда не найдено ни одного пациента по заданным параметрам
+    @throws InvalidPersonalInfo          когда по полису или документу найдены пациент(ы) в БД ЛПУ, но (ФИО/пол/др) отличаются от переданных
+    @throws InvalidDocumentException     когда не найдено совпадений по полису и документу, но пациент с таким (ФИО/пол/др) уже есть в БД ЛПУ
+    @throws AnotherPolicyException       когда пациент найден и документы совпали, но его полис отличается от запрошенного
+    @throws NotUniqueException           когда по запрошенным параметрам невозможно выделить единственного пациента
 
     Parameters:
      - params
@@ -121,10 +183,10 @@ class Iface(object):
   def changePatientPolicy(self, params):
     """
     Добавление/ изменение полиса клиента
-    @param params                    1) Параметры для добавления полиса (struct ChangePolicyParameters)
-    @return успешность замены/добавления полиса
-    @throws PolicyTypeNotFoundException когда нету типа полиса с переданным кодом
-    @throws NotFoundException когда нету пациента с переданным идентификатором
+    @param params                        1) Параметры для добавления полиса (struct ChangePolicyParameters)
+    @return                              успешность замены/добавления полиса
+    @throws PolicyTypeNotFoundException  когда нету типа полиса с переданным кодом
+    @throws NotFoundException            когда нету пациента с переданным идентификатором
 
     Parameters:
      - params
@@ -135,47 +197,44 @@ class Iface(object):
     """
      Запрос на список талончиков, которые появились с момента последнего запроса
     (для поиска записей на прием к врачу созданных не через КС)
-     @return Список новых талончиков или пустой список, если таких талончиков не найдено то пустой список
+     @return                              Список новых талончиков или пустой список, если таких талончиков не найдено то пустой список
     """
     pass
 
-  def getFirstFreeTicket(self, personId, dateTime, hospitalUidFrom):
+  def getFirstFreeTicket(self, params):
     """
     Метод для получения первого свободного талончика врача
-    @param personId                  1)Идетификатор врача
-    @param dateTime                  2)Время с которого начинается поиск свободных талончиков
-    @param hospitalUidFrom           3)Идентификатор ЛПУ из которого производится запись
-    @return Структура с данными первого доступного для записи талончика
-    @throws NotFoundException        когда у выьранного врача с этой даты нету свободных талончиков
+    @param params                        1) Параметры для поиска первого свободого талончика
+    @return                              Структура с данными первого доступного для записи талончика
+    @throws NotFoundException            когда у выьранного врача с этой даты нету свободных талончиков
 
     Parameters:
-     - personId
-     - dateTime
-     - hospitalUidFrom
+     - params
     """
     pass
 
-  def getPersonSchedule(self, personId, begDate, endDate, hospitalUidFrom):
+  def getPersonSchedule(self, params):
     """
-    Метод для получения расписания врача пачкой
-    @param personId                  1)Идетификатор врача
-    @param begDate                   2)Дата начала периода за который получаем расписание
-    @param endDate                   3)Дата окончания периода за который получаем расписание
-    @param hospitalUidFrom           4)Идентификатор ЛПУ из которого производится запись
-    @return map<timestamp, Amb> - карта вида <[Дата приема], [Расписание на эту дату]>,
-    в случае отсутствия расписания на указанную дату набор ключ-значение опускается
-    @throws NotFoundException        когда нету такого идентификатора врача
+    Метод для получения расписания врача пачкой за указанный интервал
+    @param params                        1) Параметры для получения расписания
+    @return                              map<timestamp, Schedule> - карта вида <[Дата приема], [Расписание на эту дату]>,
+                                         в случае отсутствия расписания на указанную дату набор ключ-значение опускается
+    @throws NotFoundException            когда нету такого идентификатора врача
 
     Parameters:
-     - personId
-     - begDate
-     - endDate
-     - hospitalUidFrom
+     - params
     """
     pass
 
   def getPatientInfo(self, patientIds):
     """
+    * Получение детальной информации по пациентам по их идентфикаторам
+    * @param patientIds                    1) Список идентификаторов пациентов
+    * @return                              map<int, PatientInfo> - карта вида <[Идетификатор пациента], [Информация о пациенте]>,
+                                           в случае отсутвия идентификатора в БД ЛПУ набор ключ-значение опускается
+    * @throws NotFoundException            //TODO
+    * @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - patientIds
     """
@@ -183,6 +242,12 @@ class Iface(object):
 
   def getPatientContacts(self, patientId):
     """
+    Получение контактной информации для заданного пациента
+    @param patientIds                    1) идентификатор пациентов
+    @return                              Список структур с контактной информацией
+    @throws NotFoundException            //TODO
+    @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - patientId
     """
@@ -190,6 +255,8 @@ class Iface(object):
 
   def getPatientOrgStructures(self, parentId):
     """
+    НЕ РЕАЛИЗОВАНО
+
     Parameters:
      - parentId
     """
@@ -197,20 +264,39 @@ class Iface(object):
 
   def enqueuePatient(self, params):
     """
+    Запись пациента на прием к врачу
+    @param params                        1) Структура с параметрами для  записи на прием к врачу
+    @return                              Структура с данными о статусе записи пациента на прием к врачу
+    @throws NotFoundException            //TODO
+    @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - params
     """
     pass
 
-  def getPatientQueue(self, parentId):
+  def getPatientQueue(self, patientId):
     """
+    Получение списка записей на приемы к врачам заданного пациента
+    @param patientId                     1) Идентификатор пациента
+    @return                              Список структура с данными о записях пациента на приемы к врачам
+    @throws NotFoundException            //TODO
+    @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
-     - parentId
+     - patientId
     """
     pass
 
   def dequeuePatient(self, patientId, queueId):
     """
+    Отмена записи пациента на прием к врачу
+    @param patientId                     1) Идентификатор пациента
+    @param queueId                       2) Идентификатор записи, которую необходимо отменить
+    @return                              Структура с данными о статусе отмены записи пациента на прием к врачу
+    @throws NotFoundException            //TODO
+    @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - patientId
      - queueId
@@ -219,6 +305,11 @@ class Iface(object):
 
   def getSpecialities(self, hospitalUidFrom):
     """
+    Получение списка  с информацией о специализациях и доступных талончиках
+    @param hospitalUidFrom               1) Инфис-код ЛПУ
+    @return                              Список структур с данными о специализациях врачей
+    @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - hospitalUidFrom
     """
@@ -234,6 +325,11 @@ class Client(Iface):
 
   def getOrganisationInfo(self, infisCode):
     """
+    получение информации об организации(ЛПУ) по ее инфис-коду
+    @param infisCode                     1)Инфис-код организации
+    @return                              Структуа с информацией об организации
+    @throws NotFoundException             когда в БД ЛПУ нету организации с таким инфис-кодом
+
     Parameters:
      - infisCode
     """
@@ -266,6 +362,14 @@ class Client(Iface):
 
   def getOrgStructures(self, parent_id, recursive, infisCode):
     """
+    Получение списка подразделений, входящих в заданное подразделение
+    @param parent_id                     1) идентификатор подразделения, для которого нужно найти дочернии подразделения
+    @param recursive                     2) Флаг рекурсии (выбрать также подразделения, входяшие во все дочерние подразделения)
+    @param infisCode                     3) Инфис-код
+    @return                              Список структур, содержащих информацию о дочерних подразделениях
+    @throws NotFoundException             когда не было найдено ни одного подразделения, удовлетворяющего заданным параметрам
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - parent_id
      - recursive
@@ -304,6 +408,14 @@ class Client(Iface):
 
   def getAddresses(self, orgStructureId, recursive, infisCode):
     """
+    Получение адресов запрошенного подразделения
+    @param orgStructureId                1) идетификатор подразделения, для которого требуется найти адреса
+    @param recursive                     2) Флаг рекурсии (выбрать также подразделения, входяшие во все дочерние подразделения)
+    @param infisCode                     3) Инфис-код
+    @return                              Список структур, содержащих информацию об адресах запрошенных подразделений
+    @throws NotFoundException             когда не было найдено ни одного адреса подразделения, удовлетворяющего заданным параметрам
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - orgStructureId
      - recursive
@@ -342,6 +454,12 @@ class Client(Iface):
 
   def findOrgStructureByAddress(self, params):
     """
+    Получение списка идентификаторов подразделений, расположенных по указанному адресу
+    @param params                        1) Структура с параметрами поиска подразделений по адресу
+    @return                              Список идентификаторов подразделений, приписанных к запрошенному адресу
+    @throws NotFoundException             когда не было найдено ни одного подразделения, удовлетворяющего заданным параметрам
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - params
     """
@@ -376,6 +494,14 @@ class Client(Iface):
 
   def getPersonnel(self, orgStructureId, recursive, infisCode):
     """
+    Получение списка персонала, работающего в запрошенном подразделении
+    @param orgStructureId                1) идентификатор подразделения
+    @param recursive                     2) флаг рекусрии
+    @param infisCode                     3) инфис-код
+    @return                              Список идентификаторов подразделений, приписанных к запрошенному адресу
+    @throws NotFoundException             когда не было найдено ни одного работника, удовлетворяющего заданным параметрам
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - orgStructureId
      - recursive
@@ -414,6 +540,8 @@ class Client(Iface):
 
   def getTotalTicketsAvailability(self, params):
     """
+    НЕ РЕАЛИЗОВАНО
+
     Parameters:
      - params
     """
@@ -448,6 +576,8 @@ class Client(Iface):
 
   def getTicketsAvailability(self, params):
     """
+    НЕ РЕАЛИЗОВАНО
+
     Parameters:
      - params
     """
@@ -482,6 +612,12 @@ class Client(Iface):
 
   def getWorkTimeAndStatus(self, params):
     """
+    Получение расписания врача
+    @param params                        1) Структура с параметрами для получения расписания врача
+    @return                              Структура с расписанием врача (на запрошенный день)
+    @throws NotFoundException             когда не было найдено расписания на запрошенную дату
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - params
     """
@@ -516,6 +652,11 @@ class Client(Iface):
 
   def addPatient(self, params):
     """
+    добавление нового пациента в БД ЛПУ
+    @param params                        1) Структура с данными для нового пациента
+    @return                              Структура со сведениями о статусе добавления пациента
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - params
     """
@@ -548,6 +689,12 @@ class Client(Iface):
 
   def findPatient(self, params):
     """
+    Поиск пациента в БД ЛПУ по заданным параметрам
+    @param params                        1) Структура с данными для поиска единственного пациента
+    @return                              Структура с данными о результатах посика пациента
+    @throws NotFoundException             //TODO
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - params
     """
@@ -582,6 +729,12 @@ class Client(Iface):
 
   def findPatients(self, params):
     """
+    Поиск пациентов в БД ЛПУ по заданным параметрам
+    @param params                        1) Структура с данными для поиска нескольких пациентов
+    @return                              Список структур с данными для найденных пациентов
+    @throws NotFoundException             //TODO
+    @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - params
     """
@@ -617,13 +770,13 @@ class Client(Iface):
   def findPatientByPolicyAndDocument(self, params):
     """
     Поиск пациента по данным из ТФОМС
-    @param params Параметры поиска
-    @return Статус нахождения пациента
-    @throws NotFoundException когда не найдено ни одного пациента по заданным параметрам
-    @throws InvalidPersonalInfo когда по полису или документу найдены пациент(ы) в БД ЛПУ, но (ФИО/пол/др) отличаются от переданных
-    @throws InvalidDocumentException когда не найдено совпадений по полису и документу, но пациент с таким (ФИО/пол/др) уже есть в БД ЛПУ
-    @throws AnotherPolicyException когда пациент найден и документы совпали, но его полис отличается от запрошенного
-    @throws NotUniqueException когда по запрошенным параметрам невозможно выделить единственного пациента
+    @param params                        1) Параметры поиска
+    @return                              Статус нахождения пациента
+    @throws NotFoundException            когда не найдено ни одного пациента по заданным параметрам
+    @throws InvalidPersonalInfo          когда по полису или документу найдены пациент(ы) в БД ЛПУ, но (ФИО/пол/др) отличаются от переданных
+    @throws InvalidDocumentException     когда не найдено совпадений по полису и документу, но пациент с таким (ФИО/пол/др) уже есть в БД ЛПУ
+    @throws AnotherPolicyException       когда пациент найден и документы совпали, но его полис отличается от запрошенного
+    @throws NotUniqueException           когда по запрошенным параметрам невозможно выделить единственного пациента
 
     Parameters:
      - params
@@ -666,10 +819,10 @@ class Client(Iface):
   def changePatientPolicy(self, params):
     """
     Добавление/ изменение полиса клиента
-    @param params                    1) Параметры для добавления полиса (struct ChangePolicyParameters)
-    @return успешность замены/добавления полиса
-    @throws PolicyTypeNotFoundException когда нету типа полиса с переданным кодом
-    @throws NotFoundException когда нету пациента с переданным идентификатором
+    @param params                        1) Параметры для добавления полиса (struct ChangePolicyParameters)
+    @return                              успешность замены/добавления полиса
+    @throws PolicyTypeNotFoundException  когда нету типа полиса с переданным кодом
+    @throws NotFoundException            когда нету пациента с переданным идентификатором
 
     Parameters:
      - params
@@ -707,7 +860,7 @@ class Client(Iface):
     """
      Запрос на список талончиков, которые появились с момента последнего запроса
     (для поиска записей на прием к врачу созданных не через КС)
-     @return Список новых талончиков или пустой список, если таких талончиков не найдено то пустой список
+     @return                              Список новых талончиков или пустой список, если таких талончиков не найдено то пустой список
     """
     self.send_checkForNewQueueCoupons()
     return self.recv_checkForNewQueueCoupons()
@@ -733,29 +886,23 @@ class Client(Iface):
       return result.success
     raise TApplicationException(TApplicationException.MISSING_RESULT, "checkForNewQueueCoupons failed: unknown result");
 
-  def getFirstFreeTicket(self, personId, dateTime, hospitalUidFrom):
+  def getFirstFreeTicket(self, params):
     """
     Метод для получения первого свободного талончика врача
-    @param personId                  1)Идетификатор врача
-    @param dateTime                  2)Время с которого начинается поиск свободных талончиков
-    @param hospitalUidFrom           3)Идентификатор ЛПУ из которого производится запись
-    @return Структура с данными первого доступного для записи талончика
-    @throws NotFoundException        когда у выьранного врача с этой даты нету свободных талончиков
+    @param params                        1) Параметры для поиска первого свободого талончика
+    @return                              Структура с данными первого доступного для записи талончика
+    @throws NotFoundException            когда у выьранного врача с этой даты нету свободных талончиков
 
     Parameters:
-     - personId
-     - dateTime
-     - hospitalUidFrom
+     - params
     """
-    self.send_getFirstFreeTicket(personId, dateTime, hospitalUidFrom)
+    self.send_getFirstFreeTicket(params)
     return self.recv_getFirstFreeTicket()
 
-  def send_getFirstFreeTicket(self, personId, dateTime, hospitalUidFrom):
+  def send_getFirstFreeTicket(self, params):
     self._oprot.writeMessageBegin('getFirstFreeTicket', TMessageType.CALL, self._seqid)
     args = getFirstFreeTicket_args()
-    args.personId = personId
-    args.dateTime = dateTime
-    args.hospitalUidFrom = hospitalUidFrom
+    args.params = params
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
@@ -776,33 +923,24 @@ class Client(Iface):
       raise result.nfExc
     raise TApplicationException(TApplicationException.MISSING_RESULT, "getFirstFreeTicket failed: unknown result");
 
-  def getPersonSchedule(self, personId, begDate, endDate, hospitalUidFrom):
+  def getPersonSchedule(self, params):
     """
-    Метод для получения расписания врача пачкой
-    @param personId                  1)Идетификатор врача
-    @param begDate                   2)Дата начала периода за который получаем расписание
-    @param endDate                   3)Дата окончания периода за который получаем расписание
-    @param hospitalUidFrom           4)Идентификатор ЛПУ из которого производится запись
-    @return map<timestamp, Amb> - карта вида <[Дата приема], [Расписание на эту дату]>,
-    в случае отсутствия расписания на указанную дату набор ключ-значение опускается
-    @throws NotFoundException        когда нету такого идентификатора врача
+    Метод для получения расписания врача пачкой за указанный интервал
+    @param params                        1) Параметры для получения расписания
+    @return                              map<timestamp, Schedule> - карта вида <[Дата приема], [Расписание на эту дату]>,
+                                         в случае отсутствия расписания на указанную дату набор ключ-значение опускается
+    @throws NotFoundException            когда нету такого идентификатора врача
 
     Parameters:
-     - personId
-     - begDate
-     - endDate
-     - hospitalUidFrom
+     - params
     """
-    self.send_getPersonSchedule(personId, begDate, endDate, hospitalUidFrom)
+    self.send_getPersonSchedule(params)
     return self.recv_getPersonSchedule()
 
-  def send_getPersonSchedule(self, personId, begDate, endDate, hospitalUidFrom):
+  def send_getPersonSchedule(self, params):
     self._oprot.writeMessageBegin('getPersonSchedule', TMessageType.CALL, self._seqid)
     args = getPersonSchedule_args()
-    args.personId = personId
-    args.begDate = begDate
-    args.endDate = endDate
-    args.hospitalUidFrom = hospitalUidFrom
+    args.params = params
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
@@ -825,6 +963,13 @@ class Client(Iface):
 
   def getPatientInfo(self, patientIds):
     """
+    * Получение детальной информации по пациентам по их идентфикаторам
+    * @param patientIds                    1) Список идентификаторов пациентов
+    * @return                              map<int, PatientInfo> - карта вида <[Идетификатор пациента], [Информация о пациенте]>,
+                                           в случае отсутвия идентификатора в БД ЛПУ набор ключ-значение опускается
+    * @throws NotFoundException            //TODO
+    * @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - patientIds
     """
@@ -859,6 +1004,12 @@ class Client(Iface):
 
   def getPatientContacts(self, patientId):
     """
+    Получение контактной информации для заданного пациента
+    @param patientIds                    1) идентификатор пациентов
+    @return                              Список структур с контактной информацией
+    @throws NotFoundException            //TODO
+    @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - patientId
     """
@@ -891,6 +1042,8 @@ class Client(Iface):
 
   def getPatientOrgStructures(self, parentId):
     """
+    НЕ РЕАЛИЗОВАНО
+
     Parameters:
      - parentId
     """
@@ -923,6 +1076,12 @@ class Client(Iface):
 
   def enqueuePatient(self, params):
     """
+    Запись пациента на прием к врачу
+    @param params                        1) Структура с параметрами для  записи на прием к врачу
+    @return                              Структура с данными о статусе записи пациента на прием к врачу
+    @throws NotFoundException            //TODO
+    @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - params
     """
@@ -955,18 +1114,24 @@ class Client(Iface):
       raise result.excsql
     raise TApplicationException(TApplicationException.MISSING_RESULT, "enqueuePatient failed: unknown result");
 
-  def getPatientQueue(self, parentId):
+  def getPatientQueue(self, patientId):
     """
+    Получение списка записей на приемы к врачам заданного пациента
+    @param patientId                     1) Идентификатор пациента
+    @return                              Список структура с данными о записях пациента на приемы к врачам
+    @throws NotFoundException            //TODO
+    @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
-     - parentId
+     - patientId
     """
-    self.send_getPatientQueue(parentId)
+    self.send_getPatientQueue(patientId)
     return self.recv_getPatientQueue()
 
-  def send_getPatientQueue(self, parentId):
+  def send_getPatientQueue(self, patientId):
     self._oprot.writeMessageBegin('getPatientQueue', TMessageType.CALL, self._seqid)
     args = getPatientQueue_args()
-    args.parentId = parentId
+    args.patientId = patientId
     args.write(self._oprot)
     self._oprot.writeMessageEnd()
     self._oprot.trans.flush()
@@ -991,6 +1156,13 @@ class Client(Iface):
 
   def dequeuePatient(self, patientId, queueId):
     """
+    Отмена записи пациента на прием к врачу
+    @param patientId                     1) Идентификатор пациента
+    @param queueId                       2) Идентификатор записи, которую необходимо отменить
+    @return                              Структура с данными о статусе отмены записи пациента на прием к врачу
+    @throws NotFoundException            //TODO
+    @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - patientId
      - queueId
@@ -1027,6 +1199,11 @@ class Client(Iface):
 
   def getSpecialities(self, hospitalUidFrom):
     """
+    Получение списка  с информацией о специализациях и доступных талончиках
+    @param hospitalUidFrom               1) Инфис-код ЛПУ
+    @return                              Список структур с данными о специализациях врачей
+    @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+
     Parameters:
      - hospitalUidFrom
     """
@@ -1328,7 +1505,7 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = getFirstFreeTicket_result()
     try:
-      result.success = self._handler.getFirstFreeTicket(args.personId, args.dateTime, args.hospitalUidFrom)
+      result.success = self._handler.getFirstFreeTicket(args.params)
     except NotFoundException as nfExc:
       result.nfExc = nfExc
     oprot.writeMessageBegin("getFirstFreeTicket", TMessageType.REPLY, seqid)
@@ -1342,7 +1519,7 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = getPersonSchedule_result()
     try:
-      result.success = self._handler.getPersonSchedule(args.personId, args.begDate, args.endDate, args.hospitalUidFrom)
+      result.success = self._handler.getPersonSchedule(args.params)
     except NotFoundException as nfExc:
       result.nfExc = nfExc
     oprot.writeMessageBegin("getPersonSchedule", TMessageType.REPLY, seqid)
@@ -1416,7 +1593,7 @@ class Processor(Iface, TProcessor):
     iprot.readMessageEnd()
     result = getPatientQueue_result()
     try:
-      result.success = self._handler.getPatientQueue(args.parentId)
+      result.success = self._handler.getPatientQueue(args.patientId)
     except NotFoundException as exc:
       result.exc = exc
     except SQLException as excsql:
@@ -1707,11 +1884,11 @@ class getOrgStructures_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype28, _size25) = iprot.readListBegin()
-          for _i29 in xrange(_size25):
-            _elem30 = OrgStructure()
-            _elem30.read(iprot)
-            self.success.append(_elem30)
+          (_etype35, _size32) = iprot.readListBegin()
+          for _i36 in xrange(_size32):
+            _elem37 = OrgStructure()
+            _elem37.read(iprot)
+            self.success.append(_elem37)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1740,8 +1917,8 @@ class getOrgStructures_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter31 in self.success:
-        iter31.write(oprot)
+      for iter38 in self.success:
+        iter38.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -1885,11 +2062,11 @@ class getAddresses_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype35, _size32) = iprot.readListBegin()
-          for _i36 in xrange(_size32):
-            _elem37 = Address()
-            _elem37.read(iprot)
-            self.success.append(_elem37)
+          (_etype42, _size39) = iprot.readListBegin()
+          for _i43 in xrange(_size39):
+            _elem44 = Address()
+            _elem44.read(iprot)
+            self.success.append(_elem44)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1918,8 +2095,8 @@ class getAddresses_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter38 in self.success:
-        iter38.write(oprot)
+      for iter45 in self.success:
+        iter45.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.excsql is not None:
@@ -2040,10 +2217,10 @@ class findOrgStructureByAddress_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype42, _size39) = iprot.readListBegin()
-          for _i43 in xrange(_size39):
-            _elem44 = iprot.readI32();
-            self.success.append(_elem44)
+          (_etype49, _size46) = iprot.readListBegin()
+          for _i50 in xrange(_size46):
+            _elem51 = iprot.readI32();
+            self.success.append(_elem51)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -2072,8 +2249,8 @@ class findOrgStructureByAddress_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.I32, len(self.success))
-      for iter45 in self.success:
-        oprot.writeI32(iter45)
+      for iter52 in self.success:
+        oprot.writeI32(iter52)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -2217,11 +2394,11 @@ class getPersonnel_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype49, _size46) = iprot.readListBegin()
-          for _i50 in xrange(_size46):
-            _elem51 = Person()
-            _elem51.read(iprot)
-            self.success.append(_elem51)
+          (_etype56, _size53) = iprot.readListBegin()
+          for _i57 in xrange(_size53):
+            _elem58 = Person()
+            _elem58.read(iprot)
+            self.success.append(_elem58)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -2250,8 +2427,8 @@ class getPersonnel_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter52 in self.success:
-        iter52.write(oprot)
+      for iter59 in self.success:
+        iter59.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -2519,11 +2696,11 @@ class getTicketsAvailability_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype56, _size53) = iprot.readListBegin()
-          for _i57 in xrange(_size53):
-            _elem58 = ExtendedTicketsAvailability()
-            _elem58.read(iprot)
-            self.success.append(_elem58)
+          (_etype63, _size60) = iprot.readListBegin()
+          for _i64 in xrange(_size60):
+            _elem65 = ExtendedTicketsAvailability()
+            _elem65.read(iprot)
+            self.success.append(_elem65)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -2552,8 +2729,8 @@ class getTicketsAvailability_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter59 in self.success:
-        iter59.write(oprot)
+      for iter66 in self.success:
+        iter66.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -3102,11 +3279,11 @@ class findPatients_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype63, _size60) = iprot.readListBegin()
-          for _i64 in xrange(_size60):
-            _elem65 = Patient()
-            _elem65.read(iprot)
-            self.success.append(_elem65)
+          (_etype70, _size67) = iprot.readListBegin()
+          for _i71 in xrange(_size67):
+            _elem72 = Patient()
+            _elem72.read(iprot)
+            self.success.append(_elem72)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -3135,8 +3312,8 @@ class findPatients_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter66 in self.success:
-        iter66.write(oprot)
+      for iter73 in self.success:
+        iter73.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -3564,11 +3741,11 @@ class checkForNewQueueCoupons_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype70, _size67) = iprot.readListBegin()
-          for _i71 in xrange(_size67):
-            _elem72 = QueueCoupon()
-            _elem72.read(iprot)
-            self.success.append(_elem72)
+          (_etype77, _size74) = iprot.readListBegin()
+          for _i78 in xrange(_size74):
+            _elem79 = QueueCoupon()
+            _elem79.read(iprot)
+            self.success.append(_elem79)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -3585,8 +3762,8 @@ class checkForNewQueueCoupons_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter73 in self.success:
-        iter73.write(oprot)
+      for iter80 in self.success:
+        iter80.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -3610,22 +3787,16 @@ class checkForNewQueueCoupons_result(object):
 class getFirstFreeTicket_args(object):
   """
   Attributes:
-   - personId
-   - dateTime
-   - hospitalUidFrom
+   - params
   """
 
   thrift_spec = (
     None, # 0
-    (1, TType.I32, 'personId', None, None, ), # 1
-    (2, TType.I64, 'dateTime', None, None, ), # 2
-    (3, TType.STRING, 'hospitalUidFrom', None, None, ), # 3
+    (1, TType.STRUCT, 'params', (ScheduleParameters, ScheduleParameters.thrift_spec), None, ), # 1
   )
 
-  def __init__(self, personId=None, dateTime=None, hospitalUidFrom=None,):
-    self.personId = personId
-    self.dateTime = dateTime
-    self.hospitalUidFrom = hospitalUidFrom
+  def __init__(self, params=None,):
+    self.params = params
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -3637,18 +3808,9 @@ class getFirstFreeTicket_args(object):
       if ftype == TType.STOP:
         break
       if fid == 1:
-        if ftype == TType.I32:
-          self.personId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I64:
-          self.dateTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.hospitalUidFrom = iprot.readString().decode('utf-8')
+        if ftype == TType.STRUCT:
+          self.params = ScheduleParameters()
+          self.params.read(iprot)
         else:
           iprot.skip(ftype)
       else:
@@ -3661,17 +3823,9 @@ class getFirstFreeTicket_args(object):
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
     oprot.writeStructBegin('getFirstFreeTicket_args')
-    if self.personId is not None:
-      oprot.writeFieldBegin('personId', TType.I32, 1)
-      oprot.writeI32(self.personId)
-      oprot.writeFieldEnd()
-    if self.dateTime is not None:
-      oprot.writeFieldBegin('dateTime', TType.I64, 2)
-      oprot.writeI64(self.dateTime)
-      oprot.writeFieldEnd()
-    if self.hospitalUidFrom is not None:
-      oprot.writeFieldBegin('hospitalUidFrom', TType.STRING, 3)
-      oprot.writeString(self.hospitalUidFrom.encode('utf-8'))
+    if self.params is not None:
+      oprot.writeFieldBegin('params', TType.STRUCT, 1)
+      self.params.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -3699,7 +3853,7 @@ class getFirstFreeTicket_result(object):
   """
 
   thrift_spec = (
-    (0, TType.STRUCT, 'success', (FreeTicket, FreeTicket.thrift_spec), None, ), # 0
+    (0, TType.STRUCT, 'success', (TTicket, TTicket.thrift_spec), None, ), # 0
     (1, TType.STRUCT, 'nfExc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
   )
 
@@ -3718,7 +3872,7 @@ class getFirstFreeTicket_result(object):
         break
       if fid == 0:
         if ftype == TType.STRUCT:
-          self.success = FreeTicket()
+          self.success = TTicket()
           self.success.read(iprot)
         else:
           iprot.skip(ftype)
@@ -3767,25 +3921,16 @@ class getFirstFreeTicket_result(object):
 class getPersonSchedule_args(object):
   """
   Attributes:
-   - personId
-   - begDate
-   - endDate
-   - hospitalUidFrom
+   - params
   """
 
   thrift_spec = (
     None, # 0
-    (1, TType.I32, 'personId', None, None, ), # 1
-    (2, TType.I64, 'begDate', None, None, ), # 2
-    (3, TType.I64, 'endDate', None, None, ), # 3
-    (4, TType.STRING, 'hospitalUidFrom', None, None, ), # 4
+    (1, TType.STRUCT, 'params', (ScheduleParameters, ScheduleParameters.thrift_spec), None, ), # 1
   )
 
-  def __init__(self, personId=None, begDate=None, endDate=None, hospitalUidFrom=None,):
-    self.personId = personId
-    self.begDate = begDate
-    self.endDate = endDate
-    self.hospitalUidFrom = hospitalUidFrom
+  def __init__(self, params=None,):
+    self.params = params
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -3797,23 +3942,9 @@ class getPersonSchedule_args(object):
       if ftype == TType.STOP:
         break
       if fid == 1:
-        if ftype == TType.I32:
-          self.personId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I64:
-          self.begDate = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.I64:
-          self.endDate = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.hospitalUidFrom = iprot.readString().decode('utf-8')
+        if ftype == TType.STRUCT:
+          self.params = ScheduleParameters()
+          self.params.read(iprot)
         else:
           iprot.skip(ftype)
       else:
@@ -3826,21 +3957,9 @@ class getPersonSchedule_args(object):
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
     oprot.writeStructBegin('getPersonSchedule_args')
-    if self.personId is not None:
-      oprot.writeFieldBegin('personId', TType.I32, 1)
-      oprot.writeI32(self.personId)
-      oprot.writeFieldEnd()
-    if self.begDate is not None:
-      oprot.writeFieldBegin('begDate', TType.I64, 2)
-      oprot.writeI64(self.begDate)
-      oprot.writeFieldEnd()
-    if self.endDate is not None:
-      oprot.writeFieldBegin('endDate', TType.I64, 3)
-      oprot.writeI64(self.endDate)
-      oprot.writeFieldEnd()
-    if self.hospitalUidFrom is not None:
-      oprot.writeFieldBegin('hospitalUidFrom', TType.STRING, 4)
-      oprot.writeString(self.hospitalUidFrom.encode('utf-8'))
+    if self.params is not None:
+      oprot.writeFieldBegin('params', TType.STRUCT, 1)
+      self.params.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -3868,7 +3987,7 @@ class getPersonSchedule_result(object):
   """
 
   thrift_spec = (
-    (0, TType.MAP, 'success', (TType.I64,None,TType.STRUCT,(Amb, Amb.thrift_spec)), None, ), # 0
+    (0, TType.MAP, 'success', (TType.I64,None,TType.STRUCT,(Schedule, Schedule.thrift_spec)), None, ), # 0
     (1, TType.STRUCT, 'nfExc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
   )
 
@@ -3888,12 +4007,12 @@ class getPersonSchedule_result(object):
       if fid == 0:
         if ftype == TType.MAP:
           self.success = {}
-          (_ktype75, _vtype76, _size74 ) = iprot.readMapBegin() 
-          for _i78 in xrange(_size74):
-            _key79 = iprot.readI64();
-            _val80 = Amb()
-            _val80.read(iprot)
-            self.success[_key79] = _val80
+          (_ktype82, _vtype83, _size81 ) = iprot.readMapBegin() 
+          for _i85 in xrange(_size81):
+            _key86 = iprot.readI64();
+            _val87 = Schedule()
+            _val87.read(iprot)
+            self.success[_key86] = _val87
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -3916,9 +4035,9 @@ class getPersonSchedule_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.MAP, 0)
       oprot.writeMapBegin(TType.I64, TType.STRUCT, len(self.success))
-      for kiter81,viter82 in self.success.items():
-        oprot.writeI64(kiter81)
-        viter82.write(oprot)
+      for kiter88,viter89 in self.success.items():
+        oprot.writeI64(kiter88)
+        viter89.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.nfExc is not None:
@@ -3969,10 +4088,10 @@ class getPatientInfo_args(object):
       if fid == 1:
         if ftype == TType.LIST:
           self.patientIds = []
-          (_etype86, _size83) = iprot.readListBegin()
-          for _i87 in xrange(_size83):
-            _elem88 = iprot.readI32();
-            self.patientIds.append(_elem88)
+          (_etype93, _size90) = iprot.readListBegin()
+          for _i94 in xrange(_size90):
+            _elem95 = iprot.readI32();
+            self.patientIds.append(_elem95)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -3989,8 +4108,8 @@ class getPatientInfo_args(object):
     if self.patientIds is not None:
       oprot.writeFieldBegin('patientIds', TType.LIST, 1)
       oprot.writeListBegin(TType.I32, len(self.patientIds))
-      for iter89 in self.patientIds:
-        oprot.writeI32(iter89)
+      for iter96 in self.patientIds:
+        oprot.writeI32(iter96)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -4042,12 +4161,12 @@ class getPatientInfo_result(object):
       if fid == 0:
         if ftype == TType.MAP:
           self.success = {}
-          (_ktype91, _vtype92, _size90 ) = iprot.readMapBegin() 
-          for _i94 in xrange(_size90):
-            _key95 = iprot.readI32();
-            _val96 = PatientInfo()
-            _val96.read(iprot)
-            self.success[_key95] = _val96
+          (_ktype98, _vtype99, _size97 ) = iprot.readMapBegin() 
+          for _i101 in xrange(_size97):
+            _key102 = iprot.readI32();
+            _val103 = PatientInfo()
+            _val103.read(iprot)
+            self.success[_key102] = _val103
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -4076,9 +4195,9 @@ class getPatientInfo_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.MAP, 0)
       oprot.writeMapBegin(TType.I32, TType.STRUCT, len(self.success))
-      for kiter97,viter98 in self.success.items():
-        oprot.writeI32(kiter97)
-        viter98.write(oprot)
+      for kiter104,viter105 in self.success.items():
+        oprot.writeI32(kiter104)
+        viter105.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -4195,11 +4314,11 @@ class getPatientContacts_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype102, _size99) = iprot.readListBegin()
-          for _i103 in xrange(_size99):
-            _elem104 = Contact()
-            _elem104.read(iprot)
-            self.success.append(_elem104)
+          (_etype109, _size106) = iprot.readListBegin()
+          for _i110 in xrange(_size106):
+            _elem111 = Contact()
+            _elem111.read(iprot)
+            self.success.append(_elem111)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -4222,8 +4341,8 @@ class getPatientContacts_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter105 in self.success:
-        iter105.write(oprot)
+      for iter112 in self.success:
+        iter112.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -4336,11 +4455,11 @@ class getPatientOrgStructures_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype109, _size106) = iprot.readListBegin()
-          for _i110 in xrange(_size106):
-            _elem111 = OrgStructuresProperties()
-            _elem111.read(iprot)
-            self.success.append(_elem111)
+          (_etype116, _size113) = iprot.readListBegin()
+          for _i117 in xrange(_size113):
+            _elem118 = OrgStructuresProperties()
+            _elem118.read(iprot)
+            self.success.append(_elem118)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -4363,8 +4482,8 @@ class getPatientOrgStructures_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter112 in self.success:
-        iter112.write(oprot)
+      for iter119 in self.success:
+        iter119.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -4539,16 +4658,16 @@ class enqueuePatient_result(object):
 class getPatientQueue_args(object):
   """
   Attributes:
-   - parentId
+   - patientId
   """
 
   thrift_spec = (
     None, # 0
-    (1, TType.I32, 'parentId', None, None, ), # 1
+    (1, TType.I32, 'patientId', None, None, ), # 1
   )
 
-  def __init__(self, parentId=None,):
-    self.parentId = parentId
+  def __init__(self, patientId=None,):
+    self.patientId = patientId
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -4561,7 +4680,7 @@ class getPatientQueue_args(object):
         break
       if fid == 1:
         if ftype == TType.I32:
-          self.parentId = iprot.readI32();
+          self.patientId = iprot.readI32();
         else:
           iprot.skip(ftype)
       else:
@@ -4574,9 +4693,9 @@ class getPatientQueue_args(object):
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
     oprot.writeStructBegin('getPatientQueue_args')
-    if self.parentId is not None:
-      oprot.writeFieldBegin('parentId', TType.I32, 1)
-      oprot.writeI32(self.parentId)
+    if self.patientId is not None:
+      oprot.writeFieldBegin('patientId', TType.I32, 1)
+      oprot.writeI32(self.patientId)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -4627,11 +4746,11 @@ class getPatientQueue_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype116, _size113) = iprot.readListBegin()
-          for _i117 in xrange(_size113):
-            _elem118 = Queue()
-            _elem118.read(iprot)
-            self.success.append(_elem118)
+          (_etype123, _size120) = iprot.readListBegin()
+          for _i124 in xrange(_size120):
+            _elem125 = Queue()
+            _elem125.read(iprot)
+            self.success.append(_elem125)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -4660,8 +4779,8 @@ class getPatientQueue_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter119 in self.success:
-        iter119.write(oprot)
+      for iter126 in self.success:
+        iter126.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -4936,11 +5055,11 @@ class getSpecialities_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype123, _size120) = iprot.readListBegin()
-          for _i124 in xrange(_size120):
-            _elem125 = Speciality()
-            _elem125.read(iprot)
-            self.success.append(_elem125)
+          (_etype130, _size127) = iprot.readListBegin()
+          for _i131 in xrange(_size127):
+            _elem132 = Speciality()
+            _elem132.read(iprot)
+            self.success.append(_elem132)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -4963,8 +5082,8 @@ class getSpecialities_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter126 in self.success:
-        iter126.write(oprot)
+      for iter133 in self.success:
+        iter133.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:

@@ -4,6 +4,35 @@ namespace java ru.korus.tmis.communication.thriftgen
 typedef i64 timestamp
 typedef i16 short
 
+//Enums
+
+/**
+ * QuotingType
+ * Перечисление типов квотирования
+ */
+enum QuotingType{
+    // из регистратуры
+    FROM_REGISTRY = 1,
+    //повторная запись врачем
+    SECOND_VISIT = 2,
+    // меж-кабинетная запись
+    BETWEEN_CABINET = 3,
+    // другое ЛПУ
+    FROM_OTHER_LPU = 4,
+    //с портала
+    FROM_PORTAL = 5
+}
+
+/**
+ * CouponStatus
+ * Перечисление статусов талончика на прием к врачу
+ */
+enum CouponStatus{
+// новый талончик
+NEW = 1;
+// отмена старого талончика
+CANCELLED = 2;
+}
 
 //Type definitions for return structures
 
@@ -146,18 +175,6 @@ struct Contact{
 }
 
 /**
- * CouponStatus
- * Перечисление статусов талончика на прием к врачу
- */
-enum CouponStatus{
-// новый талончик
-NEW = 1;
-// отмена старого талончика
-CANCELLED = 2;
-}
-
-
-/**
  * QueueCoupon
  * Структура с данными для поллинга новых записей к врачу (чтобы учесть сделанные не через КС)
  * @param uuid                  1)Уникальный идентификатор талончика (отмененные талончики будут иметь тот-же идентификатор)
@@ -180,18 +197,49 @@ struct QueueCoupon{
 
 
 /**
- * FreeTicket
- * Структура с данными о свободном талончике
- * @param begDateTime           1)ДатаВремя начала талончика
- * @param endDateTime           2)ДатаВремя конца талончика
- * @param office                3)офис врача в котором будет проходить прием
- * @param personId              4)идентификатор врача
+ * TTicket
+ * Структура с данными о талончике на прием к врачу
+ * @param begTime           1)Время начала талончика
+ * @param endTime           2)Время конца талончика
+ * @param free              3)признак, указывающий занят ли этот талончик каким-либо пациентом
+ * @param available         4)признак, указывающий доступен ли этот талончик для записи
+ * @param patientId         5) OPTIONAL: Идентификатор пациента, который занял этот талончик
+ * @param patientInfo       6) OPTIONAL: ФИО пациента, который занял этот талончик
+ * @param timeIndex         7) OPTIONAL: Индекс ячейки времени в расписании врача, на который ссылается этот талончик
+ * @param date              8) OPTIONAL: Дата приема врача. Будет выставляться для метода getFirstFreeTicket
+ * @param office            9) OPTIONAL: Офис, в котором будет происходить прием врача. Будет выставляться для метода getFirstFreeTicket
  */
-struct FreeTicket{
-1:required timestamp begDateTime;
-2:required timestamp endDateTime;
-3:optional string office;
-4:required i32 personId;
+struct TTicket{
+1:required timestamp begTime;
+2:required timestamp endTime;
+3:required bool free;
+4:required bool available;
+5:optional i32 patientId;
+6:optional string patientInfo;
+7:optional i32 timeIndex;
+8:optional timestamp date;
+9:optional string office;
+}
+
+/**
+ * Schedule
+ * Структура с данными для расписания врача
+ * @param begTime       Время начала приема врача
+ * @param endTime       Время окончания приема врача
+ * @param date          Дата приема врача
+ * @param office        Офис в котором будет происходить прием
+ * @param plan          План приема (количество ячеек времени в которые врач будет принимать пациентов)
+ * @param tickets       Список талончиков на прием
+ * @param available     Признак доступности записи на этот прием (в целом)
+ */
+struct Schedule{
+ 1:required timestamp begTime;
+ 2:required timestamp endTime;
+ 3:required timestamp date;
+ 4:optional string office;
+ 5:optional i32 plan;
+ 6:optional list<TTicket> tickets;
+ 7:required bool available;
 }
 //Type definitions for input params
 
@@ -338,6 +386,23 @@ struct FindPatientByPolicyAndDocumentParameters{
 12:optional string policyInsurerInfisCode;
 }
 
+/**
+ * Структура с данными для получения расписания пачкой и поиска превого свободного талончика
+ * @param personId                  1)Идетификатор врача
+ * @param beginDateTime             2)Время с которого начинается поиск свободных талончиков
+ * @param endDateTime               3)Время до которого происходит поиск свободных талончиков
+ (если не установлено - то плюс месяц к beginDateTime)
+ * @param hospitalUidFrom           4)Идентификатор ЛПУ из которого производится запись
+ * @param quotingType               5)Тип квотирования
+ */
+struct ScheduleParameters{
+1:required i32 personId;
+2:required timestamp beginDateTime;
+3:optional timestamp endDateTime;
+4:optional string hospitalUidFrom;
+5:optional QuotingType quotingType;
+}
+
 //Exceptions
 exception NotFoundException {
  1: string error_msg;
@@ -378,49 +443,123 @@ service Communications{
 
 //Methods to be generated in this service
 
+/**
+ * получение информации об организации(ЛПУ) по ее инфис-коду
+ * @param infisCode                     1)Инфис-код организации
+ * @return                              Структуа с информацией об организации
+ * @throws NotFoundException             когда в БД ЛПУ нету организации с таким инфис-кодом
+ */
 Organization getOrganisationInfo(1:string infisCode)
-throws (1:NotFoundException exc);
+    throws (1:NotFoundException exc);
 
+/**
+ * Получение списка подразделений, входящих в заданное подразделение
+ * @param parent_id                     1) идентификатор подразделения, для которого нужно найти дочернии подразделения
+ * @param recursive                     2) Флаг рекурсии (выбрать также подразделения, входяшие во все дочерние подразделения)
+ * @param infisCode                     3) Инфис-код
+ * @return                              Список структур, содержащих информацию о дочерних подразделениях
+ * @throws NotFoundException             когда не было найдено ни одного подразделения, удовлетворяющего заданным параметрам
+ * @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
 list<OrgStructure> getOrgStructures(1:i32 parent_id, 2:bool recursive, 3:string infisCode)
-throws (1:NotFoundException exc, 2:SQLException excsql);
+    throws (1:NotFoundException exc, 2:SQLException excsql);
 
+/**
+ * Получение адресов запрошенного подразделения
+ * @param orgStructureId                1) идетификатор подразделения, для которого требуется найти адреса
+ * @param recursive                     2) Флаг рекурсии (выбрать также подразделения, входяшие во все дочерние подразделения)
+ * @param infisCode                     3) Инфис-код
+ * @return                              Список структур, содержащих информацию об адресах запрошенных подразделений
+ * @throws NotFoundException             когда не было найдено ни одного адреса подразделения, удовлетворяющего заданным параметрам
+ * @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
 list<Address> getAddresses(1:i32 orgStructureId, 2:bool recursive, 3:string infisCode)
-throws (1:SQLException excsql, 2:NotFoundException exc);
+    throws (1:SQLException excsql, 2:NotFoundException exc);
 
+/**
+ * Получение списка идентификаторов подразделений, расположенных по указанному адресу
+ * @param params                        1) Структура с параметрами поиска подразделений по адресу
+ * @return                              Список идентификаторов подразделений, приписанных к запрошенному адресу
+ * @throws NotFoundException             когда не было найдено ни одного подразделения, удовлетворяющего заданным параметрам
+ * @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
 list<i32> findOrgStructureByAddress(1:FindOrgStructureByAddressParameters params)
-throws (1:NotFoundException exc, 2:SQLException excsql);
+    throws (1:NotFoundException exc, 2:SQLException excsql);
 
+/**
+ * Получение списка персонала, работающего в запрошенном подразделении
+ * @param orgStructureId                1) идентификатор подразделения
+ * @param recursive                     2) флаг рекусрии
+ * @param infisCode                     3) инфис-код
+ * @return                              Список идентификаторов подразделений, приписанных к запрошенному адресу
+ * @throws NotFoundException             когда не было найдено ни одного работника, удовлетворяющего заданным параметрам
+ * @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
 list<Person> getPersonnel(1:i32 orgStructureId, 2:bool recursive, 3:string infisCode)
-throws (1:NotFoundException exc, 2:SQLException excsql);
+    throws (1:NotFoundException exc, 2:SQLException excsql);
 
+/**
+ * НЕ РЕАЛИЗОВАНО
+ */
 TicketsAvailability getTotalTicketsAvailability(1:GetTicketsAvailabilityParameters params)
-throws (1:NotFoundException exc, 2:SQLException excsql);
+    throws (1:NotFoundException exc, 2:SQLException excsql);
 
+/**
+ * НЕ РЕАЛИЗОВАНО
+ */
 list<ExtendedTicketsAvailability> getTicketsAvailability(1:GetTicketsAvailabilityParameters params)
-throws (1:NotFoundException exc, 2:SQLException excsql);
+    throws (1:NotFoundException exc, 2:SQLException excsql);
 
+
+// @deprecated                          В дальнейшем планируется перейти на метод getPersonSchedule
+/**
+ * Получение расписания врача
+ * @param params                        1) Структура с параметрами для получения расписания врача
+ * @return                              Структура с расписанием врача (на запрошенный день)
+ * @throws NotFoundException             когда не было найдено расписания на запрошенную дату
+ * @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
 Amb getWorkTimeAndStatus(1:GetTimeWorkAndStatusParameters params)
-throws (1:NotFoundException exc, 2:SQLException excsql);
+    throws (1:NotFoundException exc, 2:SQLException excsql);
 
+/**
+ * добавление нового пациента в БД ЛПУ
+ * @param params                        1) Структура с данными для нового пациента
+ * @return                              Структура со сведениями о статусе добавления пациента
+ * @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
 PatientStatus addPatient(1:AddPatientParameters params)
-throws (1:SQLException excsql);
+    throws (1:SQLException excsql);
 
-
+/**
+ * Поиск пациента в БД ЛПУ по заданным параметрам
+ * @param params                        1) Структура с данными для поиска единственного пациента
+ * @return                              Структура с данными о результатах посика пациента
+ * @throws NotFoundException             //TODO
+ * @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
 PatientStatus findPatient(1:FindPatientParameters params)
-throws (1:NotFoundException exc, 2:SQLException excsql);
+    throws (1:NotFoundException exc, 2:SQLException excsql);
 
+/**
+ * Поиск пациентов в БД ЛПУ по заданным параметрам
+ * @param params                        1) Структура с данными для поиска нескольких пациентов
+ * @return                              Список структур с данными для найденных пациентов
+ * @throws NotFoundException             //TODO
+ * @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
 list<Patient> findPatients(1:FindMultiplePatientsParameters params)
-throws (1:NotFoundException exc, 2:SQLException excsql);
+    throws (1:NotFoundException exc, 2:SQLException excsql);
 
 /**
  * Поиск пациента по данным из ТФОМС
- * @param params Параметры поиска
- * @return Статус нахождения пациента
- * @throws NotFoundException когда не найдено ни одного пациента по заданным параметрам
- * @throws InvalidPersonalInfo когда по полису или документу найдены пациент(ы) в БД ЛПУ, но (ФИО/пол/др) отличаются от переданных
- * @throws InvalidDocumentException когда не найдено совпадений по полису и документу, но пациент с таким (ФИО/пол/др) уже есть в БД ЛПУ
- * @throws AnotherPolicyException когда пациент найден и документы совпали, но его полис отличается от запрошенного
- * @throws NotUniqueException когда по запрошенным параметрам невозможно выделить единственного пациента
+ * @param params                        1) Параметры поиска
+ * @return                              Статус нахождения пациента
+ * @throws NotFoundException            когда не найдено ни одного пациента по заданным параметрам
+ * @throws InvalidPersonalInfo          когда по полису или документу найдены пациент(ы) в БД ЛПУ, но (ФИО/пол/др) отличаются от переданных
+ * @throws InvalidDocumentException     когда не найдено совпадений по полису и документу, но пациент с таким (ФИО/пол/др) уже есть в БД ЛПУ
+ * @throws AnotherPolicyException       когда пациент найден и документы совпали, но его полис отличается от запрошенного
+ * @throws NotUniqueException           когда по запрошенным параметрам невозможно выделить единственного пациента
  */
 PatientStatus findPatientByPolicyAndDocument(1:FindPatientByPolicyAndDocumentParameters params)
 	throws (
@@ -433,10 +572,10 @@ PatientStatus findPatientByPolicyAndDocument(1:FindPatientByPolicyAndDocumentPar
 
 /**
  * Добавление/ изменение полиса клиента
- * @param params                    1) Параметры для добавления полиса (struct ChangePolicyParameters)
- * @return успешность замены/добавления полиса
- * @throws PolicyTypeNotFoundException когда нету типа полиса с переданным кодом
- * @throws NotFoundException когда нету пациента с переданным идентификатором
+ * @param params                        1) Параметры для добавления полиса (struct ChangePolicyParameters)
+ * @return                              успешность замены/добавления полиса
+ * @throws PolicyTypeNotFoundException  когда нету типа полиса с переданным кодом
+ * @throws NotFoundException            когда нету пациента с переданным идентификатором
  */
 bool changePatientPolicy(1:ChangePolicyParameters params)
     throws (1:PolicyTypeNotFoundException ptnfExc, 2:NotFoundException nfExc);
@@ -444,57 +583,93 @@ bool changePatientPolicy(1:ChangePolicyParameters params)
 /**
  * Запрос на список талончиков, которые появились с момента последнего запроса
  *(для поиска записей на прием к врачу созданных не через КС)
- * @return Список новых талончиков или пустой список, если таких талончиков не найдено то пустой список
+ * @return                              Список новых талончиков или пустой список, если таких талончиков не найдено то пустой список
  */
 list<QueueCoupon> checkForNewQueueCoupons();
 
 /**
  * Метод для получения первого свободного талончика врача
- * @param personId                  1)Идетификатор врача
- * @param dateTime                  2)Время с которого начинается поиск свободных талончиков
- * @param hospitalUidFrom           3)Идентификатор ЛПУ из которого производится запись
- * @return Структура с данными первого доступного для записи талончика
- * @throws NotFoundException        когда у выьранного врача с этой даты нету свободных талончиков
+ * @param params                        1) Параметры для поиска первого свободого талончика
+ * @return                              Структура с данными первого доступного для записи талончика
+ * @throws NotFoundException            когда у выьранного врача с этой даты нету свободных талончиков
  */
-FreeTicket getFirstFreeTicket(1:i32 personId, 2:timestamp dateTime, 3:string hospitalUidFrom)
+TTicket getFirstFreeTicket(1:ScheduleParameters params)
     throws (1:NotFoundException nfExc);
 
 /**
- * Метод для получения расписания врача пачкой
- * @param personId                  1)Идетификатор врача
- * @param begDate                   2)Дата начала периода за который получаем расписание
- * @param endDate                   3)Дата окончания периода за который получаем расписание
- * @param hospitalUidFrom           4)Идентификатор ЛПУ из которого производится запись
- * @return map<timestamp, Amb> - карта вида <[Дата приема], [Расписание на эту дату]>,
- * в случае отсутствия расписания на указанную дату набор ключ-значение опускается
- * @throws NotFoundException        когда нету такого идентификатора врача
+ * Метод для получения расписания врача пачкой за указанный интервал
+ * @param params                        1) Параметры для получения расписания
+ * @return                              map<timestamp, Schedule> - карта вида <[Дата приема], [Расписание на эту дату]>,
+ *                                      в случае отсутствия расписания на указанную дату набор ключ-значение опускается
+ * @throws NotFoundException            когда нету такого идентификатора врача
  */
-map<timestamp, Amb> getPersonSchedule(
-                                    1:i32 personId,
-                                    2:timestamp begDate,
-                                    3:timestamp endDate,
-                                    4:string hospitalUidFrom
-    ) throws (1:NotFoundException nfExc);
+map<timestamp, Schedule> getPersonSchedule(1:ScheduleParameters params)
+    throws (1:NotFoundException nfExc);
 
+/**
+ * Получение детальной информации по пациентам по их идентфикаторам
+ * @param patientIds                    1) Список идентификаторов пациентов
+ * @return                              map<int, PatientInfo> - карта вида <[Идетификатор пациента], [Информация о пациенте]>,
+                                        в случае отсутвия идентификатора в БД ЛПУ набор ключ-значение опускается
+ * @throws NotFoundException            //TODO
+ * @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
 map<i32,PatientInfo> getPatientInfo(1:list<i32> patientIds)
-throws (1:NotFoundException exc, 2:SQLException excsql);
+    throws (1:NotFoundException exc, 2:SQLException excsql);
 
+/**
+ * Получение контактной информации для заданного пациента
+ * @param patientIds                    1) идентификатор пациентов
+ * @return                              Список структур с контактной информацией
+ * @throws NotFoundException            //TODO
+ * @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
 list<Contact> getPatientContacts(1:i32 patientId)
-throws (1:NotFoundException exc);
+    throws (1:NotFoundException exc);
 
+/**
+ * НЕ РЕАЛИЗОВАНО
+ */
 list<OrgStructuresProperties> getPatientOrgStructures(1:i32 parentId)
-throws (1:NotFoundException exc);
+    throws (1:NotFoundException exc);
 
+/**
+ * Запись пациента на прием к врачу
+ * @param params                        1) Структура с параметрами для  записи на прием к врачу
+ * @return                              Структура с данными о статусе записи пациента на прием к врачу
+ * @throws NotFoundException            //TODO
+ * @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
 EnqueuePatientStatus enqueuePatient(1:EnqueuePatientParameters params)
-throws (1:NotFoundException exc, 2:SQLException excsql);
+    throws (1:NotFoundException exc, 2:SQLException excsql);
 
-list<Queue> getPatientQueue(1:i32 parentId)
-throws (1:NotFoundException exc, 2:SQLException excsql);
+/**
+ * Получение списка записей на приемы к врачам заданного пациента
+ * @param patientId                     1) Идентификатор пациента
+ * @return                              Список структура с данными о записях пациента на приемы к врачам
+ * @throws NotFoundException            //TODO
+ * @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
+list<Queue> getPatientQueue(1:i32 patientId)
+    throws (1:NotFoundException exc, 2:SQLException excsql);
 
+/**
+ * Отмена записи пациента на прием к врачу
+ * @param patientId                     1) Идентификатор пациента
+ * @param queueId                       2) Идентификатор записи, которую необходимо отменить
+ * @return                              Структура с данными о статусе отмены записи пациента на прием к врачу
+ * @throws NotFoundException            //TODO
+ * @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
 DequeuePatientStatus dequeuePatient(1:i32 patientId, 2:i32 queueId)
-throws (1:NotFoundException exc, 2:SQLException excsql);
+    throws (1:NotFoundException exc, 2:SQLException excsql);
 
+/**
+ * Получение списка  с информацией о специализациях и доступных талончиках
+ * @param hospitalUidFrom               1) Инфис-код ЛПУ
+ * @return                              Список структур с данными о специализациях врачей
+ * @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
 list<Speciality> getSpecialities(1:string hospitalUidFrom)
-throws (1:SQLException exc);
-
+    throws (1:SQLException exc);
 }
