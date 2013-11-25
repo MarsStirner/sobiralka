@@ -1675,6 +1675,23 @@ class ClientKorus30(AbstractClient):
                                   office=ticket.office,
                                   doctor_id=ticket.personId)
                     return result
+            except Exception, e:
+                print e
+                # CORE v2.4.7
+                try:
+                    ticket = self.client.getFirstFreeTicket(
+                        personId=doctor_id,
+                        dateTime=int(calendar.timegm(start.timetuple()) * 1000),
+                        hospitalUidFrom='')
+                except NotFoundException, e:
+                    print e.error_msg
+                    return None
+                else:
+                    result = dict(timeslotStart=datetime.datetime.utcfromtimestamp(ticket.begDateTime / 1000),
+                                  timeslotEnd=datetime.datetime.utcfromtimestamp(ticket.endDateTime / 1000),
+                                  office=ticket.office,
+                                  doctor_id=ticket.personId)
+                    return result
             else:
                 beg_date_time = ticket.date + ticket.begTime
                 end_date_time = ticket.date + ticket.endTime
