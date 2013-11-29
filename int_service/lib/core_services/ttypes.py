@@ -17,6 +17,33 @@ except:
   fastbinary = None
 
 
+class QuotingType(object):
+  """
+  QuotingType
+  Перечисление типов квотирования
+  """
+  FROM_REGISTRY = 1
+  SECOND_VISIT = 2
+  BETWEEN_CABINET = 3
+  FROM_OTHER_LPU = 4
+  FROM_PORTAL = 5
+
+  _VALUES_TO_NAMES = {
+    1: "FROM_REGISTRY",
+    2: "SECOND_VISIT",
+    3: "BETWEEN_CABINET",
+    4: "FROM_OTHER_LPU",
+    5: "FROM_PORTAL",
+  }
+
+  _NAMES_TO_VALUES = {
+    "FROM_REGISTRY": 1,
+    "SECOND_VISIT": 2,
+    "BETWEEN_CABINET": 3,
+    "FROM_OTHER_LPU": 4,
+    "FROM_PORTAL": 5,
+  }
+
 class CouponStatus(object):
   """
   CouponStatus
@@ -2091,35 +2118,55 @@ class QueueCoupon(object):
   def __ne__(self, other):
     return not (self == other)
 
-class FreeTicket(object):
+class TTicket(object):
   """
-  FreeTicket
-  Структура с данными о свободном талончике
-  @param begDateTime           1)ДатаВремя начала талончика
-  @param endDateTime           2)ДатаВремя конца талончика
-  @param office                3)офис врача в котором будет проходить прием
-  @param personId              4)идентификатор врача
+  TTicket
+  Структура с данными о талончике на прием к врачу
+  @param begTime           1)Время начала талончика
+  @param endTime           2)Время конца талончика
+  @param free              3)признак, указывающий занят ли этот талончик каким-либо пациентом
+  @param available         4)признак, указывающий доступен ли этот талончик для записи
+  @param patientId         5) OPTIONAL: Идентификатор пациента, который занял этот талончик
+  @param patientInfo       6) OPTIONAL: ФИО пациента, который занял этот талончик
+  @param timeIndex         7) OPTIONAL: Индекс ячейки времени в расписании врача, на который ссылается этот талончик
+  @param date              8) OPTIONAL: Дата приема врача. Будет выставляться для метода getFirstFreeTicket
+  @param office            9) OPTIONAL: Офис, в котором будет происходить прием врача. Будет выставляться для метода getFirstFreeTicket
 
   Attributes:
-   - begDateTime
-   - endDateTime
+   - begTime
+   - endTime
+   - free
+   - available
+   - patientId
+   - patientInfo
+   - timeIndex
+   - date
    - office
-   - personId
   """
 
   thrift_spec = (
     None, # 0
-    (1, TType.I64, 'begDateTime', None, None, ), # 1
-    (2, TType.I64, 'endDateTime', None, None, ), # 2
-    (3, TType.STRING, 'office', None, None, ), # 3
-    (4, TType.I32, 'personId', None, None, ), # 4
+    (1, TType.I64, 'begTime', None, None, ), # 1
+    (2, TType.I64, 'endTime', None, None, ), # 2
+    (3, TType.BOOL, 'free', None, None, ), # 3
+    (4, TType.BOOL, 'available', None, None, ), # 4
+    (5, TType.I32, 'patientId', None, None, ), # 5
+    (6, TType.STRING, 'patientInfo', None, None, ), # 6
+    (7, TType.I32, 'timeIndex', None, None, ), # 7
+    (8, TType.I64, 'date', None, None, ), # 8
+    (9, TType.STRING, 'office', None, None, ), # 9
   )
 
-  def __init__(self, begDateTime=None, endDateTime=None, office=None, personId=None,):
-    self.begDateTime = begDateTime
-    self.endDateTime = endDateTime
+  def __init__(self, begTime=None, endTime=None, free=None, available=None, patientId=None, patientInfo=None, timeIndex=None, date=None, office=None,):
+    self.begTime = begTime
+    self.endTime = endTime
+    self.free = free
+    self.available = available
+    self.patientId = patientId
+    self.patientInfo = patientInfo
+    self.timeIndex = timeIndex
+    self.date = date
     self.office = office
-    self.personId = personId
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -2132,22 +2179,47 @@ class FreeTicket(object):
         break
       if fid == 1:
         if ftype == TType.I64:
-          self.begDateTime = iprot.readI64();
+          self.begTime = iprot.readI64();
         else:
           iprot.skip(ftype)
       elif fid == 2:
         if ftype == TType.I64:
-          self.endDateTime = iprot.readI64();
+          self.endTime = iprot.readI64();
         else:
           iprot.skip(ftype)
       elif fid == 3:
-        if ftype == TType.STRING:
-          self.office = iprot.readString().decode('utf-8')
+        if ftype == TType.BOOL:
+          self.free = iprot.readBool();
         else:
           iprot.skip(ftype)
       elif fid == 4:
+        if ftype == TType.BOOL:
+          self.available = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
         if ftype == TType.I32:
-          self.personId = iprot.readI32();
+          self.patientId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.STRING:
+          self.patientInfo = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.I32:
+          self.timeIndex = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 8:
+        if ftype == TType.I64:
+          self.date = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 9:
+        if ftype == TType.STRING:
+          self.office = iprot.readString().decode('utf-8')
         else:
           iprot.skip(ftype)
       else:
@@ -2159,33 +2231,214 @@ class FreeTicket(object):
     if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
       oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
       return
-    oprot.writeStructBegin('FreeTicket')
-    if self.begDateTime is not None:
-      oprot.writeFieldBegin('begDateTime', TType.I64, 1)
-      oprot.writeI64(self.begDateTime)
+    oprot.writeStructBegin('TTicket')
+    if self.begTime is not None:
+      oprot.writeFieldBegin('begTime', TType.I64, 1)
+      oprot.writeI64(self.begTime)
       oprot.writeFieldEnd()
-    if self.endDateTime is not None:
-      oprot.writeFieldBegin('endDateTime', TType.I64, 2)
-      oprot.writeI64(self.endDateTime)
+    if self.endTime is not None:
+      oprot.writeFieldBegin('endTime', TType.I64, 2)
+      oprot.writeI64(self.endTime)
+      oprot.writeFieldEnd()
+    if self.free is not None:
+      oprot.writeFieldBegin('free', TType.BOOL, 3)
+      oprot.writeBool(self.free)
+      oprot.writeFieldEnd()
+    if self.available is not None:
+      oprot.writeFieldBegin('available', TType.BOOL, 4)
+      oprot.writeBool(self.available)
+      oprot.writeFieldEnd()
+    if self.patientId is not None:
+      oprot.writeFieldBegin('patientId', TType.I32, 5)
+      oprot.writeI32(self.patientId)
+      oprot.writeFieldEnd()
+    if self.patientInfo is not None:
+      oprot.writeFieldBegin('patientInfo', TType.STRING, 6)
+      oprot.writeString(self.patientInfo.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.timeIndex is not None:
+      oprot.writeFieldBegin('timeIndex', TType.I32, 7)
+      oprot.writeI32(self.timeIndex)
+      oprot.writeFieldEnd()
+    if self.date is not None:
+      oprot.writeFieldBegin('date', TType.I64, 8)
+      oprot.writeI64(self.date)
       oprot.writeFieldEnd()
     if self.office is not None:
-      oprot.writeFieldBegin('office', TType.STRING, 3)
+      oprot.writeFieldBegin('office', TType.STRING, 9)
       oprot.writeString(self.office.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.personId is not None:
-      oprot.writeFieldBegin('personId', TType.I32, 4)
-      oprot.writeI32(self.personId)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
 
   def validate(self):
-    if self.begDateTime is None:
-      raise TProtocol.TProtocolException(message='Required field begDateTime is unset!')
-    if self.endDateTime is None:
-      raise TProtocol.TProtocolException(message='Required field endDateTime is unset!')
-    if self.personId is None:
-      raise TProtocol.TProtocolException(message='Required field personId is unset!')
+    if self.begTime is None:
+      raise TProtocol.TProtocolException(message='Required field begTime is unset!')
+    if self.endTime is None:
+      raise TProtocol.TProtocolException(message='Required field endTime is unset!')
+    if self.free is None:
+      raise TProtocol.TProtocolException(message='Required field free is unset!')
+    if self.available is None:
+      raise TProtocol.TProtocolException(message='Required field available is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class Schedule(object):
+  """
+  Schedule
+  Структура с данными для расписания врача
+  @param begTime       Время начала приема врача
+  @param endTime       Время окончания приема врача
+  @param date          Дата приема врача
+  @param office        Офис в котором будет происходить прием
+  @param plan          План приема (количество ячеек времени в которые врач будет принимать пациентов)
+  @param tickets       Список талончиков на прием
+  @param available     Признак доступности записи на этот прием (в целом)
+
+  Attributes:
+   - begTime
+   - endTime
+   - date
+   - office
+   - plan
+   - tickets
+   - available
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I64, 'begTime', None, None, ), # 1
+    (2, TType.I64, 'endTime', None, None, ), # 2
+    (3, TType.I64, 'date', None, None, ), # 3
+    (4, TType.STRING, 'office', None, None, ), # 4
+    (5, TType.I32, 'plan', None, None, ), # 5
+    (6, TType.LIST, 'tickets', (TType.STRUCT,(TTicket, TTicket.thrift_spec)), None, ), # 6
+    (7, TType.BOOL, 'available', None, None, ), # 7
+  )
+
+  def __init__(self, begTime=None, endTime=None, date=None, office=None, plan=None, tickets=None, available=None,):
+    self.begTime = begTime
+    self.endTime = endTime
+    self.date = date
+    self.office = office
+    self.plan = plan
+    self.tickets = tickets
+    self.available = available
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I64:
+          self.begTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I64:
+          self.endTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I64:
+          self.date = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.office = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I32:
+          self.plan = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.LIST:
+          self.tickets = []
+          (_etype10, _size7) = iprot.readListBegin()
+          for _i11 in xrange(_size7):
+            _elem12 = TTicket()
+            _elem12.read(iprot)
+            self.tickets.append(_elem12)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.BOOL:
+          self.available = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Schedule')
+    if self.begTime is not None:
+      oprot.writeFieldBegin('begTime', TType.I64, 1)
+      oprot.writeI64(self.begTime)
+      oprot.writeFieldEnd()
+    if self.endTime is not None:
+      oprot.writeFieldBegin('endTime', TType.I64, 2)
+      oprot.writeI64(self.endTime)
+      oprot.writeFieldEnd()
+    if self.date is not None:
+      oprot.writeFieldBegin('date', TType.I64, 3)
+      oprot.writeI64(self.date)
+      oprot.writeFieldEnd()
+    if self.office is not None:
+      oprot.writeFieldBegin('office', TType.STRING, 4)
+      oprot.writeString(self.office.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.plan is not None:
+      oprot.writeFieldBegin('plan', TType.I32, 5)
+      oprot.writeI32(self.plan)
+      oprot.writeFieldEnd()
+    if self.tickets is not None:
+      oprot.writeFieldBegin('tickets', TType.LIST, 6)
+      oprot.writeListBegin(TType.STRUCT, len(self.tickets))
+      for iter13 in self.tickets:
+        iter13.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.available is not None:
+      oprot.writeFieldBegin('available', TType.BOOL, 7)
+      oprot.writeBool(self.available)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.begTime is None:
+      raise TProtocol.TProtocolException(message='Required field begTime is unset!')
+    if self.endTime is None:
+      raise TProtocol.TProtocolException(message='Required field endTime is unset!')
+    if self.date is None:
+      raise TProtocol.TProtocolException(message='Required field date is unset!')
+    if self.available is None:
+      raise TProtocol.TProtocolException(message='Required field available is unset!')
     return
 
 
@@ -3039,11 +3292,11 @@ class FindPatientParameters(object):
       elif fid == 8:
         if ftype == TType.MAP:
           self.document = {}
-          (_ktype8, _vtype9, _size7 ) = iprot.readMapBegin() 
-          for _i11 in xrange(_size7):
-            _key12 = iprot.readString().decode('utf-8')
-            _val13 = iprot.readString().decode('utf-8')
-            self.document[_key12] = _val13
+          (_ktype15, _vtype16, _size14 ) = iprot.readMapBegin() 
+          for _i18 in xrange(_size14):
+            _key19 = iprot.readString().decode('utf-8')
+            _val20 = iprot.readString().decode('utf-8')
+            self.document[_key19] = _val20
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -3088,9 +3341,9 @@ class FindPatientParameters(object):
     if self.document is not None:
       oprot.writeFieldBegin('document', TType.MAP, 8)
       oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.document))
-      for kiter14,viter15 in self.document.items():
-        oprot.writeString(kiter14.encode('utf-8'))
-        oprot.writeString(viter15.encode('utf-8'))
+      for kiter21,viter22 in self.document.items():
+        oprot.writeString(kiter21.encode('utf-8'))
+        oprot.writeString(viter22.encode('utf-8'))
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -3205,11 +3458,11 @@ class FindMultiplePatientsParameters(object):
       elif fid == 8:
         if ftype == TType.MAP:
           self.document = {}
-          (_ktype17, _vtype18, _size16 ) = iprot.readMapBegin() 
-          for _i20 in xrange(_size16):
-            _key21 = iprot.readString().decode('utf-8')
-            _val22 = iprot.readString().decode('utf-8')
-            self.document[_key21] = _val22
+          (_ktype24, _vtype25, _size23 ) = iprot.readMapBegin() 
+          for _i27 in xrange(_size23):
+            _key28 = iprot.readString().decode('utf-8')
+            _val29 = iprot.readString().decode('utf-8')
+            self.document[_key28] = _val29
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -3254,9 +3507,9 @@ class FindMultiplePatientsParameters(object):
     if self.document is not None:
       oprot.writeFieldBegin('document', TType.MAP, 8)
       oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.document))
-      for kiter23,viter24 in self.document.items():
-        oprot.writeString(kiter23.encode('utf-8'))
-        oprot.writeString(viter24.encode('utf-8'))
+      for kiter30,viter31 in self.document.items():
+        oprot.writeString(kiter30.encode('utf-8'))
+        oprot.writeString(viter31.encode('utf-8'))
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -3572,6 +3825,126 @@ class FindPatientByPolicyAndDocumentParameters(object):
       raise TProtocol.TProtocolException(message='Required field policyNumber is unset!')
     if self.policyTypeCode is None:
       raise TProtocol.TProtocolException(message='Required field policyTypeCode is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class ScheduleParameters(object):
+  """
+  * Структура с данными для получения расписания пачкой и поиска превого свободного талончика
+  * @param personId                  1)Идетификатор врача
+  * @param beginDateTime             2)Время с которого начинается поиск свободных талончиков
+  * @param endDateTime               3)Время до которого происходит поиск свободных талончиков
+  (если не установлено - то плюс месяц к beginDateTime)
+  * @param hospitalUidFrom           4)Идентификатор ЛПУ из которого производится запись
+  * @param quotingType               5)Тип квотирования
+
+  Attributes:
+   - personId
+   - beginDateTime
+   - endDateTime
+   - hospitalUidFrom
+   - quotingType
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'personId', None, None, ), # 1
+    (2, TType.I64, 'beginDateTime', None, None, ), # 2
+    (3, TType.I64, 'endDateTime', None, None, ), # 3
+    (4, TType.STRING, 'hospitalUidFrom', None, None, ), # 4
+    (5, TType.I32, 'quotingType', None, None, ), # 5
+  )
+
+  def __init__(self, personId=None, beginDateTime=None, endDateTime=None, hospitalUidFrom=None, quotingType=None,):
+    self.personId = personId
+    self.beginDateTime = beginDateTime
+    self.endDateTime = endDateTime
+    self.hospitalUidFrom = hospitalUidFrom
+    self.quotingType = quotingType
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.personId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I64:
+          self.beginDateTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I64:
+          self.endDateTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.hospitalUidFrom = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I32:
+          self.quotingType = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('ScheduleParameters')
+    if self.personId is not None:
+      oprot.writeFieldBegin('personId', TType.I32, 1)
+      oprot.writeI32(self.personId)
+      oprot.writeFieldEnd()
+    if self.beginDateTime is not None:
+      oprot.writeFieldBegin('beginDateTime', TType.I64, 2)
+      oprot.writeI64(self.beginDateTime)
+      oprot.writeFieldEnd()
+    if self.endDateTime is not None:
+      oprot.writeFieldBegin('endDateTime', TType.I64, 3)
+      oprot.writeI64(self.endDateTime)
+      oprot.writeFieldEnd()
+    if self.hospitalUidFrom is not None:
+      oprot.writeFieldBegin('hospitalUidFrom', TType.STRING, 4)
+      oprot.writeString(self.hospitalUidFrom.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.quotingType is not None:
+      oprot.writeFieldBegin('quotingType', TType.I32, 5)
+      oprot.writeI32(self.quotingType)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.personId is None:
+      raise TProtocol.TProtocolException(message='Required field personId is unset!')
+    if self.beginDateTime is None:
+      raise TProtocol.TProtocolException(message='Required field beginDateTime is unset!')
     return
 
 

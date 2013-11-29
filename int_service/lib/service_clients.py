@@ -29,6 +29,7 @@ from core_services.ttypes import SQLException, NotFoundException, TException
 from core_services.ttypes import AnotherPolicyException, InvalidDocumentException, InvalidPersonalInfoException
 from core_services.ttypes import FindPatientByPolicyAndDocumentParameters, NotUniqueException
 from core_services.ttypes import ChangePolicyParameters, Policy, PolicyTypeNotFoundException
+from core_services.ttypes import ScheduleParameters, QuotingType
 
 from tfoms_service import TFOMSClient, AnswerCodes, logger
 
@@ -1629,18 +1630,75 @@ class ClientKorus30(AbstractClient):
             if start is None:
                 start = datetime.datetime.now()
             try:
-                ticket = self.client.getFirstFreeTicket(
-                    personId=doctor_id,
-                    dateTime=int(calendar.timegm(start.timetuple()) * 1000),
-                    hospitalUidFrom='')
+                # CORE v2.5.2
+        # quotingType=QuotingType.FROM_PORTAL - т.к. этот метод никто, кроме портала не использует, то можно передавать
+                parameters = ScheduleParameters(personId=doctor_id,
+                                                beginDateTime=int(calendar.timegm(start.timetuple()) * 1000),
+                                                hospitalUidFrom='',
+                                                quotingType=QuotingType.FROM_PORTAL)
+
+                ticket = self.client.getFirstFreeTicket(parameters)
             except NotFoundException, e:
                 print e.error_msg
                 return None
+            except TApplicationException, e:
+                print e
+                # CORE v2.4.7
+                try:
+                    ticket = self.client.getFirstFreeTicket(
+                        personId=doctor_id,
+                        dateTime=int(calendar.timegm(start.timetuple()) * 1000),
+                        hospitalUidFrom='')
+                except NotFoundException, e:
+                    print e.error_msg
+                    return None
+                else:
+                    result = dict(timeslotStart=datetime.datetime.utcfromtimestamp(ticket.begDateTime / 1000),
+                                  timeslotEnd=datetime.datetime.utcfromtimestamp(ticket.endDateTime / 1000),
+                                  office=ticket.office,
+                                  doctor_id=ticket.personId)
+                    return result
+            except TypeError, e:
+                print e
+                # CORE v2.4.7
+                try:
+                    ticket = self.client.getFirstFreeTicket(
+                        personId=doctor_id,
+                        dateTime=int(calendar.timegm(start.timetuple()) * 1000),
+                        hospitalUidFrom='')
+                except NotFoundException, e:
+                    print e.error_msg
+                    return None
+                else:
+                    result = dict(timeslotStart=datetime.datetime.utcfromtimestamp(ticket.begDateTime / 1000),
+                                  timeslotEnd=datetime.datetime.utcfromtimestamp(ticket.endDateTime / 1000),
+                                  office=ticket.office,
+                                  doctor_id=ticket.personId)
+                    return result
+            except Exception, e:
+                print e
+                # CORE v2.4.7
+                try:
+                    ticket = self.client.getFirstFreeTicket(
+                        personId=doctor_id,
+                        dateTime=int(calendar.timegm(start.timetuple()) * 1000),
+                        hospitalUidFrom='')
+                except NotFoundException, e:
+                    print e.error_msg
+                    return None
+                else:
+                    result = dict(timeslotStart=datetime.datetime.utcfromtimestamp(ticket.begDateTime / 1000),
+                                  timeslotEnd=datetime.datetime.utcfromtimestamp(ticket.endDateTime / 1000),
+                                  office=ticket.office,
+                                  doctor_id=ticket.personId)
+                    return result
             else:
-                result = dict(timeslotStart=datetime.datetime.utcfromtimestamp(ticket.begDateTime / 1000),
-                              timeslotEnd=datetime.datetime.utcfromtimestamp(ticket.endDateTime / 1000),
+                beg_date_time = ticket.date + ticket.begTime
+                end_date_time = ticket.date + ticket.endTime
+                result = dict(timeslotStart=datetime.datetime.utcfromtimestamp(beg_date_time / 1000),
+                              timeslotEnd=datetime.datetime.utcfromtimestamp(end_date_time / 1000),
                               office=ticket.office,
-                              doctor_id=ticket.personId)
+                              doctor_id=doctor_id)
                 return result
         return None
 
