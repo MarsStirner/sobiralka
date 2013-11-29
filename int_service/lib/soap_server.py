@@ -19,6 +19,7 @@ from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, SOAP_NAMESPACE, DEBUG
 from dataworker import DataWorker, EPGUWorker
 import soap_models
 import version
+from admin.database import shutdown_session
 
 # if DEBUG:
 #     logging.basicConfig(level=logging.DEBUG)
@@ -170,6 +171,7 @@ class Server(object):
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
+        info_app.event_manager.add_listener('wsgi_close', shutdown_session)
         list_app = Application(
             [ListServer],
             tns=SOAP_NAMESPACE,
@@ -178,6 +180,7 @@ class Server(object):
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
+        list_app.event_manager.add_listener('wsgi_close', shutdown_session)
         schedule_app = Application(
             [ScheduleServer],
             tns=SOAP_NAMESPACE,
@@ -186,6 +189,7 @@ class Server(object):
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
+        schedule_app.event_manager.add_listener('wsgi_close', shutdown_session)
         epgu_gate_app = Application(
             [EPGUGateServer],
             tns='http://erGateService.er.atc.ru/ws',
@@ -194,6 +198,7 @@ class Server(object):
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
+        epgu_gate_app.event_manager.add_listener('wsgi_close', shutdown_session)
         self.applications = CustomWsgiMounter({
             'info': info_app,
             'list': list_app,

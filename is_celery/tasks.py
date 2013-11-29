@@ -19,8 +19,17 @@ def shutdown_session():
     Task_Session.remove()
 
 
+class SqlAlchemyTask(celery.Task):
+    """An abstract Celery Task that ensures that the connection the the
+    database is closed on task completion"""
+    abstract = True
+
+    def after_return(self, *args, **kwargs):
+        shutdown_session()
+
+
 # SYNC SCHEDULE TASKS
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def appoint_patients(parent_task_returns, hospital, doctor):
     if not parent_task_returns:
         return None
@@ -32,7 +41,7 @@ def appoint_patients(parent_task_returns, hospital, doctor):
     return epgu_dw.msg
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def activate_location(parent_task_returns, hospital, location_id):
     if not parent_task_returns:
         return None
@@ -41,7 +50,7 @@ def activate_location(parent_task_returns, hospital, location_id):
     return parent_task_returns
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def link_schedule(parent_task_returns, hospital, location_id):
     rules, busy_by_patients = parent_task_returns
     if not rules:
@@ -51,13 +60,13 @@ def link_schedule(parent_task_returns, hospital, location_id):
     return parent_task_returns
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def doctor_schedule_task(doctor, hospital_dict):
     epgu_dw = EPGUWorker(db_session)
     return epgu_dw.doctor_schedule_task(doctor, hospital_dict)
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def lpu_schedule_task(hospital_id, hospital_dict):
     epgu_doctors = db_session.query(Personal).filter(Personal.lpuId == hospital_id).filter(
         Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
@@ -73,7 +82,7 @@ def lpu_schedule_task(hospital_id, hospital_dict):
     # shutdown_session()
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def lpu_tickets_task(hospital_id, hospital_dict):
     epgu_doctors = db_session.query(Personal).filter(Personal.lpuId == hospital_id).filter(
         Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
@@ -84,7 +93,7 @@ def lpu_tickets_task(hospital_id, hospital_dict):
                for doctor in epgu_doctors])()
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def sync_tickets_task():
     lpu_list = (db_session.query(LPU).
                 filter(LPU.keyEPGU != '',
@@ -106,7 +115,7 @@ def sync_tickets_task():
         return False
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def sync_schedule_task():
     lpu_list = (db_session.query(LPU).
                 filter(LPU.keyEPGU != '',
@@ -129,7 +138,7 @@ def sync_schedule_task():
         return False
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def sync_locations():
     epgu_dw = EPGUWorker(db_session)
     epgu_dw.sync_locations()
@@ -140,14 +149,14 @@ def close_session(*args, **kwargs):
     shutdown_session()
 
 
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def clear_broker_messages():
     db_session.query(Message).filter(Message.visible == 0).delete()
     db_session.commit()
 
 
 # UPDATE TASKS
-@celery.task
+@celery.task(base=SqlAlchemyTask)
 def update_db():
     data_worker = UpdateWorker(db_session)
     data_worker.update_data()
