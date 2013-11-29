@@ -76,7 +76,7 @@ def lpu_schedule_task(hospital_id, hospital_dict):
             [chain(
                 doctor_schedule_task.s(doctor, hospital_dict),
                 link_schedule.s(hospital_dict, doctor.key_epgu.keyEPGU),
-                activate_location.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=30),
+                activate_location.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=5),
                 appoint_patients.s(hospital_dict, doctor).set(countdown=5)
             ) for doctor in epgu_doctors])()
     # shutdown_session()
