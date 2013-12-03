@@ -1503,11 +1503,11 @@ class ClientKorus30(AbstractClient):
                 try:
                     # ELREG-158: Из БД ТФОМС приходят пустые ФИО, поэтому подставляем введённые пользователем
                     patient_params = self.__prepare_patient_params(data)
-                    if isinstance(tfoms_data['data'], list) and len(tfoms_data) == 1:
+                    if isinstance(tfoms_data['data'], list) and len(tfoms_data['data']) == 1:
                         tfoms_data['data'][0].update(dict(lastName=patient_params.get('lastName', ''),
                                                           firstName=patient_params.get('firstName', ''),
                                                           patrName=patient_params.get('patrName', '')))
-                    patient = self.__get_patient_by_tfoms_data(tfoms_data['data'])
+                        patient = self.__get_patient_by_tfoms_data(tfoms_data['data'])
                 except TApplicationException, e:
                     print e
         elif tfoms_data['status'].code == AnswerCodes(3).code:
