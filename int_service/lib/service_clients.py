@@ -1285,10 +1285,11 @@ class ClientKorus30(AbstractClient):
 
     def __prepare_tfoms_params(self, data):
         """Подготавливает словарь параметров для осуществления поиска в ТФОМС"""
-        person = data.get('person')
-        params = {'lastName': person.get('lastName'),
-                  'firstName': person.get('firstName'),
-                  'patrName': person.get('patronymic')}
+        params = dict()
+        #person = data.get('person')
+        #params = {'lastName': person.get('lastName'),
+        #          'firstName': person.get('firstName'),
+        #          'patrName': person.get('patronymic')}
 
         document = data.get('document')
         birthDate = data.get('birthday')
@@ -1395,9 +1396,9 @@ class ClientKorus30(AbstractClient):
     def __prepare_tfoms_data(self, tfoms_data):
         """"Mapping данных, полученных из ТФОМС в словарь для поиска в БД ЛПУ"""
         params = dict()
-        params['lastName'] = tfoms_data.get('lastname', '').title()
+        params['lastName'] = tfoms_data.get('lastName', tfoms_data.get('lastname', '')).title()
         params['firstName'] = tfoms_data.get('firstName', '').title()
-        params['patrName'] = tfoms_data.get('midname', '').title()
+        params['patrName'] = tfoms_data.get('patrName', tfoms_data.get('midname', '')).title()
         params['sex'] = tfoms_data.get('sex', 0)
         birthDate = datetime.datetime.strptime(tfoms_data.get('birthdate'), '%d.%m.%Y')
         params['birthDate'] = calendar.timegm(birthDate.timetuple()) * 1000
@@ -1483,7 +1484,7 @@ class ClientKorus30(AbstractClient):
         "такого пациента нет ни в базе застрахованных по ОМС лиц,
         ни в базе медицинского учреждения и необходимо сначала получить полис,
         а потом зарегистрироваться в нужном медицинском учреждении в регистратуре"
-        3. В ТФОМС найден полис, но не совпали ФИО или Д.Р., то в БД ЛПУ не ищем, возвращаем сообщение:
+        3. В ТФОМС найден полис, но не совпал Д.Р., то в БД ЛПУ не ищем, возвращаем сообщение:
         "данные в базе застрахованных по ОМС лиц не совпадают с введенными и запись на прием выполнена быть не может,
         проверьте корректность введенных данных или обратитесь в регистратуру выбранного медицинского учреждения"
         4. Если сервис ТФОМС вернул ошибку, то работаем с БД ЛПУ по старой схеме.
@@ -1502,6 +1503,12 @@ class ClientKorus30(AbstractClient):
             patient = self.__get_patient_by_lpu(data)
             if patient.success is False and patient.patientId is None:
                 try:
+                    # ELREG-158: Из БД ТФОМС приходят пустые ФИО, поэтому подставляем введённые пользователем
+                    patient_params = self.__prepare_patient_params(data)
+                    if isinstance(tfoms_data['data'], list) and len(tfoms_data['data']) == 1:
+                        tfoms_data['data'][0].update(dict(lastName=patient_params.get('lastName', ''),
+                                                          firstName=patient_params.get('firstName', ''),
+                                                          patrName=patient_params.get('patrName', '')))
                     patient = self.__get_patient_by_tfoms_data(tfoms_data['data'])
                 except TApplicationException, e:
                     print e
