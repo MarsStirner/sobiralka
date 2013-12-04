@@ -1249,6 +1249,8 @@ class ClientKorus30(AbstractClient):
             print e
         except NotFoundException, e:
             print e.error_msg
+        except TApplicationException, e:
+            print e
         else:
             if schedule and hasattr(schedule, 'tickets') and schedule.tickets:
                 result = []
