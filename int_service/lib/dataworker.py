@@ -427,7 +427,7 @@ class LPU_UnitsWorker(object):
         if lpu_id:
             query_lpu_units = query_lpu_units.filter(LPU_Units.lpuId == lpu_id)
 
-        return query_lpu_units.group_by(LPU_Units.id).all()
+        return query_lpu_units.group_by(LPU_Units.id).order_by(LPU_Units.name).all()
 
     def get_by_id(self, id):
         """
@@ -1030,7 +1030,11 @@ class PersonalWorker(object):
             query = query.filter(Personal.LastName == lastName)
 
         query = query.filter(or_(*or_list))
-        query = query.order_by(Personal.LastName, Personal.FirstName, Personal.PatrName)
+        order_by = kwargs.get('order')
+        if order_by:
+            query = query.order_by(order_by)
+        else:
+            query = query.order_by(Personal.LastName, Personal.FirstName, Personal.PatrName)
         return query.all()
 
     def get_doctor(self, **kwargs):
@@ -1158,7 +1162,8 @@ class PersonalWorker(object):
             lpu=lpu_list,
             lpu_units=lpu_units_list,
             speciality=kwargs.get('speciality'),
-            lastName=kwargs.get('lastName')
+            lastName=kwargs.get('lastName'),
+            order=Speciality.name
         )
         result = dict()
         result['speciality'] = []
