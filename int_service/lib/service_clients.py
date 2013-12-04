@@ -1394,9 +1394,9 @@ class ClientKorus30(AbstractClient):
     def __prepare_tfoms_data(self, tfoms_data):
         """"Mapping данных, полученных из ТФОМС в словарь для поиска в БД ЛПУ"""
         params = dict()
-        params['lastName'] = tfoms_data.get('lastname', tfoms_data.get('lastName', '')).title()
+        params['lastName'] = tfoms_data.get('lastName', tfoms_data.get('lastname', '')).title()
         params['firstName'] = tfoms_data.get('firstName', '').title()
-        params['patrName'] = tfoms_data.get('midname', tfoms_data.get('patrName', '')).title()
+        params['patrName'] = tfoms_data.get('patrName', tfoms_data.get('midname', '')).title()
         params['sex'] = tfoms_data.get('sex', 0)
         birthDate = datetime.datetime.strptime(tfoms_data.get('birthdate'), '%d.%m.%Y')
         params['birthDate'] = calendar.timegm(birthDate.timetuple()) * 1000
