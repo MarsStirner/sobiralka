@@ -2,7 +2,7 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import or_, and_, func, not_
 from sqlalchemy import Column, Table, Integer, BigInteger, String, Unicode, Text, UnicodeText, Enum, ForeignKey, Boolean
-from sqlalchemy import ForeignKeyConstraint, UniqueConstraint, Index
+from sqlalchemy import ForeignKeyConstraint, UniqueConstraint, Index, DateTime
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql.expression import ClauseList
 
@@ -260,3 +260,19 @@ class Regions(Base):
     is_active = Column(Boolean, default=True)
 
     __mapper_args__ = {'order_by': name}
+
+
+class Tickets(Base):
+    """Mapping for enqueue table"""
+    __tablename__ = 'tickets'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    timeslot = Column(DateTime())
+    lpu_id = Column(BigInteger, ForeignKey('lpu.id'))
+    doctor_id = Column(BigInteger)
+    patient_id = Column(BigInteger)
+    ticket_uuid = Column(String(25))
+    keyEPGU = Column(String(100))
+    message = Column(Unicode(100))
+    data = Column(Text)

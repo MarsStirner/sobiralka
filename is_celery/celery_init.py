@@ -52,6 +52,10 @@ celery.conf.update(
             'task': 'is_celery.tasks.clear_broker_messages',
             'schedule': crontab(minute=0, hour=1, day_of_week=6),
         },
+        'periodical_send_inside_tickets': {
+            'task': 'is_celery.tasks.epgu_send_new_tickets',
+            'schedule': crontab(minute=0),
+        },
     }
 )
 

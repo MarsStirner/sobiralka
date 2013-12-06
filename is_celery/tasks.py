@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 
+import exceptions
 from celery import group, chain
 from celery.signals import task_postrun
 from celery.utils.log import get_task_logger
@@ -153,6 +154,35 @@ def close_session(*args, **kwargs):
 def clear_broker_messages():
     db_session.query(Message).filter(Message.visible == 0).delete()
     db_session.commit()
+
+
+@celery.task(base=SqlAlchemyTask)
+def epgu_send_lpu_tickets(hospital_id, hospital):
+    Task_Session = init_task_session()
+    epgu_dw = EPGUWorker(Task_Session())
+    try:
+        epgu_dw.send_new_tickets(hospital_id, hospital)
+    except exceptions.Exception, e:
+        print e
+
+
+@celery.task(base=SqlAlchemyTask)
+def epgu_send_new_tickets():
+    lpu_list = (db_session.query(LPU).
+                filter(LPU.keyEPGU != '',
+                       LPU.keyEPGU != None,
+                       LPU.token != '',
+                       LPU.token != None).
+                all())
+    if lpu_list:
+        res = group([
+            epgu_send_lpu_tickets.s(
+                lpu.id,
+                dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
+            ) for lpu in lpu_list])()
+    else:
+        # self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
+        return False
 
 
 # UPDATE TASKS

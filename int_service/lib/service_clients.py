@@ -29,7 +29,7 @@ from core_services.ttypes import SQLException, NotFoundException, TException
 from core_services.ttypes import AnotherPolicyException, InvalidDocumentException, InvalidPersonalInfoException
 from core_services.ttypes import FindPatientByPolicyAndDocumentParameters, NotUniqueException
 from core_services.ttypes import ChangePolicyParameters, Policy, PolicyTypeNotFoundException
-from core_services.ttypes import ScheduleParameters, QuotingType
+from core_services.ttypes import ScheduleParameters, QuotingType, CouponStatus
 
 from tfoms_service import TFOMSClient, AnswerCodes, logger
 
@@ -1709,6 +1709,20 @@ class ClientKorus30(AbstractClient):
                               office=ticket.office,
                               doctor_id=doctor_id)
                 return result
+        return None
+
+    def get_new_tickets(self):
+        """Получает новые талончики, которые были созданы внутри ЛПУ.
+        Будут использованы для отправки на ЕПГУ
+        """
+        try:
+            result = self.client.checkForNewQueueCoupons()
+        except TException, e:
+            raise e
+        except WebFault, e:
+            print e
+        else:
+            return result
         return None
 
 
