@@ -5,23 +5,23 @@ import datetime
 import calendar
 from urlparse import urlparse
 from suds import WebFault
-import is_exceptions
+from ...lib import is_exceptions
 import settings
 from copy import deepcopy
 
 from thrift.transport import TTransport, TSocket, THttpClient
 from thrift.protocol import TBinaryProtocol, TProtocol
-from core_services.Communications import Client as Thrift_Client, TApplicationException
-from core_services.ttypes import GetTimeWorkAndStatusParameters, EnqueuePatientParameters
-from core_services.ttypes import AddPatientParameters, FindOrgStructureByAddressParameters
-from core_services.ttypes import FindPatientParameters, FindMultiplePatientsParameters
-from core_services.ttypes import SQLException, NotFoundException, TException
-from core_services.ttypes import AnotherPolicyException, InvalidDocumentException, InvalidPersonalInfoException
-from core_services.ttypes import FindPatientByPolicyAndDocumentParameters, NotUniqueException
-from core_services.ttypes import ChangePolicyParameters, Policy, PolicyTypeNotFoundException
-from core_services.ttypes import ScheduleParameters, QuotingType, CouponStatus, ReasonOfAbsenceException
+from ..core_services.Communications import Client as Thrift_Client, TApplicationException
+from ..core_services.ttypes import GetTimeWorkAndStatusParameters, EnqueuePatientParameters
+from ..core_services.ttypes import AddPatientParameters, FindOrgStructureByAddressParameters
+from ..core_services.ttypes import FindPatientParameters, FindMultiplePatientsParameters
+from ..core_services.ttypes import SQLException, NotFoundException, TException
+from ..core_services.ttypes import AnotherPolicyException, InvalidDocumentException, InvalidPersonalInfoException
+from ..core_services.ttypes import FindPatientByPolicyAndDocumentParameters, NotUniqueException
+from ..core_services.ttypes import ChangePolicyParameters, Policy, PolicyTypeNotFoundException
+from ..core_services.ttypes import ScheduleParameters, QuotingType, CouponStatus, ReasonOfAbsenceException
 
-from tfoms_service import TFOMSClient, AnswerCodes, logger
+from ..tfoms_service import TFOMSClient, AnswerCodes, logger
 from abstract import AbstractClient
 
 # From rbPolicyType.id to rbPolicyType.code (с сайта приходит id в Korus30 необходимо передавать code),
@@ -169,6 +169,75 @@ class ClientKorus30(AbstractClient):
         return None
 
     def getScheduleInfo(self, **kwargs):
+        """Формирует и возвращает информацию о расписании приёма врача
+
+        Args:
+            start: дата начала расписания (обязательный)
+            end: дата окончания расписания (обязательный)
+            doctor_uid: id врача (обязательный)
+            hospital_uid_from: id ЛПУ, из которого производится запрос (необязательный)
+
+        """
+        result = []
+        absences = []
+        start = kwargs.get('start')
+        end = kwargs.get('end')
+        doctor_uid = kwargs.get('doctor_uid')
+        if start and end and doctor_uid:
+            hospital_uid_from = kwargs.get('hospital_uid_from')
+            if not hospital_uid_from:
+                hospital_uid_from = ''
+
+            parameters = ScheduleParameters(personId=doctor_uid,
+                                            beginDateTime=int(calendar.timegm(start.timetuple()) * 1000),
+                                            endDateTime=int(calendar.timegm(end.timetuple()) * 1000),
+                                            hospitalUidFrom=hospital_uid_from,
+                                            quotingType=QuotingType.FROM_PORTAL)
+
+            try:
+                data = self.client.getPersonSchedule(parameters)
+            except NotFoundException, e:
+                print e.error_msg
+            else:
+                schedules = getattr(data, 'schedules', dict())
+                person_absences = getattr(data, 'personAbsences', dict())
+                if schedules:
+                    for date_timestamp, schedule in schedules.items():
+                        if schedule and hasattr(schedule, 'tickets') and schedule.tickets:
+                            date = schedule.date
+                            for key, timeslot in enumerate(schedule.tickets):
+                                start = datetime.datetime.utcfromtimestamp((date + timeslot.begTime) / 1000)
+                                finish = datetime.datetime.utcfromtimestamp((date + timeslot.endTime) / 1000)
+
+                                if timeslot.free and timeslot.available:
+                                    status = 'free'
+                                elif timeslot.free:
+                                    status = 'disabled'
+                                else:
+                                    status = 'locked'
+
+                                result.append({
+                                    'start': start,
+                                    'finish': finish,
+                                    'status': status,
+                                    'office': schedule.office,
+                                    'patientId': timeslot.patientId if hasattr(timeslot, 'patientId') else None,
+                                    'patientInfo': (
+                                        timeslot.patientInfo
+                                        if hasattr(timeslot, 'patientInfo') and timeslot.patientInfo
+                                        else None
+                                    ),
+                                })
+
+                if person_absences:
+                    for date_timestamp, absence in person_absences.items():
+                        date = datetime.datetime.utcfromtimestamp(date_timestamp / 1000).date()
+                        absences.append(dict(date=date, code=absence.code, name=absence.name))
+        else:
+            raise exceptions.ValueError
+        return {'timeslots': result, 'absences': absences}
+
+    def getScheduleInfo_old(self, **kwargs):
         """Формирует и возвращает информацию о расписании приёма врача
 
         Args:

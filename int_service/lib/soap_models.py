@@ -473,10 +473,22 @@ class Timeslot(ComplexModel):
         super(Timeslot, self).__init__(doc=u'Интервал в расписании врача')
 
 
+class Absence(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    date = Date
+    code = String
+    name = Unicode
+
+    def __init__(self):
+        super(Absence, self).__init__(doc=u'Причина отсутствия врача')
+
+
 class GetScheduleInfoResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     timeslots = Timeslot.customize(max_occurs='unbounded', doc=u'Расписание на отдельные дни в заданном интервале')
+    absences = Absence.customize(max_occurs='unbounded', doc=u'Причина отсутствия на отдельные дни в заданном интервале')
 
     def __init__(self):
         super(GetScheduleInfoResponse, self).__init__(doc=u'Информация о расписании врача')

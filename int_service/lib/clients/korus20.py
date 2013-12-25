@@ -2,9 +2,9 @@
 import exceptions
 import datetime
 from suds import WebFault
-import is_exceptions
+from ...lib import is_exceptions
 import settings
-from tfoms_service import TFOMSClient, AnswerCodes, logger
+from ..tfoms_service import TFOMSClient, AnswerCodes, logger
 from suds.client import Client
 from abstract import AbstractClient
 
