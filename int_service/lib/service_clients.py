@@ -24,12 +24,12 @@ from thrift.protocol import TBinaryProtocol, TProtocol
 from core_services.Communications import Client as Thrift_Client, TApplicationException
 from core_services.ttypes import GetTimeWorkAndStatusParameters, EnqueuePatientParameters
 from core_services.ttypes import AddPatientParameters, FindOrgStructureByAddressParameters
-from core_services.ttypes import FindPatientParameters, FindMultiplePatientsParameters, PatientInfo
+from core_services.ttypes import FindPatientParameters, FindMultiplePatientsParameters
 from core_services.ttypes import SQLException, NotFoundException, TException
 from core_services.ttypes import AnotherPolicyException, InvalidDocumentException, InvalidPersonalInfoException
 from core_services.ttypes import FindPatientByPolicyAndDocumentParameters, NotUniqueException
 from core_services.ttypes import ChangePolicyParameters, Policy, PolicyTypeNotFoundException
-from core_services.ttypes import ScheduleParameters, QuotingType, CouponStatus
+from core_services.ttypes import ScheduleParameters, QuotingType, CouponStatus, ReasonOfAbsenceException
 
 from tfoms_service import TFOMSClient, AnswerCodes, logger
 
@@ -1077,16 +1077,13 @@ class ClientKorus30(AbstractClient):
         """Возвращает информацию о записях пациента
 
         Args:
-            serverId: infis код ЛПУ (обязательный)
             patientId: id пациента (обязательный)
 
         """
-        server_id = kwargs.get('serverId')
         patient_id = kwargs.get('patientId')
-        if server_id and patient_id:
-            params = PatientInfo(infisCode = server_id, patientId = patient_id,)
+        if patient_id:
             try:
-                result = self.client.getPatientQueue(params)
+                result = self.client.getPatientQueue(patient_id)
             except SQLException, e:
                 print e.error_msg
             except WebFault, e:
@@ -1102,16 +1099,15 @@ class ClientKorus30(AbstractClient):
         """Возвращает информацию о пациенте
 
         Args:
-             serverId: infis код ЛПУ (обязательный)
              patientId: id пациента (обязательный)
 
         """
-        server_id = kwargs.get('serverId')
         patient_id = kwargs.get('patientId')
-        if server_id and patient_id:
-            params = PatientInfo(infisCode=server_id, patientId=patient_id)
+        if patient_id:
+            if not isinstance(patient_id, list):
+                patient_id = [patient_id]
             try:
-                result = self.client.getPatientInfo(params)
+                result = self.client.getPatientInfo(patient_id)
             except WebFault, e:
                 print e
             else:
@@ -1250,6 +1246,8 @@ class ClientKorus30(AbstractClient):
         except NotFoundException, e:
             print e.error_msg
         except TApplicationException, e:
+            print e
+        except ReasonOfAbsenceException, e:
             print e
         else:
             if schedule and hasattr(schedule, 'tickets') and schedule.tickets:

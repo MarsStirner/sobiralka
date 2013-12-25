@@ -50,8 +50,8 @@ class Iface(object):
 
   def getAddresses(self, orgStructureId, recursive, infisCode):
     """
-    Получение адресов запрошенного подразделения
-    @param orgStructureId                1) идетификатор подразделения, для которого требуется найти адреса
+    Получение обслуживаемых адресов запрошенного подразделения
+    @param orgStructureId                1) идетификатор подразделения, для которого требуется найти обслуживаемые им адреса
     @param recursive                     2) Флаг рекурсии (выбрать также подразделения, входяшие во все дочерние подразделения)
     @param infisCode                     3) Инфис-код
     @return                              Список структур, содержащих информацию об адресах запрошенных подразделений
@@ -217,8 +217,7 @@ class Iface(object):
     """
     Метод для получения расписания врача пачкой за указанный интервал
     @param params                        1) Параметры для получения расписания
-    @return                              map<timestamp, Schedule> - карта вида <[Дата приема], [Расписание на эту дату]>,
-                                         в случае отсутствия расписания на указанную дату набор ключ-значение опускается
+    @return                              структура данных с информацией о примемах врача
     @throws NotFoundException            когда нету такого идентификатора врача
 
     Parameters:
@@ -408,8 +407,8 @@ class Client(Iface):
 
   def getAddresses(self, orgStructureId, recursive, infisCode):
     """
-    Получение адресов запрошенного подразделения
-    @param orgStructureId                1) идетификатор подразделения, для которого требуется найти адреса
+    Получение обслуживаемых адресов запрошенного подразделения
+    @param orgStructureId                1) идетификатор подразделения, для которого требуется найти обслуживаемые им адреса
     @param recursive                     2) Флаг рекурсии (выбрать также подразделения, входяшие во все дочерние подразделения)
     @param infisCode                     3) Инфис-код
     @return                              Список структур, содержащих информацию об адресах запрошенных подразделений
@@ -648,6 +647,8 @@ class Client(Iface):
       raise result.exc
     if result.excsql is not None:
       raise result.excsql
+    if result.raExc is not None:
+      raise result.raExc
     raise TApplicationException(TApplicationException.MISSING_RESULT, "getWorkTimeAndStatus failed: unknown result");
 
   def addPatient(self, params):
@@ -927,8 +928,7 @@ class Client(Iface):
     """
     Метод для получения расписания врача пачкой за указанный интервал
     @param params                        1) Параметры для получения расписания
-    @return                              map<timestamp, Schedule> - карта вида <[Дата приема], [Расписание на эту дату]>,
-                                         в случае отсутствия расписания на указанную дату набор ключ-значение опускается
+    @return                              структура данных с информацией о примемах врача
     @throws NotFoundException            когда нету такого идентификатора врача
 
     Parameters:
@@ -1112,6 +1112,8 @@ class Client(Iface):
       raise result.exc
     if result.excsql is not None:
       raise result.excsql
+    if result.raExc is not None:
+      raise result.raExc
     raise TApplicationException(TApplicationException.MISSING_RESULT, "enqueuePatient failed: unknown result");
 
   def getPatientQueue(self, patientId):
@@ -1399,6 +1401,8 @@ class Processor(Iface, TProcessor):
       result.exc = exc
     except SQLException as excsql:
       result.excsql = excsql
+    except ReasonOfAbsenceException as raExc:
+      result.raExc = raExc
     oprot.writeMessageBegin("getWorkTimeAndStatus", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
@@ -1582,6 +1586,8 @@ class Processor(Iface, TProcessor):
       result.exc = exc
     except SQLException as excsql:
       result.excsql = excsql
+    except ReasonOfAbsenceException as raExc:
+      result.raExc = raExc
     oprot.writeMessageBegin("enqueuePatient", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
@@ -1884,11 +1890,11 @@ class getOrgStructures_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype35, _size32) = iprot.readListBegin()
-          for _i36 in xrange(_size32):
-            _elem37 = OrgStructure()
-            _elem37.read(iprot)
-            self.success.append(_elem37)
+          (_etype53, _size50) = iprot.readListBegin()
+          for _i54 in xrange(_size50):
+            _elem55 = OrgStructure()
+            _elem55.read(iprot)
+            self.success.append(_elem55)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -1917,8 +1923,8 @@ class getOrgStructures_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter38 in self.success:
-        iter38.write(oprot)
+      for iter56 in self.success:
+        iter56.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -2062,11 +2068,11 @@ class getAddresses_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype42, _size39) = iprot.readListBegin()
-          for _i43 in xrange(_size39):
-            _elem44 = Address()
-            _elem44.read(iprot)
-            self.success.append(_elem44)
+          (_etype60, _size57) = iprot.readListBegin()
+          for _i61 in xrange(_size57):
+            _elem62 = Address()
+            _elem62.read(iprot)
+            self.success.append(_elem62)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -2095,8 +2101,8 @@ class getAddresses_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter45 in self.success:
-        iter45.write(oprot)
+      for iter63 in self.success:
+        iter63.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.excsql is not None:
@@ -2217,10 +2223,10 @@ class findOrgStructureByAddress_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype49, _size46) = iprot.readListBegin()
-          for _i50 in xrange(_size46):
-            _elem51 = iprot.readI32();
-            self.success.append(_elem51)
+          (_etype67, _size64) = iprot.readListBegin()
+          for _i68 in xrange(_size64):
+            _elem69 = iprot.readI32();
+            self.success.append(_elem69)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -2249,8 +2255,8 @@ class findOrgStructureByAddress_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.I32, len(self.success))
-      for iter52 in self.success:
-        oprot.writeI32(iter52)
+      for iter70 in self.success:
+        oprot.writeI32(iter70)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -2394,11 +2400,11 @@ class getPersonnel_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype56, _size53) = iprot.readListBegin()
-          for _i57 in xrange(_size53):
-            _elem58 = Person()
-            _elem58.read(iprot)
-            self.success.append(_elem58)
+          (_etype74, _size71) = iprot.readListBegin()
+          for _i75 in xrange(_size71):
+            _elem76 = Person()
+            _elem76.read(iprot)
+            self.success.append(_elem76)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -2427,8 +2433,8 @@ class getPersonnel_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter59 in self.success:
-        iter59.write(oprot)
+      for iter77 in self.success:
+        iter77.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -2696,11 +2702,11 @@ class getTicketsAvailability_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype63, _size60) = iprot.readListBegin()
-          for _i64 in xrange(_size60):
-            _elem65 = ExtendedTicketsAvailability()
-            _elem65.read(iprot)
-            self.success.append(_elem65)
+          (_etype81, _size78) = iprot.readListBegin()
+          for _i82 in xrange(_size78):
+            _elem83 = ExtendedTicketsAvailability()
+            _elem83.read(iprot)
+            self.success.append(_elem83)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -2729,8 +2735,8 @@ class getTicketsAvailability_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter66 in self.success:
-        iter66.write(oprot)
+      for iter84 in self.success:
+        iter84.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -2826,18 +2832,21 @@ class getWorkTimeAndStatus_result(object):
    - success
    - exc
    - excsql
+   - raExc
   """
 
   thrift_spec = (
     (0, TType.STRUCT, 'success', (Amb, Amb.thrift_spec), None, ), # 0
     (1, TType.STRUCT, 'exc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
     (2, TType.STRUCT, 'excsql', (SQLException, SQLException.thrift_spec), None, ), # 2
+    (3, TType.STRUCT, 'raExc', (ReasonOfAbsenceException, ReasonOfAbsenceException.thrift_spec), None, ), # 3
   )
 
-  def __init__(self, success=None, exc=None, excsql=None,):
+  def __init__(self, success=None, exc=None, excsql=None, raExc=None,):
     self.success = success
     self.exc = exc
     self.excsql = excsql
+    self.raExc = raExc
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -2866,6 +2875,12 @@ class getWorkTimeAndStatus_result(object):
           self.excsql.read(iprot)
         else:
           iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRUCT:
+          self.raExc = ReasonOfAbsenceException()
+          self.raExc.read(iprot)
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -2887,6 +2902,10 @@ class getWorkTimeAndStatus_result(object):
     if self.excsql is not None:
       oprot.writeFieldBegin('excsql', TType.STRUCT, 2)
       self.excsql.write(oprot)
+      oprot.writeFieldEnd()
+    if self.raExc is not None:
+      oprot.writeFieldBegin('raExc', TType.STRUCT, 3)
+      self.raExc.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -3279,11 +3298,11 @@ class findPatients_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype70, _size67) = iprot.readListBegin()
-          for _i71 in xrange(_size67):
-            _elem72 = Patient()
-            _elem72.read(iprot)
-            self.success.append(_elem72)
+          (_etype88, _size85) = iprot.readListBegin()
+          for _i89 in xrange(_size85):
+            _elem90 = Patient()
+            _elem90.read(iprot)
+            self.success.append(_elem90)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -3312,8 +3331,8 @@ class findPatients_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter73 in self.success:
-        iter73.write(oprot)
+      for iter91 in self.success:
+        iter91.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -3741,11 +3760,11 @@ class checkForNewQueueCoupons_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype77, _size74) = iprot.readListBegin()
-          for _i78 in xrange(_size74):
-            _elem79 = QueueCoupon()
-            _elem79.read(iprot)
-            self.success.append(_elem79)
+          (_etype95, _size92) = iprot.readListBegin()
+          for _i96 in xrange(_size92):
+            _elem97 = QueueCoupon()
+            _elem97.read(iprot)
+            self.success.append(_elem97)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -3762,8 +3781,8 @@ class checkForNewQueueCoupons_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter80 in self.success:
-        iter80.write(oprot)
+      for iter98 in self.success:
+        iter98.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -3987,7 +4006,7 @@ class getPersonSchedule_result(object):
   """
 
   thrift_spec = (
-    (0, TType.MAP, 'success', (TType.I64,None,TType.STRUCT,(Schedule, Schedule.thrift_spec)), None, ), # 0
+    (0, TType.STRUCT, 'success', (PersonSchedule, PersonSchedule.thrift_spec), None, ), # 0
     (1, TType.STRUCT, 'nfExc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
   )
 
@@ -4005,15 +4024,9 @@ class getPersonSchedule_result(object):
       if ftype == TType.STOP:
         break
       if fid == 0:
-        if ftype == TType.MAP:
-          self.success = {}
-          (_ktype82, _vtype83, _size81 ) = iprot.readMapBegin() 
-          for _i85 in xrange(_size81):
-            _key86 = iprot.readI64();
-            _val87 = Schedule()
-            _val87.read(iprot)
-            self.success[_key86] = _val87
-          iprot.readMapEnd()
+        if ftype == TType.STRUCT:
+          self.success = PersonSchedule()
+          self.success.read(iprot)
         else:
           iprot.skip(ftype)
       elif fid == 1:
@@ -4033,12 +4046,8 @@ class getPersonSchedule_result(object):
       return
     oprot.writeStructBegin('getPersonSchedule_result')
     if self.success is not None:
-      oprot.writeFieldBegin('success', TType.MAP, 0)
-      oprot.writeMapBegin(TType.I64, TType.STRUCT, len(self.success))
-      for kiter88,viter89 in self.success.items():
-        oprot.writeI64(kiter88)
-        viter89.write(oprot)
-      oprot.writeMapEnd()
+      oprot.writeFieldBegin('success', TType.STRUCT, 0)
+      self.success.write(oprot)
       oprot.writeFieldEnd()
     if self.nfExc is not None:
       oprot.writeFieldBegin('nfExc', TType.STRUCT, 1)
@@ -4088,10 +4097,10 @@ class getPatientInfo_args(object):
       if fid == 1:
         if ftype == TType.LIST:
           self.patientIds = []
-          (_etype93, _size90) = iprot.readListBegin()
-          for _i94 in xrange(_size90):
-            _elem95 = iprot.readI32();
-            self.patientIds.append(_elem95)
+          (_etype102, _size99) = iprot.readListBegin()
+          for _i103 in xrange(_size99):
+            _elem104 = iprot.readI32();
+            self.patientIds.append(_elem104)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -4108,8 +4117,8 @@ class getPatientInfo_args(object):
     if self.patientIds is not None:
       oprot.writeFieldBegin('patientIds', TType.LIST, 1)
       oprot.writeListBegin(TType.I32, len(self.patientIds))
-      for iter96 in self.patientIds:
-        oprot.writeI32(iter96)
+      for iter105 in self.patientIds:
+        oprot.writeI32(iter105)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
@@ -4139,7 +4148,7 @@ class getPatientInfo_result(object):
   """
 
   thrift_spec = (
-    (0, TType.MAP, 'success', (TType.I32,None,TType.STRUCT,(PatientInfo, PatientInfo.thrift_spec)), None, ), # 0
+    (0, TType.MAP, 'success', (TType.I32,None,TType.STRUCT,(Patient, Patient.thrift_spec)), None, ), # 0
     (1, TType.STRUCT, 'exc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
     (2, TType.STRUCT, 'excsql', (SQLException, SQLException.thrift_spec), None, ), # 2
   )
@@ -4161,12 +4170,12 @@ class getPatientInfo_result(object):
       if fid == 0:
         if ftype == TType.MAP:
           self.success = {}
-          (_ktype98, _vtype99, _size97 ) = iprot.readMapBegin() 
-          for _i101 in xrange(_size97):
-            _key102 = iprot.readI32();
-            _val103 = PatientInfo()
-            _val103.read(iprot)
-            self.success[_key102] = _val103
+          (_ktype107, _vtype108, _size106 ) = iprot.readMapBegin() 
+          for _i110 in xrange(_size106):
+            _key111 = iprot.readI32();
+            _val112 = Patient()
+            _val112.read(iprot)
+            self.success[_key111] = _val112
           iprot.readMapEnd()
         else:
           iprot.skip(ftype)
@@ -4195,9 +4204,9 @@ class getPatientInfo_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.MAP, 0)
       oprot.writeMapBegin(TType.I32, TType.STRUCT, len(self.success))
-      for kiter104,viter105 in self.success.items():
-        oprot.writeI32(kiter104)
-        viter105.write(oprot)
+      for kiter113,viter114 in self.success.items():
+        oprot.writeI32(kiter113)
+        viter114.write(oprot)
       oprot.writeMapEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -4314,11 +4323,11 @@ class getPatientContacts_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype109, _size106) = iprot.readListBegin()
-          for _i110 in xrange(_size106):
-            _elem111 = Contact()
-            _elem111.read(iprot)
-            self.success.append(_elem111)
+          (_etype118, _size115) = iprot.readListBegin()
+          for _i119 in xrange(_size115):
+            _elem120 = Contact()
+            _elem120.read(iprot)
+            self.success.append(_elem120)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -4341,8 +4350,8 @@ class getPatientContacts_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter112 in self.success:
-        iter112.write(oprot)
+      for iter121 in self.success:
+        iter121.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -4455,11 +4464,11 @@ class getPatientOrgStructures_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype116, _size113) = iprot.readListBegin()
-          for _i117 in xrange(_size113):
-            _elem118 = OrgStructuresProperties()
-            _elem118.read(iprot)
-            self.success.append(_elem118)
+          (_etype125, _size122) = iprot.readListBegin()
+          for _i126 in xrange(_size122):
+            _elem127 = OrgStructuresProperties()
+            _elem127.read(iprot)
+            self.success.append(_elem127)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -4482,8 +4491,8 @@ class getPatientOrgStructures_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter119 in self.success:
-        iter119.write(oprot)
+      for iter128 in self.success:
+        iter128.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -4575,18 +4584,21 @@ class enqueuePatient_result(object):
    - success
    - exc
    - excsql
+   - raExc
   """
 
   thrift_spec = (
     (0, TType.STRUCT, 'success', (EnqueuePatientStatus, EnqueuePatientStatus.thrift_spec), None, ), # 0
     (1, TType.STRUCT, 'exc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
     (2, TType.STRUCT, 'excsql', (SQLException, SQLException.thrift_spec), None, ), # 2
+    (3, TType.STRUCT, 'raExc', (ReasonOfAbsenceException, ReasonOfAbsenceException.thrift_spec), None, ), # 3
   )
 
-  def __init__(self, success=None, exc=None, excsql=None,):
+  def __init__(self, success=None, exc=None, excsql=None, raExc=None,):
     self.success = success
     self.exc = exc
     self.excsql = excsql
+    self.raExc = raExc
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -4615,6 +4627,12 @@ class enqueuePatient_result(object):
           self.excsql.read(iprot)
         else:
           iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRUCT:
+          self.raExc = ReasonOfAbsenceException()
+          self.raExc.read(iprot)
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -4636,6 +4654,10 @@ class enqueuePatient_result(object):
     if self.excsql is not None:
       oprot.writeFieldBegin('excsql', TType.STRUCT, 2)
       self.excsql.write(oprot)
+      oprot.writeFieldEnd()
+    if self.raExc is not None:
+      oprot.writeFieldBegin('raExc', TType.STRUCT, 3)
+      self.raExc.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -4746,11 +4768,11 @@ class getPatientQueue_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype123, _size120) = iprot.readListBegin()
-          for _i124 in xrange(_size120):
-            _elem125 = Queue()
-            _elem125.read(iprot)
-            self.success.append(_elem125)
+          (_etype132, _size129) = iprot.readListBegin()
+          for _i133 in xrange(_size129):
+            _elem134 = Queue()
+            _elem134.read(iprot)
+            self.success.append(_elem134)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -4779,8 +4801,8 @@ class getPatientQueue_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter126 in self.success:
-        iter126.write(oprot)
+      for iter135 in self.success:
+        iter135.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:
@@ -5055,11 +5077,11 @@ class getSpecialities_result(object):
       if fid == 0:
         if ftype == TType.LIST:
           self.success = []
-          (_etype130, _size127) = iprot.readListBegin()
-          for _i131 in xrange(_size127):
-            _elem132 = Speciality()
-            _elem132.read(iprot)
-            self.success.append(_elem132)
+          (_etype139, _size136) = iprot.readListBegin()
+          for _i140 in xrange(_size136):
+            _elem141 = Speciality()
+            _elem141.read(iprot)
+            self.success.append(_elem141)
           iprot.readListEnd()
         else:
           iprot.skip(ftype)
@@ -5082,8 +5104,8 @@ class getSpecialities_result(object):
     if self.success is not None:
       oprot.writeFieldBegin('success', TType.LIST, 0)
       oprot.writeListBegin(TType.STRUCT, len(self.success))
-      for iter133 in self.success:
-        iter133.write(oprot)
+      for iter142 in self.success:
+        iter142.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
     if self.exc is not None:

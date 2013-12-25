@@ -38,7 +38,7 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print '  bool changePatientPolicy(ChangePolicyParameters params)'
   print '   checkForNewQueueCoupons()'
   print '  TTicket getFirstFreeTicket(ScheduleParameters params)'
-  print '   getPersonSchedule(ScheduleParameters params)'
+  print '  PersonSchedule getPersonSchedule(ScheduleParameters params)'
   print '   getPatientInfo( patientIds)'
   print '   getPatientContacts(i32 patientId)'
   print '   getPatientOrgStructures(i32 parentId)'
