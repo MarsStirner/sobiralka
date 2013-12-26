@@ -36,11 +36,14 @@ if len(sys.argv) <= 1 or sys.argv[1] == '--help':
   print '   findPatients(FindMultiplePatientsParameters params)'
   print '  PatientStatus findPatientByPolicyAndDocument(FindPatientByPolicyAndDocumentParameters params)'
   print '  bool changePatientPolicy(ChangePolicyParameters params)'
+  print '   checkForNewQueueCoupons()'
+  print '  TTicket getFirstFreeTicket(ScheduleParameters params)'
+  print '  PersonSchedule getPersonSchedule(ScheduleParameters params)'
   print '   getPatientInfo( patientIds)'
   print '   getPatientContacts(i32 patientId)'
   print '   getPatientOrgStructures(i32 parentId)'
   print '  EnqueuePatientStatus enqueuePatient(EnqueuePatientParameters params)'
-  print '   getPatientQueue(i32 parentId)'
+  print '   getPatientQueue(i32 patientId)'
   print '  DequeuePatientStatus dequeuePatient(i32 patientId, i32 queueId)'
   print '   getSpecialities(string hospitalUidFrom)'
   print ''
@@ -171,6 +174,24 @@ elif cmd == 'changePatientPolicy':
     print 'changePatientPolicy requires 1 args'
     sys.exit(1)
   pp.pprint(client.changePatientPolicy(eval(args[0]),))
+
+elif cmd == 'checkForNewQueueCoupons':
+  if len(args) != 0:
+    print 'checkForNewQueueCoupons requires 0 args'
+    sys.exit(1)
+  pp.pprint(client.checkForNewQueueCoupons())
+
+elif cmd == 'getFirstFreeTicket':
+  if len(args) != 1:
+    print 'getFirstFreeTicket requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.getFirstFreeTicket(eval(args[0]),))
+
+elif cmd == 'getPersonSchedule':
+  if len(args) != 1:
+    print 'getPersonSchedule requires 1 args'
+    sys.exit(1)
+  pp.pprint(client.getPersonSchedule(eval(args[0]),))
 
 elif cmd == 'getPatientInfo':
   if len(args) != 1:

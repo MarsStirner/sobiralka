@@ -7,6 +7,7 @@ from spyne.model.binary import ByteArray
 
 from settings import SOAP_NAMESPACE
 
+
 # INFO MODELS
 class HospitalAddress(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
@@ -472,10 +473,22 @@ class Timeslot(ComplexModel):
         super(Timeslot, self).__init__(doc=u'Интервал в расписании врача')
 
 
+class Absence(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    date = Date
+    code = String
+    name = Unicode
+
+    def __init__(self):
+        super(Absence, self).__init__(doc=u'Причина отсутствия врача')
+
+
 class GetScheduleInfoResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     timeslots = Timeslot.customize(max_occurs='unbounded', doc=u'Расписание на отдельные дни в заданном интервале')
+    absences = Absence.customize(max_occurs='unbounded', doc=u'Причина отсутствия на отдельные дни в заданном интервале')
 
     def __init__(self):
         super(GetScheduleInfoResponse, self).__init__(doc=u'Информация о расписании врача')
@@ -798,3 +811,40 @@ class ErrorResponseType(ComplexModel):
 
     def __init__(self):
         super(ErrorResponseType, self).__init__(doc=u'Ответ в случае возникновения ошибки')
+
+
+class ClosestTicket(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    timeslotStart = DateTime(doc=u'Начало приёма у врача по талончику')
+    timeslotEnd = DateTime(doc=u'Окончание приёма у врача по талончику')
+    office = Unicode(doc=u'Кабинет приёма')
+    doctor_id = Integer(doc=u'ID врача')
+
+    def __init__(self):
+        super(ClosestTicket, self).__init__(doc=u'Данные о ближайшем талончике')
+
+
+class GetClosestTicketsRequest(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    hospitalUid = String(doc=u'Уникальный идентификатор ЛПУ в БД ИС')
+    doctors = Integer(min_occurs=1, max_occurs='unbounded', nillable=False, doc=u'Список идентификаторов врачей')
+    start = DateTime()
+
+    def __init__(self):
+        super(GetClosestTicketsRequest, self).__init__(
+            doc=u'Данные запроса на получение ближайших талончиков по врачам')
+
+
+class GetClosestTicketsResponse(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    tickets = ClosestTicket.customize(min_occurs=0,
+                                      max_occurs='unbounded',
+                                      nillable=True,
+                                      doc=u'Список ближайших талончиков')
+
+    def __init__(self):
+        super(GetClosestTicketsResponse, self).__init__(
+            doc=u'Результат запроса на получение ближайших талончиков по врачам')

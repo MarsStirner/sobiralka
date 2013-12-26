@@ -22,8 +22,8 @@ from suds import WebFault
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, DEBUG
 from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality, Regions, LPU_Specialities
 from admin.models import Personal_Specialities, EPGU_Speciality, EPGU_Service_Type, Personal_KeyEPGU
-from admin.models import EPGU_Payment_Method, EPGU_Reservation_Type
-from service_clients import Clients, ClientEPGU
+from admin.models import EPGU_Payment_Method, EPGU_Reservation_Type, Tickets
+from service_clients import Clients, ClientEPGU, CouponStatus
 from is_exceptions import exception_by_code, IS_ConnectionError
 
 from admin.database import Session, Session2, init_task_session, shutdown_session
@@ -35,8 +35,8 @@ rootLogger = logging.getLogger()
 rootLogger.addHandler(h1)
 
 if DEBUG:
-    logging.basicConfig(level=logging.INFO)
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.DEBUG)
+    logging.basicConfig(level=logging.ERROR)
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
 else:
     logging.basicConfig(level=logging.ERROR)
     logging.getLogger('sqlalchemy.engine').setLevel(logging.ERROR)
@@ -107,6 +107,7 @@ class LPUWorker(object):
         for i in hospitalUid:
             tmp_list = i.split('/')
             if len(tmp_list) > 1 and int(tmp_list[1]):
+                lpu.append(int(tmp_list[0]))
                 lpu_units.append([int(tmp_list[0]), int(tmp_list[1])])
             else:
                 lpu.append(int(tmp_list[0]))
@@ -426,7 +427,7 @@ class LPU_UnitsWorker(object):
         if lpu_id:
             query_lpu_units = query_lpu_units.filter(LPU_Units.lpuId == lpu_id)
 
-        return query_lpu_units.group_by(LPU_Units.id).all()
+        return query_lpu_units.group_by(LPU_Units.id).order_by(LPU_Units.name).all()
 
     def get_by_id(self, id):
         """
@@ -512,6 +513,31 @@ class EnqueueWorker(object):
         result = proxy_client.getScheduleInfo(**params)
         shutdown_session()
         return result
+
+    def get_closest_tickets(self, hospitalUid, doctors, start=None):
+        result = list()
+        hospital_uid = hospitalUid
+        if hospital_uid:
+            hospital_uid = hospital_uid.split('/')
+        if isinstance(hospital_uid, list) and len(hospital_uid) > 1:
+            lpu_id = hospital_uid[0]
+        else:
+            shutdown_session()
+            raise exceptions.ValueError
+        lpu_dw = LPUWorker()
+        lpu = lpu_dw.get_by_id(lpu_id)
+        proxy_client = Clients.provider(lpu.protocol, lpu.proxy.split(';')[0])
+        method = 'get_closest_free_ticket'
+        if hasattr(proxy_client, method) and callable(getattr(proxy_client, method)):
+            for doctor_id in doctors:
+                try:
+                    ticket = proxy_client.get_closest_free_ticket(doctor_id, start)
+                except Exception, e:
+                    print e
+                else:
+                    #result[doctor_id] = ticket
+                    result.append(ticket)
+        return dict(tickets=result)
 
     def __get_dates_period(self, start, end):
         if not start:
@@ -788,8 +814,7 @@ class EnqueueWorker(object):
         service_type = doctor_info.speciality[0].epgu_service_type
         task_doctor = dict(location_id=getattr(doctor_info.key_epgu, 'keyEPGU', None),
                            epgu_service_type=getattr(service_type, 'keyEPGU', None))
-
-        hospital_uid_from = kwargs.get('hospitalUidFrom', '0')
+        hospital_uid_from = kwargs.get('hospitalUidFrom', '')
 
         if not doctor_info:
             shutdown_session()
@@ -866,13 +891,14 @@ class EnqueueWorker(object):
     def __delete_epgu_slot(self, hospital, patient_id, ticket_id):
         if not hospital.token or not hospital.keyEPGU:
             return None
-
+        # TODO: может возникнуть ситуация, когда patient_id и ticket_id совпадают для разных ЛПУ
+        # TODO: тогда может не произвестись отмена записи на ГП, т.к. мы достанем не тот keyEPGU
+        # TODO: решается учётом lpu_id
         enqueue_record = (self.session.query(Enqueue).
                           filter(and_(Enqueue.patient_id == int(patient_id), Enqueue.ticket_id == int(ticket_id))).
                           one())
         _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
         if enqueue_record:
-            # # TODO: CELERY TASK
             # epgu_dw = EPGUWorker()
             # epgu_dw.epgu_delete_slot(_hospital, enqueue_record.keyEPGU)
 
@@ -950,6 +976,16 @@ class EnqueueWorker(object):
         shutdown_session()
         return result
 
+    def get_new_tickets(self, lpu_id):
+        result = None
+        lpu_dw = LPUWorker()
+        lpu = lpu_dw.get_by_id(lpu_id)
+        proxy_client = Clients.provider(lpu.protocol, lpu.proxy.split(';')[0])
+        method = 'get_new_tickets'
+        if hasattr(proxy_client, method) and callable(getattr(proxy_client, method)):
+            result = proxy_client.get_new_tickets()
+        return result
+
 
 class PersonalWorker(object):
     """Класс для работы с информацией по врачам"""
@@ -974,11 +1010,12 @@ class PersonalWorker(object):
         speciality = kwargs.get('speciality')
         lastName = kwargs.get('lastName')
         or_list = []
-        if lpu or lpu_units:
-            for item in lpu:
-                or_list.append(and_(Personal.lpuId == item.id,))
+        if lpu_units:
             for item in lpu_units:
                 or_list.append(and_(Personal.lpuId == item.lpuId, Personal.orgId == item.orgId))
+        elif lpu:
+            for item in lpu:
+                or_list.append(and_(Personal.lpuId == item.id,))
 #         else:
                 #TODO: по-хорошему бы расскоментить, чтоб при пустых параметрах была пустота, но сначала нужно изменить код НТК
 # #            raise exceptions.AttributeError
@@ -999,12 +1036,16 @@ class PersonalWorker(object):
         query = query.outerjoin(LPU_Units, Personal.orgId == LPU_Units.orgId).filter(Personal.lpuId == LPU_Units.lpuId)
 
         if speciality:
-            query = query.filter(Speciality.name == speciality)
+            query = query.filter(or_(Speciality.name == speciality, Speciality.name.like(u'%{0}%'.format(speciality))))
         if lastName:
             query = query.filter(Personal.LastName == lastName)
 
         query = query.filter(or_(*or_list))
-        query = query.order_by(Personal.LastName, Personal.FirstName, Personal.PatrName)
+        order_by = kwargs.get('order')
+        if order_by:
+            query = query.order_by(order_by)
+        else:
+            query = query.order_by(Personal.LastName, Personal.FirstName, Personal.PatrName)
         return query.all()
 
     def get_doctor(self, **kwargs):
@@ -1132,7 +1173,8 @@ class PersonalWorker(object):
             lpu=lpu_list,
             lpu_units=lpu_units_list,
             speciality=kwargs.get('speciality'),
-            lastName=kwargs.get('lastName')
+            lastName=kwargs.get('lastName'),
+            order=Speciality.name
         )
         result = dict()
         result['speciality'] = []
@@ -1396,7 +1438,7 @@ class UpdateWorker(object):
                 return False
         return True
 
-    def __failed_update(self, error=""):
+    def __failed_update(self, error=u""):
         self.session.rollback()
         # shutdown_session()
         if error:
@@ -1646,6 +1688,7 @@ class EPGUWorker(object):
         result = []
         epgu_result = self.proxy_client.GetLocations(hospital)
         locations = getattr(epgu_result, 'locations', None)
+        #TODO: проверить возвращаемое значение, а то возникает ошибка в отсутствии атрибуту location у locations
         if locations:
             result.extend(self.__get_location_data(locations))
             num_pages = int(locations.paginate.num_pages)
@@ -1870,9 +1913,10 @@ class EPGUWorker(object):
                     for doctor in add_epgu_doctors:
                         location_id = self.__post_location_epgu(hospital, doctor)
                         if location_id:
-                            self.__update_doctor(doctor, dict(keyEPGU=str(location_id)))
-                            self.__log(u'Для %s %s %s отправлена очередь, получен keyEPGU (%s)' %
+                            message = (u'Для %s %s %s отправлена очередь, получен keyEPGU (%s)' %
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, location_id))
+                            self.__update_doctor(doctor, dict(keyEPGU=str(location_id)))
+                            self.__log(message)
                 self.__log(u'----------------------------')
 
     def __link_activate_schedule(self, hospital, location_id, rules):
@@ -1977,10 +2021,10 @@ class EPGUWorker(object):
                               slot_unique_key))
             else:
                 self.__log(getattr(epgu_result, 'error', None))
-                # print getattr(epgu_result, 'error', '').encode('utf-8')
+                #print getattr(epgu_result, 'error', '').encode('utf-8')
         else:
             self.__log(getattr(epgu_result, 'error', None))
-            # print getattr(epgu_result, 'error', '').encode('utf-8')
+            #print getattr(epgu_result, 'error', '').encode('utf-8')
         return slot_unique_key
 
     def epgu_delete_slot(self, hospital, slot_id):
@@ -2443,6 +2487,65 @@ class EPGUWorker(object):
 
         return busy_by_patients
 
+    def _save_ticket(self, lpu_id, ticket, message=None, data=None):
+        try:
+            _ticket = Tickets()
+            _ticket.lpu_id = lpu_id
+            _ticket.doctor_id = ticket.personId
+            _ticket.patient_id = ticket.patient.id
+            _ticket.timeslot = datetime.datetime.utcfromtimestamp(ticket.begDateTime / 1000)
+            _ticket.ticket_uuid = ticket.uuid
+            if message:
+                _ticket.message = message
+            if data:
+                _ticket.data = data
+            self.session.add(_ticket)
+        except exceptions.Exception, e:
+            print e
+            self.session.rollback()
+            return None
+        else:
+            self.session.commit()
+            return _ticket
+
+    def _get_ticket(self, lpu_id, doctor_id, ticket_uid):
+        ticket = self.session.query(Tickets).filter(Tickets.lpu_id == lpu_id,
+                                                    Tickets.doctor_id == doctor_id,
+                                                    Tickets.ticket_uuid == ticket_uid).first()
+        return ticket
+
+    def send_new_tickets(self, hospital_id, hospital_info):
+        person_dw = PersonalWorker()
+        enqueue_dw = EnqueueWorker()
+        tickets = enqueue_dw.get_new_tickets(hospital_id)
+        task_hospital = hospital_info  # dict(auth_token=lpu_info.token, place_id=lpu_info.keyEPGU)
+        if tickets:
+            for ticket in tickets:
+                if ticket.status == CouponStatus.NEW:
+                    _ticket = self._save_ticket(hospital_id, ticket)
+                    if _ticket:
+                        doctor_info = person_dw.get_doctor(lpu_unit=[hospital_id, 0], doctor_id=ticket.personId)
+                        service_type = doctor_info.speciality[0].epgu_service_type
+                        task_doctor = dict(location_id=getattr(doctor_info.key_epgu, 'keyEPGU', None),
+                                           epgu_service_type=getattr(service_type, 'keyEPGU', None))
+
+
+                        _patient = dict(firstName=ticket.patient.firstName,
+                                        lastName=ticket.patient.lastName,
+                                        patronymic=ticket.patient.patrName,
+                                        id=ticket.patient.id)
+                        timeslot = datetime.datetime.utcfromtimestamp(ticket.begDateTime / 1000)
+                        slot_unique_key = self.epgu_appoint_patient(hospital=task_hospital,
+                                                                    doctor=task_doctor,
+                                                                    patient=_patient,
+                                                                    timeslot=timeslot)
+                        _ticket.keyEPGU = slot_unique_key
+                        self.session.commit()
+                elif ticket.status == CouponStatus.CANCELLED:
+                    _ticket = self._get_ticket(hospital_id, ticket.personId, ticket.uuid)
+                    self.epgu_delete_slot(task_hospital, _ticket.keyEPGU)
+
+
     # def lpu_schedule_task(self, hospital_id, hospital_dict):
     #     epgu_doctors = self.session.query(Personal).filter(Personal.lpuId == hospital_id).filter(
     #         Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
@@ -2490,7 +2593,8 @@ def send_enqueue_task(hospital, doctor, patient, timeslot, enqueue_id, slot_uniq
         epgu_dw.send_enqueue(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key)
     except exceptions.Exception, e:
         print e
-    Task_Session.remove()
+    finally:
+        Task_Session.remove()
 
 
 @celery.task(interval_start=5, interval_step=5)
@@ -2501,4 +2605,5 @@ def epgu_delete_slot_task(_hospital, enqueue_keyEPGU):
         epgu_dw.epgu_delete_slot(_hospital, enqueue_keyEPGU)
     except exceptions.Exception, e:
         print e
-    Task_Session.remove()
+    finally:
+        Task_Session.remove()
