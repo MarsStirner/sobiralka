@@ -63,3902 +63,6 @@ class CouponStatus(object):
   }
 
 
-class Organization(object):
-  """
-  Attributes:
-   - fullName
-   - shortName
-   - address
-   - infisCode
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.STRING, 'fullName', None, None, ), # 1
-    (2, TType.STRING, 'shortName', None, None, ), # 2
-    (3, TType.STRING, 'address', None, None, ), # 3
-    (4, TType.STRING, 'infisCode', None, None, ), # 4
-  )
-
-  def __init__(self, fullName=None, shortName=None, address=None, infisCode=None,):
-    self.fullName = fullName
-    self.shortName = shortName
-    self.address = address
-    self.infisCode = infisCode
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.STRING:
-          self.fullName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.shortName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.address = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.infisCode = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('Organization')
-    if self.fullName is not None:
-      oprot.writeFieldBegin('fullName', TType.STRING, 1)
-      oprot.writeString(self.fullName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.shortName is not None:
-      oprot.writeFieldBegin('shortName', TType.STRING, 2)
-      oprot.writeString(self.shortName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.address is not None:
-      oprot.writeFieldBegin('address', TType.STRING, 3)
-      oprot.writeString(self.address.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.infisCode is not None:
-      oprot.writeFieldBegin('infisCode', TType.STRING, 4)
-      oprot.writeString(self.infisCode.encode('utf-8'))
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.fullName is None:
-      raise TProtocol.TProtocolException(message='Required field fullName is unset!')
-    if self.infisCode is None:
-      raise TProtocol.TProtocolException(message='Required field infisCode is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class OrgStructure(object):
-  """
-  Attributes:
-   - id
-   - parent_id
-   - code
-   - name
-   - address
-   - sexFilter
-   - ageFilter
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I32, 'id', None, None, ), # 1
-    (2, TType.I32, 'parent_id', None, 0, ), # 2
-    (3, TType.STRING, 'code', None, None, ), # 3
-    (4, TType.STRING, 'name', None, "", ), # 4
-    (5, TType.STRING, 'address', None, "", ), # 5
-    (6, TType.STRING, 'sexFilter', None, "", ), # 6
-    (7, TType.STRING, 'ageFilter', None, "", ), # 7
-  )
-
-  def __init__(self, id=None, parent_id=thrift_spec[2][4], code=None, name=thrift_spec[4][4], address=thrift_spec[5][4], sexFilter=thrift_spec[6][4], ageFilter=thrift_spec[7][4],):
-    self.id = id
-    self.parent_id = parent_id
-    self.code = code
-    self.name = name
-    self.address = address
-    self.sexFilter = sexFilter
-    self.ageFilter = ageFilter
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I32:
-          self.id = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I32:
-          self.parent_id = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.code = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.name = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.STRING:
-          self.address = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.STRING:
-          self.sexFilter = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 7:
-        if ftype == TType.STRING:
-          self.ageFilter = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('OrgStructure')
-    if self.id is not None:
-      oprot.writeFieldBegin('id', TType.I32, 1)
-      oprot.writeI32(self.id)
-      oprot.writeFieldEnd()
-    if self.parent_id is not None:
-      oprot.writeFieldBegin('parent_id', TType.I32, 2)
-      oprot.writeI32(self.parent_id)
-      oprot.writeFieldEnd()
-    if self.code is not None:
-      oprot.writeFieldBegin('code', TType.STRING, 3)
-      oprot.writeString(self.code.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.name is not None:
-      oprot.writeFieldBegin('name', TType.STRING, 4)
-      oprot.writeString(self.name.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.address is not None:
-      oprot.writeFieldBegin('address', TType.STRING, 5)
-      oprot.writeString(self.address.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.sexFilter is not None:
-      oprot.writeFieldBegin('sexFilter', TType.STRING, 6)
-      oprot.writeString(self.sexFilter.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.ageFilter is not None:
-      oprot.writeFieldBegin('ageFilter', TType.STRING, 7)
-      oprot.writeString(self.ageFilter.encode('utf-8'))
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.id is None:
-      raise TProtocol.TProtocolException(message='Required field id is unset!')
-    if self.code is None:
-      raise TProtocol.TProtocolException(message='Required field code is unset!')
-    if self.name is None:
-      raise TProtocol.TProtocolException(message='Required field name is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class Person(object):
-  """
-  Attributes:
-   - id
-   - code
-   - orgStructureId
-   - lastName
-   - firstName
-   - patrName
-   - office
-   - speciality
-   - specialityOKSOCode
-   - specialityRegionalCode
-   - post
-   - SexFilter
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I32, 'id', None, None, ), # 1
-    (2, TType.STRING, 'code', None, None, ), # 2
-    (3, TType.I32, 'orgStructureId', None, None, ), # 3
-    (4, TType.STRING, 'lastName', None, None, ), # 4
-    (5, TType.STRING, 'firstName', None, None, ), # 5
-    (6, TType.STRING, 'patrName', None, None, ), # 6
-    (7, TType.STRING, 'office', None, None, ), # 7
-    (8, TType.STRING, 'speciality', None, None, ), # 8
-    (9, TType.STRING, 'specialityOKSOCode', None, None, ), # 9
-    (10, TType.STRING, 'specialityRegionalCode', None, None, ), # 10
-    (11, TType.STRING, 'post', None, None, ), # 11
-    (12, TType.STRING, 'SexFilter', None, None, ), # 12
-  )
-
-  def __init__(self, id=None, code=None, orgStructureId=None, lastName=None, firstName=None, patrName=None, office=None, speciality=None, specialityOKSOCode=None, specialityRegionalCode=None, post=None, SexFilter=None,):
-    self.id = id
-    self.code = code
-    self.orgStructureId = orgStructureId
-    self.lastName = lastName
-    self.firstName = firstName
-    self.patrName = patrName
-    self.office = office
-    self.speciality = speciality
-    self.specialityOKSOCode = specialityOKSOCode
-    self.specialityRegionalCode = specialityRegionalCode
-    self.post = post
-    self.SexFilter = SexFilter
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I32:
-          self.id = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.code = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.I32:
-          self.orgStructureId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.lastName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.STRING:
-          self.firstName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.STRING:
-          self.patrName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 7:
-        if ftype == TType.STRING:
-          self.office = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 8:
-        if ftype == TType.STRING:
-          self.speciality = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 9:
-        if ftype == TType.STRING:
-          self.specialityOKSOCode = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 10:
-        if ftype == TType.STRING:
-          self.specialityRegionalCode = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 11:
-        if ftype == TType.STRING:
-          self.post = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 12:
-        if ftype == TType.STRING:
-          self.SexFilter = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('Person')
-    if self.id is not None:
-      oprot.writeFieldBegin('id', TType.I32, 1)
-      oprot.writeI32(self.id)
-      oprot.writeFieldEnd()
-    if self.code is not None:
-      oprot.writeFieldBegin('code', TType.STRING, 2)
-      oprot.writeString(self.code.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.orgStructureId is not None:
-      oprot.writeFieldBegin('orgStructureId', TType.I32, 3)
-      oprot.writeI32(self.orgStructureId)
-      oprot.writeFieldEnd()
-    if self.lastName is not None:
-      oprot.writeFieldBegin('lastName', TType.STRING, 4)
-      oprot.writeString(self.lastName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.firstName is not None:
-      oprot.writeFieldBegin('firstName', TType.STRING, 5)
-      oprot.writeString(self.firstName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.patrName is not None:
-      oprot.writeFieldBegin('patrName', TType.STRING, 6)
-      oprot.writeString(self.patrName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.office is not None:
-      oprot.writeFieldBegin('office', TType.STRING, 7)
-      oprot.writeString(self.office.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.speciality is not None:
-      oprot.writeFieldBegin('speciality', TType.STRING, 8)
-      oprot.writeString(self.speciality.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.specialityOKSOCode is not None:
-      oprot.writeFieldBegin('specialityOKSOCode', TType.STRING, 9)
-      oprot.writeString(self.specialityOKSOCode.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.specialityRegionalCode is not None:
-      oprot.writeFieldBegin('specialityRegionalCode', TType.STRING, 10)
-      oprot.writeString(self.specialityRegionalCode.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.post is not None:
-      oprot.writeFieldBegin('post', TType.STRING, 11)
-      oprot.writeString(self.post.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.SexFilter is not None:
-      oprot.writeFieldBegin('SexFilter', TType.STRING, 12)
-      oprot.writeString(self.SexFilter.encode('utf-8'))
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.id is None:
-      raise TProtocol.TProtocolException(message='Required field id is unset!')
-    if self.code is None:
-      raise TProtocol.TProtocolException(message='Required field code is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class Ticket(object):
-  """
-  Attributes:
-   - time
-   - free
-   - available
-   - patientId
-   - patientInfo
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I64, 'time', None, None, ), # 1
-    (2, TType.I32, 'free', None, None, ), # 2
-    (3, TType.I32, 'available', None, None, ), # 3
-    (4, TType.I32, 'patientId', None, None, ), # 4
-    (5, TType.STRING, 'patientInfo', None, None, ), # 5
-  )
-
-  def __init__(self, time=None, free=None, available=None, patientId=None, patientInfo=None,):
-    self.time = time
-    self.free = free
-    self.available = available
-    self.patientId = patientId
-    self.patientInfo = patientInfo
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I64:
-          self.time = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I32:
-          self.free = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.I32:
-          self.available = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.I32:
-          self.patientId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.STRING:
-          self.patientInfo = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('Ticket')
-    if self.time is not None:
-      oprot.writeFieldBegin('time', TType.I64, 1)
-      oprot.writeI64(self.time)
-      oprot.writeFieldEnd()
-    if self.free is not None:
-      oprot.writeFieldBegin('free', TType.I32, 2)
-      oprot.writeI32(self.free)
-      oprot.writeFieldEnd()
-    if self.available is not None:
-      oprot.writeFieldBegin('available', TType.I32, 3)
-      oprot.writeI32(self.available)
-      oprot.writeFieldEnd()
-    if self.patientId is not None:
-      oprot.writeFieldBegin('patientId', TType.I32, 4)
-      oprot.writeI32(self.patientId)
-      oprot.writeFieldEnd()
-    if self.patientInfo is not None:
-      oprot.writeFieldBegin('patientInfo', TType.STRING, 5)
-      oprot.writeString(self.patientInfo.encode('utf-8'))
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class TicketsAvailability(object):
-  """
-  Attributes:
-   - total
-   - free
-   - available
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I32, 'total', None, None, ), # 1
-    (2, TType.I32, 'free', None, None, ), # 2
-    (3, TType.I32, 'available', None, None, ), # 3
-  )
-
-  def __init__(self, total=None, free=None, available=None,):
-    self.total = total
-    self.free = free
-    self.available = available
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I32:
-          self.total = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I32:
-          self.free = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.I32:
-          self.available = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('TicketsAvailability')
-    if self.total is not None:
-      oprot.writeFieldBegin('total', TType.I32, 1)
-      oprot.writeI32(self.total)
-      oprot.writeFieldEnd()
-    if self.free is not None:
-      oprot.writeFieldBegin('free', TType.I32, 2)
-      oprot.writeI32(self.free)
-      oprot.writeFieldEnd()
-    if self.available is not None:
-      oprot.writeFieldBegin('available', TType.I32, 3)
-      oprot.writeI32(self.available)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.total is None:
-      raise TProtocol.TProtocolException(message='Required field total is unset!')
-    if self.free is None:
-      raise TProtocol.TProtocolException(message='Required field free is unset!')
-    if self.available is None:
-      raise TProtocol.TProtocolException(message='Required field available is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class ExtendedTicketsAvailability(object):
-  """
-  Attributes:
-   - personId
-   - date
-   - ticketsInfo
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I32, 'personId', None, None, ), # 1
-    (2, TType.I64, 'date', None, None, ), # 2
-    (3, TType.STRUCT, 'ticketsInfo', (TicketsAvailability, TicketsAvailability.thrift_spec), None, ), # 3
-  )
-
-  def __init__(self, personId=None, date=None, ticketsInfo=None,):
-    self.personId = personId
-    self.date = date
-    self.ticketsInfo = ticketsInfo
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I32:
-          self.personId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I64:
-          self.date = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRUCT:
-          self.ticketsInfo = TicketsAvailability()
-          self.ticketsInfo.read(iprot)
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('ExtendedTicketsAvailability')
-    if self.personId is not None:
-      oprot.writeFieldBegin('personId', TType.I32, 1)
-      oprot.writeI32(self.personId)
-      oprot.writeFieldEnd()
-    if self.date is not None:
-      oprot.writeFieldBegin('date', TType.I64, 2)
-      oprot.writeI64(self.date)
-      oprot.writeFieldEnd()
-    if self.ticketsInfo is not None:
-      oprot.writeFieldBegin('ticketsInfo', TType.STRUCT, 3)
-      self.ticketsInfo.write(oprot)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.personId is None:
-      raise TProtocol.TProtocolException(message='Required field personId is unset!')
-    if self.ticketsInfo is None:
-      raise TProtocol.TProtocolException(message='Required field ticketsInfo is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class Amb(object):
-  """
-  Attributes:
-   - begTime
-   - endTime
-   - office
-   - plan
-   - tickets
-   - available
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I64, 'begTime', None, None, ), # 1
-    (2, TType.I64, 'endTime', None, None, ), # 2
-    (3, TType.STRING, 'office', None, None, ), # 3
-    (4, TType.I32, 'plan', None, None, ), # 4
-    (5, TType.LIST, 'tickets', (TType.STRUCT,(Ticket, Ticket.thrift_spec)), None, ), # 5
-    (6, TType.I32, 'available', None, None, ), # 6
-  )
-
-  def __init__(self, begTime=None, endTime=None, office=None, plan=None, tickets=None, available=None,):
-    self.begTime = begTime
-    self.endTime = endTime
-    self.office = office
-    self.plan = plan
-    self.tickets = tickets
-    self.available = available
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I64:
-          self.begTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I64:
-          self.endTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.office = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.I32:
-          self.plan = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.LIST:
-          self.tickets = []
-          (_etype3, _size0) = iprot.readListBegin()
-          for _i4 in xrange(_size0):
-            _elem5 = Ticket()
-            _elem5.read(iprot)
-            self.tickets.append(_elem5)
-          iprot.readListEnd()
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.I32:
-          self.available = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('Amb')
-    if self.begTime is not None:
-      oprot.writeFieldBegin('begTime', TType.I64, 1)
-      oprot.writeI64(self.begTime)
-      oprot.writeFieldEnd()
-    if self.endTime is not None:
-      oprot.writeFieldBegin('endTime', TType.I64, 2)
-      oprot.writeI64(self.endTime)
-      oprot.writeFieldEnd()
-    if self.office is not None:
-      oprot.writeFieldBegin('office', TType.STRING, 3)
-      oprot.writeString(self.office.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.plan is not None:
-      oprot.writeFieldBegin('plan', TType.I32, 4)
-      oprot.writeI32(self.plan)
-      oprot.writeFieldEnd()
-    if self.tickets is not None:
-      oprot.writeFieldBegin('tickets', TType.LIST, 5)
-      oprot.writeListBegin(TType.STRUCT, len(self.tickets))
-      for iter6 in self.tickets:
-        iter6.write(oprot)
-      oprot.writeListEnd()
-      oprot.writeFieldEnd()
-    if self.available is not None:
-      oprot.writeFieldBegin('available', TType.I32, 6)
-      oprot.writeI32(self.available)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class PatientStatus(object):
-  """
-  Attributes:
-   - success
-   - message
-   - patientId
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.BOOL, 'success', None, None, ), # 1
-    (2, TType.STRING, 'message', None, None, ), # 2
-    (3, TType.I32, 'patientId', None, None, ), # 3
-  )
-
-  def __init__(self, success=None, message=None, patientId=None,):
-    self.success = success
-    self.message = message
-    self.patientId = patientId
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.BOOL:
-          self.success = iprot.readBool();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.message = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.I32:
-          self.patientId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('PatientStatus')
-    if self.success is not None:
-      oprot.writeFieldBegin('success', TType.BOOL, 1)
-      oprot.writeBool(self.success)
-      oprot.writeFieldEnd()
-    if self.message is not None:
-      oprot.writeFieldBegin('message', TType.STRING, 2)
-      oprot.writeString(self.message.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.patientId is not None:
-      oprot.writeFieldBegin('patientId', TType.I32, 3)
-      oprot.writeI32(self.patientId)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.success is None:
-      raise TProtocol.TProtocolException(message='Required field success is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class PatientInfo(object):
-  """
-  Attributes:
-   - lastName
-   - firstName
-   - patrName
-   - birthDate
-   - sex
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.STRING, 'lastName', None, None, ), # 1
-    (2, TType.STRING, 'firstName', None, None, ), # 2
-    (3, TType.STRING, 'patrName', None, None, ), # 3
-    (4, TType.I64, 'birthDate', None, None, ), # 4
-    (5, TType.I32, 'sex', None, None, ), # 5
-  )
-
-  def __init__(self, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None,):
-    self.lastName = lastName
-    self.firstName = firstName
-    self.patrName = patrName
-    self.birthDate = birthDate
-    self.sex = sex
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.STRING:
-          self.lastName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.firstName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.patrName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.I64:
-          self.birthDate = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.I32:
-          self.sex = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('PatientInfo')
-    if self.lastName is not None:
-      oprot.writeFieldBegin('lastName', TType.STRING, 1)
-      oprot.writeString(self.lastName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.firstName is not None:
-      oprot.writeFieldBegin('firstName', TType.STRING, 2)
-      oprot.writeString(self.firstName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.patrName is not None:
-      oprot.writeFieldBegin('patrName', TType.STRING, 3)
-      oprot.writeString(self.patrName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.birthDate is not None:
-      oprot.writeFieldBegin('birthDate', TType.I64, 4)
-      oprot.writeI64(self.birthDate)
-      oprot.writeFieldEnd()
-    if self.sex is not None:
-      oprot.writeFieldBegin('sex', TType.I32, 5)
-      oprot.writeI32(self.sex)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class Patient(object):
-  """
-  Attributes:
-   - id
-   - lastName
-   - firstName
-   - patrName
-   - birthDate
-   - sex
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I32, 'id', None, None, ), # 1
-    (2, TType.STRING, 'lastName', None, None, ), # 2
-    (3, TType.STRING, 'firstName', None, None, ), # 3
-    (4, TType.STRING, 'patrName', None, None, ), # 4
-    (5, TType.I64, 'birthDate', None, None, ), # 5
-    (6, TType.I32, 'sex', None, None, ), # 6
-  )
-
-  def __init__(self, id=None, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None,):
-    self.id = id
-    self.lastName = lastName
-    self.firstName = firstName
-    self.patrName = patrName
-    self.birthDate = birthDate
-    self.sex = sex
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I32:
-          self.id = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.lastName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.firstName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.patrName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.I64:
-          self.birthDate = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.I32:
-          self.sex = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('Patient')
-    if self.id is not None:
-      oprot.writeFieldBegin('id', TType.I32, 1)
-      oprot.writeI32(self.id)
-      oprot.writeFieldEnd()
-    if self.lastName is not None:
-      oprot.writeFieldBegin('lastName', TType.STRING, 2)
-      oprot.writeString(self.lastName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.firstName is not None:
-      oprot.writeFieldBegin('firstName', TType.STRING, 3)
-      oprot.writeString(self.firstName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.patrName is not None:
-      oprot.writeFieldBegin('patrName', TType.STRING, 4)
-      oprot.writeString(self.patrName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.birthDate is not None:
-      oprot.writeFieldBegin('birthDate', TType.I64, 5)
-      oprot.writeI64(self.birthDate)
-      oprot.writeFieldEnd()
-    if self.sex is not None:
-      oprot.writeFieldBegin('sex', TType.I32, 6)
-      oprot.writeI32(self.sex)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.id is None:
-      raise TProtocol.TProtocolException(message='Required field id is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class OrgStructuresProperties(object):
-  """
-  Attributes:
-   - orgStructureId
-   - attached
-   - matchRegAddress
-   - matchLocAddress
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I32, 'orgStructureId', None, None, ), # 1
-    (2, TType.BOOL, 'attached', None, None, ), # 2
-    (3, TType.BOOL, 'matchRegAddress', None, None, ), # 3
-    (4, TType.BOOL, 'matchLocAddress', None, None, ), # 4
-  )
-
-  def __init__(self, orgStructureId=None, attached=None, matchRegAddress=None, matchLocAddress=None,):
-    self.orgStructureId = orgStructureId
-    self.attached = attached
-    self.matchRegAddress = matchRegAddress
-    self.matchLocAddress = matchLocAddress
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I32:
-          self.orgStructureId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.BOOL:
-          self.attached = iprot.readBool();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.BOOL:
-          self.matchRegAddress = iprot.readBool();
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.BOOL:
-          self.matchLocAddress = iprot.readBool();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('OrgStructuresProperties')
-    if self.orgStructureId is not None:
-      oprot.writeFieldBegin('orgStructureId', TType.I32, 1)
-      oprot.writeI32(self.orgStructureId)
-      oprot.writeFieldEnd()
-    if self.attached is not None:
-      oprot.writeFieldBegin('attached', TType.BOOL, 2)
-      oprot.writeBool(self.attached)
-      oprot.writeFieldEnd()
-    if self.matchRegAddress is not None:
-      oprot.writeFieldBegin('matchRegAddress', TType.BOOL, 3)
-      oprot.writeBool(self.matchRegAddress)
-      oprot.writeFieldEnd()
-    if self.matchLocAddress is not None:
-      oprot.writeFieldBegin('matchLocAddress', TType.BOOL, 4)
-      oprot.writeBool(self.matchLocAddress)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.orgStructureId is None:
-      raise TProtocol.TProtocolException(message='Required field orgStructureId is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class EnqueuePatientStatus(object):
-  """
-  Attributes:
-   - success
-   - message
-   - index
-   - queueId
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.BOOL, 'success', None, None, ), # 1
-    (2, TType.STRING, 'message', None, None, ), # 2
-    (3, TType.I32, 'index', None, None, ), # 3
-    (4, TType.I32, 'queueId', None, None, ), # 4
-  )
-
-  def __init__(self, success=None, message=None, index=None, queueId=None,):
-    self.success = success
-    self.message = message
-    self.index = index
-    self.queueId = queueId
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.BOOL:
-          self.success = iprot.readBool();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.message = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.I32:
-          self.index = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.I32:
-          self.queueId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('EnqueuePatientStatus')
-    if self.success is not None:
-      oprot.writeFieldBegin('success', TType.BOOL, 1)
-      oprot.writeBool(self.success)
-      oprot.writeFieldEnd()
-    if self.message is not None:
-      oprot.writeFieldBegin('message', TType.STRING, 2)
-      oprot.writeString(self.message.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.index is not None:
-      oprot.writeFieldBegin('index', TType.I32, 3)
-      oprot.writeI32(self.index)
-      oprot.writeFieldEnd()
-    if self.queueId is not None:
-      oprot.writeFieldBegin('queueId', TType.I32, 4)
-      oprot.writeI32(self.queueId)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.success is None:
-      raise TProtocol.TProtocolException(message='Required field success is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class Queue(object):
-  """
-  Attributes:
-   - dateTime
-   - index
-   - personId
-   - note
-   - queueId
-   - enqueuePersonId
-   - enqueueDateTime
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I64, 'dateTime', None, None, ), # 1
-    (2, TType.I32, 'index', None, None, ), # 2
-    (3, TType.I32, 'personId', None, None, ), # 3
-    (4, TType.STRING, 'note', None, None, ), # 4
-    (5, TType.I32, 'queueId', None, None, ), # 5
-    (6, TType.I32, 'enqueuePersonId', None, None, ), # 6
-    (7, TType.I64, 'enqueueDateTime', None, None, ), # 7
-  )
-
-  def __init__(self, dateTime=None, index=None, personId=None, note=None, queueId=None, enqueuePersonId=None, enqueueDateTime=None,):
-    self.dateTime = dateTime
-    self.index = index
-    self.personId = personId
-    self.note = note
-    self.queueId = queueId
-    self.enqueuePersonId = enqueuePersonId
-    self.enqueueDateTime = enqueueDateTime
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I64:
-          self.dateTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I32:
-          self.index = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.I32:
-          self.personId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.note = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.I32:
-          self.queueId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.I32:
-          self.enqueuePersonId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 7:
-        if ftype == TType.I64:
-          self.enqueueDateTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('Queue')
-    if self.dateTime is not None:
-      oprot.writeFieldBegin('dateTime', TType.I64, 1)
-      oprot.writeI64(self.dateTime)
-      oprot.writeFieldEnd()
-    if self.index is not None:
-      oprot.writeFieldBegin('index', TType.I32, 2)
-      oprot.writeI32(self.index)
-      oprot.writeFieldEnd()
-    if self.personId is not None:
-      oprot.writeFieldBegin('personId', TType.I32, 3)
-      oprot.writeI32(self.personId)
-      oprot.writeFieldEnd()
-    if self.note is not None:
-      oprot.writeFieldBegin('note', TType.STRING, 4)
-      oprot.writeString(self.note.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.queueId is not None:
-      oprot.writeFieldBegin('queueId', TType.I32, 5)
-      oprot.writeI32(self.queueId)
-      oprot.writeFieldEnd()
-    if self.enqueuePersonId is not None:
-      oprot.writeFieldBegin('enqueuePersonId', TType.I32, 6)
-      oprot.writeI32(self.enqueuePersonId)
-      oprot.writeFieldEnd()
-    if self.enqueueDateTime is not None:
-      oprot.writeFieldBegin('enqueueDateTime', TType.I64, 7)
-      oprot.writeI64(self.enqueueDateTime)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class DequeuePatientStatus(object):
-  """
-  Attributes:
-   - success
-   - message
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.BOOL, 'success', None, None, ), # 1
-    (2, TType.STRING, 'message', None, None, ), # 2
-  )
-
-  def __init__(self, success=None, message=None,):
-    self.success = success
-    self.message = message
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.BOOL:
-          self.success = iprot.readBool();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.message = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('DequeuePatientStatus')
-    if self.success is not None:
-      oprot.writeFieldBegin('success', TType.BOOL, 1)
-      oprot.writeBool(self.success)
-      oprot.writeFieldEnd()
-    if self.message is not None:
-      oprot.writeFieldBegin('message', TType.STRING, 2)
-      oprot.writeString(self.message.encode('utf-8'))
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.success is None:
-      raise TProtocol.TProtocolException(message='Required field success is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class Speciality(object):
-  """
-  Attributes:
-   - id
-   - ticketsPerMonths
-   - ticketsAvailable
-   - speciality
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I32, 'id', None, None, ), # 1
-    (2, TType.I32, 'ticketsPerMonths', None, None, ), # 2
-    (3, TType.I32, 'ticketsAvailable', None, None, ), # 3
-    (4, TType.STRING, 'speciality', None, None, ), # 4
-  )
-
-  def __init__(self, id=None, ticketsPerMonths=None, ticketsAvailable=None, speciality=None,):
-    self.id = id
-    self.ticketsPerMonths = ticketsPerMonths
-    self.ticketsAvailable = ticketsAvailable
-    self.speciality = speciality
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I32:
-          self.id = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I32:
-          self.ticketsPerMonths = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.I32:
-          self.ticketsAvailable = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.speciality = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('Speciality')
-    if self.id is not None:
-      oprot.writeFieldBegin('id', TType.I32, 1)
-      oprot.writeI32(self.id)
-      oprot.writeFieldEnd()
-    if self.ticketsPerMonths is not None:
-      oprot.writeFieldBegin('ticketsPerMonths', TType.I32, 2)
-      oprot.writeI32(self.ticketsPerMonths)
-      oprot.writeFieldEnd()
-    if self.ticketsAvailable is not None:
-      oprot.writeFieldBegin('ticketsAvailable', TType.I32, 3)
-      oprot.writeI32(self.ticketsAvailable)
-      oprot.writeFieldEnd()
-    if self.speciality is not None:
-      oprot.writeFieldBegin('speciality', TType.STRING, 4)
-      oprot.writeString(self.speciality.encode('utf-8'))
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.id is None:
-      raise TProtocol.TProtocolException(message='Required field id is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class Address(object):
-  """
-  Attributes:
-   - orgStructureId
-   - pointKLADR
-   - streetKLADR
-   - number
-   - corpus
-   - firstFlat
-   - lastFlat
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I32, 'orgStructureId', None, None, ), # 1
-    (2, TType.STRING, 'pointKLADR', None, None, ), # 2
-    (3, TType.STRING, 'streetKLADR', None, None, ), # 3
-    (4, TType.STRING, 'number', None, None, ), # 4
-    (5, TType.STRING, 'corpus', None, None, ), # 5
-    (6, TType.I32, 'firstFlat', None, None, ), # 6
-    (7, TType.I32, 'lastFlat', None, None, ), # 7
-  )
-
-  def __init__(self, orgStructureId=None, pointKLADR=None, streetKLADR=None, number=None, corpus=None, firstFlat=None, lastFlat=None,):
-    self.orgStructureId = orgStructureId
-    self.pointKLADR = pointKLADR
-    self.streetKLADR = streetKLADR
-    self.number = number
-    self.corpus = corpus
-    self.firstFlat = firstFlat
-    self.lastFlat = lastFlat
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I32:
-          self.orgStructureId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.pointKLADR = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.streetKLADR = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.number = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.STRING:
-          self.corpus = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.I32:
-          self.firstFlat = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 7:
-        if ftype == TType.I32:
-          self.lastFlat = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('Address')
-    if self.orgStructureId is not None:
-      oprot.writeFieldBegin('orgStructureId', TType.I32, 1)
-      oprot.writeI32(self.orgStructureId)
-      oprot.writeFieldEnd()
-    if self.pointKLADR is not None:
-      oprot.writeFieldBegin('pointKLADR', TType.STRING, 2)
-      oprot.writeString(self.pointKLADR.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.streetKLADR is not None:
-      oprot.writeFieldBegin('streetKLADR', TType.STRING, 3)
-      oprot.writeString(self.streetKLADR.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.number is not None:
-      oprot.writeFieldBegin('number', TType.STRING, 4)
-      oprot.writeString(self.number.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.corpus is not None:
-      oprot.writeFieldBegin('corpus', TType.STRING, 5)
-      oprot.writeString(self.corpus.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.firstFlat is not None:
-      oprot.writeFieldBegin('firstFlat', TType.I32, 6)
-      oprot.writeI32(self.firstFlat)
-      oprot.writeFieldEnd()
-    if self.lastFlat is not None:
-      oprot.writeFieldBegin('lastFlat', TType.I32, 7)
-      oprot.writeI32(self.lastFlat)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.orgStructureId is None:
-      raise TProtocol.TProtocolException(message='Required field orgStructureId is unset!')
-    if self.pointKLADR is None:
-      raise TProtocol.TProtocolException(message='Required field pointKLADR is unset!')
-    if self.streetKLADR is None:
-      raise TProtocol.TProtocolException(message='Required field streetKLADR is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class Contact(object):
-  """
-  Attributes:
-   - type
-   - code
-   - contact
-   - note
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.STRING, 'type', None, None, ), # 1
-    (2, TType.STRING, 'code', None, None, ), # 2
-    (3, TType.STRING, 'contact', None, None, ), # 3
-    (4, TType.STRING, 'note', None, None, ), # 4
-  )
-
-  def __init__(self, type=None, code=None, contact=None, note=None,):
-    self.type = type
-    self.code = code
-    self.contact = contact
-    self.note = note
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.STRING:
-          self.type = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.code = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.contact = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.note = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('Contact')
-    if self.type is not None:
-      oprot.writeFieldBegin('type', TType.STRING, 1)
-      oprot.writeString(self.type.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.code is not None:
-      oprot.writeFieldBegin('code', TType.STRING, 2)
-      oprot.writeString(self.code.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.contact is not None:
-      oprot.writeFieldBegin('contact', TType.STRING, 3)
-      oprot.writeString(self.contact.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.note is not None:
-      oprot.writeFieldBegin('note', TType.STRING, 4)
-      oprot.writeString(self.note.encode('utf-8'))
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class QueueCoupon(object):
-  """
-  QueueCoupon
-  Структура с данными для поллинга новых записей к врачу (чтобы учесть сделанные не через КС)
-  @param uuid                  1)Уникальный идентификатор талончика (отмененные талончики будут иметь тот-же идентификатор)
-  @param status                2)Статус талончика (Новый\Отменен)
-  @param personId              3)Ид врача
-  @param patient               4)Структура с данными пациента - владельца талончика
-  @param begDateTime           5)Дата+время начала талончика
-  @param endDateTime           5)Дата+время окончания талончика
-  @param office                6)Офис в котором будет принимать врач
-
-  Attributes:
-   - uuid
-   - status
-   - personId
-   - patient
-   - begDateTime
-   - endDateTime
-   - office
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.STRING, 'uuid', None, None, ), # 1
-    (2, TType.I32, 'status', None, None, ), # 2
-    (3, TType.I32, 'personId', None, None, ), # 3
-    (4, TType.STRUCT, 'patient', (Patient, Patient.thrift_spec), None, ), # 4
-    (5, TType.I64, 'begDateTime', None, None, ), # 5
-    (6, TType.I64, 'endDateTime', None, None, ), # 6
-    (7, TType.STRING, 'office', None, None, ), # 7
-  )
-
-  def __init__(self, uuid=None, status=None, personId=None, patient=None, begDateTime=None, endDateTime=None, office=None,):
-    self.uuid = uuid
-    self.status = status
-    self.personId = personId
-    self.patient = patient
-    self.begDateTime = begDateTime
-    self.endDateTime = endDateTime
-    self.office = office
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.STRING:
-          self.uuid = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I32:
-          self.status = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.I32:
-          self.personId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRUCT:
-          self.patient = Patient()
-          self.patient.read(iprot)
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.I64:
-          self.begDateTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.I64:
-          self.endDateTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 7:
-        if ftype == TType.STRING:
-          self.office = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('QueueCoupon')
-    if self.uuid is not None:
-      oprot.writeFieldBegin('uuid', TType.STRING, 1)
-      oprot.writeString(self.uuid.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.status is not None:
-      oprot.writeFieldBegin('status', TType.I32, 2)
-      oprot.writeI32(self.status)
-      oprot.writeFieldEnd()
-    if self.personId is not None:
-      oprot.writeFieldBegin('personId', TType.I32, 3)
-      oprot.writeI32(self.personId)
-      oprot.writeFieldEnd()
-    if self.patient is not None:
-      oprot.writeFieldBegin('patient', TType.STRUCT, 4)
-      self.patient.write(oprot)
-      oprot.writeFieldEnd()
-    if self.begDateTime is not None:
-      oprot.writeFieldBegin('begDateTime', TType.I64, 5)
-      oprot.writeI64(self.begDateTime)
-      oprot.writeFieldEnd()
-    if self.endDateTime is not None:
-      oprot.writeFieldBegin('endDateTime', TType.I64, 6)
-      oprot.writeI64(self.endDateTime)
-      oprot.writeFieldEnd()
-    if self.office is not None:
-      oprot.writeFieldBegin('office', TType.STRING, 7)
-      oprot.writeString(self.office.encode('utf-8'))
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.uuid is None:
-      raise TProtocol.TProtocolException(message='Required field uuid is unset!')
-    if self.status is None:
-      raise TProtocol.TProtocolException(message='Required field status is unset!')
-    if self.personId is None:
-      raise TProtocol.TProtocolException(message='Required field personId is unset!')
-    if self.patient is None:
-      raise TProtocol.TProtocolException(message='Required field patient is unset!')
-    if self.begDateTime is None:
-      raise TProtocol.TProtocolException(message='Required field begDateTime is unset!')
-    if self.endDateTime is None:
-      raise TProtocol.TProtocolException(message='Required field endDateTime is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class TTicket(object):
-  """
-  TTicket
-  Структура с данными о талончике на прием к врачу
-  @param begTime           1)Время начала талончика
-  @param endTime           2)Время конца талончика
-  @param free              3)признак, указывающий занят ли этот талончик каким-либо пациентом
-  @param available         4)признак, указывающий доступен ли этот талончик для записи
-  @param patientId         5) OPTIONAL: Идентификатор пациента, который занял этот талончик
-  @param patientInfo       6) OPTIONAL: ФИО пациента, который занял этот талончик
-  @param timeIndex         7) OPTIONAL: Индекс ячейки времени в расписании врача, на который ссылается этот талончик
-  @param date              8) OPTIONAL: Дата приема врача. Будет выставляться для метода getFirstFreeTicket
-  @param office            9) OPTIONAL: Офис, в котором будет происходить прием врача. Будет выставляться для метода getFirstFreeTicket
-
-  Attributes:
-   - begTime
-   - endTime
-   - free
-   - available
-   - patientId
-   - patientInfo
-   - timeIndex
-   - date
-   - office
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I64, 'begTime', None, None, ), # 1
-    (2, TType.I64, 'endTime', None, None, ), # 2
-    (3, TType.BOOL, 'free', None, None, ), # 3
-    (4, TType.BOOL, 'available', None, None, ), # 4
-    (5, TType.I32, 'patientId', None, None, ), # 5
-    (6, TType.STRING, 'patientInfo', None, None, ), # 6
-    (7, TType.I32, 'timeIndex', None, None, ), # 7
-    (8, TType.I64, 'date', None, None, ), # 8
-    (9, TType.STRING, 'office', None, None, ), # 9
-  )
-
-  def __init__(self, begTime=None, endTime=None, free=None, available=None, patientId=None, patientInfo=None, timeIndex=None, date=None, office=None,):
-    self.begTime = begTime
-    self.endTime = endTime
-    self.free = free
-    self.available = available
-    self.patientId = patientId
-    self.patientInfo = patientInfo
-    self.timeIndex = timeIndex
-    self.date = date
-    self.office = office
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I64:
-          self.begTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I64:
-          self.endTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.BOOL:
-          self.free = iprot.readBool();
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.BOOL:
-          self.available = iprot.readBool();
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.I32:
-          self.patientId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.STRING:
-          self.patientInfo = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 7:
-        if ftype == TType.I32:
-          self.timeIndex = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 8:
-        if ftype == TType.I64:
-          self.date = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 9:
-        if ftype == TType.STRING:
-          self.office = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('TTicket')
-    if self.begTime is not None:
-      oprot.writeFieldBegin('begTime', TType.I64, 1)
-      oprot.writeI64(self.begTime)
-      oprot.writeFieldEnd()
-    if self.endTime is not None:
-      oprot.writeFieldBegin('endTime', TType.I64, 2)
-      oprot.writeI64(self.endTime)
-      oprot.writeFieldEnd()
-    if self.free is not None:
-      oprot.writeFieldBegin('free', TType.BOOL, 3)
-      oprot.writeBool(self.free)
-      oprot.writeFieldEnd()
-    if self.available is not None:
-      oprot.writeFieldBegin('available', TType.BOOL, 4)
-      oprot.writeBool(self.available)
-      oprot.writeFieldEnd()
-    if self.patientId is not None:
-      oprot.writeFieldBegin('patientId', TType.I32, 5)
-      oprot.writeI32(self.patientId)
-      oprot.writeFieldEnd()
-    if self.patientInfo is not None:
-      oprot.writeFieldBegin('patientInfo', TType.STRING, 6)
-      oprot.writeString(self.patientInfo.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.timeIndex is not None:
-      oprot.writeFieldBegin('timeIndex', TType.I32, 7)
-      oprot.writeI32(self.timeIndex)
-      oprot.writeFieldEnd()
-    if self.date is not None:
-      oprot.writeFieldBegin('date', TType.I64, 8)
-      oprot.writeI64(self.date)
-      oprot.writeFieldEnd()
-    if self.office is not None:
-      oprot.writeFieldBegin('office', TType.STRING, 9)
-      oprot.writeString(self.office.encode('utf-8'))
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.begTime is None:
-      raise TProtocol.TProtocolException(message='Required field begTime is unset!')
-    if self.endTime is None:
-      raise TProtocol.TProtocolException(message='Required field endTime is unset!')
-    if self.free is None:
-      raise TProtocol.TProtocolException(message='Required field free is unset!')
-    if self.available is None:
-      raise TProtocol.TProtocolException(message='Required field available is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class Schedule(object):
-  """
-  Schedule
-  Структура с данными для расписания врача
-  @param begTime       Время начала приема врача
-  @param endTime       Время окончания приема врача
-  @param date          Дата приема врача
-  @param office        Офис в котором будет происходить прием
-  @param plan          План приема (количество ячеек времени в которые врач будет принимать пациентов)
-  @param tickets       Список талончиков на прием
-  @param available     Признак доступности записи на этот прием (в целом)
-
-  Attributes:
-   - begTime
-   - endTime
-   - date
-   - office
-   - plan
-   - tickets
-   - available
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I64, 'begTime', None, None, ), # 1
-    (2, TType.I64, 'endTime', None, None, ), # 2
-    (3, TType.I64, 'date', None, None, ), # 3
-    (4, TType.STRING, 'office', None, None, ), # 4
-    (5, TType.I32, 'plan', None, None, ), # 5
-    (6, TType.LIST, 'tickets', (TType.STRUCT,(TTicket, TTicket.thrift_spec)), None, ), # 6
-    (7, TType.BOOL, 'available', None, None, ), # 7
-  )
-
-  def __init__(self, begTime=None, endTime=None, date=None, office=None, plan=None, tickets=None, available=None,):
-    self.begTime = begTime
-    self.endTime = endTime
-    self.date = date
-    self.office = office
-    self.plan = plan
-    self.tickets = tickets
-    self.available = available
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I64:
-          self.begTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I64:
-          self.endTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.I64:
-          self.date = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.office = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.I32:
-          self.plan = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.LIST:
-          self.tickets = []
-          (_etype10, _size7) = iprot.readListBegin()
-          for _i11 in xrange(_size7):
-            _elem12 = TTicket()
-            _elem12.read(iprot)
-            self.tickets.append(_elem12)
-          iprot.readListEnd()
-        else:
-          iprot.skip(ftype)
-      elif fid == 7:
-        if ftype == TType.BOOL:
-          self.available = iprot.readBool();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('Schedule')
-    if self.begTime is not None:
-      oprot.writeFieldBegin('begTime', TType.I64, 1)
-      oprot.writeI64(self.begTime)
-      oprot.writeFieldEnd()
-    if self.endTime is not None:
-      oprot.writeFieldBegin('endTime', TType.I64, 2)
-      oprot.writeI64(self.endTime)
-      oprot.writeFieldEnd()
-    if self.date is not None:
-      oprot.writeFieldBegin('date', TType.I64, 3)
-      oprot.writeI64(self.date)
-      oprot.writeFieldEnd()
-    if self.office is not None:
-      oprot.writeFieldBegin('office', TType.STRING, 4)
-      oprot.writeString(self.office.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.plan is not None:
-      oprot.writeFieldBegin('plan', TType.I32, 5)
-      oprot.writeI32(self.plan)
-      oprot.writeFieldEnd()
-    if self.tickets is not None:
-      oprot.writeFieldBegin('tickets', TType.LIST, 6)
-      oprot.writeListBegin(TType.STRUCT, len(self.tickets))
-      for iter13 in self.tickets:
-        iter13.write(oprot)
-      oprot.writeListEnd()
-      oprot.writeFieldEnd()
-    if self.available is not None:
-      oprot.writeFieldBegin('available', TType.BOOL, 7)
-      oprot.writeBool(self.available)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.begTime is None:
-      raise TProtocol.TProtocolException(message='Required field begTime is unset!')
-    if self.endTime is None:
-      raise TProtocol.TProtocolException(message='Required field endTime is unset!')
-    if self.date is None:
-      raise TProtocol.TProtocolException(message='Required field date is unset!')
-    if self.available is None:
-      raise TProtocol.TProtocolException(message='Required field available is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class Policy(object):
-  """
-  Policy
-  Структура с данными о полисе
-  @param serial            1)Серия полиса
-  @param number            2)Номер полиса
-  @param typeCode          3)Код типа полиса
-  @param insurerInfisCode  4)Инфис-код страховой организации
-
-  Attributes:
-   - serial
-   - number
-   - typeCode
-   - insurerInfisCode
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.STRING, 'serial', None, None, ), # 1
-    (2, TType.STRING, 'number', None, None, ), # 2
-    (3, TType.STRING, 'typeCode', None, None, ), # 3
-    (4, TType.STRING, 'insurerInfisCode', None, None, ), # 4
-  )
-
-  def __init__(self, serial=None, number=None, typeCode=None, insurerInfisCode=None,):
-    self.serial = serial
-    self.number = number
-    self.typeCode = typeCode
-    self.insurerInfisCode = insurerInfisCode
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.STRING:
-          self.serial = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.number = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.typeCode = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.insurerInfisCode = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('Policy')
-    if self.serial is not None:
-      oprot.writeFieldBegin('serial', TType.STRING, 1)
-      oprot.writeString(self.serial.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.number is not None:
-      oprot.writeFieldBegin('number', TType.STRING, 2)
-      oprot.writeString(self.number.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.typeCode is not None:
-      oprot.writeFieldBegin('typeCode', TType.STRING, 3)
-      oprot.writeString(self.typeCode.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.insurerInfisCode is not None:
-      oprot.writeFieldBegin('insurerInfisCode', TType.STRING, 4)
-      oprot.writeString(self.insurerInfisCode.encode('utf-8'))
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.number is None:
-      raise TProtocol.TProtocolException(message='Required field number is unset!')
-    if self.typeCode is None:
-      raise TProtocol.TProtocolException(message='Required field typeCode is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class FindOrgStructureByAddressParameters(object):
-  """
-  Attributes:
-   - pointKLADR
-   - streetKLADR
-   - number
-   - corpus
-   - flat
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.STRING, 'pointKLADR', None, None, ), # 1
-    (2, TType.STRING, 'streetKLADR', None, "", ), # 2
-    (3, TType.STRING, 'number', None, "", ), # 3
-    (4, TType.STRING, 'corpus', None, "", ), # 4
-    (5, TType.I32, 'flat', None, 0, ), # 5
-  )
-
-  def __init__(self, pointKLADR=None, streetKLADR=thrift_spec[2][4], number=thrift_spec[3][4], corpus=thrift_spec[4][4], flat=thrift_spec[5][4],):
-    self.pointKLADR = pointKLADR
-    self.streetKLADR = streetKLADR
-    self.number = number
-    self.corpus = corpus
-    self.flat = flat
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.STRING:
-          self.pointKLADR = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.streetKLADR = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.number = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.corpus = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.I32:
-          self.flat = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('FindOrgStructureByAddressParameters')
-    if self.pointKLADR is not None:
-      oprot.writeFieldBegin('pointKLADR', TType.STRING, 1)
-      oprot.writeString(self.pointKLADR.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.streetKLADR is not None:
-      oprot.writeFieldBegin('streetKLADR', TType.STRING, 2)
-      oprot.writeString(self.streetKLADR.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.number is not None:
-      oprot.writeFieldBegin('number', TType.STRING, 3)
-      oprot.writeString(self.number.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.corpus is not None:
-      oprot.writeFieldBegin('corpus', TType.STRING, 4)
-      oprot.writeString(self.corpus.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.flat is not None:
-      oprot.writeFieldBegin('flat', TType.I32, 5)
-      oprot.writeI32(self.flat)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.pointKLADR is None:
-      raise TProtocol.TProtocolException(message='Required field pointKLADR is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class GetTicketsAvailabilityParameters(object):
-  """
-  Attributes:
-   - orgStructureId
-   - recursive
-   - specialityNotation
-   - speciality
-   - personId
-   - begDate
-   - endDate
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I32, 'orgStructureId', None, None, ), # 1
-    (2, TType.BOOL, 'recursive', None, None, ), # 2
-    (3, TType.STRING, 'specialityNotation', None, None, ), # 3
-    (4, TType.STRING, 'speciality', None, None, ), # 4
-    (5, TType.I32, 'personId', None, None, ), # 5
-    (6, TType.I64, 'begDate', None, None, ), # 6
-    (7, TType.I64, 'endDate', None, None, ), # 7
-  )
-
-  def __init__(self, orgStructureId=None, recursive=None, specialityNotation=None, speciality=None, personId=None, begDate=None, endDate=None,):
-    self.orgStructureId = orgStructureId
-    self.recursive = recursive
-    self.specialityNotation = specialityNotation
-    self.speciality = speciality
-    self.personId = personId
-    self.begDate = begDate
-    self.endDate = endDate
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I32:
-          self.orgStructureId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.BOOL:
-          self.recursive = iprot.readBool();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.specialityNotation = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.speciality = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.I32:
-          self.personId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.I64:
-          self.begDate = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 7:
-        if ftype == TType.I64:
-          self.endDate = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('GetTicketsAvailabilityParameters')
-    if self.orgStructureId is not None:
-      oprot.writeFieldBegin('orgStructureId', TType.I32, 1)
-      oprot.writeI32(self.orgStructureId)
-      oprot.writeFieldEnd()
-    if self.recursive is not None:
-      oprot.writeFieldBegin('recursive', TType.BOOL, 2)
-      oprot.writeBool(self.recursive)
-      oprot.writeFieldEnd()
-    if self.specialityNotation is not None:
-      oprot.writeFieldBegin('specialityNotation', TType.STRING, 3)
-      oprot.writeString(self.specialityNotation.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.speciality is not None:
-      oprot.writeFieldBegin('speciality', TType.STRING, 4)
-      oprot.writeString(self.speciality.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.personId is not None:
-      oprot.writeFieldBegin('personId', TType.I32, 5)
-      oprot.writeI32(self.personId)
-      oprot.writeFieldEnd()
-    if self.begDate is not None:
-      oprot.writeFieldBegin('begDate', TType.I64, 6)
-      oprot.writeI64(self.begDate)
-      oprot.writeFieldEnd()
-    if self.endDate is not None:
-      oprot.writeFieldBegin('endDate', TType.I64, 7)
-      oprot.writeI64(self.endDate)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.orgStructureId is None:
-      raise TProtocol.TProtocolException(message='Required field orgStructureId is unset!')
-    if self.personId is None:
-      raise TProtocol.TProtocolException(message='Required field personId is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class GetTimeWorkAndStatusParameters(object):
-  """
-  Attributes:
-   - hospitalUidFrom
-   - personId
-   - date
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.STRING, 'hospitalUidFrom', None, None, ), # 1
-    (2, TType.I32, 'personId', None, None, ), # 2
-    (3, TType.I64, 'date', None, None, ), # 3
-  )
-
-  def __init__(self, hospitalUidFrom=None, personId=None, date=None,):
-    self.hospitalUidFrom = hospitalUidFrom
-    self.personId = personId
-    self.date = date
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.STRING:
-          self.hospitalUidFrom = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I32:
-          self.personId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.I64:
-          self.date = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('GetTimeWorkAndStatusParameters')
-    if self.hospitalUidFrom is not None:
-      oprot.writeFieldBegin('hospitalUidFrom', TType.STRING, 1)
-      oprot.writeString(self.hospitalUidFrom.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.personId is not None:
-      oprot.writeFieldBegin('personId', TType.I32, 2)
-      oprot.writeI32(self.personId)
-      oprot.writeFieldEnd()
-    if self.date is not None:
-      oprot.writeFieldBegin('date', TType.I64, 3)
-      oprot.writeI64(self.date)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.personId is None:
-      raise TProtocol.TProtocolException(message='Required field personId is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class AddPatientParameters(object):
-  """
-  AddPatientParameters 	Структура для создания нового пациента
-  @param lastName			Фамилия пациента
-  @param firstName			Имя пациента
-  @param patrName			Отчество пациента
-  @param birthDate			Дата рождения пациента
-  @param sex				Пол пациента
-  @param documentSerial	Серия документа
-  @param documentNumber	Номер документа
-  @param documentTypeCode	Код типа документа
-  @param policySerial		Серия полиса
-  @param policyNumber		Номер полиса
-  @param policyTypeCode	Код типа полиса
-  @param policyInsurerInfisCode	Инфис код страховой, полис которой представлен выше
-
-  Attributes:
-   - lastName
-   - firstName
-   - patrName
-   - birthDate
-   - sex
-   - documentSerial
-   - documentNumber
-   - documentTypeCode
-   - policySerial
-   - policyNumber
-   - policyTypeCode
-   - policyInsurerInfisCode
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.STRING, 'lastName', None, None, ), # 1
-    (2, TType.STRING, 'firstName', None, None, ), # 2
-    (3, TType.STRING, 'patrName', None, None, ), # 3
-    (4, TType.I64, 'birthDate', None, None, ), # 4
-    (5, TType.I32, 'sex', None, None, ), # 5
-    (6, TType.STRING, 'documentSerial', None, None, ), # 6
-    (7, TType.STRING, 'documentNumber', None, None, ), # 7
-    (8, TType.STRING, 'documentTypeCode', None, None, ), # 8
-    (9, TType.STRING, 'policySerial', None, None, ), # 9
-    (10, TType.STRING, 'policyNumber', None, None, ), # 10
-    (11, TType.STRING, 'policyTypeCode', None, None, ), # 11
-    (12, TType.STRING, 'policyInsurerInfisCode', None, None, ), # 12
-  )
-
-  def __init__(self, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None, documentSerial=None, documentNumber=None, documentTypeCode=None, policySerial=None, policyNumber=None, policyTypeCode=None, policyInsurerInfisCode=None,):
-    self.lastName = lastName
-    self.firstName = firstName
-    self.patrName = patrName
-    self.birthDate = birthDate
-    self.sex = sex
-    self.documentSerial = documentSerial
-    self.documentNumber = documentNumber
-    self.documentTypeCode = documentTypeCode
-    self.policySerial = policySerial
-    self.policyNumber = policyNumber
-    self.policyTypeCode = policyTypeCode
-    self.policyInsurerInfisCode = policyInsurerInfisCode
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.STRING:
-          self.lastName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.firstName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.patrName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.I64:
-          self.birthDate = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.I32:
-          self.sex = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.STRING:
-          self.documentSerial = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 7:
-        if ftype == TType.STRING:
-          self.documentNumber = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 8:
-        if ftype == TType.STRING:
-          self.documentTypeCode = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 9:
-        if ftype == TType.STRING:
-          self.policySerial = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 10:
-        if ftype == TType.STRING:
-          self.policyNumber = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 11:
-        if ftype == TType.STRING:
-          self.policyTypeCode = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 12:
-        if ftype == TType.STRING:
-          self.policyInsurerInfisCode = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('AddPatientParameters')
-    if self.lastName is not None:
-      oprot.writeFieldBegin('lastName', TType.STRING, 1)
-      oprot.writeString(self.lastName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.firstName is not None:
-      oprot.writeFieldBegin('firstName', TType.STRING, 2)
-      oprot.writeString(self.firstName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.patrName is not None:
-      oprot.writeFieldBegin('patrName', TType.STRING, 3)
-      oprot.writeString(self.patrName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.birthDate is not None:
-      oprot.writeFieldBegin('birthDate', TType.I64, 4)
-      oprot.writeI64(self.birthDate)
-      oprot.writeFieldEnd()
-    if self.sex is not None:
-      oprot.writeFieldBegin('sex', TType.I32, 5)
-      oprot.writeI32(self.sex)
-      oprot.writeFieldEnd()
-    if self.documentSerial is not None:
-      oprot.writeFieldBegin('documentSerial', TType.STRING, 6)
-      oprot.writeString(self.documentSerial.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.documentNumber is not None:
-      oprot.writeFieldBegin('documentNumber', TType.STRING, 7)
-      oprot.writeString(self.documentNumber.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.documentTypeCode is not None:
-      oprot.writeFieldBegin('documentTypeCode', TType.STRING, 8)
-      oprot.writeString(self.documentTypeCode.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.policySerial is not None:
-      oprot.writeFieldBegin('policySerial', TType.STRING, 9)
-      oprot.writeString(self.policySerial.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.policyNumber is not None:
-      oprot.writeFieldBegin('policyNumber', TType.STRING, 10)
-      oprot.writeString(self.policyNumber.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.policyTypeCode is not None:
-      oprot.writeFieldBegin('policyTypeCode', TType.STRING, 11)
-      oprot.writeString(self.policyTypeCode.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.policyInsurerInfisCode is not None:
-      oprot.writeFieldBegin('policyInsurerInfisCode', TType.STRING, 12)
-      oprot.writeString(self.policyInsurerInfisCode.encode('utf-8'))
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class EnqueuePatientParameters(object):
-  """
-  Attributes:
-   - patientId
-   - personId
-   - dateTime
-   - note
-   - hospitalUidFrom
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I32, 'patientId', None, None, ), # 1
-    (2, TType.I32, 'personId', None, None, ), # 2
-    (3, TType.I64, 'dateTime', None, None, ), # 3
-    (4, TType.STRING, 'note', None, None, ), # 4
-    (5, TType.STRING, 'hospitalUidFrom', None, None, ), # 5
-  )
-
-  def __init__(self, patientId=None, personId=None, dateTime=None, note=None, hospitalUidFrom=None,):
-    self.patientId = patientId
-    self.personId = personId
-    self.dateTime = dateTime
-    self.note = note
-    self.hospitalUidFrom = hospitalUidFrom
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I32:
-          self.patientId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I32:
-          self.personId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.I64:
-          self.dateTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.note = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.STRING:
-          self.hospitalUidFrom = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('EnqueuePatientParameters')
-    if self.patientId is not None:
-      oprot.writeFieldBegin('patientId', TType.I32, 1)
-      oprot.writeI32(self.patientId)
-      oprot.writeFieldEnd()
-    if self.personId is not None:
-      oprot.writeFieldBegin('personId', TType.I32, 2)
-      oprot.writeI32(self.personId)
-      oprot.writeFieldEnd()
-    if self.dateTime is not None:
-      oprot.writeFieldBegin('dateTime', TType.I64, 3)
-      oprot.writeI64(self.dateTime)
-      oprot.writeFieldEnd()
-    if self.note is not None:
-      oprot.writeFieldBegin('note', TType.STRING, 4)
-      oprot.writeString(self.note.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.hospitalUidFrom is not None:
-      oprot.writeFieldBegin('hospitalUidFrom', TType.STRING, 5)
-      oprot.writeString(self.hospitalUidFrom.encode('utf-8'))
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.patientId is None:
-      raise TProtocol.TProtocolException(message='Required field patientId is unset!')
-    if self.personId is None:
-      raise TProtocol.TProtocolException(message='Required field personId is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class FindPatientParameters(object):
-  """
-  Attributes:
-   - lastName
-   - firstName
-   - patrName
-   - birthDate
-   - sex
-   - identifierType
-   - identifier
-   - document
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.STRING, 'lastName', None, None, ), # 1
-    (2, TType.STRING, 'firstName', None, None, ), # 2
-    (3, TType.STRING, 'patrName', None, None, ), # 3
-    (4, TType.I64, 'birthDate', None, None, ), # 4
-    (5, TType.I32, 'sex', None, None, ), # 5
-    (6, TType.STRING, 'identifierType', None, None, ), # 6
-    (7, TType.STRING, 'identifier', None, None, ), # 7
-    (8, TType.MAP, 'document', (TType.STRING,None,TType.STRING,None), None, ), # 8
-  )
-
-  def __init__(self, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None, identifierType=None, identifier=None, document=None,):
-    self.lastName = lastName
-    self.firstName = firstName
-    self.patrName = patrName
-    self.birthDate = birthDate
-    self.sex = sex
-    self.identifierType = identifierType
-    self.identifier = identifier
-    self.document = document
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.STRING:
-          self.lastName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.firstName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.patrName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.I64:
-          self.birthDate = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.I32:
-          self.sex = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.STRING:
-          self.identifierType = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 7:
-        if ftype == TType.STRING:
-          self.identifier = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 8:
-        if ftype == TType.MAP:
-          self.document = {}
-          (_ktype15, _vtype16, _size14 ) = iprot.readMapBegin() 
-          for _i18 in xrange(_size14):
-            _key19 = iprot.readString().decode('utf-8')
-            _val20 = iprot.readString().decode('utf-8')
-            self.document[_key19] = _val20
-          iprot.readMapEnd()
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('FindPatientParameters')
-    if self.lastName is not None:
-      oprot.writeFieldBegin('lastName', TType.STRING, 1)
-      oprot.writeString(self.lastName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.firstName is not None:
-      oprot.writeFieldBegin('firstName', TType.STRING, 2)
-      oprot.writeString(self.firstName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.patrName is not None:
-      oprot.writeFieldBegin('patrName', TType.STRING, 3)
-      oprot.writeString(self.patrName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.birthDate is not None:
-      oprot.writeFieldBegin('birthDate', TType.I64, 4)
-      oprot.writeI64(self.birthDate)
-      oprot.writeFieldEnd()
-    if self.sex is not None:
-      oprot.writeFieldBegin('sex', TType.I32, 5)
-      oprot.writeI32(self.sex)
-      oprot.writeFieldEnd()
-    if self.identifierType is not None:
-      oprot.writeFieldBegin('identifierType', TType.STRING, 6)
-      oprot.writeString(self.identifierType.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.identifier is not None:
-      oprot.writeFieldBegin('identifier', TType.STRING, 7)
-      oprot.writeString(self.identifier.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.document is not None:
-      oprot.writeFieldBegin('document', TType.MAP, 8)
-      oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.document))
-      for kiter21,viter22 in self.document.items():
-        oprot.writeString(kiter21.encode('utf-8'))
-        oprot.writeString(viter22.encode('utf-8'))
-      oprot.writeMapEnd()
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.lastName is None:
-      raise TProtocol.TProtocolException(message='Required field lastName is unset!')
-    if self.firstName is None:
-      raise TProtocol.TProtocolException(message='Required field firstName is unset!')
-    if self.patrName is None:
-      raise TProtocol.TProtocolException(message='Required field patrName is unset!')
-    if self.birthDate is None:
-      raise TProtocol.TProtocolException(message='Required field birthDate is unset!')
-    if self.sex is None:
-      raise TProtocol.TProtocolException(message='Required field sex is unset!')
-    if self.document is None:
-      raise TProtocol.TProtocolException(message='Required field document is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class FindMultiplePatientsParameters(object):
-  """
-  Attributes:
-   - lastName
-   - firstName
-   - patrName
-   - birthDate
-   - sex
-   - identifierType
-   - identifier
-   - document
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.STRING, 'lastName', None, None, ), # 1
-    (2, TType.STRING, 'firstName', None, None, ), # 2
-    (3, TType.STRING, 'patrName', None, None, ), # 3
-    (4, TType.I64, 'birthDate', None, None, ), # 4
-    (5, TType.I32, 'sex', None, None, ), # 5
-    (6, TType.STRING, 'identifierType', None, None, ), # 6
-    (7, TType.STRING, 'identifier', None, None, ), # 7
-    (8, TType.MAP, 'document', (TType.STRING,None,TType.STRING,None), None, ), # 8
-  )
-
-  def __init__(self, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None, identifierType=None, identifier=None, document=None,):
-    self.lastName = lastName
-    self.firstName = firstName
-    self.patrName = patrName
-    self.birthDate = birthDate
-    self.sex = sex
-    self.identifierType = identifierType
-    self.identifier = identifier
-    self.document = document
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.STRING:
-          self.lastName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.firstName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.patrName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.I64:
-          self.birthDate = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.I32:
-          self.sex = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.STRING:
-          self.identifierType = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 7:
-        if ftype == TType.STRING:
-          self.identifier = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 8:
-        if ftype == TType.MAP:
-          self.document = {}
-          (_ktype24, _vtype25, _size23 ) = iprot.readMapBegin() 
-          for _i27 in xrange(_size23):
-            _key28 = iprot.readString().decode('utf-8')
-            _val29 = iprot.readString().decode('utf-8')
-            self.document[_key28] = _val29
-          iprot.readMapEnd()
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('FindMultiplePatientsParameters')
-    if self.lastName is not None:
-      oprot.writeFieldBegin('lastName', TType.STRING, 1)
-      oprot.writeString(self.lastName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.firstName is not None:
-      oprot.writeFieldBegin('firstName', TType.STRING, 2)
-      oprot.writeString(self.firstName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.patrName is not None:
-      oprot.writeFieldBegin('patrName', TType.STRING, 3)
-      oprot.writeString(self.patrName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.birthDate is not None:
-      oprot.writeFieldBegin('birthDate', TType.I64, 4)
-      oprot.writeI64(self.birthDate)
-      oprot.writeFieldEnd()
-    if self.sex is not None:
-      oprot.writeFieldBegin('sex', TType.I32, 5)
-      oprot.writeI32(self.sex)
-      oprot.writeFieldEnd()
-    if self.identifierType is not None:
-      oprot.writeFieldBegin('identifierType', TType.STRING, 6)
-      oprot.writeString(self.identifierType.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.identifier is not None:
-      oprot.writeFieldBegin('identifier', TType.STRING, 7)
-      oprot.writeString(self.identifier.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.document is not None:
-      oprot.writeFieldBegin('document', TType.MAP, 8)
-      oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.document))
-      for kiter30,viter31 in self.document.items():
-        oprot.writeString(kiter30.encode('utf-8'))
-        oprot.writeString(viter31.encode('utf-8'))
-      oprot.writeMapEnd()
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class ChangePolicyParameters(object):
-  """
-  ChangePolicyParameters
-  Структура с данными для изменения/добавления полиса указанного клиента
-  @param patientId         1)Идентификатор пациента, которому нужно добавить/изменить полис
-  @param policy            2)Структура с данными для нового полиса
-
-  Attributes:
-   - patientId
-   - policy
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I32, 'patientId', None, None, ), # 1
-    (2, TType.STRUCT, 'policy', (Policy, Policy.thrift_spec), None, ), # 2
-  )
-
-  def __init__(self, patientId=None, policy=None,):
-    self.patientId = patientId
-    self.policy = policy
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I32:
-          self.patientId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRUCT:
-          self.policy = Policy()
-          self.policy.read(iprot)
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('ChangePolicyParameters')
-    if self.patientId is not None:
-      oprot.writeFieldBegin('patientId', TType.I32, 1)
-      oprot.writeI32(self.patientId)
-      oprot.writeFieldEnd()
-    if self.policy is not None:
-      oprot.writeFieldBegin('policy', TType.STRUCT, 2)
-      self.policy.write(oprot)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.patientId is None:
-      raise TProtocol.TProtocolException(message='Required field patientId is unset!')
-    if self.policy is None:
-      raise TProtocol.TProtocolException(message='Required field policy is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class FindPatientByPolicyAndDocumentParameters(object):
-  """
-  FindPatientByPolicyAndDocumentParameters
-  Структура с данными для поиска пациента по ФИО, полису и документу
-  @param lastName			1)Фамилия пациента
-  @param firstName			2)Имя пациента
-  @param patrName			3)Отчество пациента
-  @param sex				4)Пол пациента
-  @param birthDate			5)Дата рождения пациента
-  @param documentSerial	6)Серия документа
-  @param documentNumber	7)Номер документа
-  @param documentTypeCode	8)Код типа документа
-  @param policySerial		9)Серия полиса
-  @param policyNumber		10)Номер полиса
-  @param policyTypeCode	11)Код типа полиса
-  @param policyInsurerInfisCode	12)Инфис код страховой, полис которой представлен выше
-
-  Attributes:
-   - lastName
-   - firstName
-   - patrName
-   - sex
-   - birthDate
-   - documentSerial
-   - documentNumber
-   - documentTypeCode
-   - policySerial
-   - policyNumber
-   - policyTypeCode
-   - policyInsurerInfisCode
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.STRING, 'lastName', None, None, ), # 1
-    (2, TType.STRING, 'firstName', None, None, ), # 2
-    (3, TType.STRING, 'patrName', None, None, ), # 3
-    (4, TType.I16, 'sex', None, None, ), # 4
-    (5, TType.I64, 'birthDate', None, None, ), # 5
-    (6, TType.STRING, 'documentSerial', None, None, ), # 6
-    (7, TType.STRING, 'documentNumber', None, None, ), # 7
-    (8, TType.STRING, 'documentTypeCode', None, None, ), # 8
-    (9, TType.STRING, 'policySerial', None, None, ), # 9
-    (10, TType.STRING, 'policyNumber', None, None, ), # 10
-    (11, TType.STRING, 'policyTypeCode', None, None, ), # 11
-    (12, TType.STRING, 'policyInsurerInfisCode', None, None, ), # 12
-  )
-
-  def __init__(self, lastName=None, firstName=None, patrName=None, sex=None, birthDate=None, documentSerial=None, documentNumber=None, documentTypeCode=None, policySerial=None, policyNumber=None, policyTypeCode=None, policyInsurerInfisCode=None,):
-    self.lastName = lastName
-    self.firstName = firstName
-    self.patrName = patrName
-    self.sex = sex
-    self.birthDate = birthDate
-    self.documentSerial = documentSerial
-    self.documentNumber = documentNumber
-    self.documentTypeCode = documentTypeCode
-    self.policySerial = policySerial
-    self.policyNumber = policyNumber
-    self.policyTypeCode = policyTypeCode
-    self.policyInsurerInfisCode = policyInsurerInfisCode
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.STRING:
-          self.lastName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.STRING:
-          self.firstName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.STRING:
-          self.patrName = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.I16:
-          self.sex = iprot.readI16();
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.I64:
-          self.birthDate = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 6:
-        if ftype == TType.STRING:
-          self.documentSerial = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 7:
-        if ftype == TType.STRING:
-          self.documentNumber = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 8:
-        if ftype == TType.STRING:
-          self.documentTypeCode = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 9:
-        if ftype == TType.STRING:
-          self.policySerial = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 10:
-        if ftype == TType.STRING:
-          self.policyNumber = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 11:
-        if ftype == TType.STRING:
-          self.policyTypeCode = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 12:
-        if ftype == TType.STRING:
-          self.policyInsurerInfisCode = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('FindPatientByPolicyAndDocumentParameters')
-    if self.lastName is not None:
-      oprot.writeFieldBegin('lastName', TType.STRING, 1)
-      oprot.writeString(self.lastName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.firstName is not None:
-      oprot.writeFieldBegin('firstName', TType.STRING, 2)
-      oprot.writeString(self.firstName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.patrName is not None:
-      oprot.writeFieldBegin('patrName', TType.STRING, 3)
-      oprot.writeString(self.patrName.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.sex is not None:
-      oprot.writeFieldBegin('sex', TType.I16, 4)
-      oprot.writeI16(self.sex)
-      oprot.writeFieldEnd()
-    if self.birthDate is not None:
-      oprot.writeFieldBegin('birthDate', TType.I64, 5)
-      oprot.writeI64(self.birthDate)
-      oprot.writeFieldEnd()
-    if self.documentSerial is not None:
-      oprot.writeFieldBegin('documentSerial', TType.STRING, 6)
-      oprot.writeString(self.documentSerial.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.documentNumber is not None:
-      oprot.writeFieldBegin('documentNumber', TType.STRING, 7)
-      oprot.writeString(self.documentNumber.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.documentTypeCode is not None:
-      oprot.writeFieldBegin('documentTypeCode', TType.STRING, 8)
-      oprot.writeString(self.documentTypeCode.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.policySerial is not None:
-      oprot.writeFieldBegin('policySerial', TType.STRING, 9)
-      oprot.writeString(self.policySerial.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.policyNumber is not None:
-      oprot.writeFieldBegin('policyNumber', TType.STRING, 10)
-      oprot.writeString(self.policyNumber.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.policyTypeCode is not None:
-      oprot.writeFieldBegin('policyTypeCode', TType.STRING, 11)
-      oprot.writeString(self.policyTypeCode.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.policyInsurerInfisCode is not None:
-      oprot.writeFieldBegin('policyInsurerInfisCode', TType.STRING, 12)
-      oprot.writeString(self.policyInsurerInfisCode.encode('utf-8'))
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.lastName is None:
-      raise TProtocol.TProtocolException(message='Required field lastName is unset!')
-    if self.firstName is None:
-      raise TProtocol.TProtocolException(message='Required field firstName is unset!')
-    if self.patrName is None:
-      raise TProtocol.TProtocolException(message='Required field patrName is unset!')
-    if self.sex is None:
-      raise TProtocol.TProtocolException(message='Required field sex is unset!')
-    if self.birthDate is None:
-      raise TProtocol.TProtocolException(message='Required field birthDate is unset!')
-    if self.documentSerial is None:
-      raise TProtocol.TProtocolException(message='Required field documentSerial is unset!')
-    if self.documentNumber is None:
-      raise TProtocol.TProtocolException(message='Required field documentNumber is unset!')
-    if self.documentTypeCode is None:
-      raise TProtocol.TProtocolException(message='Required field documentTypeCode is unset!')
-    if self.policyNumber is None:
-      raise TProtocol.TProtocolException(message='Required field policyNumber is unset!')
-    if self.policyTypeCode is None:
-      raise TProtocol.TProtocolException(message='Required field policyTypeCode is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
-class ScheduleParameters(object):
-  """
-  * Структура с данными для получения расписания пачкой и поиска превого свободного талончика
-  * @param personId                  1)Идетификатор врача
-  * @param beginDateTime             2)Время с которого начинается поиск свободных талончиков
-  * @param endDateTime               3)Время до которого происходит поиск свободных талончиков
-  (если не установлено - то плюс месяц к beginDateTime)
-  * @param hospitalUidFrom           4)Идентификатор ЛПУ из которого производится запись
-  * @param quotingType               5)Тип квотирования
-
-  Attributes:
-   - personId
-   - beginDateTime
-   - endDateTime
-   - hospitalUidFrom
-   - quotingType
-  """
-
-  thrift_spec = (
-    None, # 0
-    (1, TType.I32, 'personId', None, None, ), # 1
-    (2, TType.I64, 'beginDateTime', None, None, ), # 2
-    (3, TType.I64, 'endDateTime', None, None, ), # 3
-    (4, TType.STRING, 'hospitalUidFrom', None, None, ), # 4
-    (5, TType.I32, 'quotingType', None, None, ), # 5
-  )
-
-  def __init__(self, personId=None, beginDateTime=None, endDateTime=None, hospitalUidFrom=None, quotingType=None,):
-    self.personId = personId
-    self.beginDateTime = beginDateTime
-    self.endDateTime = endDateTime
-    self.hospitalUidFrom = hospitalUidFrom
-    self.quotingType = quotingType
-
-  def read(self, iprot):
-    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
-      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
-      return
-    iprot.readStructBegin()
-    while True:
-      (fname, ftype, fid) = iprot.readFieldBegin()
-      if ftype == TType.STOP:
-        break
-      if fid == 1:
-        if ftype == TType.I32:
-          self.personId = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      elif fid == 2:
-        if ftype == TType.I64:
-          self.beginDateTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 3:
-        if ftype == TType.I64:
-          self.endDateTime = iprot.readI64();
-        else:
-          iprot.skip(ftype)
-      elif fid == 4:
-        if ftype == TType.STRING:
-          self.hospitalUidFrom = iprot.readString().decode('utf-8')
-        else:
-          iprot.skip(ftype)
-      elif fid == 5:
-        if ftype == TType.I32:
-          self.quotingType = iprot.readI32();
-        else:
-          iprot.skip(ftype)
-      else:
-        iprot.skip(ftype)
-      iprot.readFieldEnd()
-    iprot.readStructEnd()
-
-  def write(self, oprot):
-    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
-      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
-      return
-    oprot.writeStructBegin('ScheduleParameters')
-    if self.personId is not None:
-      oprot.writeFieldBegin('personId', TType.I32, 1)
-      oprot.writeI32(self.personId)
-      oprot.writeFieldEnd()
-    if self.beginDateTime is not None:
-      oprot.writeFieldBegin('beginDateTime', TType.I64, 2)
-      oprot.writeI64(self.beginDateTime)
-      oprot.writeFieldEnd()
-    if self.endDateTime is not None:
-      oprot.writeFieldBegin('endDateTime', TType.I64, 3)
-      oprot.writeI64(self.endDateTime)
-      oprot.writeFieldEnd()
-    if self.hospitalUidFrom is not None:
-      oprot.writeFieldBegin('hospitalUidFrom', TType.STRING, 4)
-      oprot.writeString(self.hospitalUidFrom.encode('utf-8'))
-      oprot.writeFieldEnd()
-    if self.quotingType is not None:
-      oprot.writeFieldBegin('quotingType', TType.I32, 5)
-      oprot.writeI32(self.quotingType)
-      oprot.writeFieldEnd()
-    oprot.writeFieldStop()
-    oprot.writeStructEnd()
-
-  def validate(self):
-    if self.personId is None:
-      raise TProtocol.TProtocolException(message='Required field personId is unset!')
-    if self.beginDateTime is None:
-      raise TProtocol.TProtocolException(message='Required field beginDateTime is unset!')
-    return
-
-
-  def __repr__(self):
-    L = ['%s=%r' % (key, value)
-      for key, value in self.__dict__.iteritems()]
-    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
-
-  def __eq__(self, other):
-    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
-
-  def __ne__(self, other):
-    return not (self == other)
-
 class NotFoundException(TException):
   """
   Attributes:
@@ -4472,6 +576,4068 @@ class PolicyTypeNotFoundException(TException):
 
   def __str__(self):
     return repr(self)
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class ReasonOfAbsenceException(TException):
+  """
+  Attributes:
+   - name
+   - code
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'name', None, None, ), # 1
+    (2, TType.STRING, 'code', None, None, ), # 2
+  )
+
+  def __init__(self, name=None, code=None,):
+    self.name = name
+    self.code = code
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.name = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.code = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('ReasonOfAbsenceException')
+    if self.name is not None:
+      oprot.writeFieldBegin('name', TType.STRING, 1)
+      oprot.writeString(self.name.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.code is not None:
+      oprot.writeFieldBegin('code', TType.STRING, 2)
+      oprot.writeString(self.code.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __str__(self):
+    return repr(self)
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class Organization(object):
+  """
+  Organization
+  Структура с данными об организации
+  @param fullName				1) Полное наименование организации
+  @param shortName				2) Краткое наименование организации
+  @param address				3) Строковое представление адреса организации
+  @param infisCode				4) Инфис-код организации
+
+  Attributes:
+   - fullName
+   - shortName
+   - address
+   - infisCode
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'fullName', None, None, ), # 1
+    (2, TType.STRING, 'shortName', None, None, ), # 2
+    (3, TType.STRING, 'address', None, None, ), # 3
+    (4, TType.STRING, 'infisCode', None, None, ), # 4
+  )
+
+  def __init__(self, fullName=None, shortName=None, address=None, infisCode=None,):
+    self.fullName = fullName
+    self.shortName = shortName
+    self.address = address
+    self.infisCode = infisCode
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.fullName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.shortName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.address = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.infisCode = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Organization')
+    if self.fullName is not None:
+      oprot.writeFieldBegin('fullName', TType.STRING, 1)
+      oprot.writeString(self.fullName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.shortName is not None:
+      oprot.writeFieldBegin('shortName', TType.STRING, 2)
+      oprot.writeString(self.shortName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.address is not None:
+      oprot.writeFieldBegin('address', TType.STRING, 3)
+      oprot.writeString(self.address.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.infisCode is not None:
+      oprot.writeFieldBegin('infisCode', TType.STRING, 4)
+      oprot.writeString(self.infisCode.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.fullName is None:
+      raise TProtocol.TProtocolException(message='Required field fullName is unset!')
+    if self.infisCode is None:
+      raise TProtocol.TProtocolException(message='Required field infisCode is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class OrgStructure(object):
+  """
+  OrgStructure
+  Структура с данными о подразделении
+  @param id					1) Внутренний идентификатор подразделения
+  @param parent_id				2) Внутренний идентификатор вышестоящего подразделения, или 0 если вышестоящего отделеия не существует
+  @param code					3) Код подразделения
+  @param name					4) Название подразделения
+  @param address				5) Адрес подразделения
+  @param sexFilter				6) Половой фильтр
+  @param ageFilter				7) Возрастной фильтр
+
+  Attributes:
+   - id
+   - parent_id
+   - code
+   - name
+   - address
+   - sexFilter
+   - ageFilter
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'id', None, None, ), # 1
+    (2, TType.I32, 'parent_id', None, 0, ), # 2
+    (3, TType.STRING, 'code', None, None, ), # 3
+    (4, TType.STRING, 'name', None, "", ), # 4
+    (5, TType.STRING, 'address', None, "", ), # 5
+    (6, TType.STRING, 'sexFilter', None, "", ), # 6
+    (7, TType.STRING, 'ageFilter', None, "", ), # 7
+  )
+
+  def __init__(self, id=None, parent_id=thrift_spec[2][4], code=None, name=thrift_spec[4][4], address=thrift_spec[5][4], sexFilter=thrift_spec[6][4], ageFilter=thrift_spec[7][4],):
+    self.id = id
+    self.parent_id = parent_id
+    self.code = code
+    self.name = name
+    self.address = address
+    self.sexFilter = sexFilter
+    self.ageFilter = ageFilter
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.id = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I32:
+          self.parent_id = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.code = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.name = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.STRING:
+          self.address = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.STRING:
+          self.sexFilter = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.STRING:
+          self.ageFilter = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('OrgStructure')
+    if self.id is not None:
+      oprot.writeFieldBegin('id', TType.I32, 1)
+      oprot.writeI32(self.id)
+      oprot.writeFieldEnd()
+    if self.parent_id is not None:
+      oprot.writeFieldBegin('parent_id', TType.I32, 2)
+      oprot.writeI32(self.parent_id)
+      oprot.writeFieldEnd()
+    if self.code is not None:
+      oprot.writeFieldBegin('code', TType.STRING, 3)
+      oprot.writeString(self.code.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.name is not None:
+      oprot.writeFieldBegin('name', TType.STRING, 4)
+      oprot.writeString(self.name.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.address is not None:
+      oprot.writeFieldBegin('address', TType.STRING, 5)
+      oprot.writeString(self.address.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.sexFilter is not None:
+      oprot.writeFieldBegin('sexFilter', TType.STRING, 6)
+      oprot.writeString(self.sexFilter.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.ageFilter is not None:
+      oprot.writeFieldBegin('ageFilter', TType.STRING, 7)
+      oprot.writeString(self.ageFilter.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.id is None:
+      raise TProtocol.TProtocolException(message='Required field id is unset!')
+    if self.code is None:
+      raise TProtocol.TProtocolException(message='Required field code is unset!')
+    if self.name is None:
+      raise TProtocol.TProtocolException(message='Required field name is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class Person(object):
+  """
+  Person
+  Структура с данными о мед. работнике
+  @param id					1) Внутренний идентификатор работника
+  @param code					2) Код работника
+  @param orgStructureId		3) Идентификатор подразделения к которому работник приписан
+  @param lastName				4) Фамилия
+  @param firstName				5) Имя
+  @param patrName				6) Отчество
+  @param office				7) Офис, который указан в таблице персонала
+  @param speciality			8) Наименование специальности
+  @param specialityOKSOCode    9) ОКСО-код специальности
+  @param specialityRegionalCode 10) Региональный код специальности
+  @param post					11) Наименование должности
+  @param sexFilter				12) Пол работника
+
+  Attributes:
+   - id
+   - code
+   - orgStructureId
+   - lastName
+   - firstName
+   - patrName
+   - office
+   - speciality
+   - specialityOKSOCode
+   - specialityRegionalCode
+   - post
+   - sexFilter
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'id', None, None, ), # 1
+    (2, TType.STRING, 'code', None, None, ), # 2
+    (3, TType.I32, 'orgStructureId', None, None, ), # 3
+    (4, TType.STRING, 'lastName', None, None, ), # 4
+    (5, TType.STRING, 'firstName', None, None, ), # 5
+    (6, TType.STRING, 'patrName', None, None, ), # 6
+    (7, TType.STRING, 'office', None, None, ), # 7
+    (8, TType.STRING, 'speciality', None, None, ), # 8
+    (9, TType.STRING, 'specialityOKSOCode', None, None, ), # 9
+    (10, TType.STRING, 'specialityRegionalCode', None, None, ), # 10
+    (11, TType.STRING, 'post', None, None, ), # 11
+    (12, TType.STRING, 'sexFilter', None, None, ), # 12
+  )
+
+  def __init__(self, id=None, code=None, orgStructureId=None, lastName=None, firstName=None, patrName=None, office=None, speciality=None, specialityOKSOCode=None, specialityRegionalCode=None, post=None, sexFilter=None,):
+    self.id = id
+    self.code = code
+    self.orgStructureId = orgStructureId
+    self.lastName = lastName
+    self.firstName = firstName
+    self.patrName = patrName
+    self.office = office
+    self.speciality = speciality
+    self.specialityOKSOCode = specialityOKSOCode
+    self.specialityRegionalCode = specialityRegionalCode
+    self.post = post
+    self.sexFilter = sexFilter
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.id = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.code = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I32:
+          self.orgStructureId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.lastName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.STRING:
+          self.firstName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.STRING:
+          self.patrName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.STRING:
+          self.office = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 8:
+        if ftype == TType.STRING:
+          self.speciality = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 9:
+        if ftype == TType.STRING:
+          self.specialityOKSOCode = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 10:
+        if ftype == TType.STRING:
+          self.specialityRegionalCode = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 11:
+        if ftype == TType.STRING:
+          self.post = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 12:
+        if ftype == TType.STRING:
+          self.sexFilter = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Person')
+    if self.id is not None:
+      oprot.writeFieldBegin('id', TType.I32, 1)
+      oprot.writeI32(self.id)
+      oprot.writeFieldEnd()
+    if self.code is not None:
+      oprot.writeFieldBegin('code', TType.STRING, 2)
+      oprot.writeString(self.code.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.orgStructureId is not None:
+      oprot.writeFieldBegin('orgStructureId', TType.I32, 3)
+      oprot.writeI32(self.orgStructureId)
+      oprot.writeFieldEnd()
+    if self.lastName is not None:
+      oprot.writeFieldBegin('lastName', TType.STRING, 4)
+      oprot.writeString(self.lastName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.firstName is not None:
+      oprot.writeFieldBegin('firstName', TType.STRING, 5)
+      oprot.writeString(self.firstName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.patrName is not None:
+      oprot.writeFieldBegin('patrName', TType.STRING, 6)
+      oprot.writeString(self.patrName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.office is not None:
+      oprot.writeFieldBegin('office', TType.STRING, 7)
+      oprot.writeString(self.office.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.speciality is not None:
+      oprot.writeFieldBegin('speciality', TType.STRING, 8)
+      oprot.writeString(self.speciality.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.specialityOKSOCode is not None:
+      oprot.writeFieldBegin('specialityOKSOCode', TType.STRING, 9)
+      oprot.writeString(self.specialityOKSOCode.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.specialityRegionalCode is not None:
+      oprot.writeFieldBegin('specialityRegionalCode', TType.STRING, 10)
+      oprot.writeString(self.specialityRegionalCode.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.post is not None:
+      oprot.writeFieldBegin('post', TType.STRING, 11)
+      oprot.writeString(self.post.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.sexFilter is not None:
+      oprot.writeFieldBegin('sexFilter', TType.STRING, 12)
+      oprot.writeString(self.sexFilter.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.id is None:
+      raise TProtocol.TProtocolException(message='Required field id is unset!')
+    if self.code is None:
+      raise TProtocol.TProtocolException(message='Required field code is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class Ticket(object):
+  """
+  Attributes:
+   - time
+   - free
+   - available
+   - patientId
+   - patientInfo
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I64, 'time', None, None, ), # 1
+    (2, TType.I32, 'free', None, None, ), # 2
+    (3, TType.I32, 'available', None, None, ), # 3
+    (4, TType.I32, 'patientId', None, None, ), # 4
+    (5, TType.STRING, 'patientInfo', None, None, ), # 5
+  )
+
+  def __init__(self, time=None, free=None, available=None, patientId=None, patientInfo=None,):
+    self.time = time
+    self.free = free
+    self.available = available
+    self.patientId = patientId
+    self.patientInfo = patientInfo
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I64:
+          self.time = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I32:
+          self.free = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I32:
+          self.available = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.I32:
+          self.patientId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.STRING:
+          self.patientInfo = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Ticket')
+    if self.time is not None:
+      oprot.writeFieldBegin('time', TType.I64, 1)
+      oprot.writeI64(self.time)
+      oprot.writeFieldEnd()
+    if self.free is not None:
+      oprot.writeFieldBegin('free', TType.I32, 2)
+      oprot.writeI32(self.free)
+      oprot.writeFieldEnd()
+    if self.available is not None:
+      oprot.writeFieldBegin('available', TType.I32, 3)
+      oprot.writeI32(self.available)
+      oprot.writeFieldEnd()
+    if self.patientId is not None:
+      oprot.writeFieldBegin('patientId', TType.I32, 4)
+      oprot.writeI32(self.patientId)
+      oprot.writeFieldEnd()
+    if self.patientInfo is not None:
+      oprot.writeFieldBegin('patientInfo', TType.STRING, 5)
+      oprot.writeString(self.patientInfo.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class TicketsAvailability(object):
+  """
+  Attributes:
+   - total
+   - free
+   - available
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'total', None, None, ), # 1
+    (2, TType.I32, 'free', None, None, ), # 2
+    (3, TType.I32, 'available', None, None, ), # 3
+  )
+
+  def __init__(self, total=None, free=None, available=None,):
+    self.total = total
+    self.free = free
+    self.available = available
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.total = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I32:
+          self.free = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I32:
+          self.available = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('TicketsAvailability')
+    if self.total is not None:
+      oprot.writeFieldBegin('total', TType.I32, 1)
+      oprot.writeI32(self.total)
+      oprot.writeFieldEnd()
+    if self.free is not None:
+      oprot.writeFieldBegin('free', TType.I32, 2)
+      oprot.writeI32(self.free)
+      oprot.writeFieldEnd()
+    if self.available is not None:
+      oprot.writeFieldBegin('available', TType.I32, 3)
+      oprot.writeI32(self.available)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.total is None:
+      raise TProtocol.TProtocolException(message='Required field total is unset!')
+    if self.free is None:
+      raise TProtocol.TProtocolException(message='Required field free is unset!')
+    if self.available is None:
+      raise TProtocol.TProtocolException(message='Required field available is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class ExtendedTicketsAvailability(object):
+  """
+  Attributes:
+   - personId
+   - date
+   - ticketsInfo
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'personId', None, None, ), # 1
+    (2, TType.I64, 'date', None, None, ), # 2
+    (3, TType.STRUCT, 'ticketsInfo', (TicketsAvailability, TicketsAvailability.thrift_spec), None, ), # 3
+  )
+
+  def __init__(self, personId=None, date=None, ticketsInfo=None,):
+    self.personId = personId
+    self.date = date
+    self.ticketsInfo = ticketsInfo
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.personId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I64:
+          self.date = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRUCT:
+          self.ticketsInfo = TicketsAvailability()
+          self.ticketsInfo.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('ExtendedTicketsAvailability')
+    if self.personId is not None:
+      oprot.writeFieldBegin('personId', TType.I32, 1)
+      oprot.writeI32(self.personId)
+      oprot.writeFieldEnd()
+    if self.date is not None:
+      oprot.writeFieldBegin('date', TType.I64, 2)
+      oprot.writeI64(self.date)
+      oprot.writeFieldEnd()
+    if self.ticketsInfo is not None:
+      oprot.writeFieldBegin('ticketsInfo', TType.STRUCT, 3)
+      self.ticketsInfo.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.personId is None:
+      raise TProtocol.TProtocolException(message='Required field personId is unset!')
+    if self.ticketsInfo is None:
+      raise TProtocol.TProtocolException(message='Required field ticketsInfo is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class Amb(object):
+  """
+  Attributes:
+   - begTime
+   - endTime
+   - office
+   - plan
+   - tickets
+   - available
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I64, 'begTime', None, None, ), # 1
+    (2, TType.I64, 'endTime', None, None, ), # 2
+    (3, TType.STRING, 'office', None, None, ), # 3
+    (4, TType.I32, 'plan', None, None, ), # 4
+    (5, TType.LIST, 'tickets', (TType.STRUCT,(Ticket, Ticket.thrift_spec)), None, ), # 5
+    (6, TType.I32, 'available', None, None, ), # 6
+  )
+
+  def __init__(self, begTime=None, endTime=None, office=None, plan=None, tickets=None, available=None,):
+    self.begTime = begTime
+    self.endTime = endTime
+    self.office = office
+    self.plan = plan
+    self.tickets = tickets
+    self.available = available
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I64:
+          self.begTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I64:
+          self.endTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.office = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.I32:
+          self.plan = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.LIST:
+          self.tickets = []
+          (_etype3, _size0) = iprot.readListBegin()
+          for _i4 in xrange(_size0):
+            _elem5 = Ticket()
+            _elem5.read(iprot)
+            self.tickets.append(_elem5)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.I32:
+          self.available = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Amb')
+    if self.begTime is not None:
+      oprot.writeFieldBegin('begTime', TType.I64, 1)
+      oprot.writeI64(self.begTime)
+      oprot.writeFieldEnd()
+    if self.endTime is not None:
+      oprot.writeFieldBegin('endTime', TType.I64, 2)
+      oprot.writeI64(self.endTime)
+      oprot.writeFieldEnd()
+    if self.office is not None:
+      oprot.writeFieldBegin('office', TType.STRING, 3)
+      oprot.writeString(self.office.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.plan is not None:
+      oprot.writeFieldBegin('plan', TType.I32, 4)
+      oprot.writeI32(self.plan)
+      oprot.writeFieldEnd()
+    if self.tickets is not None:
+      oprot.writeFieldBegin('tickets', TType.LIST, 5)
+      oprot.writeListBegin(TType.STRUCT, len(self.tickets))
+      for iter6 in self.tickets:
+        iter6.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.available is not None:
+      oprot.writeFieldBegin('available', TType.I32, 6)
+      oprot.writeI32(self.available)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class PatientStatus(object):
+  """
+  PatientStatus
+  Структура с данными о  результате поиска \ добавления пациента
+  @param success				1) Статус поиска\добавления пациента (true - найдено\добавлено)
+  @param message				2) Строковое описание причины неудачи
+  @param patientId				3) Идентификатор найденного\добавленого пациента
+
+  Attributes:
+   - success
+   - message
+   - patientId
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.BOOL, 'success', None, None, ), # 1
+    (2, TType.STRING, 'message', None, None, ), # 2
+    (3, TType.I32, 'patientId', None, None, ), # 3
+  )
+
+  def __init__(self, success=None, message=None, patientId=None,):
+    self.success = success
+    self.message = message
+    self.patientId = patientId
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.BOOL:
+          self.success = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.message = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I32:
+          self.patientId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('PatientStatus')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.BOOL, 1)
+      oprot.writeBool(self.success)
+      oprot.writeFieldEnd()
+    if self.message is not None:
+      oprot.writeFieldBegin('message', TType.STRING, 2)
+      oprot.writeString(self.message.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.patientId is not None:
+      oprot.writeFieldBegin('patientId', TType.I32, 3)
+      oprot.writeI32(self.patientId)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.success is None:
+      raise TProtocol.TProtocolException(message='Required field success is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class Patient(object):
+  """
+  Patient
+  Структура с данными о пациенте
+  @param id					1) Внутренний идентификатор пациента
+  @param lastName				2) Фамилия
+  @param firstName				3) Имя
+  @param patrName				4) Отчество
+  @param birthDate				5) Дата рождения
+  @param sex					6) Пол (1-М, 2-Ж)
+
+  Attributes:
+   - id
+   - lastName
+   - firstName
+   - patrName
+   - birthDate
+   - sex
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'id', None, None, ), # 1
+    (2, TType.STRING, 'lastName', None, None, ), # 2
+    (3, TType.STRING, 'firstName', None, None, ), # 3
+    (4, TType.STRING, 'patrName', None, None, ), # 4
+    (5, TType.I64, 'birthDate', None, None, ), # 5
+    (6, TType.I32, 'sex', None, None, ), # 6
+  )
+
+  def __init__(self, id=None, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None,):
+    self.id = id
+    self.lastName = lastName
+    self.firstName = firstName
+    self.patrName = patrName
+    self.birthDate = birthDate
+    self.sex = sex
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.id = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.lastName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.firstName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.patrName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I64:
+          self.birthDate = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.I32:
+          self.sex = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Patient')
+    if self.id is not None:
+      oprot.writeFieldBegin('id', TType.I32, 1)
+      oprot.writeI32(self.id)
+      oprot.writeFieldEnd()
+    if self.lastName is not None:
+      oprot.writeFieldBegin('lastName', TType.STRING, 2)
+      oprot.writeString(self.lastName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.firstName is not None:
+      oprot.writeFieldBegin('firstName', TType.STRING, 3)
+      oprot.writeString(self.firstName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.patrName is not None:
+      oprot.writeFieldBegin('patrName', TType.STRING, 4)
+      oprot.writeString(self.patrName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.birthDate is not None:
+      oprot.writeFieldBegin('birthDate', TType.I64, 5)
+      oprot.writeI64(self.birthDate)
+      oprot.writeFieldEnd()
+    if self.sex is not None:
+      oprot.writeFieldBegin('sex', TType.I32, 6)
+      oprot.writeI32(self.sex)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.id is None:
+      raise TProtocol.TProtocolException(message='Required field id is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class OrgStructuresProperties(object):
+  """
+  OrgStructuresProperties
+  НЕ РЕАЛИЗОВАНО
+
+  Attributes:
+   - orgStructureId
+   - attached
+   - matchRegAddress
+   - matchLocAddress
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'orgStructureId', None, None, ), # 1
+    (2, TType.BOOL, 'attached', None, None, ), # 2
+    (3, TType.BOOL, 'matchRegAddress', None, None, ), # 3
+    (4, TType.BOOL, 'matchLocAddress', None, None, ), # 4
+  )
+
+  def __init__(self, orgStructureId=None, attached=None, matchRegAddress=None, matchLocAddress=None,):
+    self.orgStructureId = orgStructureId
+    self.attached = attached
+    self.matchRegAddress = matchRegAddress
+    self.matchLocAddress = matchLocAddress
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.orgStructureId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.BOOL:
+          self.attached = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.BOOL:
+          self.matchRegAddress = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.BOOL:
+          self.matchLocAddress = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('OrgStructuresProperties')
+    if self.orgStructureId is not None:
+      oprot.writeFieldBegin('orgStructureId', TType.I32, 1)
+      oprot.writeI32(self.orgStructureId)
+      oprot.writeFieldEnd()
+    if self.attached is not None:
+      oprot.writeFieldBegin('attached', TType.BOOL, 2)
+      oprot.writeBool(self.attached)
+      oprot.writeFieldEnd()
+    if self.matchRegAddress is not None:
+      oprot.writeFieldBegin('matchRegAddress', TType.BOOL, 3)
+      oprot.writeBool(self.matchRegAddress)
+      oprot.writeFieldEnd()
+    if self.matchLocAddress is not None:
+      oprot.writeFieldBegin('matchLocAddress', TType.BOOL, 4)
+      oprot.writeBool(self.matchLocAddress)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.orgStructureId is None:
+      raise TProtocol.TProtocolException(message='Required field orgStructureId is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class EnqueuePatientStatus(object):
+  """
+  EnqueuePatientStatus
+  Статус записи пациента к врачу
+  @param success				1) Флажок успешности записи к врачу
+  @param message				2) Сообщение
+  @param index					3) Индекс ячейки записи
+  @param queueId				4) Идентификатор новой записи
+
+  Attributes:
+   - success
+   - message
+   - index
+   - queueId
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.BOOL, 'success', None, None, ), # 1
+    (2, TType.STRING, 'message', None, None, ), # 2
+    (3, TType.I32, 'index', None, None, ), # 3
+    (4, TType.I32, 'queueId', None, None, ), # 4
+  )
+
+  def __init__(self, success=None, message=None, index=None, queueId=None,):
+    self.success = success
+    self.message = message
+    self.index = index
+    self.queueId = queueId
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.BOOL:
+          self.success = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.message = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I32:
+          self.index = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.I32:
+          self.queueId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('EnqueuePatientStatus')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.BOOL, 1)
+      oprot.writeBool(self.success)
+      oprot.writeFieldEnd()
+    if self.message is not None:
+      oprot.writeFieldBegin('message', TType.STRING, 2)
+      oprot.writeString(self.message.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.index is not None:
+      oprot.writeFieldBegin('index', TType.I32, 3)
+      oprot.writeI32(self.index)
+      oprot.writeFieldEnd()
+    if self.queueId is not None:
+      oprot.writeFieldBegin('queueId', TType.I32, 4)
+      oprot.writeI32(self.queueId)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.success is None:
+      raise TProtocol.TProtocolException(message='Required field success is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class Queue(object):
+  """
+  Queue
+  Структура с данными о записях пациента к врачам
+  @param dateTime				1) Дата+время начала талончика
+  @param index					2) Индекс ячейки записи
+  @param personId				3) Идентификатор врача
+  @param note					4) Примечание
+  @param queueId				5) Идентификатор Action-а записи к врачу
+  @param enqueuePersonId		6) Идентификатор врача, который записал пациента
+  @param enqueueDateTime		7) Дата+время создания записи
+
+  Attributes:
+   - dateTime
+   - index
+   - personId
+   - note
+   - queueId
+   - enqueuePersonId
+   - enqueueDateTime
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I64, 'dateTime', None, None, ), # 1
+    (2, TType.I32, 'index', None, None, ), # 2
+    (3, TType.I32, 'personId', None, None, ), # 3
+    (4, TType.STRING, 'note', None, None, ), # 4
+    (5, TType.I32, 'queueId', None, None, ), # 5
+    (6, TType.I32, 'enqueuePersonId', None, None, ), # 6
+    (7, TType.I64, 'enqueueDateTime', None, None, ), # 7
+  )
+
+  def __init__(self, dateTime=None, index=None, personId=None, note=None, queueId=None, enqueuePersonId=None, enqueueDateTime=None,):
+    self.dateTime = dateTime
+    self.index = index
+    self.personId = personId
+    self.note = note
+    self.queueId = queueId
+    self.enqueuePersonId = enqueuePersonId
+    self.enqueueDateTime = enqueueDateTime
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I64:
+          self.dateTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I32:
+          self.index = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I32:
+          self.personId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.note = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I32:
+          self.queueId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.I32:
+          self.enqueuePersonId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.I64:
+          self.enqueueDateTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Queue')
+    if self.dateTime is not None:
+      oprot.writeFieldBegin('dateTime', TType.I64, 1)
+      oprot.writeI64(self.dateTime)
+      oprot.writeFieldEnd()
+    if self.index is not None:
+      oprot.writeFieldBegin('index', TType.I32, 2)
+      oprot.writeI32(self.index)
+      oprot.writeFieldEnd()
+    if self.personId is not None:
+      oprot.writeFieldBegin('personId', TType.I32, 3)
+      oprot.writeI32(self.personId)
+      oprot.writeFieldEnd()
+    if self.note is not None:
+      oprot.writeFieldBegin('note', TType.STRING, 4)
+      oprot.writeString(self.note.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.queueId is not None:
+      oprot.writeFieldBegin('queueId', TType.I32, 5)
+      oprot.writeI32(self.queueId)
+      oprot.writeFieldEnd()
+    if self.enqueuePersonId is not None:
+      oprot.writeFieldBegin('enqueuePersonId', TType.I32, 6)
+      oprot.writeI32(self.enqueuePersonId)
+      oprot.writeFieldEnd()
+    if self.enqueueDateTime is not None:
+      oprot.writeFieldBegin('enqueueDateTime', TType.I64, 7)
+      oprot.writeI64(self.enqueueDateTime)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class DequeuePatientStatus(object):
+  """
+  DequeuePatientStatus
+  Структура со статусом отмены записи пациента к врачу
+  @param success				1) Статус отмены записи пациента к врачу
+  @param message				2) Сообшение
+
+  Attributes:
+   - success
+   - message
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.BOOL, 'success', None, None, ), # 1
+    (2, TType.STRING, 'message', None, None, ), # 2
+  )
+
+  def __init__(self, success=None, message=None,):
+    self.success = success
+    self.message = message
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.BOOL:
+          self.success = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.message = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('DequeuePatientStatus')
+    if self.success is not None:
+      oprot.writeFieldBegin('success', TType.BOOL, 1)
+      oprot.writeBool(self.success)
+      oprot.writeFieldEnd()
+    if self.message is not None:
+      oprot.writeFieldBegin('message', TType.STRING, 2)
+      oprot.writeString(self.message.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.success is None:
+      raise TProtocol.TProtocolException(message='Required field success is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class Speciality(object):
+  """
+  Speciality
+  Структура с данными о специальностях врачей, на которые доступна внешняя запись
+  @param id 					1) Внутренний идентификатор специальности
+  @param ticketsPerMonths		2) Количество выделяемых талончиков в месяц
+  @param ticketsAvailable		3) Количество доступных талончиков (остатки)
+  @param speciality			4) Строковое название специальности
+
+  Attributes:
+   - id
+   - ticketsPerMonths
+   - ticketsAvailable
+   - speciality
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'id', None, None, ), # 1
+    (2, TType.I32, 'ticketsPerMonths', None, None, ), # 2
+    (3, TType.I32, 'ticketsAvailable', None, None, ), # 3
+    (4, TType.STRING, 'speciality', None, None, ), # 4
+  )
+
+  def __init__(self, id=None, ticketsPerMonths=None, ticketsAvailable=None, speciality=None,):
+    self.id = id
+    self.ticketsPerMonths = ticketsPerMonths
+    self.ticketsAvailable = ticketsAvailable
+    self.speciality = speciality
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.id = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I32:
+          self.ticketsPerMonths = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I32:
+          self.ticketsAvailable = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.speciality = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Speciality')
+    if self.id is not None:
+      oprot.writeFieldBegin('id', TType.I32, 1)
+      oprot.writeI32(self.id)
+      oprot.writeFieldEnd()
+    if self.ticketsPerMonths is not None:
+      oprot.writeFieldBegin('ticketsPerMonths', TType.I32, 2)
+      oprot.writeI32(self.ticketsPerMonths)
+      oprot.writeFieldEnd()
+    if self.ticketsAvailable is not None:
+      oprot.writeFieldBegin('ticketsAvailable', TType.I32, 3)
+      oprot.writeI32(self.ticketsAvailable)
+      oprot.writeFieldEnd()
+    if self.speciality is not None:
+      oprot.writeFieldBegin('speciality', TType.STRING, 4)
+      oprot.writeString(self.speciality.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.id is None:
+      raise TProtocol.TProtocolException(message='Required field id is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class Address(object):
+  """
+  Address
+  Структура с данными об адресах, которые обслуживаются подразделением
+  @param orgStructureId		1) Внутренний идентификатор подразделения, к которому приписан этот адрес
+  @param pointKLADR			2) Соответствующий адресу КЛАДР-код
+  @param streetKLADR 			3) Соответствующий КЛАДР-код улицы
+  @param number				4) Номер дома\строения
+  @param corpus				5) Номер корпуса
+  @param firstFlat				6) Начало диапозона обслуживаемых квартир
+  @param lastFlat				7) Конец диапозона обслуживаемых квартир
+
+  Attributes:
+   - orgStructureId
+   - pointKLADR
+   - streetKLADR
+   - number
+   - corpus
+   - firstFlat
+   - lastFlat
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'orgStructureId', None, None, ), # 1
+    (2, TType.STRING, 'pointKLADR', None, None, ), # 2
+    (3, TType.STRING, 'streetKLADR', None, None, ), # 3
+    (4, TType.STRING, 'number', None, None, ), # 4
+    (5, TType.STRING, 'corpus', None, None, ), # 5
+    (6, TType.I32, 'firstFlat', None, None, ), # 6
+    (7, TType.I32, 'lastFlat', None, None, ), # 7
+  )
+
+  def __init__(self, orgStructureId=None, pointKLADR=None, streetKLADR=None, number=None, corpus=None, firstFlat=None, lastFlat=None,):
+    self.orgStructureId = orgStructureId
+    self.pointKLADR = pointKLADR
+    self.streetKLADR = streetKLADR
+    self.number = number
+    self.corpus = corpus
+    self.firstFlat = firstFlat
+    self.lastFlat = lastFlat
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.orgStructureId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.pointKLADR = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.streetKLADR = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.number = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.STRING:
+          self.corpus = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.I32:
+          self.firstFlat = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.I32:
+          self.lastFlat = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Address')
+    if self.orgStructureId is not None:
+      oprot.writeFieldBegin('orgStructureId', TType.I32, 1)
+      oprot.writeI32(self.orgStructureId)
+      oprot.writeFieldEnd()
+    if self.pointKLADR is not None:
+      oprot.writeFieldBegin('pointKLADR', TType.STRING, 2)
+      oprot.writeString(self.pointKLADR.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.streetKLADR is not None:
+      oprot.writeFieldBegin('streetKLADR', TType.STRING, 3)
+      oprot.writeString(self.streetKLADR.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.number is not None:
+      oprot.writeFieldBegin('number', TType.STRING, 4)
+      oprot.writeString(self.number.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.corpus is not None:
+      oprot.writeFieldBegin('corpus', TType.STRING, 5)
+      oprot.writeString(self.corpus.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.firstFlat is not None:
+      oprot.writeFieldBegin('firstFlat', TType.I32, 6)
+      oprot.writeI32(self.firstFlat)
+      oprot.writeFieldEnd()
+    if self.lastFlat is not None:
+      oprot.writeFieldBegin('lastFlat', TType.I32, 7)
+      oprot.writeI32(self.lastFlat)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.orgStructureId is None:
+      raise TProtocol.TProtocolException(message='Required field orgStructureId is unset!')
+    if self.pointKLADR is None:
+      raise TProtocol.TProtocolException(message='Required field pointKLADR is unset!')
+    if self.streetKLADR is None:
+      raise TProtocol.TProtocolException(message='Required field streetKLADR is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class Contact(object):
+  """
+  Contact
+  Структура с контактными данными пациента
+  @param type					1) Тип контакта
+  @param code					2) Код типа контакта
+  @param contact				3) Контактная информация
+  @param note					4) Примечание
+
+  Attributes:
+   - type
+   - code
+   - contact
+   - note
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'type', None, None, ), # 1
+    (2, TType.STRING, 'code', None, None, ), # 2
+    (3, TType.STRING, 'contact', None, None, ), # 3
+    (4, TType.STRING, 'note', None, None, ), # 4
+  )
+
+  def __init__(self, type=None, code=None, contact=None, note=None,):
+    self.type = type
+    self.code = code
+    self.contact = contact
+    self.note = note
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.type = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.code = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.contact = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.note = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Contact')
+    if self.type is not None:
+      oprot.writeFieldBegin('type', TType.STRING, 1)
+      oprot.writeString(self.type.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.code is not None:
+      oprot.writeFieldBegin('code', TType.STRING, 2)
+      oprot.writeString(self.code.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.contact is not None:
+      oprot.writeFieldBegin('contact', TType.STRING, 3)
+      oprot.writeString(self.contact.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.note is not None:
+      oprot.writeFieldBegin('note', TType.STRING, 4)
+      oprot.writeString(self.note.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class QueueCoupon(object):
+  """
+  QueueCoupon
+  Структура с данными для поллинга новых записей к врачу (чтобы учесть сделанные не через КС)
+  @param uuid                  1)Уникальный идентификатор талончика (отмененные талончики будут иметь тот-же идентификатор)
+  @param status                2)Статус талончика (Новый\Отменен)
+  @param personId              3)Ид врача
+  @param patient               4)Структура с данными пациента - владельца талончика
+  @param begDateTime           5)Дата+время начала талончика
+  @param endDateTime           5)Дата+время окончания талончика
+  @param office                6)Офис в котором будет принимать врач
+
+  Attributes:
+   - uuid
+   - status
+   - personId
+   - patient
+   - begDateTime
+   - endDateTime
+   - office
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'uuid', None, None, ), # 1
+    (2, TType.I32, 'status', None, None, ), # 2
+    (3, TType.I32, 'personId', None, None, ), # 3
+    (4, TType.STRUCT, 'patient', (Patient, Patient.thrift_spec), None, ), # 4
+    (5, TType.I64, 'begDateTime', None, None, ), # 5
+    (6, TType.I64, 'endDateTime', None, None, ), # 6
+    (7, TType.STRING, 'office', None, None, ), # 7
+  )
+
+  def __init__(self, uuid=None, status=None, personId=None, patient=None, begDateTime=None, endDateTime=None, office=None,):
+    self.uuid = uuid
+    self.status = status
+    self.personId = personId
+    self.patient = patient
+    self.begDateTime = begDateTime
+    self.endDateTime = endDateTime
+    self.office = office
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.uuid = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I32:
+          self.status = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I32:
+          self.personId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRUCT:
+          self.patient = Patient()
+          self.patient.read(iprot)
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I64:
+          self.begDateTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.I64:
+          self.endDateTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.STRING:
+          self.office = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('QueueCoupon')
+    if self.uuid is not None:
+      oprot.writeFieldBegin('uuid', TType.STRING, 1)
+      oprot.writeString(self.uuid.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.status is not None:
+      oprot.writeFieldBegin('status', TType.I32, 2)
+      oprot.writeI32(self.status)
+      oprot.writeFieldEnd()
+    if self.personId is not None:
+      oprot.writeFieldBegin('personId', TType.I32, 3)
+      oprot.writeI32(self.personId)
+      oprot.writeFieldEnd()
+    if self.patient is not None:
+      oprot.writeFieldBegin('patient', TType.STRUCT, 4)
+      self.patient.write(oprot)
+      oprot.writeFieldEnd()
+    if self.begDateTime is not None:
+      oprot.writeFieldBegin('begDateTime', TType.I64, 5)
+      oprot.writeI64(self.begDateTime)
+      oprot.writeFieldEnd()
+    if self.endDateTime is not None:
+      oprot.writeFieldBegin('endDateTime', TType.I64, 6)
+      oprot.writeI64(self.endDateTime)
+      oprot.writeFieldEnd()
+    if self.office is not None:
+      oprot.writeFieldBegin('office', TType.STRING, 7)
+      oprot.writeString(self.office.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.uuid is None:
+      raise TProtocol.TProtocolException(message='Required field uuid is unset!')
+    if self.status is None:
+      raise TProtocol.TProtocolException(message='Required field status is unset!')
+    if self.personId is None:
+      raise TProtocol.TProtocolException(message='Required field personId is unset!')
+    if self.patient is None:
+      raise TProtocol.TProtocolException(message='Required field patient is unset!')
+    if self.begDateTime is None:
+      raise TProtocol.TProtocolException(message='Required field begDateTime is unset!')
+    if self.endDateTime is None:
+      raise TProtocol.TProtocolException(message='Required field endDateTime is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class TTicket(object):
+  """
+  TTicket
+  Структура с данными о талончике на прием к врачу
+  @param begTime           	1)Время начала талончика
+  @param endTime           	2)Время конца талончика
+  @param free              	3)признак, указывающий занят ли этот талончик каким-либо пациентом
+  @param available         	4)признак, указывающий доступен ли этот талончик для записи
+  @param patientId         	5) OPTIONAL: Идентификатор пациента, который занял этот талончик
+  @param patientInfo       	6) OPTIONAL: ФИО пациента, который занял этот талончик
+  @param timeIndex         	7) OPTIONAL: Индекс ячейки времени в расписании врача, на который ссылается этот талончик
+  @param date              	8) OPTIONAL: Дата приема врача. Будет выставляться для метода getFirstFreeTicket
+  @param office            	9) OPTIONAL: Офис, в котором будет происходить прием врача. Будет выставляться для метода getFirstFreeTicket
+
+  Attributes:
+   - begTime
+   - endTime
+   - free
+   - available
+   - patientId
+   - patientInfo
+   - timeIndex
+   - date
+   - office
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I64, 'begTime', None, None, ), # 1
+    (2, TType.I64, 'endTime', None, None, ), # 2
+    (3, TType.BOOL, 'free', None, None, ), # 3
+    (4, TType.BOOL, 'available', None, None, ), # 4
+    (5, TType.I32, 'patientId', None, None, ), # 5
+    (6, TType.STRING, 'patientInfo', None, None, ), # 6
+    (7, TType.I32, 'timeIndex', None, None, ), # 7
+    (8, TType.I64, 'date', None, None, ), # 8
+    (9, TType.STRING, 'office', None, None, ), # 9
+  )
+
+  def __init__(self, begTime=None, endTime=None, free=None, available=None, patientId=None, patientInfo=None, timeIndex=None, date=None, office=None,):
+    self.begTime = begTime
+    self.endTime = endTime
+    self.free = free
+    self.available = available
+    self.patientId = patientId
+    self.patientInfo = patientInfo
+    self.timeIndex = timeIndex
+    self.date = date
+    self.office = office
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I64:
+          self.begTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I64:
+          self.endTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.BOOL:
+          self.free = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.BOOL:
+          self.available = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I32:
+          self.patientId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.STRING:
+          self.patientInfo = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.I32:
+          self.timeIndex = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 8:
+        if ftype == TType.I64:
+          self.date = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 9:
+        if ftype == TType.STRING:
+          self.office = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('TTicket')
+    if self.begTime is not None:
+      oprot.writeFieldBegin('begTime', TType.I64, 1)
+      oprot.writeI64(self.begTime)
+      oprot.writeFieldEnd()
+    if self.endTime is not None:
+      oprot.writeFieldBegin('endTime', TType.I64, 2)
+      oprot.writeI64(self.endTime)
+      oprot.writeFieldEnd()
+    if self.free is not None:
+      oprot.writeFieldBegin('free', TType.BOOL, 3)
+      oprot.writeBool(self.free)
+      oprot.writeFieldEnd()
+    if self.available is not None:
+      oprot.writeFieldBegin('available', TType.BOOL, 4)
+      oprot.writeBool(self.available)
+      oprot.writeFieldEnd()
+    if self.patientId is not None:
+      oprot.writeFieldBegin('patientId', TType.I32, 5)
+      oprot.writeI32(self.patientId)
+      oprot.writeFieldEnd()
+    if self.patientInfo is not None:
+      oprot.writeFieldBegin('patientInfo', TType.STRING, 6)
+      oprot.writeString(self.patientInfo.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.timeIndex is not None:
+      oprot.writeFieldBegin('timeIndex', TType.I32, 7)
+      oprot.writeI32(self.timeIndex)
+      oprot.writeFieldEnd()
+    if self.date is not None:
+      oprot.writeFieldBegin('date', TType.I64, 8)
+      oprot.writeI64(self.date)
+      oprot.writeFieldEnd()
+    if self.office is not None:
+      oprot.writeFieldBegin('office', TType.STRING, 9)
+      oprot.writeString(self.office.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.begTime is None:
+      raise TProtocol.TProtocolException(message='Required field begTime is unset!')
+    if self.endTime is None:
+      raise TProtocol.TProtocolException(message='Required field endTime is unset!')
+    if self.free is None:
+      raise TProtocol.TProtocolException(message='Required field free is unset!')
+    if self.available is None:
+      raise TProtocol.TProtocolException(message='Required field available is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class Schedule(object):
+  """
+  Schedule
+  Структура с данными для расписания врача
+  @param begTime       		1) Время начала приема врача
+  @param endTime       		2) Время окончания приема врача
+  @param date          		3) Дата приема врача
+  @param office        		4) Офис в котором будет происходить прием
+  @param plan          		5) План приема (количество ячеек времени в которые врач будет принимать пациентов)
+  @param tickets       		6) Список талончиков на прием
+  @param available     		7) Признак доступности записи на этот прием (в целом)
+
+  Attributes:
+   - begTime
+   - endTime
+   - date
+   - office
+   - plan
+   - tickets
+   - available
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I64, 'begTime', None, None, ), # 1
+    (2, TType.I64, 'endTime', None, None, ), # 2
+    (3, TType.I64, 'date', None, None, ), # 3
+    (4, TType.STRING, 'office', None, None, ), # 4
+    (5, TType.I32, 'plan', None, None, ), # 5
+    (6, TType.LIST, 'tickets', (TType.STRUCT,(TTicket, TTicket.thrift_spec)), None, ), # 6
+    (7, TType.BOOL, 'available', None, None, ), # 7
+  )
+
+  def __init__(self, begTime=None, endTime=None, date=None, office=None, plan=None, tickets=None, available=None,):
+    self.begTime = begTime
+    self.endTime = endTime
+    self.date = date
+    self.office = office
+    self.plan = plan
+    self.tickets = tickets
+    self.available = available
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I64:
+          self.begTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I64:
+          self.endTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I64:
+          self.date = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.office = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I32:
+          self.plan = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.LIST:
+          self.tickets = []
+          (_etype10, _size7) = iprot.readListBegin()
+          for _i11 in xrange(_size7):
+            _elem12 = TTicket()
+            _elem12.read(iprot)
+            self.tickets.append(_elem12)
+          iprot.readListEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.BOOL:
+          self.available = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Schedule')
+    if self.begTime is not None:
+      oprot.writeFieldBegin('begTime', TType.I64, 1)
+      oprot.writeI64(self.begTime)
+      oprot.writeFieldEnd()
+    if self.endTime is not None:
+      oprot.writeFieldBegin('endTime', TType.I64, 2)
+      oprot.writeI64(self.endTime)
+      oprot.writeFieldEnd()
+    if self.date is not None:
+      oprot.writeFieldBegin('date', TType.I64, 3)
+      oprot.writeI64(self.date)
+      oprot.writeFieldEnd()
+    if self.office is not None:
+      oprot.writeFieldBegin('office', TType.STRING, 4)
+      oprot.writeString(self.office.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.plan is not None:
+      oprot.writeFieldBegin('plan', TType.I32, 5)
+      oprot.writeI32(self.plan)
+      oprot.writeFieldEnd()
+    if self.tickets is not None:
+      oprot.writeFieldBegin('tickets', TType.LIST, 6)
+      oprot.writeListBegin(TType.STRUCT, len(self.tickets))
+      for iter13 in self.tickets:
+        iter13.write(oprot)
+      oprot.writeListEnd()
+      oprot.writeFieldEnd()
+    if self.available is not None:
+      oprot.writeFieldBegin('available', TType.BOOL, 7)
+      oprot.writeBool(self.available)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.begTime is None:
+      raise TProtocol.TProtocolException(message='Required field begTime is unset!')
+    if self.endTime is None:
+      raise TProtocol.TProtocolException(message='Required field endTime is unset!')
+    if self.date is None:
+      raise TProtocol.TProtocolException(message='Required field date is unset!')
+    if self.available is None:
+      raise TProtocol.TProtocolException(message='Required field available is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class PersonSchedule(object):
+  """
+  PersonSchedule
+  Структура с данными о расписаниях врача за интервал
+  @param schedules             1) Расписания врача: map<timestamp, Schedule> - карта вида <[Дата приема], [Расписание на эту дату]>,
+                                       в случае отсутствия расписания на указанную дату набор ключ-значение опускается
+  @param personAbsences        2) Список причин отсутствия врача
+
+  Attributes:
+   - schedules
+   - personAbsences
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.MAP, 'schedules', (TType.I64,None,TType.STRUCT,(Schedule, Schedule.thrift_spec)), None, ), # 1
+    (2, TType.MAP, 'personAbsences', (TType.I64,None,TType.STRUCT,(ReasonOfAbsenceException, ReasonOfAbsenceException.thrift_spec)), None, ), # 2
+  )
+
+  def __init__(self, schedules=None, personAbsences=None,):
+    self.schedules = schedules
+    self.personAbsences = personAbsences
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.MAP:
+          self.schedules = {}
+          (_ktype15, _vtype16, _size14 ) = iprot.readMapBegin() 
+          for _i18 in xrange(_size14):
+            _key19 = iprot.readI64();
+            _val20 = Schedule()
+            _val20.read(iprot)
+            self.schedules[_key19] = _val20
+          iprot.readMapEnd()
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.MAP:
+          self.personAbsences = {}
+          (_ktype22, _vtype23, _size21 ) = iprot.readMapBegin() 
+          for _i25 in xrange(_size21):
+            _key26 = iprot.readI64();
+            _val27 = ReasonOfAbsenceException()
+            _val27.read(iprot)
+            self.personAbsences[_key26] = _val27
+          iprot.readMapEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('PersonSchedule')
+    if self.schedules is not None:
+      oprot.writeFieldBegin('schedules', TType.MAP, 1)
+      oprot.writeMapBegin(TType.I64, TType.STRUCT, len(self.schedules))
+      for kiter28,viter29 in self.schedules.items():
+        oprot.writeI64(kiter28)
+        viter29.write(oprot)
+      oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    if self.personAbsences is not None:
+      oprot.writeFieldBegin('personAbsences', TType.MAP, 2)
+      oprot.writeMapBegin(TType.I64, TType.STRUCT, len(self.personAbsences))
+      for kiter30,viter31 in self.personAbsences.items():
+        oprot.writeI64(kiter30)
+        viter31.write(oprot)
+      oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.schedules is None:
+      raise TProtocol.TProtocolException(message='Required field schedules is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class Policy(object):
+  """
+  Policy
+  Структура с данными о полисе
+  @param serial            1)Серия полиса
+  @param number            2)Номер полиса
+  @param typeCode          3)Код типа полиса
+  @param insurerInfisCode  4)Инфис-код страховой организации
+
+  Attributes:
+   - serial
+   - number
+   - typeCode
+   - insurerInfisCode
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'serial', None, None, ), # 1
+    (2, TType.STRING, 'number', None, None, ), # 2
+    (3, TType.STRING, 'typeCode', None, None, ), # 3
+    (4, TType.STRING, 'insurerInfisCode', None, None, ), # 4
+  )
+
+  def __init__(self, serial=None, number=None, typeCode=None, insurerInfisCode=None,):
+    self.serial = serial
+    self.number = number
+    self.typeCode = typeCode
+    self.insurerInfisCode = insurerInfisCode
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.serial = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.number = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.typeCode = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.insurerInfisCode = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('Policy')
+    if self.serial is not None:
+      oprot.writeFieldBegin('serial', TType.STRING, 1)
+      oprot.writeString(self.serial.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.number is not None:
+      oprot.writeFieldBegin('number', TType.STRING, 2)
+      oprot.writeString(self.number.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.typeCode is not None:
+      oprot.writeFieldBegin('typeCode', TType.STRING, 3)
+      oprot.writeString(self.typeCode.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.insurerInfisCode is not None:
+      oprot.writeFieldBegin('insurerInfisCode', TType.STRING, 4)
+      oprot.writeString(self.insurerInfisCode.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.number is None:
+      raise TProtocol.TProtocolException(message='Required field number is unset!')
+    if self.typeCode is None:
+      raise TProtocol.TProtocolException(message='Required field typeCode is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class FindOrgStructureByAddressParameters(object):
+  """
+  Attributes:
+   - pointKLADR
+   - streetKLADR
+   - number
+   - corpus
+   - flat
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'pointKLADR', None, None, ), # 1
+    (2, TType.STRING, 'streetKLADR', None, "", ), # 2
+    (3, TType.STRING, 'number', None, "", ), # 3
+    (4, TType.STRING, 'corpus', None, "", ), # 4
+    (5, TType.I32, 'flat', None, 0, ), # 5
+  )
+
+  def __init__(self, pointKLADR=None, streetKLADR=thrift_spec[2][4], number=thrift_spec[3][4], corpus=thrift_spec[4][4], flat=thrift_spec[5][4],):
+    self.pointKLADR = pointKLADR
+    self.streetKLADR = streetKLADR
+    self.number = number
+    self.corpus = corpus
+    self.flat = flat
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.pointKLADR = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.streetKLADR = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.number = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.corpus = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I32:
+          self.flat = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('FindOrgStructureByAddressParameters')
+    if self.pointKLADR is not None:
+      oprot.writeFieldBegin('pointKLADR', TType.STRING, 1)
+      oprot.writeString(self.pointKLADR.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.streetKLADR is not None:
+      oprot.writeFieldBegin('streetKLADR', TType.STRING, 2)
+      oprot.writeString(self.streetKLADR.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.number is not None:
+      oprot.writeFieldBegin('number', TType.STRING, 3)
+      oprot.writeString(self.number.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.corpus is not None:
+      oprot.writeFieldBegin('corpus', TType.STRING, 4)
+      oprot.writeString(self.corpus.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.flat is not None:
+      oprot.writeFieldBegin('flat', TType.I32, 5)
+      oprot.writeI32(self.flat)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.pointKLADR is None:
+      raise TProtocol.TProtocolException(message='Required field pointKLADR is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class GetTicketsAvailabilityParameters(object):
+  """
+  Attributes:
+   - orgStructureId
+   - recursive
+   - specialityNotation
+   - speciality
+   - personId
+   - begDate
+   - endDate
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'orgStructureId', None, None, ), # 1
+    (2, TType.BOOL, 'recursive', None, None, ), # 2
+    (3, TType.STRING, 'specialityNotation', None, None, ), # 3
+    (4, TType.STRING, 'speciality', None, None, ), # 4
+    (5, TType.I32, 'personId', None, None, ), # 5
+    (6, TType.I64, 'begDate', None, None, ), # 6
+    (7, TType.I64, 'endDate', None, None, ), # 7
+  )
+
+  def __init__(self, orgStructureId=None, recursive=None, specialityNotation=None, speciality=None, personId=None, begDate=None, endDate=None,):
+    self.orgStructureId = orgStructureId
+    self.recursive = recursive
+    self.specialityNotation = specialityNotation
+    self.speciality = speciality
+    self.personId = personId
+    self.begDate = begDate
+    self.endDate = endDate
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.orgStructureId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.BOOL:
+          self.recursive = iprot.readBool();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.specialityNotation = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.speciality = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I32:
+          self.personId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.I64:
+          self.begDate = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.I64:
+          self.endDate = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('GetTicketsAvailabilityParameters')
+    if self.orgStructureId is not None:
+      oprot.writeFieldBegin('orgStructureId', TType.I32, 1)
+      oprot.writeI32(self.orgStructureId)
+      oprot.writeFieldEnd()
+    if self.recursive is not None:
+      oprot.writeFieldBegin('recursive', TType.BOOL, 2)
+      oprot.writeBool(self.recursive)
+      oprot.writeFieldEnd()
+    if self.specialityNotation is not None:
+      oprot.writeFieldBegin('specialityNotation', TType.STRING, 3)
+      oprot.writeString(self.specialityNotation.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.speciality is not None:
+      oprot.writeFieldBegin('speciality', TType.STRING, 4)
+      oprot.writeString(self.speciality.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.personId is not None:
+      oprot.writeFieldBegin('personId', TType.I32, 5)
+      oprot.writeI32(self.personId)
+      oprot.writeFieldEnd()
+    if self.begDate is not None:
+      oprot.writeFieldBegin('begDate', TType.I64, 6)
+      oprot.writeI64(self.begDate)
+      oprot.writeFieldEnd()
+    if self.endDate is not None:
+      oprot.writeFieldBegin('endDate', TType.I64, 7)
+      oprot.writeI64(self.endDate)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.orgStructureId is None:
+      raise TProtocol.TProtocolException(message='Required field orgStructureId is unset!')
+    if self.personId is None:
+      raise TProtocol.TProtocolException(message='Required field personId is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class GetTimeWorkAndStatusParameters(object):
+  """
+  Attributes:
+   - hospitalUidFrom
+   - personId
+   - date
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'hospitalUidFrom', None, None, ), # 1
+    (2, TType.I32, 'personId', None, None, ), # 2
+    (3, TType.I64, 'date', None, None, ), # 3
+  )
+
+  def __init__(self, hospitalUidFrom=None, personId=None, date=None,):
+    self.hospitalUidFrom = hospitalUidFrom
+    self.personId = personId
+    self.date = date
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.hospitalUidFrom = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I32:
+          self.personId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I64:
+          self.date = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('GetTimeWorkAndStatusParameters')
+    if self.hospitalUidFrom is not None:
+      oprot.writeFieldBegin('hospitalUidFrom', TType.STRING, 1)
+      oprot.writeString(self.hospitalUidFrom.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.personId is not None:
+      oprot.writeFieldBegin('personId', TType.I32, 2)
+      oprot.writeI32(self.personId)
+      oprot.writeFieldEnd()
+    if self.date is not None:
+      oprot.writeFieldBegin('date', TType.I64, 3)
+      oprot.writeI64(self.date)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.personId is None:
+      raise TProtocol.TProtocolException(message='Required field personId is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class AddPatientParameters(object):
+  """
+  AddPatientParameters
+  Структура для создания нового пациента
+  @param lastName				1) Фамилия пациента
+  @param firstName				2) Имя пациента
+  @param patrName				3) Отчество пациента
+  @param birthDate				4) Дата рождения пациента
+  @param sex					5) Пол пациента
+  @param documentSerial		6) Серия документа
+  @param documentNumber		7) Номер документа
+  @param documentTypeCode		8) Код типа документа
+  @param policySerial			9) Серия полиса
+  @param policyNumber			10) Номер полиса
+  @param policyTypeCode		11) Код типа полиса
+  @param policyInsurerInfisCode	12)Инфис код страховой, полис которой представлен выше
+
+  Attributes:
+   - lastName
+   - firstName
+   - patrName
+   - birthDate
+   - sex
+   - documentSerial
+   - documentNumber
+   - documentTypeCode
+   - policySerial
+   - policyNumber
+   - policyTypeCode
+   - policyInsurerInfisCode
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'lastName', None, None, ), # 1
+    (2, TType.STRING, 'firstName', None, None, ), # 2
+    (3, TType.STRING, 'patrName', None, None, ), # 3
+    (4, TType.I64, 'birthDate', None, None, ), # 4
+    (5, TType.I32, 'sex', None, None, ), # 5
+    (6, TType.STRING, 'documentSerial', None, None, ), # 6
+    (7, TType.STRING, 'documentNumber', None, None, ), # 7
+    (8, TType.STRING, 'documentTypeCode', None, None, ), # 8
+    (9, TType.STRING, 'policySerial', None, None, ), # 9
+    (10, TType.STRING, 'policyNumber', None, None, ), # 10
+    (11, TType.STRING, 'policyTypeCode', None, None, ), # 11
+    (12, TType.STRING, 'policyInsurerInfisCode', None, None, ), # 12
+  )
+
+  def __init__(self, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None, documentSerial=None, documentNumber=None, documentTypeCode=None, policySerial=None, policyNumber=None, policyTypeCode=None, policyInsurerInfisCode=None,):
+    self.lastName = lastName
+    self.firstName = firstName
+    self.patrName = patrName
+    self.birthDate = birthDate
+    self.sex = sex
+    self.documentSerial = documentSerial
+    self.documentNumber = documentNumber
+    self.documentTypeCode = documentTypeCode
+    self.policySerial = policySerial
+    self.policyNumber = policyNumber
+    self.policyTypeCode = policyTypeCode
+    self.policyInsurerInfisCode = policyInsurerInfisCode
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.lastName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.firstName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.patrName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.I64:
+          self.birthDate = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I32:
+          self.sex = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.STRING:
+          self.documentSerial = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.STRING:
+          self.documentNumber = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 8:
+        if ftype == TType.STRING:
+          self.documentTypeCode = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 9:
+        if ftype == TType.STRING:
+          self.policySerial = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 10:
+        if ftype == TType.STRING:
+          self.policyNumber = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 11:
+        if ftype == TType.STRING:
+          self.policyTypeCode = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 12:
+        if ftype == TType.STRING:
+          self.policyInsurerInfisCode = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('AddPatientParameters')
+    if self.lastName is not None:
+      oprot.writeFieldBegin('lastName', TType.STRING, 1)
+      oprot.writeString(self.lastName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.firstName is not None:
+      oprot.writeFieldBegin('firstName', TType.STRING, 2)
+      oprot.writeString(self.firstName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.patrName is not None:
+      oprot.writeFieldBegin('patrName', TType.STRING, 3)
+      oprot.writeString(self.patrName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.birthDate is not None:
+      oprot.writeFieldBegin('birthDate', TType.I64, 4)
+      oprot.writeI64(self.birthDate)
+      oprot.writeFieldEnd()
+    if self.sex is not None:
+      oprot.writeFieldBegin('sex', TType.I32, 5)
+      oprot.writeI32(self.sex)
+      oprot.writeFieldEnd()
+    if self.documentSerial is not None:
+      oprot.writeFieldBegin('documentSerial', TType.STRING, 6)
+      oprot.writeString(self.documentSerial.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.documentNumber is not None:
+      oprot.writeFieldBegin('documentNumber', TType.STRING, 7)
+      oprot.writeString(self.documentNumber.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.documentTypeCode is not None:
+      oprot.writeFieldBegin('documentTypeCode', TType.STRING, 8)
+      oprot.writeString(self.documentTypeCode.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.policySerial is not None:
+      oprot.writeFieldBegin('policySerial', TType.STRING, 9)
+      oprot.writeString(self.policySerial.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.policyNumber is not None:
+      oprot.writeFieldBegin('policyNumber', TType.STRING, 10)
+      oprot.writeString(self.policyNumber.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.policyTypeCode is not None:
+      oprot.writeFieldBegin('policyTypeCode', TType.STRING, 11)
+      oprot.writeString(self.policyTypeCode.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.policyInsurerInfisCode is not None:
+      oprot.writeFieldBegin('policyInsurerInfisCode', TType.STRING, 12)
+      oprot.writeString(self.policyInsurerInfisCode.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class EnqueuePatientParameters(object):
+  """
+  Attributes:
+   - patientId
+   - personId
+   - dateTime
+   - note
+   - hospitalUidFrom
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'patientId', None, None, ), # 1
+    (2, TType.I32, 'personId', None, None, ), # 2
+    (3, TType.I64, 'dateTime', None, None, ), # 3
+    (4, TType.STRING, 'note', None, None, ), # 4
+    (5, TType.STRING, 'hospitalUidFrom', None, None, ), # 5
+  )
+
+  def __init__(self, patientId=None, personId=None, dateTime=None, note=None, hospitalUidFrom=None,):
+    self.patientId = patientId
+    self.personId = personId
+    self.dateTime = dateTime
+    self.note = note
+    self.hospitalUidFrom = hospitalUidFrom
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.patientId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I32:
+          self.personId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I64:
+          self.dateTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.note = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.STRING:
+          self.hospitalUidFrom = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('EnqueuePatientParameters')
+    if self.patientId is not None:
+      oprot.writeFieldBegin('patientId', TType.I32, 1)
+      oprot.writeI32(self.patientId)
+      oprot.writeFieldEnd()
+    if self.personId is not None:
+      oprot.writeFieldBegin('personId', TType.I32, 2)
+      oprot.writeI32(self.personId)
+      oprot.writeFieldEnd()
+    if self.dateTime is not None:
+      oprot.writeFieldBegin('dateTime', TType.I64, 3)
+      oprot.writeI64(self.dateTime)
+      oprot.writeFieldEnd()
+    if self.note is not None:
+      oprot.writeFieldBegin('note', TType.STRING, 4)
+      oprot.writeString(self.note.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.hospitalUidFrom is not None:
+      oprot.writeFieldBegin('hospitalUidFrom', TType.STRING, 5)
+      oprot.writeString(self.hospitalUidFrom.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.patientId is None:
+      raise TProtocol.TProtocolException(message='Required field patientId is unset!')
+    if self.personId is None:
+      raise TProtocol.TProtocolException(message='Required field personId is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class FindPatientParameters(object):
+  """
+  Attributes:
+   - lastName
+   - firstName
+   - patrName
+   - birthDate
+   - sex
+   - identifierType
+   - identifier
+   - document
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'lastName', None, None, ), # 1
+    (2, TType.STRING, 'firstName', None, None, ), # 2
+    (3, TType.STRING, 'patrName', None, None, ), # 3
+    (4, TType.I64, 'birthDate', None, None, ), # 4
+    (5, TType.I32, 'sex', None, None, ), # 5
+    (6, TType.STRING, 'identifierType', None, None, ), # 6
+    (7, TType.STRING, 'identifier', None, None, ), # 7
+    (8, TType.MAP, 'document', (TType.STRING,None,TType.STRING,None), None, ), # 8
+  )
+
+  def __init__(self, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None, identifierType=None, identifier=None, document=None,):
+    self.lastName = lastName
+    self.firstName = firstName
+    self.patrName = patrName
+    self.birthDate = birthDate
+    self.sex = sex
+    self.identifierType = identifierType
+    self.identifier = identifier
+    self.document = document
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.lastName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.firstName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.patrName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.I64:
+          self.birthDate = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I32:
+          self.sex = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.STRING:
+          self.identifierType = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.STRING:
+          self.identifier = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 8:
+        if ftype == TType.MAP:
+          self.document = {}
+          (_ktype33, _vtype34, _size32 ) = iprot.readMapBegin() 
+          for _i36 in xrange(_size32):
+            _key37 = iprot.readString().decode('utf-8')
+            _val38 = iprot.readString().decode('utf-8')
+            self.document[_key37] = _val38
+          iprot.readMapEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('FindPatientParameters')
+    if self.lastName is not None:
+      oprot.writeFieldBegin('lastName', TType.STRING, 1)
+      oprot.writeString(self.lastName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.firstName is not None:
+      oprot.writeFieldBegin('firstName', TType.STRING, 2)
+      oprot.writeString(self.firstName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.patrName is not None:
+      oprot.writeFieldBegin('patrName', TType.STRING, 3)
+      oprot.writeString(self.patrName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.birthDate is not None:
+      oprot.writeFieldBegin('birthDate', TType.I64, 4)
+      oprot.writeI64(self.birthDate)
+      oprot.writeFieldEnd()
+    if self.sex is not None:
+      oprot.writeFieldBegin('sex', TType.I32, 5)
+      oprot.writeI32(self.sex)
+      oprot.writeFieldEnd()
+    if self.identifierType is not None:
+      oprot.writeFieldBegin('identifierType', TType.STRING, 6)
+      oprot.writeString(self.identifierType.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.identifier is not None:
+      oprot.writeFieldBegin('identifier', TType.STRING, 7)
+      oprot.writeString(self.identifier.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.document is not None:
+      oprot.writeFieldBegin('document', TType.MAP, 8)
+      oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.document))
+      for kiter39,viter40 in self.document.items():
+        oprot.writeString(kiter39.encode('utf-8'))
+        oprot.writeString(viter40.encode('utf-8'))
+      oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.lastName is None:
+      raise TProtocol.TProtocolException(message='Required field lastName is unset!')
+    if self.firstName is None:
+      raise TProtocol.TProtocolException(message='Required field firstName is unset!')
+    if self.patrName is None:
+      raise TProtocol.TProtocolException(message='Required field patrName is unset!')
+    if self.birthDate is None:
+      raise TProtocol.TProtocolException(message='Required field birthDate is unset!')
+    if self.sex is None:
+      raise TProtocol.TProtocolException(message='Required field sex is unset!')
+    if self.document is None:
+      raise TProtocol.TProtocolException(message='Required field document is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class FindMultiplePatientsParameters(object):
+  """
+  Attributes:
+   - lastName
+   - firstName
+   - patrName
+   - birthDate
+   - sex
+   - identifierType
+   - identifier
+   - document
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'lastName', None, None, ), # 1
+    (2, TType.STRING, 'firstName', None, None, ), # 2
+    (3, TType.STRING, 'patrName', None, None, ), # 3
+    (4, TType.I64, 'birthDate', None, None, ), # 4
+    (5, TType.I32, 'sex', None, None, ), # 5
+    (6, TType.STRING, 'identifierType', None, None, ), # 6
+    (7, TType.STRING, 'identifier', None, None, ), # 7
+    (8, TType.MAP, 'document', (TType.STRING,None,TType.STRING,None), None, ), # 8
+  )
+
+  def __init__(self, lastName=None, firstName=None, patrName=None, birthDate=None, sex=None, identifierType=None, identifier=None, document=None,):
+    self.lastName = lastName
+    self.firstName = firstName
+    self.patrName = patrName
+    self.birthDate = birthDate
+    self.sex = sex
+    self.identifierType = identifierType
+    self.identifier = identifier
+    self.document = document
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.lastName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.firstName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.patrName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.I64:
+          self.birthDate = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I32:
+          self.sex = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.STRING:
+          self.identifierType = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.STRING:
+          self.identifier = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 8:
+        if ftype == TType.MAP:
+          self.document = {}
+          (_ktype42, _vtype43, _size41 ) = iprot.readMapBegin() 
+          for _i45 in xrange(_size41):
+            _key46 = iprot.readString().decode('utf-8')
+            _val47 = iprot.readString().decode('utf-8')
+            self.document[_key46] = _val47
+          iprot.readMapEnd()
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('FindMultiplePatientsParameters')
+    if self.lastName is not None:
+      oprot.writeFieldBegin('lastName', TType.STRING, 1)
+      oprot.writeString(self.lastName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.firstName is not None:
+      oprot.writeFieldBegin('firstName', TType.STRING, 2)
+      oprot.writeString(self.firstName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.patrName is not None:
+      oprot.writeFieldBegin('patrName', TType.STRING, 3)
+      oprot.writeString(self.patrName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.birthDate is not None:
+      oprot.writeFieldBegin('birthDate', TType.I64, 4)
+      oprot.writeI64(self.birthDate)
+      oprot.writeFieldEnd()
+    if self.sex is not None:
+      oprot.writeFieldBegin('sex', TType.I32, 5)
+      oprot.writeI32(self.sex)
+      oprot.writeFieldEnd()
+    if self.identifierType is not None:
+      oprot.writeFieldBegin('identifierType', TType.STRING, 6)
+      oprot.writeString(self.identifierType.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.identifier is not None:
+      oprot.writeFieldBegin('identifier', TType.STRING, 7)
+      oprot.writeString(self.identifier.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.document is not None:
+      oprot.writeFieldBegin('document', TType.MAP, 8)
+      oprot.writeMapBegin(TType.STRING, TType.STRING, len(self.document))
+      for kiter48,viter49 in self.document.items():
+        oprot.writeString(kiter48.encode('utf-8'))
+        oprot.writeString(viter49.encode('utf-8'))
+      oprot.writeMapEnd()
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class ChangePolicyParameters(object):
+  """
+  ChangePolicyParameters
+  Структура с данными для изменения/добавления полиса указанного клиента
+  @param patientId         1)Идентификатор пациента, которому нужно добавить/изменить полис
+  @param policy            2)Структура с данными для нового полиса
+
+  Attributes:
+   - patientId
+   - policy
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'patientId', None, None, ), # 1
+    (2, TType.STRUCT, 'policy', (Policy, Policy.thrift_spec), None, ), # 2
+  )
+
+  def __init__(self, patientId=None, policy=None,):
+    self.patientId = patientId
+    self.policy = policy
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.patientId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRUCT:
+          self.policy = Policy()
+          self.policy.read(iprot)
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('ChangePolicyParameters')
+    if self.patientId is not None:
+      oprot.writeFieldBegin('patientId', TType.I32, 1)
+      oprot.writeI32(self.patientId)
+      oprot.writeFieldEnd()
+    if self.policy is not None:
+      oprot.writeFieldBegin('policy', TType.STRUCT, 2)
+      self.policy.write(oprot)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.patientId is None:
+      raise TProtocol.TProtocolException(message='Required field patientId is unset!')
+    if self.policy is None:
+      raise TProtocol.TProtocolException(message='Required field policy is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class FindPatientByPolicyAndDocumentParameters(object):
+  """
+  FindPatientByPolicyAndDocumentParameters
+  Структура с данными для поиска пациента по ФИО, полису и документу
+  @param lastName				1)Фамилия пациента
+  @param firstName				2)Имя пациента
+  @param patrName				3)Отчество пациента
+  @param sex					4)Пол пациента
+  @param birthDate				5)Дата рождения пациента
+  @param documentSerial		6)Серия документа
+  @param documentNumber		7)Номер документа
+  @param documentTypeCode		8)Код типа документа
+  @param policySerial			9)Серия полиса
+  @param policyNumber			10)Номер полиса
+  @param policyTypeCode		11)Код типа полиса
+  @param policyInsurerInfisCode	12)Инфис код страховой, полис которой представлен выше
+
+  Attributes:
+   - lastName
+   - firstName
+   - patrName
+   - sex
+   - birthDate
+   - documentSerial
+   - documentNumber
+   - documentTypeCode
+   - policySerial
+   - policyNumber
+   - policyTypeCode
+   - policyInsurerInfisCode
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.STRING, 'lastName', None, None, ), # 1
+    (2, TType.STRING, 'firstName', None, None, ), # 2
+    (3, TType.STRING, 'patrName', None, None, ), # 3
+    (4, TType.I16, 'sex', None, None, ), # 4
+    (5, TType.I64, 'birthDate', None, None, ), # 5
+    (6, TType.STRING, 'documentSerial', None, None, ), # 6
+    (7, TType.STRING, 'documentNumber', None, None, ), # 7
+    (8, TType.STRING, 'documentTypeCode', None, None, ), # 8
+    (9, TType.STRING, 'policySerial', None, None, ), # 9
+    (10, TType.STRING, 'policyNumber', None, None, ), # 10
+    (11, TType.STRING, 'policyTypeCode', None, None, ), # 11
+    (12, TType.STRING, 'policyInsurerInfisCode', None, None, ), # 12
+  )
+
+  def __init__(self, lastName=None, firstName=None, patrName=None, sex=None, birthDate=None, documentSerial=None, documentNumber=None, documentTypeCode=None, policySerial=None, policyNumber=None, policyTypeCode=None, policyInsurerInfisCode=None,):
+    self.lastName = lastName
+    self.firstName = firstName
+    self.patrName = patrName
+    self.sex = sex
+    self.birthDate = birthDate
+    self.documentSerial = documentSerial
+    self.documentNumber = documentNumber
+    self.documentTypeCode = documentTypeCode
+    self.policySerial = policySerial
+    self.policyNumber = policyNumber
+    self.policyTypeCode = policyTypeCode
+    self.policyInsurerInfisCode = policyInsurerInfisCode
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.STRING:
+          self.lastName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.STRING:
+          self.firstName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.STRING:
+          self.patrName = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.I16:
+          self.sex = iprot.readI16();
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I64:
+          self.birthDate = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 6:
+        if ftype == TType.STRING:
+          self.documentSerial = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 7:
+        if ftype == TType.STRING:
+          self.documentNumber = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 8:
+        if ftype == TType.STRING:
+          self.documentTypeCode = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 9:
+        if ftype == TType.STRING:
+          self.policySerial = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 10:
+        if ftype == TType.STRING:
+          self.policyNumber = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 11:
+        if ftype == TType.STRING:
+          self.policyTypeCode = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 12:
+        if ftype == TType.STRING:
+          self.policyInsurerInfisCode = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('FindPatientByPolicyAndDocumentParameters')
+    if self.lastName is not None:
+      oprot.writeFieldBegin('lastName', TType.STRING, 1)
+      oprot.writeString(self.lastName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.firstName is not None:
+      oprot.writeFieldBegin('firstName', TType.STRING, 2)
+      oprot.writeString(self.firstName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.patrName is not None:
+      oprot.writeFieldBegin('patrName', TType.STRING, 3)
+      oprot.writeString(self.patrName.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.sex is not None:
+      oprot.writeFieldBegin('sex', TType.I16, 4)
+      oprot.writeI16(self.sex)
+      oprot.writeFieldEnd()
+    if self.birthDate is not None:
+      oprot.writeFieldBegin('birthDate', TType.I64, 5)
+      oprot.writeI64(self.birthDate)
+      oprot.writeFieldEnd()
+    if self.documentSerial is not None:
+      oprot.writeFieldBegin('documentSerial', TType.STRING, 6)
+      oprot.writeString(self.documentSerial.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.documentNumber is not None:
+      oprot.writeFieldBegin('documentNumber', TType.STRING, 7)
+      oprot.writeString(self.documentNumber.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.documentTypeCode is not None:
+      oprot.writeFieldBegin('documentTypeCode', TType.STRING, 8)
+      oprot.writeString(self.documentTypeCode.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.policySerial is not None:
+      oprot.writeFieldBegin('policySerial', TType.STRING, 9)
+      oprot.writeString(self.policySerial.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.policyNumber is not None:
+      oprot.writeFieldBegin('policyNumber', TType.STRING, 10)
+      oprot.writeString(self.policyNumber.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.policyTypeCode is not None:
+      oprot.writeFieldBegin('policyTypeCode', TType.STRING, 11)
+      oprot.writeString(self.policyTypeCode.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.policyInsurerInfisCode is not None:
+      oprot.writeFieldBegin('policyInsurerInfisCode', TType.STRING, 12)
+      oprot.writeString(self.policyInsurerInfisCode.encode('utf-8'))
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.lastName is None:
+      raise TProtocol.TProtocolException(message='Required field lastName is unset!')
+    if self.firstName is None:
+      raise TProtocol.TProtocolException(message='Required field firstName is unset!')
+    if self.patrName is None:
+      raise TProtocol.TProtocolException(message='Required field patrName is unset!')
+    if self.sex is None:
+      raise TProtocol.TProtocolException(message='Required field sex is unset!')
+    if self.birthDate is None:
+      raise TProtocol.TProtocolException(message='Required field birthDate is unset!')
+    if self.documentSerial is None:
+      raise TProtocol.TProtocolException(message='Required field documentSerial is unset!')
+    if self.documentNumber is None:
+      raise TProtocol.TProtocolException(message='Required field documentNumber is unset!')
+    if self.documentTypeCode is None:
+      raise TProtocol.TProtocolException(message='Required field documentTypeCode is unset!')
+    if self.policyNumber is None:
+      raise TProtocol.TProtocolException(message='Required field policyNumber is unset!')
+    if self.policyTypeCode is None:
+      raise TProtocol.TProtocolException(message='Required field policyTypeCode is unset!')
+    return
+
+
+  def __repr__(self):
+    L = ['%s=%r' % (key, value)
+      for key, value in self.__dict__.iteritems()]
+    return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+
+  def __eq__(self, other):
+    return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
+
+  def __ne__(self, other):
+    return not (self == other)
+
+class ScheduleParameters(object):
+  """
+  * Структура с данными для получения расписания пачкой и поиска превого свободного талончика
+  * @param personId                  1)Идетификатор врача
+  * @param beginDateTime             2)Время с которого начинается поиск свободных талончиков
+  * @param endDateTime               3)Время до которого происходит поиск свободных талончиков
+  (если не установлено - то плюс месяц к beginDateTime)
+  * @param hospitalUidFrom           4)Идентификатор ЛПУ из которого производится запись
+  * @param quotingType               5)Тип квотирования
+
+  Attributes:
+   - personId
+   - beginDateTime
+   - endDateTime
+   - hospitalUidFrom
+   - quotingType
+  """
+
+  thrift_spec = (
+    None, # 0
+    (1, TType.I32, 'personId', None, None, ), # 1
+    (2, TType.I64, 'beginDateTime', None, None, ), # 2
+    (3, TType.I64, 'endDateTime', None, None, ), # 3
+    (4, TType.STRING, 'hospitalUidFrom', None, None, ), # 4
+    (5, TType.I32, 'quotingType', None, None, ), # 5
+  )
+
+  def __init__(self, personId=None, beginDateTime=None, endDateTime=None, hospitalUidFrom=None, quotingType=None,):
+    self.personId = personId
+    self.beginDateTime = beginDateTime
+    self.endDateTime = endDateTime
+    self.hospitalUidFrom = hospitalUidFrom
+    self.quotingType = quotingType
+
+  def read(self, iprot):
+    if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
+      fastbinary.decode_binary(self, iprot.trans, (self.__class__, self.thrift_spec))
+      return
+    iprot.readStructBegin()
+    while True:
+      (fname, ftype, fid) = iprot.readFieldBegin()
+      if ftype == TType.STOP:
+        break
+      if fid == 1:
+        if ftype == TType.I32:
+          self.personId = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      elif fid == 2:
+        if ftype == TType.I64:
+          self.beginDateTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 3:
+        if ftype == TType.I64:
+          self.endDateTime = iprot.readI64();
+        else:
+          iprot.skip(ftype)
+      elif fid == 4:
+        if ftype == TType.STRING:
+          self.hospitalUidFrom = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
+      elif fid == 5:
+        if ftype == TType.I32:
+          self.quotingType = iprot.readI32();
+        else:
+          iprot.skip(ftype)
+      else:
+        iprot.skip(ftype)
+      iprot.readFieldEnd()
+    iprot.readStructEnd()
+
+  def write(self, oprot):
+    if oprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and self.thrift_spec is not None and fastbinary is not None:
+      oprot.trans.write(fastbinary.encode_binary(self, (self.__class__, self.thrift_spec)))
+      return
+    oprot.writeStructBegin('ScheduleParameters')
+    if self.personId is not None:
+      oprot.writeFieldBegin('personId', TType.I32, 1)
+      oprot.writeI32(self.personId)
+      oprot.writeFieldEnd()
+    if self.beginDateTime is not None:
+      oprot.writeFieldBegin('beginDateTime', TType.I64, 2)
+      oprot.writeI64(self.beginDateTime)
+      oprot.writeFieldEnd()
+    if self.endDateTime is not None:
+      oprot.writeFieldBegin('endDateTime', TType.I64, 3)
+      oprot.writeI64(self.endDateTime)
+      oprot.writeFieldEnd()
+    if self.hospitalUidFrom is not None:
+      oprot.writeFieldBegin('hospitalUidFrom', TType.STRING, 4)
+      oprot.writeString(self.hospitalUidFrom.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.quotingType is not None:
+      oprot.writeFieldBegin('quotingType', TType.I32, 5)
+      oprot.writeI32(self.quotingType)
+      oprot.writeFieldEnd()
+    oprot.writeFieldStop()
+    oprot.writeStructEnd()
+
+  def validate(self):
+    if self.personId is None:
+      raise TProtocol.TProtocolException(message='Required field personId is unset!')
+    if self.beginDateTime is None:
+      raise TProtocol.TProtocolException(message='Required field beginDateTime is unset!')
+    return
+
 
   def __repr__(self):
     L = ['%s=%r' % (key, value)

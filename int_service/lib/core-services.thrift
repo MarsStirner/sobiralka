@@ -4,7 +4,9 @@ namespace java ru.korus.tmis.communication.thriftgen
 typedef i64 timestamp
 typedef i16 short
 
+/////////////////////////////////////////////////////////////////////
 //Enums
+/////////////////////////////////////////////////////////////////////
 
 /**
  * QuotingType
@@ -28,14 +30,67 @@ enum QuotingType{
  * Перечисление статусов талончика на прием к врачу
  */
 enum CouponStatus{
-// новый талончик
-NEW = 1;
-// отмена старого талончика
-CANCELLED = 2;
+	// новый талончик
+	NEW = 1;
+	// отмена старого талончика
+	CANCELLED = 2;
 }
 
-//Type definitions for return structures
+/////////////////////////////////////////////////////////////////////
+//Exceptions
+/////////////////////////////////////////////////////////////////////
 
+exception NotFoundException {
+ 1: string error_msg;
+}
+exception SQLException {
+  1: i32 error_code;
+  2: string error_msg;
+}
+
+exception InvalidPersonalInfoException{
+	1:string message;
+	2:i32 code;
+}
+
+exception InvalidDocumentException{
+	1:string message;
+	2:i32 code;
+}
+
+exception AnotherPolicyException{
+	1:string message;
+	2:i32 code;
+	3:i32 patientId;
+}
+
+exception NotUniqueException{
+	1:string message;
+	2:i32 code;
+}
+
+exception PolicyTypeNotFoundException{
+    1:string message;
+    2:i32 code;
+}
+
+exception ReasonOfAbsenceException{
+    1:string name;
+    2:string code;
+}
+
+/////////////////////////////////////////////////////////////////////
+//Type definitions for return structures
+/////////////////////////////////////////////////////////////////////
+
+/**
+ * Organization 
+ * Структура с данными об организации
+ * @param fullName				1) Полное наименование организации
+ * @param shortName				2) Краткое наименование организации
+ * @param address				3) Строковое представление адреса организации
+ * @param infisCode				4) Инфис-код организации 
+ */
 struct Organization{
 1:required string fullName;
 2:optional string shortName;
@@ -43,6 +98,17 @@ struct Organization{
 4:required string infisCode;
 }
 
+/**
+ * OrgStructure 
+ * Структура с данными о подразделении
+ * @param id					1) Внутренний идентификатор подразделения
+ * @param parent_id				2) Внутренний идентификатор вышестоящего подразделения, или 0 если вышестоящего отделеия не существует
+ * @param code					3) Код подразделения
+ * @param name					4) Название подразделения
+ * @param address				5) Адрес подразделения
+ * @param sexFilter				6) Половой фильтр
+ * @param ageFilter				7) Возрастной фильтр 
+ */
 struct OrgStructure{
 1:required i32 id;
 2:optional i32 parent_id=0;
@@ -53,6 +119,22 @@ struct OrgStructure{
 7:optional string ageFilter="";
 }
 
+/**
+ * Person
+ * Структура с данными о мед. работнике
+ * @param id					1) Внутренний идентификатор работника	
+ * @param code					2) Код работника
+ * @param orgStructureId		3) Идентификатор подразделения к которому работник приписан
+ * @param lastName				4) Фамилия
+ * @param firstName				5) Имя
+ * @param patrName				6) Отчество
+ * @param office				7) Офис, который указан в таблице персонала
+ * @param speciality			8) Наименование специальности
+ * @param specialityOKSOCode    9) ОКСО-код специальности
+ * @param specialityRegionalCode 10) Региональный код специальности
+ * @param post					11) Наименование должности
+ * @param sexFilter				12) Пол работника
+ */
 struct Person{
 1:required i32 id;
 2:required string code;
@@ -65,7 +147,7 @@ struct Person{
 9:optional string specialityOKSOCode;
 10:optional string specialityRegionalCode;
 11:optional string post;
-12:optional string SexFilter;
+12:optional string sexFilter;
 }
 
 struct Ticket{
@@ -97,20 +179,29 @@ struct Amb{
 6:optional i32 available;
 }
 
+/**
+ * PatientStatus
+ * Структура с данными о  результате поиска \ добавления пациента
+ * @param success				1) Статус поиска\добавления пациента (true - найдено\добавлено)
+ * @param message				2) Строковое описание причины неудачи
+ * @param patientId				3) Идентификатор найденного\добавленого пациента 
+ */
 struct PatientStatus{
 1:required bool success;
 2:optional string message;
 3:optional i32 patientId;
 }
 
-struct PatientInfo{
-1:optional string lastName;
-2:optional string firstName;
-3:optional string patrName;
-4:optional timestamp birthDate;
-5:optional i32 sex;
-}
-
+/**
+ * Patient
+ * Структура с данными о пациенте
+ * @param id					1) Внутренний идентификатор пациента
+ * @param lastName				2) Фамилия
+ * @param firstName				3) Имя
+ * @param patrName				4) Отчество
+ * @param birthDate				5) Дата рождения
+ * @param sex					6) Пол (1-М, 2-Ж)
+ */
 struct Patient{
 1:required i32 id;
 2:optional string lastName;
@@ -120,6 +211,10 @@ struct Patient{
 6:optional i32 sex;
 }
 
+/**
+ * OrgStructuresProperties
+ * НЕ РЕАЛИЗОВАНО
+ */
 struct OrgStructuresProperties{
 1:required i32 orgStructureId;
 2:optional bool attached;
@@ -127,7 +222,14 @@ struct OrgStructuresProperties{
 4:optional bool matchLocAddress;
 }
 
-
+/**
+ * EnqueuePatientStatus
+ * Статус записи пациента к врачу
+ * @param success				1) Флажок успешности записи к врачу
+ * @param message				2) Сообщение
+ * @param index					3) Индекс ячейки записи
+ * @param queueId				4) Идентификатор новой записи
+ */
 struct EnqueuePatientStatus{
 1:required bool success;
 2:optional string message;
@@ -135,6 +237,17 @@ struct EnqueuePatientStatus{
 4:optional i32 queueId;
 }
 
+/**
+ * Queue
+ * Структура с данными о записях пациента к врачам
+ * @param dateTime				1) Дата+время начала талончика
+ * @param index					2) Индекс ячейки записи
+ * @param personId				3) Идентификатор врача
+ * @param note					4) Примечание
+ * @param queueId				5) Идентификатор Action-а записи к врачу
+ * @param enqueuePersonId		6) Идентификатор врача, который записал пациента
+ * @param enqueueDateTime		7) Дата+время создания записи
+ */
 struct Queue{
 1:optional timestamp dateTime;
 2:optional i32 index;
@@ -145,11 +258,25 @@ struct Queue{
 7:optional timestamp enqueueDateTime;
 }
 
+/**
+ * DequeuePatientStatus
+ * Структура со статусом отмены записи пациента к врачу
+ * @param success				1) Статус отмены записи пациента к врачу
+ * @param message				2) Сообшение
+ */
 struct DequeuePatientStatus{
 1:required bool success;
 2:optional string message;
 }
 
+/**
+ * Speciality
+ * Структура с данными о специальностях врачей, на которые доступна внешняя запись
+ * @param id 					1) Внутренний идентификатор специальности
+ * @param ticketsPerMonths		2) Количество выделяемых талончиков в месяц
+ * @param ticketsAvailable		3) Количество доступных талончиков (остатки)
+ * @param speciality			4) Строковое название специальности
+ */
 struct Speciality{
 1:required i32 id;
 2:optional i32 ticketsPerMonths;
@@ -157,6 +284,17 @@ struct Speciality{
 4:optional string speciality;
 }
 
+/**
+ * Address
+ * Структура с данными об адресах, которые обслуживаются подразделением
+ * @param orgStructureId		1) Внутренний идентификатор подразделения, к которому приписан этот адрес
+ * @param pointKLADR			2) Соответствующий адресу КЛАДР-код
+ * @param streetKLADR 			3) Соответствующий КЛАДР-код улицы
+ * @param number				4) Номер дома\строения
+ * @param corpus				5) Номер корпуса
+ * @param firstFlat				6) Начало диапозона обслуживаемых квартир
+ * @param lastFlat				7) Конец диапозона обслуживаемых квартир 
+ */
 struct Address{
 1:required i32 orgStructureId;
 2:required string pointKLADR;
@@ -167,6 +305,14 @@ struct Address{
 7:optional i32 lastFlat;
 }
 
+/**
+ * Contact
+ * Структура с контактными данными пациента
+ * @param type					1) Тип контакта
+ * @param code					2) Код типа контакта
+ * @param contact				3) Контактная информация
+ * @param note					4) Примечание
+ */
 struct Contact{
 1:optional string type;
 2:optional string code;
@@ -195,19 +341,18 @@ struct QueueCoupon{
 7:optional string office;
 }
 
-
 /**
  * TTicket
  * Структура с данными о талончике на прием к врачу
- * @param begTime           1)Время начала талончика
- * @param endTime           2)Время конца талончика
- * @param free              3)признак, указывающий занят ли этот талончик каким-либо пациентом
- * @param available         4)признак, указывающий доступен ли этот талончик для записи
- * @param patientId         5) OPTIONAL: Идентификатор пациента, который занял этот талончик
- * @param patientInfo       6) OPTIONAL: ФИО пациента, который занял этот талончик
- * @param timeIndex         7) OPTIONAL: Индекс ячейки времени в расписании врача, на который ссылается этот талончик
- * @param date              8) OPTIONAL: Дата приема врача. Будет выставляться для метода getFirstFreeTicket
- * @param office            9) OPTIONAL: Офис, в котором будет происходить прием врача. Будет выставляться для метода getFirstFreeTicket
+ * @param begTime           	1)Время начала талончика
+ * @param endTime           	2)Время конца талончика
+ * @param free              	3)признак, указывающий занят ли этот талончик каким-либо пациентом
+ * @param available         	4)признак, указывающий доступен ли этот талончик для записи
+ * @param patientId         	5) OPTIONAL: Идентификатор пациента, который занял этот талончик
+ * @param patientInfo       	6) OPTIONAL: ФИО пациента, который занял этот талончик
+ * @param timeIndex         	7) OPTIONAL: Индекс ячейки времени в расписании врача, на который ссылается этот талончик
+ * @param date              	8) OPTIONAL: Дата приема врача. Будет выставляться для метода getFirstFreeTicket
+ * @param office            	9) OPTIONAL: Офис, в котором будет происходить прием врача. Будет выставляться для метода getFirstFreeTicket
  */
 struct TTicket{
 1:required timestamp begTime;
@@ -224,13 +369,13 @@ struct TTicket{
 /**
  * Schedule
  * Структура с данными для расписания врача
- * @param begTime       Время начала приема врача
- * @param endTime       Время окончания приема врача
- * @param date          Дата приема врача
- * @param office        Офис в котором будет происходить прием
- * @param plan          План приема (количество ячеек времени в которые врач будет принимать пациентов)
- * @param tickets       Список талончиков на прием
- * @param available     Признак доступности записи на этот прием (в целом)
+ * @param begTime       		1) Время начала приема врача
+ * @param endTime       		2) Время окончания приема врача
+ * @param date          		3) Дата приема врача
+ * @param office        		4) Офис в котором будет происходить прием
+ * @param plan          		5) План приема (количество ячеек времени в которые врач будет принимать пациентов)
+ * @param tickets       		6) Список талончиков на прием
+ * @param available     		7) Признак доступности записи на этот прием (в целом)
  */
 struct Schedule{
  1:required timestamp begTime;
@@ -241,7 +386,22 @@ struct Schedule{
  6:optional list<TTicket> tickets;
  7:required bool available;
 }
+
+/**
+ * PersonSchedule
+ * Структура с данными о расписаниях врача за интервал
+ * @param schedules             1) Расписания врача: map<timestamp, Schedule> - карта вида <[Дата приема], [Расписание на эту дату]>,
+ *                                      в случае отсутствия расписания на указанную дату набор ключ-значение опускается
+ * @param personAbsences        2) Список причин отсутствия врача
+ */
+struct PersonSchedule{
+    1:required map<timestamp, Schedule> schedules;
+    2:optional map<timestamp, ReasonOfAbsenceException> personAbsences;
+}
+
+/////////////////////////////////////////////////////////////////////
 //Type definitions for input params
+/////////////////////////////////////////////////////////////////////
 
 /**
  * Policy
@@ -283,28 +443,27 @@ struct GetTimeWorkAndStatusParameters{
 }
 
 /**
- * AddPatientParameters 	Структура для создания нового пациента
- * @param lastName			Фамилия пациента
- * @param firstName			Имя пациента
- * @param patrName			Отчество пациента
- * @param birthDate			Дата рождения пациента
- * @param sex				Пол пациента
- * @param documentSerial	Серия документа
- * @param documentNumber	Номер документа
- * @param documentTypeCode	Код типа документа
- * @param policySerial		Серия полиса
- * @param policyNumber		Номер полиса
- * @param policyTypeCode	Код типа полиса
- * @param policyInsurerInfisCode	Инфис код страховой, полис которой представлен выше
- */
- 
+ * AddPatientParameters 	
+ * Структура для создания нового пациента
+ * @param lastName				1) Фамилия пациента
+ * @param firstName				2) Имя пациента
+ * @param patrName				3) Отчество пациента
+ * @param birthDate				4) Дата рождения пациента
+ * @param sex					5) Пол пациента
+ * @param documentSerial		6) Серия документа
+ * @param documentNumber		7) Номер документа
+ * @param documentTypeCode		8) Код типа документа
+ * @param policySerial			9) Серия полиса
+ * @param policyNumber			10) Номер полиса
+ * @param policyTypeCode		11) Код типа полиса
+ * @param policyInsurerInfisCode	12)Инфис код страховой, полис которой представлен выше
+ */ 
 struct AddPatientParameters{
 1:optional string lastName;
 2:optional string firstName;
 3:optional string patrName;
 4:optional timestamp birthDate;
 5:optional i32 sex;
-//Version 2
 6:optional string documentSerial;
 7:optional string documentNumber;
 8:optional string documentTypeCode;
@@ -358,17 +517,17 @@ struct ChangePolicyParameters{
 /**
  * FindPatientByPolicyAndDocumentParameters 	
  * Структура с данными для поиска пациента по ФИО, полису и документу
- * @param lastName			1)Фамилия пациента
- * @param firstName			2)Имя пациента
- * @param patrName			3)Отчество пациента
- * @param sex				4)Пол пациента
- * @param birthDate			5)Дата рождения пациента
- * @param documentSerial	6)Серия документа
- * @param documentNumber	7)Номер документа
- * @param documentTypeCode	8)Код типа документа
- * @param policySerial		9)Серия полиса
- * @param policyNumber		10)Номер полиса
- * @param policyTypeCode	11)Код типа полиса
+ * @param lastName				1)Фамилия пациента
+ * @param firstName				2)Имя пациента
+ * @param patrName				3)Отчество пациента
+ * @param sex					4)Пол пациента
+ * @param birthDate				5)Дата рождения пациента
+ * @param documentSerial		6)Серия документа
+ * @param documentNumber		7)Номер документа
+ * @param documentTypeCode		8)Код типа документа
+ * @param policySerial			9)Серия полиса
+ * @param policyNumber			10)Номер полиса
+ * @param policyTypeCode		11)Код типа полиса
  * @param policyInsurerInfisCode	12)Инфис код страховой, полис которой представлен выше
  */
 struct FindPatientByPolicyAndDocumentParameters{
@@ -403,45 +562,15 @@ struct ScheduleParameters{
 5:optional QuotingType quotingType;
 }
 
-//Exceptions
-exception NotFoundException {
- 1: string error_msg;
-}
-exception SQLException {
-  1: i32 error_code;
-  2: string error_msg;
-}
+/////////////////////////////////////////////////////////////////////
+//Service 
+/////////////////////////////////////////////////////////////////////
 
-exception InvalidPersonalInfoException{
-	1:string message;
-	2:i32 code;
-}
-
-exception InvalidDocumentException{
-	1:string message;
-	2:i32 code;
-}
-
-exception AnotherPolicyException{
-	1:string message;
-	2:i32 code;
-	3:i32 patientId;
-}
-
-exception NotUniqueException{
-	1:string message;
-	2:i32 code;
-}
-
-exception PolicyTypeNotFoundException{
-    1:string message;
-    2:i32 code;
-}
-
-//Service to be generated from here
 service Communications{
 
-//Methods to be generated in this service
+/////////////////////////////////////////////////////////////////////
+//Methods 
+/////////////////////////////////////////////////////////////////////
 
 /**
  * получение информации об организации(ЛПУ) по ее инфис-коду
@@ -465,8 +594,8 @@ list<OrgStructure> getOrgStructures(1:i32 parent_id, 2:bool recursive, 3:string 
     throws (1:NotFoundException exc, 2:SQLException excsql);
 
 /**
- * Получение адресов запрошенного подразделения
- * @param orgStructureId                1) идетификатор подразделения, для которого требуется найти адреса
+ * Получение обслуживаемых адресов запрошенного подразделения
+ * @param orgStructureId                1) идетификатор подразделения, для которого требуется найти обслуживаемые им адреса
  * @param recursive                     2) Флаг рекурсии (выбрать также подразделения, входяшие во все дочерние подразделения)
  * @param infisCode                     3) Инфис-код
  * @return                              Список структур, содержащих информацию об адресах запрошенных подразделений
@@ -510,7 +639,6 @@ TicketsAvailability getTotalTicketsAvailability(1:GetTicketsAvailabilityParamete
 list<ExtendedTicketsAvailability> getTicketsAvailability(1:GetTicketsAvailabilityParameters params)
     throws (1:NotFoundException exc, 2:SQLException excsql);
 
-
 // @deprecated                          В дальнейшем планируется перейти на метод getPersonSchedule
 /**
  * Получение расписания врача
@@ -520,7 +648,7 @@ list<ExtendedTicketsAvailability> getTicketsAvailability(1:GetTicketsAvailabilit
  * @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
  */
 Amb getWorkTimeAndStatus(1:GetTimeWorkAndStatusParameters params)
-    throws (1:NotFoundException exc, 2:SQLException excsql);
+    throws (1:NotFoundException exc, 2:SQLException excsql, 3:ReasonOfAbsenceException raExc);
 
 /**
  * добавление нового пациента в БД ЛПУ
@@ -599,11 +727,11 @@ TTicket getFirstFreeTicket(1:ScheduleParameters params)
 /**
  * Метод для получения расписания врача пачкой за указанный интервал
  * @param params                        1) Параметры для получения расписания
- * @return                              map<timestamp, Schedule> - карта вида <[Дата приема], [Расписание на эту дату]>,
- *                                      в случае отсутствия расписания на указанную дату набор ключ-значение опускается
+ * @return                              структура данных с информацией о примемах врача
  * @throws NotFoundException            когда нету такого идентификатора врача
  */
-map<timestamp, Schedule> getPersonSchedule(1:ScheduleParameters params)
+
+PersonSchedule getPersonSchedule(1:ScheduleParameters params)
     throws (1:NotFoundException nfExc);
 
 /**
@@ -614,7 +742,7 @@ map<timestamp, Schedule> getPersonSchedule(1:ScheduleParameters params)
  * @throws NotFoundException            //TODO
  * @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
  */
-map<i32,PatientInfo> getPatientInfo(1:list<i32> patientIds)
+map<i32, Patient> getPatientInfo(1:list<i32> patientIds)
     throws (1:NotFoundException exc, 2:SQLException excsql);
 
 /**
@@ -641,7 +769,7 @@ list<OrgStructuresProperties> getPatientOrgStructures(1:i32 parentId)
  * @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
  */
 EnqueuePatientStatus enqueuePatient(1:EnqueuePatientParameters params)
-    throws (1:NotFoundException exc, 2:SQLException excsql);
+    throws (1:NotFoundException exc, 2:SQLException excsql, 3:ReasonOfAbsenceException raExc);
 
 /**
  * Получение списка записей на приемы к врачам заданного пациента
@@ -672,4 +800,5 @@ DequeuePatientStatus dequeuePatient(1:i32 patientId, 2:i32 queueId)
  */
 list<Speciality> getSpecialities(1:string hospitalUidFrom)
     throws (1:SQLException exc);
+
 }
