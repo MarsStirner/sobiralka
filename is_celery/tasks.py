@@ -16,7 +16,7 @@ Task_Session = init_task_session()
 db_session = Task_Session()
 
 
-def shutdown_session():
+def remove_session():
     Task_Session.remove()
 
 
@@ -26,7 +26,7 @@ class SqlAlchemyTask(celery.Task):
     abstract = True
 
     def after_return(self, *args, **kwargs):
-        shutdown_session()
+        remove_session()
 
 
 # SYNC SCHEDULE TASKS
@@ -109,10 +109,8 @@ def sync_tickets_task():
                 dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
             ) for lpu in lpu_list])()
         # print res.get()
-        shutdown_session()
     else:
         # self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
-        shutdown_session()
         return False
 
 
@@ -132,10 +130,8 @@ def sync_schedule_task():
             ) for lpu in lpu_list])()
         # print res.get()
         # print self.msg
-        shutdown_session()
     else:
         # self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
-        shutdown_session()
         return False
 
 
@@ -147,7 +143,8 @@ def sync_locations():
 
 @task_postrun.connect
 def close_session(*args, **kwargs):
-    shutdown_session()
+    db_session.close()
+    remove_session()
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -158,7 +155,6 @@ def clear_broker_messages():
 
 @celery.task(base=SqlAlchemyTask)
 def epgu_send_lpu_tickets(hospital_id, hospital):
-    Task_Session = init_task_session()
     epgu_dw = EPGUWorker(Task_Session())
     try:
         epgu_dw.send_new_tickets(hospital_id, hospital)

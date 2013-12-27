@@ -5,6 +5,8 @@ import urllib2
 import datetime
 import time
 import sys
+import sqlalchemy
+
 try:
     import json
 except ImportError:
@@ -667,7 +669,7 @@ class EnqueueWorker(object):
                     ticket_uid, patient_id = ticket.split('/')
 
                     queue_info = proxy_client.getPatientQueue({'serverId': server_id, 'patientId': patient_id})
-                    patient_info = proxy_client.getPatientQueue({'serverId': server_id, 'patientId': patient_id})
+                    patient_info = proxy_client.getPatientInfo({'serverId': server_id, 'patientId': patient_id})
 
                     for ticket_info in queue_info:
                         if ticket_info.queueId == ticket_uid:
@@ -1509,7 +1511,7 @@ class EPGUWorker(object):
         self.default_phone = '+79011111111'
 
         self.proxy_client = ClientEPGU()
-        if session is not None and isinstance(session, ScopedSession):
+        if session is not None and isinstance(session, sqlalchemy.orm.Session):
             self.session = session
         else:
             self.session = Session2()
