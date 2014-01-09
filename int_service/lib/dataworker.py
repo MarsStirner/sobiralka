@@ -667,7 +667,7 @@ class EnqueueWorker(object):
                     ticket_uid, patient_id = ticket.split('/')
 
                     queue_info = proxy_client.getPatientQueue({'serverId': server_id, 'patientId': patient_id})
-                    patient_info = proxy_client.getPatientQueue({'serverId': server_id, 'patientId': patient_id})
+                    patient_info = proxy_client.getPatientInfo({'serverId': server_id, 'patientId': patient_id})
 
                     for ticket_info in queue_info:
                         if ticket_info.queueId == ticket_uid:
@@ -733,6 +733,115 @@ class EnqueueWorker(object):
                             })
 
         shutdown_session()
+        return result
+
+    def __prepare_tickets_info(self, hospital_uid, lpu_info, patient, tickets):
+        proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
+        doctor_dw = PersonalWorker()
+        result = list()
+        for ticket in tickets:
+            date_time = getattr(ticket, 'dateTime')
+            doctor = doctor_dw.get_doctor(lpu_unit=hospital_uid, doctor_id=getattr(ticket, 'personId', None))
+            work_times = proxy_client.getWorkTimeAndStatus(personId=getattr(ticket, 'personId'),
+                                                           date=date_time.date())
+            office = u'-'
+            if work_times:
+                office = work_times[0].get('office')
+
+            result.append({
+                'id': '',
+                'ticketUid': '{0}/{1}'.format(getattr(ticket, 'queueId'), getattr(patient, 'patientId')),
+                'hospitalUid': '{0}/{1}'.format(*hospital_uid),
+                'doctorUid': getattr(ticket, 'personId'),
+                'doctor': {
+                    'name': {
+                        'firstName': doctor.FirstName,
+                        'patronymic': doctor.PatrName,
+                        'lastName': doctor.LastName
+                    },
+                    'uid': getattr(ticket, 'personId'),
+                    'speciality': doctor.speciality[0].name,
+                    'hospitalUid': '{0}/{1}'.format(doctor.lpuId, doctor.orgId)
+                },
+                'person': {
+                    'firstName': '',
+                    'patronymic': '',
+                    'lastName': '',
+                },
+                'timeslotStart': date_time,
+#               'comment': exception_by_code(ticket_info.Error),
+                'location': u'{0} ({1}), кабинет: {2}'.format(lpu_info.name, lpu_info.address, office)
+            })
+        return result
+
+    def patient_tickets(self, **kwargs):
+        """Талончики пациента
+
+        Args:
+            person: { ФИО пациента (обязательный)
+                'firstName'
+                'lastName'
+                'patronymic'
+            }
+            hospitalUid:
+                uid ЛПУ или подразделения, строка вида: '17/0', соответствует 'LPU_ID/LPU_Unit_ID' (обязательный)
+            birthday: дата рождения пациента (необязательный)
+            sex: пол (необязательный)
+            hospitalUidFrom: uid ЛПУ, с которого производится запись (необязательный), используется для записи между ЛПУ
+
+        """
+        hospital_uid = kwargs.get('hospitalUid', '')
+        if hospital_uid:
+            hospital_uid = hospital_uid.split('/')
+        birthday = kwargs.get('birthday')
+        patient = kwargs.get('person')
+        sex = kwargs.get('sex')
+        document_obj = kwargs.get('document')
+        document = dict()
+        if document_obj:
+            if document_obj.client_id:
+                document['client_id'] = str(document_obj.client_id)
+            if document_obj.policy_type:
+                document['policy_type'] = str(document_obj.policy_type)
+            if document_obj.document_code:
+                document['document_code'] = str(document_obj.document_code)
+            if document_obj.series:
+                document['serial'] = document_obj.series
+            else:
+                document['serial'] = ''
+            if document_obj.number:
+                document['number'] = document_obj.number
+
+        if len(hospital_uid) > 1:
+            dw = LPUWorker()
+            lpu_info = dw.get_by_id(hospital_uid[0])
+            proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
+        else:
+            shutdown_session()
+            raise exceptions.ValueError
+
+        result = dict()
+        hospital_uid_from = kwargs.get('hospitalUidFrom', '')
+
+        params = dict(firstName=patient.firstName,
+                      lastName=patient.lastName,
+                      patronymic=patient.patronymic,
+                      document=document,
+                      birthday=birthday,
+                      sex=sex,
+                      hospitalUidFrom=hospital_uid_from)
+        try:
+            result = proxy_client.get_patient_tickets(params)
+        except Exception, e:
+            print e
+            return dict(status=False, message=u'Пациент не найден')
+        else:
+            if result.get('tickets', None):
+                result['tickets'] = self.__prepare_tickets_info(hospital_uid,
+                                                                lpu_info,
+                                                                result['patient'],
+                                                                result['tickets'])
+                del result['patient']
         return result
 
     def __get_ticket_print(self, **kwargs):

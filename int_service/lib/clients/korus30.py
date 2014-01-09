@@ -289,10 +289,11 @@ class ClientKorus30(AbstractClient):
             except WebFault, e:
                 print e
             else:
-                #return self.__unicode_result(result['list'])
-                return result['list']
+                for ticket in result:
+                    ticket.dateTime = datetime.datetime.utcfromtimestamp(ticket.dateTime / 1000)
+                return result
         else:
-            raise exceptions.ValueError
+            raise exceptions.AttributeError
         return None
 
     def getPatientInfo(self, **kwargs):
@@ -311,9 +312,9 @@ class ClientKorus30(AbstractClient):
             except WebFault, e:
                 print e
             else:
-                return result['patientInfo']
+                return result
         else:
-            raise exceptions.ValueError
+            raise exceptions.AttributeError
         return None
 
     def findPatient(self, **kwargs):
@@ -329,13 +330,16 @@ class ClientKorus30(AbstractClient):
 
         """
         document = kwargs.get('document')
+        birth_date = kwargs.get('birthDate')
+        if isinstance(birth_date, datetime.date):
+            birth_date = calendar.timegm(birth_date.timetuple()) * 1000
         if not document:
             document = dict()
         params = {
             'lastName': kwargs.get('lastName'),
             'firstName': kwargs.get('firstName'),
             'patrName': kwargs.get('patrName'),
-            'birthDate': kwargs.get('birthDate'),
+            'birthDate': birth_date,
             'document': document,
             'sex': kwargs.get('sex'),
         }
@@ -536,10 +540,7 @@ class ClientKorus30(AbstractClient):
             patient_params['birthDate'] = calendar.timegm(birthDate.timetuple()) * 1000
         return patient_params
 
-    def __get_patient_by_lpu(self, data):
-        """Поиск пациента в БД ЛПУ. Добавление его при записи между ЛПУ"""
-
-        patient_params = self.__prepare_patient_params(data)
+    def get_patient(self, patient_params, data):
         hospital_uid_from = data.get('hospitalUidFrom')
         patient = self.Struct(success=False, patientId=None, message=None)
         try:
@@ -550,12 +551,10 @@ class ClientKorus30(AbstractClient):
                 if len(patients) > 1:
                     patient.message = int(is_exceptions.IS_FoundMultiplePatients())
                     #return {'result': False, 'error_code': int(is_exceptions.IS_FoundMultiplePatients()), }
-                    return patient
                 elif len(patients) == 0:
                     if hospital_uid_from == '0':
                         patient.message = int(is_exceptions.IS_PatientNotRegistered())
                         #return {'result': False, 'error_code': int(is_exceptions.IS_PatientNotRegistered()), }
-                        return patient
                 else:
                     patient = self.Struct(success=True, patientId=patients[0].id)
         except NotFoundException, e:
@@ -563,17 +562,22 @@ class ClientKorus30(AbstractClient):
             if hospital_uid_from == '0':
                 patient.message = e.error_msg
                 #return {'result': False, 'error_code': e.error_msg.decode('utf-8')}
-            return patient
         except TException, e:
             print e
             patient.message = e.message
             #return {'result': False, 'error_code': e.message}
-            return patient
         except Exception, e:
             print e
             patient.message = e
             #return {'result': False, 'error_code': e}
-            return patient
+        return patient
+
+    def __get_patient_by_lpu(self, data):
+        """Поиск пациента в БД ЛПУ. Добавление его при записи между ЛПУ"""
+
+        patient_params = self.__prepare_patient_params(data)
+        patient = self.get_patient(patient_params, data)
+        hospital_uid_from = data.get('hospitalUidFrom')
 
         if not patient.success and hospital_uid_from and hospital_uid_from != '0':
             patient = self.addPatient(**patient_params)
@@ -925,3 +929,25 @@ class ClientKorus30(AbstractClient):
         else:
             return result
         return None
+
+    def get_patient_tickets(self, data):
+        try:
+            data['person'] = dict(firstName=data['firstName'],
+                                  lastName=data['lastName'],
+                                  patronymic=data['patronymic'])
+            data = self.__update_policy_type_code(deepcopy(data), 'core')
+            patient_params = self.__prepare_patient_params(data)
+            patient = self.get_patient(patient_params, data)
+        except Exception, e:
+            print e
+            return dict(status=False, message=u'Пациент не найден')
+        else:
+            if patient and patient.success and patient.patientId:
+                tickets = self.getPatientQueue(patientId=patient.patientId)
+                if not tickets:
+                    return dict(status=False, message=u'Талончики не найдены')
+                else:
+                    return dict(status=True, message=u'Талончики найдены', tickets=tickets, patient=patient)
+            elif hasattr(patient, 'message'):
+                return dict(status=False, message=patient.message)
+        return dict(status=False, message=u'Пациент не найден')
