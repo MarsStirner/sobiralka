@@ -124,6 +124,8 @@ class ClientKorus30(AbstractClient):
             result = self.client.getSpecialities(hospital_uid_from)
         except WebFault, e:
             print e
+        except NotFoundException, e:
+            print e.error_msg
         else:
             #return self.__unicode_result(result)
             return result

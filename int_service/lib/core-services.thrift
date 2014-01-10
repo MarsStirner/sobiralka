@@ -150,6 +150,7 @@ struct Person{
 12:optional string sexFilter;
 }
 
+//@deprecated
 struct Ticket{
 1:optional timestamp time;
 2:optional i32 free;
@@ -170,6 +171,7 @@ struct ExtendedTicketsAvailability{
 3:required TicketsAvailability ticketsInfo;
 }
 
+//@deprecated
 struct Amb{
 1:optional timestamp begTime;
 2:optional timestamp endTime;
@@ -796,9 +798,9 @@ DequeuePatientStatus dequeuePatient(1:i32 patientId, 2:i32 queueId)
  * Получение списка  с информацией о специализациях и доступных талончиках
  * @param hospitalUidFrom               1) Инфис-код ЛПУ
  * @return                              Список структур с данными о специализациях врачей
- * @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ * @throws NotFoundException            когда ничего не найдено
  */
 list<Speciality> getSpecialities(1:string hospitalUidFrom)
-    throws (1:SQLException exc);
+    throws (1:NotFoundException nfExc);
 
 }

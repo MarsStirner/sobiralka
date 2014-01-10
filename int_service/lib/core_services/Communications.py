@@ -307,7 +307,7 @@ class Iface(object):
     Получение списка  с информацией о специализациях и доступных талончиках
     @param hospitalUidFrom               1) Инфис-код ЛПУ
     @return                              Список структур с данными о специализациях врачей
-    @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+    @throws NotFoundException            когда ничего не найдено
 
     Parameters:
      - hospitalUidFrom
@@ -1204,7 +1204,7 @@ class Client(Iface):
     Получение списка  с информацией о специализациях и доступных талончиках
     @param hospitalUidFrom               1) Инфис-код ЛПУ
     @return                              Список структур с данными о специализациях врачей
-    @throws SQLException                 когда произошла внутренняя ошибка при запросах к БД ЛПУ
+    @throws NotFoundException            когда ничего не найдено
 
     Parameters:
      - hospitalUidFrom
@@ -1232,8 +1232,8 @@ class Client(Iface):
     self._iprot.readMessageEnd()
     if result.success is not None:
       return result.success
-    if result.exc is not None:
-      raise result.exc
+    if result.nfExc is not None:
+      raise result.nfExc
     raise TApplicationException(TApplicationException.MISSING_RESULT, "getSpecialities failed: unknown result");
 
 
@@ -1632,8 +1632,8 @@ class Processor(Iface, TProcessor):
     result = getSpecialities_result()
     try:
       result.success = self._handler.getSpecialities(args.hospitalUidFrom)
-    except SQLException as exc:
-      result.exc = exc
+    except NotFoundException as nfExc:
+      result.nfExc = nfExc
     oprot.writeMessageBegin("getSpecialities", TMessageType.REPLY, seqid)
     result.write(oprot)
     oprot.writeMessageEnd()
@@ -5053,17 +5053,17 @@ class getSpecialities_result(object):
   """
   Attributes:
    - success
-   - exc
+   - nfExc
   """
 
   thrift_spec = (
     (0, TType.LIST, 'success', (TType.STRUCT,(Speciality, Speciality.thrift_spec)), None, ), # 0
-    (1, TType.STRUCT, 'exc', (SQLException, SQLException.thrift_spec), None, ), # 1
+    (1, TType.STRUCT, 'nfExc', (NotFoundException, NotFoundException.thrift_spec), None, ), # 1
   )
 
-  def __init__(self, success=None, exc=None,):
+  def __init__(self, success=None, nfExc=None,):
     self.success = success
-    self.exc = exc
+    self.nfExc = nfExc
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -5087,8 +5087,8 @@ class getSpecialities_result(object):
           iprot.skip(ftype)
       elif fid == 1:
         if ftype == TType.STRUCT:
-          self.exc = SQLException()
-          self.exc.read(iprot)
+          self.nfExc = NotFoundException()
+          self.nfExc.read(iprot)
         else:
           iprot.skip(ftype)
       else:
@@ -5108,9 +5108,9 @@ class getSpecialities_result(object):
         iter142.write(oprot)
       oprot.writeListEnd()
       oprot.writeFieldEnd()
-    if self.exc is not None:
-      oprot.writeFieldBegin('exc', TType.STRUCT, 1)
-      self.exc.write(oprot)
+    if self.nfExc is not None:
+      oprot.writeFieldBegin('nfExc', TType.STRUCT, 1)
+      self.nfExc.write(oprot)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
