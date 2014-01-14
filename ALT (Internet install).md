@@ -36,6 +36,7 @@ apt-get upgrade
 
 * git ```apt-get install git```
 * python-module-setuptools ```apt-get install python-module-setuptools```
+* python-module-virtualenv ```apt-get install python-module-virtualenv```
 
 
 Установка ИС
