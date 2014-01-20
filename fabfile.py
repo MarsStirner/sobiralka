@@ -19,7 +19,7 @@ virtualenv_bin_path = os.path.join(project_dir_path, virtualenv, 'bin')
 
 def prepare_virtual_env():
     #Установка виртуального окружения и инструмента работы с пакетами Python
-    local('easy_install virtualenv')
+    #local('easy_install virtualenv')
     #Создаём и активируем виртульное окружение для проекта
     with lcd(project_dir_path):
         with settings(warn_only=True):
@@ -60,7 +60,7 @@ def create_system_user():
     with settings(warn_only=True):
         local('/usr/sbin/useradd --system --no-create-home --home-dir %s --user-group %s' %
               (project_dir_path, SYSTEM_USER))
-    local('chsh -s /bin/bash %s' % SYSTEM_USER)
+        local('chsh -s /bin/bash %s' % SYSTEM_USER)
     local('chown -R %s:%s %s' % (SYSTEM_USER, SYSTEM_USER, project_dir_path))
 
 
