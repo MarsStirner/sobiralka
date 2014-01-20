@@ -126,6 +126,8 @@ class ClientKorus30(AbstractClient):
             print e
         except NotFoundException, e:
             print e.error_msg
+        except SQLException, e:
+            print e.error_msg
         else:
             #return self.__unicode_result(result)
             return result
