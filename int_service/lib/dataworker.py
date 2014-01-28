@@ -5,6 +5,8 @@ import urllib2
 import datetime
 import time
 import sys
+import sqlalchemy
+
 try:
     import json
 except ImportError:
@@ -1618,7 +1620,7 @@ class EPGUWorker(object):
         self.default_phone = '+79011111111'
 
         self.proxy_client = ClientEPGU()
-        if session is not None and isinstance(session, ScopedSession):
+        if session is not None and isinstance(session, sqlalchemy.orm.Session):
             self.session = session
         else:
             self.session = Session2()

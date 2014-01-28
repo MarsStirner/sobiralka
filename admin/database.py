@@ -8,7 +8,6 @@ from settings import DB_CONNECT_STRING
 engine = create_engine(DB_CONNECT_STRING, convert_unicode=True, pool_recycle=600)
 Session = scoped_session(sessionmaker(bind=engine))
 Session2 = scoped_session(sessionmaker(bind=engine))
-#Base = declarative_base()
 Base.query = Session.query_property()
 
 
@@ -25,6 +24,7 @@ def init_db():
     # Session.begin()
     Base.metadata.create_all(bind=engine)
     Session.commit()
+    Session.remove()
 
 
 def shutdown_session(exception=None):

@@ -263,7 +263,7 @@ class Regions(Base):
 
 
 class Tickets(Base):
-    """Mapping for enqueue table"""
+    """Mapping for patient tickets table"""
     __tablename__ = 'tickets'
     __table_args__ = {'mysql_engine': 'InnoDB'}
 
