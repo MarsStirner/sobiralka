@@ -121,6 +121,11 @@ class ScheduleServer(ServiceBase):
         obj = DataWorker.provider('enqueue')
         return obj.enqueue(**vars(parameters))
 
+    @srpc(soap_models.PatientTicketsRequest, _returns=soap_models.PatientTicketsResponse)
+    def patientTickets(parameters):
+        obj = DataWorker.provider('enqueue')
+        return obj.patient_tickets(**vars(parameters))
+
     def setTicketReadStatus(self):
         pass
 

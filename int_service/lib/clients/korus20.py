@@ -531,3 +531,28 @@ class ClientKorus20(AbstractClient):
                               doctor_id=ticket.personId)
                 return result
         return None
+
+    def __prepare_tickets_info(self, tickets):
+        for ticket in tickets:
+            setattr(ticket, 'dateTime', datetime.datetime.combine(ticket.date, ticket.time))
+            del ticket.date
+            del ticket.time
+        return tickets
+
+    def get_patient_tickets(self, params):
+        try:
+            patient = self.findPatient(**params)
+        except Exception, e:
+            print e
+            return dict(status=False, message=u'Пациент не найден')
+        else:
+            if patient and patient.success and patient.patientId:
+                tickets = self.getPatientQueue(patientId=patient.patientId)
+                if not tickets:
+                    return dict(status=False, message=u'Талончики не найдены')
+                else:
+                    return dict(status=True,
+                                message=u'Талончики найдены',
+                                tickets=self.__prepare_tickets_info(tickets),
+                                patient=patient)
+        return dict(status=False, message=u'Пациент не найден')

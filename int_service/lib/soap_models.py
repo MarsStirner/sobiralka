@@ -108,9 +108,12 @@ class DetailedOperationStatus(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
     status = String()
-    status.Annotations.doc=u'Статус операции'
+    status.Annotations.doc = u'Статус операции'
     errMessage = String()
-    errMessage.Annotations.doc=u'Сообщение об ошибке'
+    errMessage.Annotations.doc = u'Сообщение об ошибке'
+
+    def __init__(self):
+        super(DetailedOperationStatus, self).__init__(doc=u'Подробная информация о статусе')
 
 
 class SetDoctorInfoResponse(ComplexModel):
@@ -444,6 +447,7 @@ Timeslot_Statuses = Enum(
     type_name="Statuses"
 )
 
+
 class TimeslotStatus(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
@@ -602,6 +606,18 @@ class EnqueueResponse(ComplexModel):
         super(EnqueueResponse, self).__init__(doc=u'Данные запроса о записи на приём')
 
 
+class PatientTicketsRequest(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+
+    person = PersonName
+    document = PatientDocument
+    birthday = Date
+    sex = Integer
+    hospitalUid = Unicode
+    hospitalUidFrom = String
+#    hospitalUidFrom.Annotations.doc=u'Уникальный идентификатор ЛПУ отправителя'
+
+
 class CancelRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
@@ -622,16 +638,6 @@ class CancelResponse(ComplexModel):
         super(CancelResponse, self).__init__(doc=u'Результат запроса об отмене записи на приём')
 
 
-class DetailedOperationStatus(ComplexModel):
-    __namespace__ = SOAP_NAMESPACE
-
-    status = String(doc=u'Статус операции')
-    errMessage = Unicode(doc=u'Сообщение об ошибке')
-
-    def __init__(self):
-        super(DetailedOperationStatus, self).__init__(doc=u'Подробная информация о статусе')
-
-
 class SetTicketReadStatusRequest(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
@@ -647,7 +653,7 @@ class SetTicketReadStatusRequest(ComplexModel):
 class SetTicketReadStatusResponse(ComplexModel):
     __namespace__ = SOAP_NAMESPACE
 
-    info = DetailedOperationStatus
+    info = DetailedOperationStatus()
 
     def __init__(self):
         super(SetTicketReadStatusResponse, self).__init__(doc=u'Запрос о текущем статусе заявки на приём')
@@ -675,17 +681,27 @@ class TicketInfo(ComplexModel):
     id = String(doc=u'Уникальный для ИС идентификатор заявки')
     ticketUid = String(doc=u'Уникальный для МИС ЛПУ идентификатор заявки')
     hospitalUid = String(doc=u'Уникальный идентификатор ЛПУ')
-    doctorUid = String(doc=u'Уникальный идентификатор врача')
-    doctor = PersonName(doc=u'ФИО врача')
-    person = PersonName(doc=u'ФИО записавшегося')
-    status = TicketStatus()
+    doctorUid = Integer.customize(doc=u'Уникальный идентификатор врача')
+    doctor = DoctorInfo.customize(max_occurs=1, doc=u'ФИО врача')
+    person = PersonName.customize(max_occurs=1, doc=u'ФИО записавшегося')
+    status = TicketStatus.customize(max_occurs=1, doc=u'Статус талончика')
     timeslotStart = DateTime(doc=u'Начало приёма у врача, соответствующее данной заявке')
-    location = Unicode(doc=u'Информация о месте приёма (копрус, этаж, кабинет и т.п.)')
+    location = Unicode(doc=u'Информация о месте приёма (корпус, этаж, кабинет и т.п.)')
     comment = Unicode(doc=u'Дополнительные указания и информация')
     printableDocument = PrintableDocument()
 
     def __init__(self):
         super(TicketInfo, self).__init__(doc=u'Данные о текущем статусе заявки на приём')
+
+
+class PatientTicketsResponse(ComplexModel):
+    __namespace__ = SOAP_NAMESPACE
+    status = Boolean(doc=u'Результат поиска талончиков пациента')
+    message = Unicode(doc=u'Сообщение об ошибке')
+    tickets = TicketInfo.customize(max_occurs='unbounded', doc=u'Талончики, на которые записан пациент')
+
+    def __init__(self):
+        super(PatientTicketsResponse, self).__init__(doc=u'Результат запроса о записях на приём')
 
 
 class GetTicketStatusRequest(ComplexModel):
