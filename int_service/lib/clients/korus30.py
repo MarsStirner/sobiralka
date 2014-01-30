@@ -191,12 +191,15 @@ class ClientKorus30(AbstractClient):
             hospital_uid_from = kwargs.get('hospital_uid_from')
             if not hospital_uid_from:
                 hospital_uid_from = ''
+                quotingType = QuotingType.FROM_PORTAL
+            else:
+                quotingType = QuotingType.FROM_OTHER_LPU
 
             parameters = ScheduleParameters(personId=doctor_uid,
                                             beginDateTime=int(calendar.timegm(start.timetuple()) * 1000),
                                             endDateTime=int(calendar.timegm(end.timetuple()) * 1000),
                                             hospitalUidFrom=hospital_uid_from,
-                                            quotingType=QuotingType.FROM_PORTAL)
+                                            quotingType=quotingType)
 
             try:
                 data = self.client.getPersonSchedule(parameters)
