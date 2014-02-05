@@ -125,7 +125,7 @@ class ClientKorus30(AbstractClient):
         except WebFault, e:
             print e
         except NotFoundException, e:
-            print e.error_msg
+            print e.error_msg.encode('utf-8')
         except SQLException, e:
             print e.error_msg
         else:
