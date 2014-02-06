@@ -34,7 +34,7 @@ celery.conf.update(
     CELERYBEAT_SCHEDULE={
         'update_db_every_3_hours': {
             'task': 'is_celery.tasks.update_db',
-            'schedule': crontab(minute=0, hour='5,11,17,22'),
+            'schedule': crontab(minute=0, hour='5,23'),
         },
         'periodical_sync_locations': {
             'task': 'is_celery.tasks.sync_locations',
