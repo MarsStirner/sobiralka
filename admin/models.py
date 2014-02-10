@@ -22,7 +22,7 @@ class LPU(Base):
     email = Column(UnicodeText, doc='E-mail')
     kladr = Column(UnicodeText, doc=u'КЛАДР', nullable=True)
     OGRN = Column(String(15), doc=u'ОГРН', nullable=True)
-    OKATO = Column(String(15), doc=u'ОКАТО', nullable=False)
+    OKATO = Column(String(15), doc=u'ОКАТО', nullable=False, index=True)
     LastUpdate = Column(
         Integer,
         doc=u'Время последнего обновления специальностей для данного ЛПУ',
@@ -43,7 +43,7 @@ class LPU_Units(Base):
 
     id = Column(BigInteger, primary_key=True)
     lpuId = Column(BigInteger, ForeignKey('lpu.id', ondelete='CASCADE'))
-    orgId = Column(BigInteger)
+    orgId = Column(BigInteger, index=True)
     name = Column(Unicode(256))
     address = Column(Unicode(256))
 
@@ -89,8 +89,8 @@ class Enqueue(Base):
     id = Column(BigInteger, primary_key=True)
     Error = Column(String(64))
     Data = Column(Text)
-    patient_id = Column(BigInteger)
-    ticket_id = Column(BigInteger)
+    patient_id = Column(BigInteger, index=True)
+    ticket_id = Column(BigInteger, index=True)
     keyEPGU = Column(String(100))
 
 
