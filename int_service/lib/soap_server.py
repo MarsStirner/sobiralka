@@ -20,6 +20,7 @@ from dataworker import DataWorker, EPGUWorker
 import soap_models
 import version
 from admin.database import shutdown_session
+from utils import logger
 
 # if DEBUG:
 #     logging.basicConfig(level=logging.DEBUG)
@@ -160,6 +161,7 @@ class EPGUGateServer(ServiceBase):
             result = obj.epgu_request(format=_format, message=message)
         except Exception, e:
             print e
+            logger.error(e, extra=dict(tags=[u'EPGU Request', 'IS']))
             return []
         else:
             return result
