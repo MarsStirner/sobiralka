@@ -5,7 +5,7 @@ from suds import WebFault
 import settings
 import urllib2
 import socket
-from utils import logger
+from ..utils import logger
 
 from jinja2 import Environment, PackageLoader
 
