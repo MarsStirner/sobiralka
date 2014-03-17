@@ -5,13 +5,14 @@ from datetime import datetime
 
 import logging
 import sys
+from utils import logger
 
 h1 = logging.StreamHandler(sys.stdout)
 rootLogger = logging.getLogger()
 rootLogger.addHandler(h1)
-logger = logging.getLogger("tfoms.logger")
-logger.addHandler(h1)
-logger.setLevel(logging.DEBUG)
+tfoms_logger = logging.getLogger("tfoms.logger")
+tfoms_logger.addHandler(h1)
+tfoms_logger.setLevel(logging.DEBUG)
 
 _codes = {
     0: u'Ошибка при работе с сервисом',
@@ -19,6 +20,8 @@ _codes = {
     2: u'Пациент найден в БД ТФОМС',
     3: u'Полис найден, несовпадение даты рождения'
 }
+
+logger_tags = dict(tags=['tfoms_client', 'IS', __file__])
 
 
 class AnswerCodes(object):
@@ -60,32 +63,33 @@ class TFOMSClient(object):
         self.__is_logined = value
 
     def __check_service(self):
-        logger.debug('CHECK TFOMS_SERVICE')
+        tfoms_logger.debug('CHECK TFOMS_SERVICE')
         try:
             r = requests.get(self.service_url, timeout=0.5)
-        except requests.exceptions.Timeout, e:
-            logger.debug(e)
+        except requests.Timeout, e:
+            tfoms_logger.debug(e)
+            logger.error(e, extra=logger_tags)
             print e
             self.is_available = False
-            logger.debug('CHECK FAILED')
+            tfoms_logger.debug('CHECK FAILED')
         else:
-            logger.debug('CHECK SUCCESS')
+            tfoms_logger.debug('CHECK SUCCESS')
             self.is_available = True
 
     def __login(self, login, password):
-        logger.debug('LOGIN TFOMS_SERVICE (%s, %s)' % (login, password))
+        tfoms_logger.debug('LOGIN TFOMS_SERVICE (%s, %s)' % (login, password))
         url = '{}/login'.format(self.service_url)
         r = requests.post(url, data=json.dumps(dict(login=login, password=password)))
         if r.status_code == requests.codes.ok:
-            logger.debug('LOGIN SUCCESS')
+            tfoms_logger.debug('LOGIN SUCCESS')
             if r.cookies['session']:
-                logger.debug(r.cookies['session'])
+                tfoms_logger.debug(r.cookies['session'])
                 self.cookies = dict(session=r.cookies['session'])
             return True
         elif r.status_code == requests.codes.unauthorized:
-            logger.debug('LOGIN FAILED')
+            tfoms_logger.debug('LOGIN FAILED')
             return False
-        logger.debug('LOGIN FAILED')
+        tfoms_logger.debug('LOGIN FAILED')
         return False
 
     def __check(self, **kwargs):
@@ -100,21 +104,22 @@ class TFOMSClient(object):
         return None
 
     def __search(self, **kwargs):
-        logger.debug('SEARCH PROCESS')
+        tfoms_logger.debug('SEARCH PROCESS')
         if self.is_logined:
             url = '{}/search'.format(self.service_url)
             r = requests.post(url, data=json.dumps(kwargs), cookies=self.cookies)
-            logger.debug(self.cookies)
+            tfoms_logger.debug(self.cookies)
             if r.status_code == requests.codes.ok:
                 try:
                     result = r.json()
-                    logger.debug(result)
+                    tfoms_logger.debug(result)
                 except ValueError, e:
-                    logger.debug(e)
+                    tfoms_logger.error(e)
+                    logger.error(e, extra=logger_tags)
                     raise e
                 else:
                     return result
-        logger.debug('NOT LOGINED')
+        tfoms_logger.debug('NOT LOGINED')
         return None
 
     def check_policy(self, policy):
@@ -145,7 +150,8 @@ class TFOMSClient(object):
         try:
             policy = self.__get_policy_data(patient_data)
             patient = self.__get_patient_data(patient_data)
-        except AttributeError:
+        except AttributeError, e:
+            logger.error(e, extra=logger_tags)
             return dict(status=AnswerCodes(0), data=None)
 
         all_data = patient
@@ -154,6 +160,7 @@ class TFOMSClient(object):
             result = self.__search(**all_data)
         except ValueError, e:
             print e
+            logger.error(e, extra=logger_tags)
             return dict(status=AnswerCodes(0), data=None)
         if result:
             return dict(status=AnswerCodes(2), data=result)
@@ -165,6 +172,7 @@ class TFOMSClient(object):
                 result = self.__search(**policy)
             except ValueError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 return dict(status=AnswerCodes(0), data=None)
             if result:
                 return dict(status=AnswerCodes(3), data=result)

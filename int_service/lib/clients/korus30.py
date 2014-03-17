@@ -21,7 +21,8 @@ from ..core_services.ttypes import FindPatientByPolicyAndDocumentParameters, Not
 from ..core_services.ttypes import ChangePolicyParameters, Policy, PolicyTypeNotFoundException
 from ..core_services.ttypes import ScheduleParameters, QuotingType, CouponStatus, ReasonOfAbsenceException
 
-from ..tfoms_service import TFOMSClient, AnswerCodes, logger
+from ..tfoms_service import TFOMSClient, AnswerCodes
+from ..utils import logger
 from abstract import AbstractClient
 
 # From rbPolicyType.id to rbPolicyType.code (с сайта приходит id в Korus30 необходимо передавать code),
@@ -42,6 +43,8 @@ _tfoms_to_core_policy_type = {
     3: 'cmiCommonElectron',
     4: 4,
 }
+
+logger_tags = dict(tags=['korus30', 'IS', __file__])
 
 
 class ClientKorus30(AbstractClient):
@@ -88,10 +91,11 @@ class ClientKorus30(AbstractClient):
             result = self.client.getOrgStructures(**params)
         except NotFoundException, e:
             print e.error_msg
+            logger.error(e, extra=logger_tags)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
-            #return self.__unicode_result(result)
             return result
         return None
 
@@ -110,10 +114,13 @@ class ClientKorus30(AbstractClient):
             result = self.client.getPersonnel(**params)
         except SQLException, e:
             print e.error_msg
+            logger.error(e, extra=logger_tags)
         except NotFoundException, e:
             print e.error_msg
+            logger.error(e, extra=logger_tags)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             #return self.__unicode_result(result)
             return result
@@ -124,10 +131,13 @@ class ClientKorus30(AbstractClient):
             result = self.client.getSpecialities(hospital_uid_from)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except NotFoundException, e:
             print e.error_msg
+            logger.error(e, extra=logger_tags)
         except SQLException, e:
             print e.error_msg
+            logger.error(e, extra=logger_tags)
         else:
             #return self.__unicode_result(result)
             return result
@@ -163,12 +173,15 @@ class ClientKorus30(AbstractClient):
                 result = self.client.findOrgStructureByAddress(params)
             except WebFault, e:
                 print e
-            except NotFoundException:
+                logger.error(e, extra=logger_tags)
+            except NotFoundException, e:
+                logger.error(e, extra=logger_tags)
                 return []
             else:
                 #return self.__unicode_result(result)
                 return result
         else:
+            logger.error(exceptions.AttributeError(), extra=logger_tags)
             raise exceptions.AttributeError
         return None
 
@@ -205,6 +218,7 @@ class ClientKorus30(AbstractClient):
                 data = self.client.getPersonSchedule(parameters)
             except NotFoundException, e:
                 print e.error_msg
+                logger.error(e, extra=logger_tags)
             else:
                 schedules = getattr(data, 'schedules', dict())
                 person_absences = getattr(data, 'personAbsences', dict())
@@ -241,6 +255,7 @@ class ClientKorus30(AbstractClient):
                         date = datetime.datetime.utcfromtimestamp(date_timestamp / 1000).date()
                         absences.append(dict(date=date, code=absence.code, name=absence.name))
         else:
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
         return {'timeslots': result, 'absences': absences}
 
@@ -272,11 +287,13 @@ class ClientKorus30(AbstractClient):
                     )
                 except NotFoundException, e:
                     print e.error_msg
+                    logger.error(e, extra=logger_tags)
                     continue
                 else:
                     if timeslot:
                         result.extend(timeslot)
         else:
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
         return {'timeslots': result}
 
@@ -293,13 +310,16 @@ class ClientKorus30(AbstractClient):
                 result = self.client.getPatientQueue(patient_id)
             except SQLException, e:
                 print e.error_msg
+                logger.error(e, extra=logger_tags)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 for ticket in result:
                     ticket.dateTime = datetime.datetime.utcfromtimestamp(ticket.dateTime / 1000)
                 return result
         else:
+            logger.error(exceptions.AttributeError(), extra=logger_tags)
             raise exceptions.AttributeError
         return None
 
@@ -318,9 +338,11 @@ class ClientKorus30(AbstractClient):
                 result = self.client.getPatientInfo(patient_id)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 return result
         else:
+            logger.error(exceptions.AttributeError(), extra=logger_tags)
             raise exceptions.AttributeError
         return None
 
@@ -354,10 +376,13 @@ class ClientKorus30(AbstractClient):
         try:
             result = self.client.findPatient(FindPatientParameters(**params))
         except NotFoundException, e:
+            logger.error(e, extra=logger_tags)
             raise e
         except TException, e:
+            logger.error(e, extra=logger_tags)
             raise e
         except WebFault, e:
+            logger.error(e, extra=logger_tags)
             print e
         else:
             return result
@@ -395,10 +420,13 @@ class ClientKorus30(AbstractClient):
         try:
             result = self.client.findPatients(FindMultiplePatientsParameters(**params))
         except NotFoundException, e:
+            logger.error(e, extra=logger_tags)
             raise e
         except TException, e:
+            logger.error(e, extra=logger_tags)
             raise e
         except WebFault, e:
+            logger.error(e, extra=logger_tags)
             print e
         else:
             return result
@@ -427,8 +455,10 @@ class ClientKorus30(AbstractClient):
         try:
             result = self.client.addPatient(params)
         except WebFault, e:
+            logger.error(e, extra=logger_tags)
             print e
         except Exception, e:
+            logger.error(e, extra=logger_tags)
             print e
         else:
             return result
@@ -453,12 +483,16 @@ class ClientKorus30(AbstractClient):
             )
             schedule = self.client.getWorkTimeAndStatus(parameters)
         except WebFault, e:
+            logger.error(e, extra=logger_tags)
             print e
         except NotFoundException, e:
+            logger.error(e, extra=logger_tags)
             print e.error_msg
         except TApplicationException, e:
+            logger.error(e, extra=logger_tags)
             print e
         except ReasonOfAbsenceException, e:
+            logger.error(e, extra=logger_tags)
             print e
         else:
             if schedule and hasattr(schedule, 'tickets') and schedule.tickets:
@@ -566,15 +600,18 @@ class ClientKorus30(AbstractClient):
                     patient = self.Struct(success=True, patientId=patients[0].id)
         except NotFoundException, e:
             print e
+            logger.error(e, extra=logger_tags)
             if hospital_uid_from == '0':
                 patient.message = e.error_msg
                 #return {'result': False, 'error_code': e.error_msg.decode('utf-8')}
         except TException, e:
             print e
+            logger.error(e, extra=logger_tags)
             patient.message = e.message
             #return {'result': False, 'error_code': e.message}
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
             patient.message = e
             #return {'result': False, 'error_code': e}
         return patient
@@ -632,32 +669,39 @@ class ClientKorus30(AbstractClient):
         try:
             patient = self.client.findPatientByPolicyAndDocument(FindPatientByPolicyAndDocumentParameters(**params))
         except NotFoundException, e:
+            logger.error(e, extra=logger_tags)
             try:
                 patient = self.client.addPatient(AddPatientParameters(**params))
                 patient.message = u'''Пациент не был ранее зарегистрирован в выбранном медицинском учреждении,
                 перед обращением к врачу требуется обратиться в регистратуру для подтверждения записи
                 и получения карточки'''
             except WebFault, e:
+                logger.error(e, extra=logger_tags)
                 print e
             except Exception, e:
+                logger.error(e, extra=logger_tags)
                 print e
         except InvalidPersonalInfoException, e:
             patient.message = u'''Идентифицировать пациента по имеющимся данным невозможно,
             необходимо обратиться в регистратуру медицинского учреждения для обновления анкетных данных'''
         except InvalidDocumentException, e:
+            logger.error(e, extra=logger_tags)
             patient.message = u'''Идентифицировать пациента по имеющимся данным невозможно,
             необходимо обратиться в регистратуру медицинского учреждения для обновления анкетных данных'''
         except AnotherPolicyException, e:
+            logger.error(e, extra=logger_tags)
             patient.patientId = e.patientId
             patient.success = True
             try:
                 result = self.__update_policy(patient.patientId, params)
             except PolicyTypeNotFoundException, e:
+                logger.error(e, extra=logger_tags)
                 print e
                 patient.message = u'''Перед посещением врача Вам необходимо обратиться
                                     в регистратуру медицинского учреждения для обновления анкетных данных'''
             except NotFoundException, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 patient.message = u'''Перед посещением врача Вам необходимо обратиться
                                     в регистратуру медицинского учреждения для обновления анкетных данных'''
             else:
@@ -667,6 +711,7 @@ class ClientKorus30(AbstractClient):
             #patient.message = u'''Введён неактуальный номер полиса. Перед обращением к врачу требуется обратиться
             #в регистратуру медицинского учреждения для обновления анкетных данных'''
         except NotUniqueException, e:
+            logger.error(e, extra=logger_tags)
             patient.message = u'''Идентифицировать пациента по имеющимся данным невозможно,
             необходимо обратиться в регистратуру медицинского учреждения для обновления анкетных данных'''
         return patient
@@ -720,6 +765,7 @@ class ClientKorus30(AbstractClient):
                                                           patrName=patient_params.get('patrName', '')))
                     patient = self.__get_patient_by_tfoms_data(tfoms_data['data'])
                 except TApplicationException, e:
+                    logger.error(e, extra=logger_tags)
                     print e
         elif tfoms_data['status'].code == AnswerCodes(3).code:
             patient.message = u'''Введенные данные не совпадают с данными в базе лиц застрахованных по ОМС.
@@ -744,6 +790,7 @@ class ClientKorus30(AbstractClient):
 #               serverId = data.get('serverId'),
             )
         except Exception, e:
+            logger.error(e, extra=logger_tags)
             print e
             raise exceptions.ValueError
         else:
@@ -751,8 +798,10 @@ class ClientKorus30(AbstractClient):
                 result = self.client.enqueuePatient(params)
                 print result
             except WebFault, e:
+                logger.error(e, extra=logger_tags)
                 print e
             except Exception, e:
+                logger.error(e, extra=logger_tags)
                 print e
                 return {'result': False,
                         'error_code': e.message,
@@ -776,7 +825,8 @@ class ClientKorus30(AbstractClient):
             try:
                 data['document']['policy_type'] = str(
                     _policy_types_mapping[int(data['document']['policy_type'])][_type])
-            except NameError:
+            except NameError, e:
+                logger.error(e, extra=logger_tags)
                 pass
         return data
 
@@ -798,9 +848,9 @@ class ClientKorus30(AbstractClient):
         tfoms_params = self.__prepare_tfoms_params(self.__update_policy_type_code(deepcopy(kwargs), 'tfoms'))
         try:
             tfoms_result = self.__check_by_tfoms(tfoms_params)
-            logger.debug('QUERY TO TFOMS WAS SENT')
+            logger.debug('QUERY TO TFOMS WAS SENT', extra=logger_tags)
         except Exception, e:
-            logger.error(e)
+            logger.error(e, extra=logger_tags)
             print e
         ################################################################
         # TODO: избавиться от костыля.
@@ -824,9 +874,11 @@ class ClientKorus30(AbstractClient):
                 result = self.client.dequeuePatient(patientId=int(patient_id), queueId=int(ticket_id))
             except NotFoundException, e:
                 print e.error_msg
+                logger.error(e, extra=logger_tags)
                 return {'success': False, 'comment': e.error_msg, }
             except TException, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 return {'success': False, 'comment': e.message, }
             else:
                 message = getattr(result, 'message', None)
@@ -834,6 +886,7 @@ class ClientKorus30(AbstractClient):
                     message = u'Запись на приём отменена.' if result.success else u'Ошибка отмены записи на приём.'
                 return dict(success=result.success, comment=message)
         else:
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
 
     def get_closest_free_ticket(self, doctor_id, start=None):
@@ -858,9 +911,11 @@ class ClientKorus30(AbstractClient):
                 ticket = self.client.getFirstFreeTicket(parameters)
             except NotFoundException, e:
                 print e.error_msg
+                logger.error(e, extra=logger_tags)
                 return None
             except TApplicationException, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 # CORE v2.4.7
                 # TODO: remove lagacy
                 try:
@@ -869,6 +924,7 @@ class ClientKorus30(AbstractClient):
                         dateTime=int(calendar.timegm(start.timetuple()) * 1000),
                         hospitalUidFrom='')
                 except NotFoundException, e:
+                    logger.error(e, extra=logger_tags)
                     print e.error_msg
                     return None
                 else:
@@ -879,6 +935,7 @@ class ClientKorus30(AbstractClient):
                     return result
             except TypeError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 # CORE v2.4.7
                 # TODO: remove lagacy
                 try:
@@ -888,6 +945,7 @@ class ClientKorus30(AbstractClient):
                         hospitalUidFrom='')
                 except NotFoundException, e:
                     print e.error_msg
+                    logger.error(e, extra=logger_tags)
                     return None
                 else:
                     result = dict(timeslotStart=datetime.datetime.utcfromtimestamp(ticket.begDateTime / 1000),
@@ -897,6 +955,7 @@ class ClientKorus30(AbstractClient):
                     return result
             except Exception, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 # CORE v2.4.7
                 # TODO: remove lagacy
                 try:
@@ -906,6 +965,7 @@ class ClientKorus30(AbstractClient):
                         hospitalUidFrom='')
                 except NotFoundException, e:
                     print e.error_msg
+                    logger.error(e, extra=logger_tags)
                     return None
                 else:
                     result = dict(timeslotStart=datetime.datetime.utcfromtimestamp(ticket.begDateTime / 1000),
@@ -930,8 +990,10 @@ class ClientKorus30(AbstractClient):
         try:
             result = self.client.checkForNewQueueCoupons()
         except TException, e:
+            logger.error(e, extra=logger_tags)
             raise e
         except WebFault, e:
+            logger.error(e, extra=logger_tags)
             print e
         else:
             return result
@@ -947,6 +1009,7 @@ class ClientKorus30(AbstractClient):
             patient = self.get_patient(patient_params, data)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
             return dict(status=False, message=u'Пациент не найден')
         else:
             if patient and patient.success and patient.patientId:
