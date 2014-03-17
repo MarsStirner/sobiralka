@@ -21,7 +21,7 @@ _codes = {
     3: u'Полис найден, несовпадение даты рождения'
 }
 
-logger_tags = dict(tags=['tfoms_client', 'IS', __file__])
+logger_tags = dict(tags=['tfoms_client', 'IS'])
 
 
 class AnswerCodes(object):

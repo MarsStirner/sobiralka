@@ -44,7 +44,7 @@ _tfoms_to_core_policy_type = {
     4: 4,
 }
 
-logger_tags = dict(tags=['korus30', 'IS', __file__])
+logger_tags = dict(tags=['korus30', 'IS'])
 
 
 class ClientKorus30(AbstractClient):

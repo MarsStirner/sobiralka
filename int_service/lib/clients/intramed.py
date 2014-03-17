@@ -5,7 +5,7 @@ from suds import WebFault
 from abstract import AbstractClient
 from ..utils import logger
 
-logger_tags = dict(tags=['intramed', 'IS', __file__])
+logger_tags = dict(tags=['intramed', 'IS'])
 
 
 class ClientIntramed(AbstractClient):

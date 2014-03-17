@@ -9,7 +9,7 @@ from ..utils import logger
 
 from jinja2 import Environment, PackageLoader
 
-logger_tags = dict(tags=['epgu_client', 'IS', __file__])
+logger_tags = dict(tags=['epgu_client', 'IS'])
 
 
 class ClientEPGU():

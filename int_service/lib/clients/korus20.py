@@ -10,7 +10,7 @@ from abstract import AbstractClient
 
 from ..utils import logger
 
-logger_tags = dict(tags=['korus20', 'IS', __file__])
+logger_tags = dict(tags=['korus20', 'IS'])
 
 
 class ClientKorus20(AbstractClient):
