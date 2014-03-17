@@ -133,7 +133,7 @@ class ClientKorus30(AbstractClient):
             print e
             logger.error(e, extra=logger_tags)
         except NotFoundException, e:
-            print e.error_msg
+            print e.error_msg.encode('utf-8')
             logger.error(e, extra=logger_tags)
         except SQLException, e:
             print e.error_msg
