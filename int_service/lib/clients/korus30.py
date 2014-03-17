@@ -218,7 +218,7 @@ class ClientKorus30(AbstractClient):
                 data = self.client.getPersonSchedule(parameters)
             except NotFoundException, e:
                 print e.error_msg
-                logger.error(e, extra=logger_tags)
+                logger.error(u'{0}{1}'.format(e, kwargs), extra=logger_tags)
             else:
                 schedules = getattr(data, 'schedules', dict())
                 person_absences = getattr(data, 'personAbsences', dict())
