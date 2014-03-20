@@ -107,7 +107,8 @@ struct Organization{
  * @param name					4) Название подразделения
  * @param address				5) Адрес подразделения
  * @param sexFilter				6) Половой фильтр
- * @param ageFilter				7) Возрастной фильтр 
+ * @param ageFilter				7) Возрастной фильтр
+ * @param availableForExternal  8) Признак досутпности подразделения для внешних подсистем
  */
 struct OrgStructure{
 1:required i32 id;
@@ -117,6 +118,7 @@ struct OrgStructure{
 5:optional string address="";
 6:optional string sexFilter="";
 7:optional string ageFilter="";
+8:optional bool availableForExternal;
 }
 
 /**
@@ -594,6 +596,17 @@ Organization getOrganisationInfo(1:string infisCode)
  */
 list<OrgStructure> getOrgStructures(1:i32 parent_id, 2:bool recursive, 3:string infisCode)
     throws (1:NotFoundException exc, 2:SQLException excsql);
+
+/**
+ * Получение списка всех подразделений, относящихся к запрошенному ЛПУ
+ * @param parent_id                     1) идентификатор подразделения, для которого нужно найти дочернии подразделения
+ * @param recursive                     2) Флаг рекурсии (выбрать также подразделения, входяшие во все дочерние подразделения)
+ * @param infisCode                     3) Инфис-код
+ * @return                              Список структур, содержащих информацию о дочерних подразделениях
+ * @throws NotFoundException             когда не было найдено ни одного подразделения, удовлетворяющего заданным параметрам
+ * @throws SQLException                  когда произошла внутренняя ошибка при запросах к БД ЛПУ
+ */
+list<OrgStructure> getAllOrgStructures(1:i32 parent_id, 2:bool recursive, 3:string infisCode) throws (1:NotFoundException exc, 2:SQLException excsql);
 
 /**
  * Получение обслуживаемых адресов запрошенного подразделения

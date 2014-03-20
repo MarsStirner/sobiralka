@@ -56,6 +56,7 @@ class ClientKorus30(AbstractClient):
 
     def __init__(self, url):
         self.url = url
+        logger_tags.update(dict(tags=[url]))
         url_parsed = urlparse(self.url)
         host = url_parsed.hostname
         port = url_parsed.port
@@ -75,6 +76,27 @@ class ClientKorus30(AbstractClient):
                     setattr(element, attr, value.strip().decode('utf8'))
         return data
 
+    def __prepare_list_hospitals(self, data):
+        #MIS-1128 (ИС, видя на первом уровне одно отделение, недоступное для записи будет подтягивать отделения следующего уровня)
+        root_units_id = list()
+        available_units = list()
+        for unit in data:
+            if not unit.name:
+                continue
+
+            if unit.parent_id == 0:
+                root_units_id.append(unit.id)
+                if getattr(unit, 'availableForExternal', None):
+                    available_units.append(unit)
+        if not available_units:
+            for unit in data:
+                if not unit.name:
+                    continue
+
+                if unit.parent_id in root_units_id and getattr(unit, 'availableForExternal', None):
+                    available_units.append(unit)
+        return available_units
+
     def listHospitals(self, **kwargs):
         """Получает список подразделений
 
@@ -88,7 +110,22 @@ class ClientKorus30(AbstractClient):
         params['parent_id'] = kwargs.get('parent_id', 0)
         params['infisCode'] = str(kwargs.get('infis_code', ""))
         try:
-            result = self.client.getOrgStructures(**params)
+            result = self.client.getAllOrgStructures(**params)
+        except TApplicationException, e:
+            print e
+            logger.debug(
+                u'В ядре отсутствует метод getAllOrgStructures, используем старый getOrgStructures ({0})'.format(e),
+                extra=logger_tags)
+            try:
+                result = self.client.getOrgStructures(**params)
+            except NotFoundException, e:
+                print e.error_msg
+                logger.error(e, extra=logger_tags)
+            except WebFault, e:
+                print e
+                logger.error(e, extra=logger_tags)
+            else:
+                return result
         except NotFoundException, e:
             print e.error_msg
             logger.error(e, extra=logger_tags)
@@ -96,7 +133,7 @@ class ClientKorus30(AbstractClient):
             print e
             logger.error(e, extra=logger_tags)
         else:
-            return result
+            return self.__prepare_list_hospitals(result)
         return None
 
     def listDoctors(self, **kwargs):

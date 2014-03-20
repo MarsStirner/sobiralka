@@ -21,6 +21,7 @@ class ClientKorus20(AbstractClient):
             url: URL-адрес WSDL старой КС
 
         """
+        logger_tags.update(dict(tags=[url]))
         if settings.DEBUG:
             self.client = Client(url, cache=None)
         else:

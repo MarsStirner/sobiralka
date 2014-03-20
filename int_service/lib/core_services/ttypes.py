@@ -781,6 +781,7 @@ class OrgStructure(object):
   @param address				5) Адрес подразделения
   @param sexFilter				6) Половой фильтр
   @param ageFilter				7) Возрастной фильтр
+  @param availableForExternal  8) Признак досутпности подразделения для внешних подсистем
 
   Attributes:
    - id
@@ -790,6 +791,7 @@ class OrgStructure(object):
    - address
    - sexFilter
    - ageFilter
+   - availableForExternal
   """
 
   thrift_spec = (
@@ -801,9 +803,10 @@ class OrgStructure(object):
     (5, TType.STRING, 'address', None, "", ), # 5
     (6, TType.STRING, 'sexFilter', None, "", ), # 6
     (7, TType.STRING, 'ageFilter', None, "", ), # 7
+    (8, TType.BOOL, 'availableForExternal', None, None, ), # 8
   )
 
-  def __init__(self, id=None, parent_id=thrift_spec[2][4], code=None, name=thrift_spec[4][4], address=thrift_spec[5][4], sexFilter=thrift_spec[6][4], ageFilter=thrift_spec[7][4],):
+  def __init__(self, id=None, parent_id=thrift_spec[2][4], code=None, name=thrift_spec[4][4], address=thrift_spec[5][4], sexFilter=thrift_spec[6][4], ageFilter=thrift_spec[7][4], availableForExternal=None,):
     self.id = id
     self.parent_id = parent_id
     self.code = code
@@ -811,6 +814,7 @@ class OrgStructure(object):
     self.address = address
     self.sexFilter = sexFilter
     self.ageFilter = ageFilter
+    self.availableForExternal = availableForExternal
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -856,6 +860,11 @@ class OrgStructure(object):
           self.ageFilter = iprot.readString().decode('utf-8')
         else:
           iprot.skip(ftype)
+      elif fid == 8:
+        if ftype == TType.BOOL:
+          self.availableForExternal = iprot.readBool();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -893,6 +902,10 @@ class OrgStructure(object):
     if self.ageFilter is not None:
       oprot.writeFieldBegin('ageFilter', TType.STRING, 7)
       oprot.writeString(self.ageFilter.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.availableForExternal is not None:
+      oprot.writeFieldBegin('availableForExternal', TType.BOOL, 8)
+      oprot.writeBool(self.availableForExternal)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
