@@ -15,10 +15,11 @@ logger_tags = dict(tags=['epgu2_client', 'IS'])
 class ClientEPGU():
     """Класс клиента для взаимодействия с ЕПГУ"""
 
-    def __init__(self):
+    def __init__(self, source_token):
         self.url = settings.EPGU_SERVICE_URL
         self.client = None
         self.jinja2env = Environment(loader=PackageLoader('int_service', 'templates'))
+        self.messageSourceToken = source_token
 
     def __check_url(self, url):
         try:
@@ -44,6 +45,7 @@ class ClientEPGU():
         self.__init_client()
         params = dict()
         params['messageCode'] = method
+        params['messageSourceToken'] = self.messageSourceToken
         if message:
             params['message'] = base64.b64encode(message.encode('utf-8'))
         if self.client:
@@ -94,7 +96,7 @@ class ClientEPGU():
         """
         try:
             message = self.__generate_message(dict(params={'auth_token': auth_token}))
-            result = self.__send('GetMedicalSpecializations', message)
+            result = self.__send('GetSpecs', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -233,7 +235,7 @@ class ClientEPGU():
             if ms_id:
                 params.update(dict(ms_id=ms_id))
             message = self.__generate_message(dict(params=params))
-            result = self.__send('GetServiceTypes', message)
+            result = self.__send('GetServices', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -281,7 +283,7 @@ class ClientEPGU():
         try:
             message = self.__generate_message(dict(params={'auth_token': auth_token,
                                                            ':service_type_id': service_type_id}))
-            result = self.__send('GetServiceType', message)
+            result = self.__send('GetService', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -314,7 +316,7 @@ class ClientEPGU():
         """
         try:
             message = self.__generate_message(dict(params={':place_id': place_id, 'auth_token': auth_token}))
-            result = self.__send('GetPlace', message)
+            result = self.__send('GetMo', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -352,7 +354,7 @@ class ClientEPGU():
             if service_type_id:
                 params['service_type_id'] = service_type_id,
             message = self.__generate_message(dict(params=params))
-            result = self.__send('GetLocations', message)
+            result = self.__send('GetResource', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -387,7 +389,7 @@ class ClientEPGU():
                                 ':location_id': location_id,
                                 }
             message = self.__generate_message(params)
-            result = self.__send('DeleteEditLocation', message)
+            result = self.__send('DeleteResource', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -466,7 +468,7 @@ class ClientEPGU():
                 return None
             else:
                 message = self.__generate_message(dict(location=params))
-                result = self.__send('PostLocations', message)
+                result = self.__send('CreateResource', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -545,7 +547,7 @@ class ClientEPGU():
                 return None
             else:
                 message = self.__generate_message(dict(location=params))
-                result = self.__send('PutEditLocation', message)
+                result = self.__send('UpdateResource', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -613,7 +615,7 @@ class ClientEPGU():
                 return None
             else:
                 message = self.__generate_message(dict(rule_data=params))
-                result = self.__send('PostRules', message)
+                result = self.__send('CreateRule', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -701,7 +703,7 @@ class ClientEPGU():
         try:
             message = self.__generate_message(dict(params={':location_id': location_id,
                                                            'auth_token': hospital['auth_token']}))
-            result = self.__send('PutActivateLocation', message)
+            result = self.__send('ActivateResource', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -750,7 +752,7 @@ class ClientEPGU():
                 return None
             else:
                 message = self.__generate_message(dict(client_info=params))
-                result = self.__send('PostReserve', message)
+                result = self.__send('CreateSlot', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
