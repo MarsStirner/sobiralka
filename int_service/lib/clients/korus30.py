@@ -94,6 +94,7 @@ class ClientKorus30(AbstractClient):
                     continue
 
                 if unit.parent_id in root_units_id and getattr(unit, 'availableForExternal', None):
+                    unit.parent_id = 0
                     available_units.append(unit)
         return available_units
 
