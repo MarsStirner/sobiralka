@@ -153,7 +153,7 @@ class EPGUGateServer(ServiceBase):
           _returns=soap_models.ResponseType, _out_variable_name='Response',
           _throws=soap_models.ErrorResponseType)
     def Request(parameters):
-        obj = EPGUWorker()
+        obj = DataWorker.provider('epgu')
         try:
             MessageData = parameters.MessageData
             _format = str(MessageData.format)

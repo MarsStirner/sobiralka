@@ -3,6 +3,7 @@ import exceptions
 import logging
 import settings
 from clients.epgu import ClientEPGU
+from clients.epgu2 import ClientEPGU2
 from clients.korus20 import ClientKorus20
 from clients.korus30 import ClientKorus30, CouponStatus
 from clients.intramed import ClientIntramed
@@ -11,7 +12,7 @@ from clients.intramed import ClientIntramed
 class Clients(object):
     """Class provider for current Clients"""
     @classmethod
-    def provider(cls, client_type, proxy_url):
+    def provider(cls, client_type, proxy_url=None, *args, **kwargs):
         logging.basicConfig(level=logging.ERROR)
         if settings.DEBUG:
             logging.getLogger('suds.client').setLevel(logging.ERROR)
@@ -27,6 +28,10 @@ class Clients(object):
             obj = ClientIntramed(proxy_url)
         elif client_type in ('core', 'korus30'):
             obj = ClientKorus30(proxy_url)
+        elif client_type == 'epgu':
+            obj = ClientEPGU()
+        elif client_type == 'epgu2':
+            obj = ClientEPGU2(*args, **kwargs)
         else:
             obj = None
             raise exceptions.NameError

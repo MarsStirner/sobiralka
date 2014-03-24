@@ -12,14 +12,14 @@ from jinja2 import Environment, PackageLoader
 logger_tags = dict(tags=['epgu2_client', 'IS'])
 
 
-class ClientEPGU():
-    """Класс клиента для взаимодействия с ЕПГУ"""
+class ClientEPGU2():
+    """Класс клиента для взаимодействия с ЕПГУ ФЭР2"""
 
-    def __init__(self, source_token):
+    def __init__(self, auth_token):
         self.url = settings.EPGU_SERVICE_URL
         self.client = None
         self.jinja2env = Environment(loader=PackageLoader('int_service', 'templates'))
-        self.messageSourceToken = source_token
+        self.messageSourceToken = auth_token
 
     def __check_url(self, url):
         try:
@@ -47,14 +47,14 @@ class ClientEPGU():
         params['messageCode'] = method
         params['messageSourceToken'] = self.messageSourceToken
         if message:
-            params['message'] = base64.b64encode(message.encode('utf-8'))
+            params['message'] = base64.b64encode(u'<params>{0}</params>'.format(message).encode('utf-8'))
         if self.client:
             return self.client.service.Send(MessageData={'AppData': params})
         else:
             return None
 
-    def __generate_message(self, params):
-        template = self.jinja2env.get_template('epgu_message.tpl')
+    def __generate_message(self, params=None):
+        template = self.jinja2env.get_template('epgu2_message.tpl')
         if isinstance(params, list):
             result = []
             for value in params:
@@ -69,33 +69,25 @@ class ClientEPGU():
     def __strip_message(self, message):
         return u''.join([string.strip() for string in message.splitlines()])
 
-    def GetMedicalSpecializations(self, auth_token):
+    def GetSpecs(self):
         """Получает список специальностей из ЕПГУ:
 
-        Args:
-            auth_token: указывается token ЛПУ (обязательный)
-
-        <medical-specialization>
-            <id>4f882b982bcfa5145a00036c</id>
-            <name>Аллергология и иммунология</name>
-            <description/>
-        </medical-specialization>
-        <medical-specialization>
-            <id>4f882b982bcfa5145a00036d</id>
-            <name>Анестезиология и реаниматология</name>
-            <description/>
-        </medical-specialization>
-        <medical-specialization>
-            <id>4f882b982bcfa5145a00036e</id>
-            <name>Гастроэнтерология</name>
-            <description/>
-        </medical-specialization>
+        Returns:
+        <specs>
+            <spec>
+                <id>10</id>
+                <code>1</code>
+                <name>Лечебное дело. Педиатрия</name>
+                <recid>1</recid>
+                <parent_recid>0</parent_recid>
+            </spec>
+        </specs>
 
         Тег id – идентификатор специальности в справочнике ЕПГУ
         Тег name – название специальности в справочнике ЕПГУ
         """
         try:
-            message = self.__generate_message(dict(params={'auth_token': auth_token}))
+            message = self.__generate_message()
             result = self.__send('GetSpecs', message)
         except WebFault, e:
             print e
@@ -104,9 +96,43 @@ class ClientEPGU():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            medical_specializations = getattr(result.AppData, 'medical-specializations', None)
-            if medical_specializations:
-                return medical_specializations
+            specs = getattr(result.AppData, 'specs', None)
+            if specs:
+                return specs
+            return getattr(result.AppData, 'errors', None)
+        return None
+
+    def GetServicesSpecs(self):
+        """Получает список специальностей из ЕПГУ:
+
+        Returns:
+        <services_specs>
+            <service_spec>
+            <service_id>5665</service_id>
+            <spec_id>2033</spec_id>
+            <service_code>B01.001.001</service_code>
+            <spec_code>8</spec_code>
+            </service_spec>
+        </services_specs>
+
+        1 service_id: ID услуги;
+        2 spec_id: ID специальности;
+        7 service_code: код услуги;
+        8 spec_code: код специальности.
+        """
+        try:
+            message = self.__generate_message()
+            result = self.__send('GetServicesSpecs', message)
+        except WebFault, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        except Exception, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        else:
+            specs = getattr(result.AppData, 'specs', None)
+            if specs:
+                return specs
             return getattr(result.AppData, 'errors', None)
         return None
 
@@ -116,6 +142,7 @@ class ClientEPGU():
         Args:
             auth_token: указывается token ЛПУ (обязательный)
 
+        Returns:
         <reservation-type>
             <id>4f8805b52bcfa52299000011</id>
             <name>Автоматическая запись</name>
@@ -139,7 +166,7 @@ class ClientEPGU():
         По умолчанию использовать значение automatic.
         """
         try:
-            message = self.__generate_message(dict(params={'auth_token': auth_token}))
+            message = self.__generate_message()
             result = self.__send('GetReservationTypes', message)
         except WebFault, e:
             print e
@@ -154,38 +181,24 @@ class ClientEPGU():
             return getattr(result.AppData, 'errors', None)
         return None
 
-    def GetPaymentMethods(self, auth_token):
+    def GetPayments(self):
         """Получает список методов оплаты из ЕПГУ
 
-        Args:
-            auth_token: указывается token ЛПУ (обязательный)
+        Returns:
+        <payments>
+            <payment>
+                <code>oms</code>
+                <name>Пациенты с полисами ОМС</name>
+            </payment>
+        </payments>
 
-        <payment-method>
-            <id>4f8804ab2bcfa520e6000003</id>
-            <name>Бюджетные пациенты</name>
-            <default/>
-        </payment-method>
-        <payment-method>
-            <id>4f8804ab2bcfa520e6000002</id>
-            <name>Пациенты ДМС</name>
-            <default/>
-        </payment-method>
-        <payment-method>
-            <id>4f8804ab2bcfa520e6000001</id>
-            <name>Пациенты с полисами ОМС</name>
-            <default>true</default>
-        </payment-method>
+        code: код метода оплаты
+        name: наименование метода оплаты
 
-
-        Тег id – идентификатор метода оплаты в справочнике ЕПГУ
-        Тег name – название метода оплаты в справочнике ЕПГУ
-        Тег default – используется ли данный метод по умолчанию
-
-        По умолчанию для значения Пациенты с полисами ОМС использовать тег default = true.
         """
         try:
-            message = self.__generate_message(dict(params=dict(auth_token=auth_token)))
-            result = self.__send('GetPaymentMethods', message)
+            message = self.__generate_message()
+            result = self.__send('GetPayments', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -193,45 +206,37 @@ class ClientEPGU():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            payment_methods = getattr(result.AppData, 'payment-methods', None)
+            payment_methods = getattr(result.AppData, 'payments', None)
             if payment_methods:
                 return payment_methods
             return getattr(result.AppData, 'errors', None)
         return None
 
-    def GetServiceTypes(self, auth_token, ms_id=None):
+    def GetServices(self, ms_id):
         """Получает список медицинских услуг из ЕПГУ:
 
         Args:
-            auth_token: указывается token ЛПУ (обязательный)
-            ms_id: указывается идентификатор медицинской специализации (необязательный)
+            ms_id: указывается идентификатор медицинской специализации (обязательный)
 
-        <service-type>
-            <id>4f993422ef245509c20001d3</id>
-            <name>Ангиография артерии верхней конечности прямая</name>
-            <recid>828</recid>
-            <code>A0612018</code>
-        </service-type>
-        <service-type>
-            <id>4f993422ef245509c20001d4</id>
-            <name>Ангиография артерии верхней конечности ретроградная</name>
-            <recid>829</recid>
-            <code>A0612019</code>
-        </service-type>
-        <service-type>
-            <id>4f993422ef245509c20001c9</id>
-            <name>Ангиография артерии щитовидной железы</name>
-            <recid>818</recid>
-            <code>A0612008</code>
-        </service-type>
+        Returns:
+        <services>
+            <service>
+                <id>123</id>
+                <spec_recid>324</spec_recid>
+                <code>B0100101</code>
+                <name>Адаптометрия</name>
+            </service>
+        </services>
 
-        Тег id – идентификатор метода оплаты в справочнике ЕПГУ
-        Тег name – название метода оплаты в справочнике ЕПГУ
+        id: ID услуги
+        spec_recid: идентификатор  медицинской специальности из справочника НСИ
+        name: наименование услуги
+        code: код услуги
 
         По умолчанию для значения Пациенты с полисами ОМС использовать тег default = true.
         """
         try:
-            params = dict(auth_token=auth_token)
+            params = dict()
             if ms_id:
                 params.update(dict(ms_id=ms_id))
             message = self.__generate_message(dict(params=params))
@@ -249,40 +254,28 @@ class ClientEPGU():
             return getattr(result.AppData, 'errors', None)
         return None
 
-    def GetServiceType(self, auth_token, service_type_id):
+    def GetService(self, service_id):
         """Получает вид услуги по идентификатору из ЕПГУ:
 
         Args:
-            auth_token: указывается token ЛПУ (обязательный)
-            ms_id: указывается идентификатор медицинской услуги (обязательный)
+            service_id: ID услуги (обязательный)
 
-        <service-type>
-            <id>4f993422ef245509c20001d3</id>
-            <name>Ангиография артерии верхней конечности прямая</name>
-            <recid>828</recid>
-            <code>A0612018</code>
-        </service-type>
-        <service-type>
-            <id>4f993422ef245509c20001d4</id>
-            <name>Ангиография артерии верхней конечности ретроградная</name>
-            <recid>829</recid>
-            <code>A0612019</code>
-        </service-type>
-        <service-type>
-            <id>4f993422ef245509c20001c9</id>
-            <name>Ангиография артерии щитовидной железы</name>
-            <recid>818</recid>
-            <code>A0612008</code>
-        </service-type>
+        Returns:
+        <service>
+            <id>123</id>
+            <spec_id>324</spec_id>
+            <code>B0100101</code>
+            <name>Адаптометрия</name>
+        </service>
 
-        Тег id – идентификатор метода оплаты в справочнике ЕПГУ
-        Тег name – название метода оплаты в справочнике ЕПГУ
+        1 id: ID услуги
+        2 spec_id: ID медицинской специальности
+        3 code: код услуги
+        4 name: наименование услуги
 
-        По умолчанию для значения Пациенты с полисами ОМС использовать тег default = true.
         """
         try:
-            message = self.__generate_message(dict(params={'auth_token': auth_token,
-                                                           ':service_type_id': service_type_id}))
+            message = self.__generate_message(dict(params={':service_type_id': service_id}))
             result = self.__send('GetService', message)
         except WebFault, e:
             print e
@@ -297,25 +290,173 @@ class ClientEPGU():
             return getattr(result.AppData, 'errors', None)
         return None
 
-    def GetPlaces(self, **kwargs):
-        pass
+    def GetMos(self, **kwargs):
+        """Получает вид услуги по идентификатору из ЕПГУ:
 
-    def GetPlace(self, auth_token, place_id='current'):
+        Args:
+        <params>
+            <name>Багратионовская</name>
+            <code>234121</code>
+            <region_code>7700000000000</region_code>
+            <city_code>7700000000000</city_code>
+            <street_code>7700000000000</street_code>
+            <payment_method_id>1</payment_method_id>
+            <spec_id>123</spec_id>
+            <service_id>123</service_id>
+        </params>
+
+        1 name: фрагмент названия МО (необязательный);
+        5 code: код МО в ФФОМС (необязательный);
+        6 region_code: КЛАДР код региона;
+        7 city_code:  КЛАДР код города (необязательный);
+        8 street_code:  КЛАДР код улицы (необязательный);
+        9 payment_method_id: ID метода оплаты (необязательный);
+        10 spec_id: ID специальности (необязательный);
+        11 service_id: ID услуги (необязательный).
+
+        Returns:
+        <mos>
+            <mo>
+                <id>123</id>
+                <oid>123</oid>
+                <parent_id>121</parent_id>
+                <is_dept>false</is_dept>
+                <code>503021</code>
+                <name>Детская городская поликлиника №5</name>
+                <short_name>ДГП №5</short_name>
+                <address>
+                <region_code>7700000000000</region_code>
+                <city_code>7700000000000</city_code>
+                <street_code>7700000000000</street_code>
+                <house>69а</house>
+                <building>2</building>
+                <corpus>3</corpus>
+                <longitude>44.2344</longitude>
+                <latitude>23.3454545</latitude>
+                <google_url>https://maps.google.com/maps?f=d&source=s_d&saddr=&daddr=DJ522,+%D0%A0%D1%83%D0%BC%D1%8B%D0%BD%D0%B8%D1%8F&hl=ru&geocode=CbJY9UBXNn8hFQ29ogIdTohkASkRhdMaYhdTRzGz1h3ikYvebg&sll=44.2344,23.345454&sspn=0.071091,0.169086&vpsrc=6&t=h&g=44.221953,23.365488&mra=mift&ie=UTF8&z=13&iwloc=ddw1</google_url>
+                <yandex_url>http://maps.yandex.ru/?text=%D0%A0%D1%83%D0%BC%D1%8B%D0%BD%D0%B8%D1%8F%2C%20%D0%B6%D1%83%D0%B4%D0%B5%D1%86%20%D0%94%D0%BE%D0%BB%D0%B6%2C%20%D0%92%D1%8B%D1%80%D1%82%D0%BE%D0%BF&sll=23.345454%2C44.2344&ll=23.345454%2C44.234400&spn=0.352249%2C0.132553&z=12&l=map</yandex_url>
+                <openstreet_url>http://www.openstreetmap.org/#map=5/44.229/23.665</openstreet_url>
+                </address>
+                <ogrn>123654789</ogrn>
+                <okato>0001200</okato>
+                <chief> Иванов Иван Иванович</chief>
+                <email/>
+                <phone/>
+                <fax/>
+                <time_zone>8</time_zone>
+            </mo>
+        </mos>
+
+        1 id: ID МО;
+        12 oid: единый уникальный идентификатор медицинской организации (OID) по справочнику 1.2.643.5.1.13.2.1.1.178 (Регистр медицинских организаций Российской Федерации, версия 2);
+        13 parent_id: ID вышестоящей МО (необязательный);
+        14 is_dept: признак отделения МО (необязательный);
+        15 code: код МО в ФФОМС
+        16 name: наименование;
+        17 short_name: краткое наименование ;
+        18 address: адрес МО:
+        region_code: КЛАДР код региона;
+        city_code:  КЛАДР код города;
+        street_code:  КЛАДР код улицы;
+        house: номер дома;
+        building: строение;
+        corpus: корпус;
+        longitude: долгота;
+        latitude: широта;
+        google_url: ссылка на местонахождение МО на картах google (необязательный);
+        yandex_url: ссылка на местонахождение МО на картах yandex (необязательный);
+        openstreet_url: ссылка на местонахождение МО на картах openstreetmap (необязательный);
+        19 ogrn: ОГРН;
+        20 okato: ОКАТО;
+        21 chief: ФИО руководителя МО;
+        22 email: email (необязательный);
+        23 phone: телефон (необязательный);
+        24 fax: факс (необязательный);
+        25 time_zone: часовой пояс РФ
+        """
+        try:
+            message = self.__generate_message(dict(params=kwargs))
+            result = self.__send('GetMos', message)
+        except WebFault, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        except Exception, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        else:
+            mos = getattr(result.AppData, 'mos', None)
+            if mos:
+                return getattr(mos, 'mo', None)
+            return getattr(result.AppData, 'errors', None)
+        return None
+
+    def GetMo(self, id, oid):
         """Получает код ЛПУ из БД ЕПГУ
 
         Args:
-            auth_token: указывается token ЛПУ (обязательный)
-            place_id: всегда указывается current (??) (обязательный)
+            id: ID МО;
+            oid: единый уникальный идентификатор медицинской организации (OID) по справочнику 1.2.643.5.1.13.2.1.1.178 (Регистр медицинских организаций Российской Федерации, версия 2).
 
         Returns:
-            Идентификатор ЛПУ. Пример:
-            {'id': '4f880ca42bcfa5277202f051',
-             'name': u'ГУЗ "ПЕНЗЕНСКАЯ ОБЛАСТНАЯ КЛИНИЧЕСКАЯ БОЛЬНИЦА ИМ.Н.Н.БУРДЕНКО"'
-             }
+            <mo>
+                <id>123</id>
+                <oid>123</oid>
+                <parent_id>121</parent_id>
+                <is_dept>false</is_dept>
+                <code>503021</code>
+                <name>Детская городская поликлиника №5</name>
+                <short_name>ДГП №5</short_name>
+                <address>
+                <region_code>7700000000000</region_code>
+                <city_code>7700000000000</city_code>
+                <street_code>7700000000000</street_code>
+                <house>69а</house>
+                <building>2</building>
+                <corpus>3</corpus>
+                <longitude>44.2344</longitude>
+                <latitude>23.3454545</latitude>
+                <google_url>https://maps.google.com/maps?f=d&source=s_d&saddr=&daddr=DJ522,+%D0%A0%D1%83%D0%BC%D1%8B%D0%BD%D0%B8%D1%8F&hl=ru&geocode=CbJY9UBXNn8hFQ29ogIdTohkASkRhdMaYhdTRzGz1h3ikYvebg&sll=44.2344,23.345454&sspn=0.071091,0.169086&vpsrc=6&t=h&g=44.221953,23.365488&mra=mift&ie=UTF8&z=13&iwloc=ddw1</google_url>
+                <yandex_url>http://maps.yandex.ru/?text=%D0%A0%D1%83%D0%BC%D1%8B%D0%BD%D0%B8%D1%8F%2C%20%D0%B6%D1%83%D0%B4%D0%B5%D1%86%20%D0%94%D0%BE%D0%BB%D0%B6%2C%20%D0%92%D1%8B%D1%80%D1%82%D0%BE%D0%BF&sll=23.345454%2C44.2344&ll=23.345454%2C44.234400&spn=0.352249%2C0.132553&z=12&l=map</yandex_url>
+                <openstreet_url>http://www.openstreetmap.org/#map=5/44.229/23.665</openstreet_url>
+                </address>
+                <ogrn>123654789</ogrn>
+                <okato>0001200</okato>
+                <chief> Иванов Иван Иванович</chief>
+                <email/>
+                <phone/>
+                <fax/>
+                <time_zone>8</time_zone>
+            </mo>
 
+            1 id: ID МО;
+            2 oid: единый уникальный идентификатор медицинской организации (OID) по справочнику 1.2.643.5.1.13.2.1.1.178 (Регистр медицинских организаций Российской Федерации, версия 2);
+            3 parent_id: ID вышестоящей МО (необязательный);
+            4 is_dept: признак отделения МО (необязательный);
+            5 code: код МО в ФФОМС
+            6 name: наименование;
+            7 short_name: краткое наименование ;
+            8 address: адрес МО:
+                region_code: КЛАДР код региона;
+                city_code:  КЛАДР код города (необязательный);
+                street_code:  КЛАДР код улицы (необязательный);
+                house: номер дома (необязательный);
+                building: строение (необязательный);
+                corpus: корпус (необязательный);
+                longitude: долгота (необязательный);
+                latitude: широта (необязательный);
+                google_url: ссылка на местонахождение МО на картах google (необязательный);
+                yandex_url: ссылка на местонахождение МО на картах yandex (необязательный);
+                openstreet_url: ссылка на местонахождение МО на картах openstreetmap (необязательный);
+            9 ogrn: ОГРН;
+            10 okato: ОКАТО;
+            11 chief: ФИО руководителя МО;
+            12 email: email (необязательный);
+            13 phone: телефон (необязательный);
+            14 fax: факс (необязательный);
+            15 time_zone: часовой пояс РФ.
         """
         try:
-            message = self.__generate_message(dict(params={':place_id': place_id, 'auth_token': auth_token}))
+            message = self.__generate_message(dict(params={'id': id, 'oid': oid}))
             result = self.__send('GetMo', message)
         except WebFault, e:
             print e
@@ -325,7 +466,7 @@ class ClientEPGU():
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                places = getattr(result.AppData, 'places', None)
+                places = getattr(result.AppData, 'mo', None)
                 if places:
                     return places
                 return getattr(result.AppData, 'errors', None)
@@ -349,7 +490,6 @@ class ClientEPGU():
         """
         try:
             params = {':place_id': hospital['place_id'],
-                      'auth_token': hospital['auth_token'],
                       'page': page}
             if service_type_id:
                 params['service_type_id'] = service_type_id,
@@ -371,24 +511,15 @@ class ClientEPGU():
     def GetLocation(self):
         pass
 
-    def DeleteEditLocation(self, hospital, location_id):
-        """Помечает врача как удаленного на ЕПГУ
+    def DeleteResource(self, resource_id):
+        """Данный профиль используется для удаления очереди в федеральной регистратуре
 
         Args:
-            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
-                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
-                 'auth_token': token ЛПУ
-                }
-            location_id: (обязательный) идентификатор редактируемой очереди
+            resource_id: ID очереди
 
         """
         try:
-            params = dict()
-            params['params'] = {'auth_token': hospital['auth_token'],
-                                ':place_id': hospital['place_id'],
-                                ':location_id': location_id,
-                                }
-            message = self.__generate_message(params)
+            message = self.__generate_message(dict(resource=dict(id=resource_id)))
             result = self.__send('DeleteResource', message)
         except WebFault, e:
             print e
@@ -403,41 +534,107 @@ class ClientEPGU():
             return result.AppData
         return None
 
-    def PostLocations(self, hospital, doctor, service_types, can_write=None):
+    def CreateResource(self, hospital, doctor, service_types, can_write=None):
         """Используется для создания очереди в федеральной регистратуре (на ЕПГУ)
 
         Args:
-            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
-                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
-                 'auth_token': token ЛПУ
-                }
-            doctor: (обязательный) словарь с информацией о враче, вида:
-                {'prefix': название очереди (ФИО?),
-                 'medical_specialization_id': код специальности (Speciality.nameEPGU),
-                 'cabinet_number': ?? номер кабинета (#TODO: дописать ИС для получение кабинета),
-                 'time_table_period': количество дней на которое будет доступно расписание
-                    (Определяется максимальной датой, на которую доступно расписание для данного врача.
-                    Данный параметр можно вынести в файл настроек. По умолчанию значение 90)
-                 'reservation_time': время (в минутах) приема врача
-                    (необходимо высчитывать время приема для каждого врача индивидуально как разницу между началом и
-                    окончанием приема одного пациента на первый день получаемого расписания),
-                 'reserved_time_for_slot': время между талонами на прием (?равно времени указанном в reservation_time),
-                 'reservation_type_id': идентификатор типа записи, полученный в GetServiceType,
-                 'payment_method_id': идентификатор вида оплаты, полученный в GetPaymentMethods,
-                }
-            service_types: (обязательный) список кодов мед. услуг из GetServiceType, вида:
-                ['4f882b9c2bcfa5145a0006e8', ]
-            can_write: (необязательный) строка через запятую без пробелов из тех,
-                кто имеет доступ к записи в данную очередь. если массив пустой, то записаться никто не сможет.
-                если параметр не присылать, то по умолчанию доступ к записи имеют все
-                (возможные значения: registry, epgu, call_center, terminal, mis);
+            <resource>
+                <spec_id>123</spec_id>
+                <norms>
+                    <norm>
+                        <service_id>23</service_id>
+                        <span>2</span>
+                    </norm>
+                    <norm>
+                        <service_id>25</service_id>
+                        <span>1</span>
+                    </norm>
+                </norms>
+                <doctor_id>3</doctor_id>
+                <area_id>235</area_id>
+                <room>301</room>
+                <span>12</span>
+                <reserve>30</reserve>
+                <payment>oms</payment>
+                <is_automatic>false</is_automatic>
+                <is_autoactivated>false</is_autoactivated>
+                <resource_type>single</resource_type>
+                <is_dynamic>false</is_dynamic>
+                <is_quoted>false</is_quoted>
+                <has_waits>true</has_waits>
+                <quantum>15</quantum>
+                <source_codes>
+                    <source_code>reg</source_code>
+                    <source_code>epgu</source_code>
+                    <source_code>kc</source_code>
+                    <source_code>ter</source_code>
+                    <source_code>mis</source_code>
+                </source_codes>
+            </resource>
+
+            1 spec_id: ID медицинской специализации
+            5 norms: нормативы времени оказания услуг:
+                service_id: ID услуги;
+                span: количество квантов времени (quantum), требуемых на оказание услуги (обязательный для динамических очередей);
+            2 doctor_id: ID врача
+            3 area_id: ID участка (необязательный)
+            4 room: номер кабинета  (необязательный)
+            5 span: срок составления расписания
+            6 reserve: на сколько минут резервируется слот (до подтверждения)
+            7 payment_method_id: ID вида оплаты (пациенты ОМС, ДМС и т.п.)
+            8 is_automatic: true/false — признак автоматического подтверждения записи на прием
+            9 is_autoactivated: true/false — признак того, что очередь активируется автоматически
+            10 resource_type: тип очереди:
+                single: обычная
+                group: групповая
+                home: вызовы на дом
+            11 is_dynamic: true/false — признак очереди для динамической записи (может быть true только у обычных очередей)
+            12 is_quoted: true/false — признак квотируемости очереди
+            13 has_waits: true/false — признак возможности записи в лист ожидания для данной очереди (может быть true только для обычных и групповых очередей)
+            14 quantum: продолжительность приема (в минутах)
+            15 source_codes: коды допустимых источников записи:
+                reg — запись через веб-регистратуру;
+                epgu — запись с портала госуслуг;
+                kc — запись из колл-центра;
+                ter — запись с терминалов;
+                mis — запись из МИС.
 
         Returns:
-            Словарь с информацией о созданной записи, вида:
-            {'created-at': '2012-09-12T14:59:04+04:00',
-             'id': '50506af8bb4d3371b8028ea3',
-             'medical-specialization-id': '4f882b982bcfa5145a000383'
-            }
+            <resource>
+                <id>12323</id>
+                <spec_id>123</spec_id>
+                <norms>
+                    <norm>
+                    <service_id>23</service_id>
+                    <span>2</span>
+                    </norm>
+                    <norm>
+                    <service_id>25</service_id>
+                    <span>1</span>
+                    </norm>
+                </norms>
+                <doctor_id>3</doctor_id>
+                <area_id>235</area_id>
+                <room>301</room>
+                <span>12</span>
+                <reserve>30</reserve>
+                <payment>oms</payment>
+                <is_automatic>false</is_automatic>
+                <is_autoactivated>false</is_autoactivated>
+                <resource_type>single</resource_type>
+                <is_dynamic>false</is_dynamic>
+                <is_quoted>false</is_quoted>
+                <has_waits>true</has_waits>
+                <quantum>15</quantum>
+                    <source_codes>
+                    <source_code>reg</source_code>
+                    <source_code>epgu</source_code>
+                    <source_code>kc</source_code>
+                    <source_code>ter</source_code>
+                    <source_code>mis</source_code>
+                </source_codes>
+                <status>inactive</status>
+            </resource>
 
         """
         try:
@@ -461,13 +658,13 @@ class ClientEPGU():
                     service_type_ids['st%d' % k] = service_type
                 params['service_types_ids'] = service_type_ids
 
-                params['params'] = {':place_id': hospital['place_id'], 'auth_token': hospital['auth_token']}
+                params['params'] = {':place_id': hospital['place_id']}
             except AttributeError, e:
                 print e
                 logger.error(e, extra=logger_tags)
                 return None
             else:
-                message = self.__generate_message(dict(location=params))
+                message = self.__generate_message(dict(resource=params))
                 result = self.__send('CreateResource', message)
         except WebFault, e:
             print e
@@ -476,48 +673,150 @@ class ClientEPGU():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            location = getattr(result.AppData, 'location', None)
+            location = getattr(result.AppData, 'resource', None)
             if location:
                 return location
             return getattr(result.AppData, 'errors', None)
         return None
 
-    def PutEditLocation(self, hospital, doctor, service_types, can_write=None):
+    def UpdateResource(self, hospital, doctor, service_types, can_write=None):
         """Используется для редактировани очереди в федеральной регистратуре (на ЕПГУ)
 
         Args:
-            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
-                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
-                 'auth_token': token ЛПУ
-                }
-            doctor: (обязательный) словарь с информацией о враче, вида:
-                {'prefix': название очереди (ФИО?),
-                 'location_id': идентификатор врача (очереди),
-                 'medical_specialization_id': код специальности (Speciality.nameEPGU),
-                 'cabinet_number': номер кабинета ,
-                 'time_table_period': количество дней на которое будет доступно расписание
-                    (Определяется максимальной датой, на которую доступно расписание для данного врача.
-                    Данный параметр можно вынести в файл настроек. По умолчанию значение 90)
-                 'reservation_time': время (в минутах) приема врача
-                    (необходимо высчитывать время приема для каждого врача индивидуально как разницу между началом и
-                    окончанием приема одного пациента на первый день получаемого расписания),
-                 'reserved_time_for_slot': время между талонами на прием (?равно времени указанном в reservation_time),
-                 'reservation_type_id': идентификатор типа записи, полученный в GetServiceType,
-                 'payment_method_id': идентификатор вида оплаты, полученный в GetPaymentMethods,
-                }
-            service_types: (обязательный) список кодов мед. услуг из GetServiceType, вида:
-                ['4f882b9c2bcfa5145a0006e8', ]
-            can_write: (необязательный) строка через запятую без пробелов из тех,
-                кто имеет доступ к записи в данную очередь. если массив пустой, то записаться никто не сможет.
-                если параметр не присылать, то по умолчанию доступ к записи имеют все
-                (возможные значения: registry, epgu, call_center, terminal, mis);
+            <resource>
+                <id>12323</id>
+                <spec_id>123</spec_id>
+                <norms>
+                    <norm>
+                        <service_id>23</service_id>
+                        <span>2</span>
+                    </norm>
+                    <norm>
+                        <service_id>25</service_id>
+                        <span>1</span>
+                    </norm>
+                </norms>
+                <doctor_id>3</doctor_id>
+                <area_id>235</area_id>
+                <room>301</room>
+                <span>12</span>
+                <reserve>30</reserve>
+                <payment>oms</payment>
+                <is_automatic>false</is_automatic>
+                <is_autoactivated>false</is_autoactivated>
+                <resource_type>single</resource_type>
+                <is_dynamic>false</is_dynamic>
+                <is_quoted>false</is_quoted>
+                <has_waits>true</has_waits>
+                <quantum>15</quantum>
+                <source_codes>
+                    <source_code>reg</source_code>
+                    <source_code>epgu</source_code>
+                    <source_code>kc</source_code>
+                    <source_code>ter</source_code>
+                    <source_code>mis</source_code>
+                </source_codes>
+                <status>inactive</status>
+            </resource>
+
+        1 id: ID созданной очереди
+        2 spec_id: ID медицинской специализации
+        3 norms: нормативы времени оказания услуг:
+            service_id: ID услуги;
+            span: количество квантов времени (quantum), требуемых на оказание услуги (обязательный для динамических очередей);
+        4 doctor_id: ID врача
+        5 area_id: ID участка (необязательный)
+        6 room: номер кабинета  (необязательный)
+        7 span: срок составления расписания
+        8 reserve: на сколько минут резервируется слот (до подтверждения)
+        9 payment_method_id: ID вида оплаты (пациенты ОМС, ДМС и т.п.)
+        10 is_automatic: true/false — признак автоматического подтверждения записи на прием
+        11 is_autoactivated: true/false — признак того, что очередь активируется автоматически
+        12 resource_type: тип очереди:
+            single: обычная
+            group: групповая
+            home: вызовы на дом
+        13 is_dynamic: true/false — признак очереди для динамической записи (может быть true только у обычных очередей)
+        14 has_waits: true/false — признак возможности записи в лист ожидания для данной очереди (может быть true только для обычных и групповых очередей)
+        15 quantum: продолжительность приема (в минутах)
+        16 source_codes: коды допустимых источников записи:
+            reg — запись через веб-регистратуру;
+            epgu — запись с портала госуслуг;
+            kc — запись из колл-центра;
+            ter — запись с терминалов;
+            mis — запись из МИС.
+        17 status: статус очереди:
+            active — активна;
+            inactive — неактивна;
+            deleted — удалена.
 
         Returns:
-            Словарь с информацией о созданной записи, вида:
-            {'created-at': '2012-09-12T14:59:04+04:00',
-             'id': '50506af8bb4d3371b8028ea3',
-             'medical-specialization-id': '4f882b982bcfa5145a000383'
-            }
+            <resource>
+                <id>12323</id>
+                <spec_id>123</spec_id>
+                <norms>
+                    <norm>
+                    <service_id>23</service_id>
+                    <span>2</span>
+                    </norm>
+                    <norm>
+                    <service_id>25</service_id>
+                    <span>1</span>
+                    </norm>
+                </norms>
+                <doctor_id>3</doctor_id>
+                <area_id>235</area_id>
+                <room>301</room>
+                <span>12</span>
+                <reserve>30</reserve>
+                <payment>oms</payment>
+                <is_automatic>false</is_automatic>
+                <is_autoactivated>false</is_autoactivated>
+                <resource_type>single</resource_type>
+                <is_dynamic>false</is_dynamic>
+                <is_quoted>false</is_quoted>
+                <has_waits>true</has_waits>
+                <quantum>15</quantum>
+                <source_codes>
+                    <source_code>reg</source_code>
+                    <source_code>epgu</source_code>
+                    <source_code>kc</source_code>
+                    <source_code>ter</source_code>
+                    <source_code>mis</source_code>
+                </source_codes>
+                <status>inactive</status>
+            </resource>
+
+            1 id: ID созданной очереди
+            18 spec_id: ID медицинской специализации
+            19 norms: нормативы времени оказания услуг:
+                service_id: ID услуги;
+                span: количество квантов времени (quantum), требуемых на оказание услуги (обязательный для динамических очередей);
+            20 doctor_id: ID врача
+            21 area_id: ID участка (необязательный)
+            22 room: номер кабинета  (необязательный)
+            23 span: срок составления расписания
+            24 reserve: на сколько минут резервируется слот (до подтверждения)
+            25 payment_method_id: ID вида оплаты (пациенты ОМС, ДМС и т.п.)
+            26 is_automatic: true/false — признак автоматического подтверждения записи на прием
+            27 is_autoactivated: true/false — признак того, что очередь активируется автоматически
+            28 resource_type: тип очереди:
+                single: обычная
+                group: групповая
+                home: вызовы на дом
+            29 is_dynamic: true/false — признак очереди для динамической записи (может быть true только у обычных очередей)
+            30 has_waits: true/false — признак возможности записи в лист ожидания для данной очереди (может быть true только для обычных и групповых очередей)
+            31 quantum: продолжительность приема (в минутах)
+            32 source_codes: коды допустимых источников записи:
+                reg — запись через веб-регистратуру;
+                epgu — запись с портала госуслуг;
+                kc — запись из колл-центра;
+                ter — запись с терминалов;
+                mis — запись из МИС.
+            33 status: статус очереди:
+                active — активна;
+                inactive — неактивна;
+                deleted — удалена.
 
         """
         try:
@@ -539,7 +838,6 @@ class ClientEPGU():
                 params['service_types_ids'] = service_type_ids
 
                 params['params'] = {':place_id': hospital['place_id'],
-                                    'auth_token': hospital['auth_token'],
                                     ':location_id': doctor['location_id']}
             except AttributeError, e:
                 print e
@@ -561,35 +859,139 @@ class ClientEPGU():
             return getattr(result.AppData, 'errors', None)
         return None
 
-    def PostRules(self, hospital, doctor, period, days, can_write=None):
-        """Добавляет расписание на ЕПГУ
+    def CreateRule(self, hospital, doctor, period, days, can_write=None):
+        """Данный профиль используется для добавления расписания
 
         Args:
-            doctor: (обязательный) строка, ФИО врача,
-            period: (обязательный) строка, период, на которые передаётся расписание,
-            days: (обязательный) массив, содержащий расписание по датам, вида:
-                [{'date': дата,
-                  'interval': - массив интервалов, вида:
-                      [{'start': время начала приёма,
-                      'end': время окончания приёма,},
-                      {'start': время начала приёма,
-                      'end': время окончания приёма,},
-                      ]
-                }],
-            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
-                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
-                 'auth_token': token ЛПУ
-                }
-            can_write: (необязательный) строка через запятую без пробелов из тех,
-                кто имеет доступ к записи в данную очередь. если массив пустой, то записаться никто не сможет.
-                если параметр не присылать, то по умолчанию доступ к записи имеют все
-                (возможные значения: registry, epgu, call_center, terminal, mis);
+            <rule>
+                <resource_id>123</resource_id>
+                <name>Расписание 1</name>
+                <from>2013-10-20</from>
+                <till>2013-11-02</till>
+                <consider>all</consider>
+                <is_exception>false</is_exception>
+                <atoms>
+                    <atom>
+                        <weekday>1</weekday>
+                        <even>true</even>
+                        <odd>true</odd>
+                        <from>10:00</from>
+                        <till>16:00</till>
+                        <source_codes>
+                            <source_code>reg</source_code>
+                            <source_code>epgu</source_code>
+                            <source_code>kc</source_code>
+                            <source_code>ter</source_code>
+                            <source_code>mis</source_code>
+                        </source_codes>
+                    </atom>
+                    <atom>
+                        <weekday>2</weekday>
+                        <even>true</even>
+                        <odd>true</odd>
+                        <from>16:00</from>
+                        <till>22:00</till>
+                        <source_codes>
+                            <source_code>reg</source_code>
+                            <source_code>epgu</source_code>
+                            <source_code>kc</source_code>
+                            <source_code>ter</source_code>
+                            <source_code>mis</source_code>
+                        </source_codes>
+                    </atom>
+                </atoms>
+            </rule>
+
+            1 resource_id: ID очереди
+            2 name: название расписания
+            3 from: начальная дата действия правила
+            4 till: конечная дата действия правила
+            5 consider: принимает одно из трех значений:
+                all — не учитывать четность/нечетность дней/недель, при этом во всех <atom> параметры even и odd должны быть установлены в true;
+                weeks — параметры even и odd в <atom> указывают на четные/нечетные недели и в каждом <atom> должно быть либо even = true и add = false, либо even = false и odd = true;
+                days — параметры even и odd в <atom> указывают на четные/нечетные числа мсяца и в каждом <atom> должно быть либо even = true и add = false, либо even = false и odd = true;
+            6 is_exception: принимает одно из двух значений:
+                true — это правило является исключением и имеет приоритет над обычными правилами, действующими в указанный период дат;
+                false — это обычное правило;
+            7 atoms: список элементарных периодов времени <atom> с указанием источников записи:
+                weekday: номер дня недели (0 — понедельник, 6 — воскресенье);
+                even: true/false — признак того, что действие периода распространяется на четные числа или четные недели (см. consider);
+                odd: true/false — признак того, что действие периода распространяется на нечетные числа или нечетные недели (см. consider);
+                from: время начала действие периода;
+                till: время окончания действия периода;
+                source_codes: коды допустимых источников записи:
+                    reg — запись через веб-регистратуру;
+                    epgu — запись с портала госуслуг;
+                    kc — запись из колл-центра;
+                    ter — запись с терминалов;
+                    mis — запись из МИС.
 
         Returns:
-            Словарь с информацией о созданном расписании, вида:
-            {'id': '50507480ef2455c01202a0ca', # идентификатор расписания
-             'name': u'Новое расписание', # наименование расписания
-            }
+            <rule>
+                <id>5432</id>
+                <resource_id>123</resource_id>
+                <name>Расписание 1</name>
+                <from>2013-10-20</from>
+                <till>2013-11-02</till>
+                <consider>all</consider>
+                <is_exception>false</is_exception>
+                <atoms>
+                    <atom>
+                        <weekday>1</weekday>
+                        <even>true</even>
+                        <odd>true</odd>
+                        <from>10:00</from>
+                        <till>16:00</till>
+                        <source_codes>
+                            <source_code>reg</source_code>
+                            <source_code>epgu</source_code>
+                            <source_code>kc</source_code>
+                            <source_code>ter</source_code>
+                            <source_code>mis</source_code>
+                        </source_codes>
+                    </atom>
+                    <atom>
+                        <weekday>2</weekday>
+                        <even>true</even>
+                        <odd>true</odd>
+                        <from>16:00</from>
+                        <till>22:00</till>
+                        <source_codes>
+                            <source_code>reg</source_code>
+                            <source_code>epgu</source_code>
+                            <source_code>kc</source_code>
+                            <source_code>ter</source_code>
+                            <source_code>mis</source_code>
+                        </source_codes>
+                    </atom>
+                </atoms>
+            </rule>
+
+            Параметры ответа:
+            1 id: ID расписания
+            8 resource_id: ID очереди
+            9 name: название расписания
+            10 from: начальная дата действия правила
+            11 till: конечная дата действия правила
+            12 consider: принимает одно из трех значений:
+                all — не учитывать четность/нечетность дней/недель, при этом во всех <atom> параметры even и odd должны быть установлены в true;
+                weeks — параметры even и odd в <atom> указывают на четные/нечетные недели и в каждом <atom> должно быть либо even = true и add = false, либо even = false и odd = true;
+                days — параметры even и odd в <atom> указывают на четные/нечетные числа мсяца и в каждом <atom> должно быть либо even = true и add = false, либо even = false и odd = true;
+            2 is_exception: принимает одно из двух значений:
+                true — это правило является исключением и имеет приоритет над обычными правилами, действующими в указанный период дат;
+                false — это обычное правило;
+            3 atoms: список элементарных периодов времени <atom> с указанием источников записи:
+                weekday: номер дня недели (0 — понедельник, 6 — воскресенье);
+                even: true/false — признак того, что действие периода распространяется на четные числа или четные недели (см. consider);
+                odd: true/false — признак того, что действие периода распространяется на нечетные числа или нечетные недели (см. consider);
+                from: время начала действие периода;
+                till: время окончания действия периода;
+                source_codes: коды допустимых источников записи:
+                    reg — запись через веб-регистратуру;
+                    epgu — запись с портала госуслуг;
+                    kc — запись из колл-центра;
+                    ter — запись с терминалов;
+                    mis — запись из МИС.
 
         """
         try:
@@ -608,13 +1010,12 @@ class ClientEPGU():
                 if can_write:
                     params['can_write'] = can_write
 
-                params['params'] = {':place_id': hospital['place_id'], 'auth_token': hospital['auth_token']}
             except AttributeError, e:
                 print e
                 logger.error(e, extra=logger_tags)
                 return None
             else:
-                message = self.__generate_message(dict(rule_data=params))
+                message = self.__generate_message(dict(rule=params))
                 result = self.__send('CreateRule', message)
         except WebFault, e:
             print e
@@ -664,7 +1065,7 @@ class ClientEPGU():
                                                             type='all')
                 params['applied_rule'] = applied_rule
 
-                params['params'] = {':location_id': location_id, 'auth_token': hospital['auth_token']}
+                params['params'] = {':location_id': location_id}
             except AttributeError, e:
                 print e
                 logger.error(e, extra=logger_tags)
@@ -686,23 +1087,18 @@ class ClientEPGU():
                 return result.AppData
         return None
 
-    def PutActivateLocation(self, hospital, location_id):
-        """Активирует расписание
+    def ActivateResource(self, resource_id):
+        """Активирует очередь
 
         Args:
-            location_id: (обязательный) строка, id врача из PostLocations,
-            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
-                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
-                 'auth_token': token ЛПУ
-                }
+            resource_id: (обязательный) ID очереди
 
         Returns:
             Сообщение об ошибке, либо сообщение об успешной записи
 
         """
         try:
-            message = self.__generate_message(dict(params={':location_id': location_id,
-                                                           'auth_token': hospital['auth_token']}))
+            message = self.__generate_message(dict(resource={'id': resource_id}))
             result = self.__send('ActivateResource', message)
         except WebFault, e:
             print e
@@ -717,24 +1113,302 @@ class ClientEPGU():
             return result.AppData
         return None
 
-    def PostReserve(self, hospital, doctor_id, service_type_id, date, cito=0):
+    def CreateDoctor(self):
+        """Данный профиль используется для заведения нового специалиста в МО
+
+        Args:
+            <doctor>
+                <snils>12345678901</snils>
+                <surname>Никитина</surname>
+                <name>Татьяна</name>
+                <patronymic>Николаевна</patronymic>
+                <spec_ids>
+                    <spec_id>1</spec_id>
+                    <spec_id>2</spec_id>
+                </spec_ids>
+                <post_ids>
+                    <post_id>1</post_id>
+                    <post_id>2</post_id>
+                <post_id>3</post_id>
+                </post_ids>
+            </doctor>
+
+            1 surname: фамилия специалиста
+            127 name: имя специалиста
+            128 patronymic: отчество специалиста
+            129 snils: СНИЛС специалиста
+            130 spec_ids: ID специальностей
+            131 posts_ids: ID должностей
+
+        Returns:
+            <doctor>
+                <id>23</id>
+                <snils>12345678901</snils>
+                <surname>Никитина</surname>
+                <name>Татьяна</name>
+                <patronymic>Николаевна</patronymic>
+                <spec_ids>
+                    <spec_id>1</spec_id>
+                    <spec_id>2</spec_id>
+                </spec_ids>
+                <post_ids>
+                    <post_id>1</post_id>
+                    <post_id>2</post_id>
+                <post_id>3</post_id>
+                </post_ids>
+            </doctor>
+
+            1 id: ID созданного специалиста
+            132 surname: фамилия специалиста
+            133 name: имя специалиста
+            134 patronymic: отчество специалиста
+            135 snils: СНИЛС специалиста
+            136 spec_ids: ID специальностей
+            137 posts_ids: ID должностей
+
+        """
+        try:
+            params = dict()
+            message = self.__generate_message(dict(doctor=params))
+            result = self.__send('CreateDoctor', message)
+        except WebFault, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        except Exception, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        else:
+            if hasattr(result, 'AppData'):
+                doctor = getattr(result.AppData, 'doctor', None)
+                if doctor:
+                    return doctor
+                return getattr(result.AppData, 'errors', None)
+        return None
+
+    def UpdateDoctor(self):
+        """Данный профиль используется для изменения параметров специалиста в МО
+
+        Args:
+            <doctor>
+                <id>123</id>
+                <snils>12345678901</snils>
+                <surname>Никитина</surname>
+                <name>Татьяна</name>
+                <patronymic>Николаевна</patronymic>
+                <spec_ids>
+                    <spec_id>1</spec_id>
+                </spec_ids>
+                <post_ids>
+                    <post_id>1</post_id>
+                    <post_id>2</post_id>
+                </post_ids>
+            </doctor>
+
+            1 id: ID специалиста
+            2 surname: фамилия специалиста
+            138 name: имя специалиста
+            139 patronymic: отчество специалиста
+            140 snils: СНИЛС специалиста
+            141 spec_ids: ID специальностей
+            142 posts_ids: ID должностей
+
+
+        Returns:
+            <doctor>
+                <id>23</id>
+                <snils>12345678901</snils>
+                <surname>Никитина</surname>
+                <name>Татьяна</name>
+                <patronymic>Николаевна</patronymic>
+                <spec_ids>
+                    <spec_id>1</spec_id>
+                    <spec_id>2</spec_id>
+                </spec_ids>
+                <post_ids>
+                    <post_id>1</post_id>
+                    <post_id>2</post_id>
+                <post_id>3</post_id>
+                </post_ids>
+            </doctor>
+
+            1 id: ID специалиста
+            143 surname: фамилия специалиста
+            144 name: имя специалиста
+            145 patronymic: отчество специалиста
+            146 snils: СНИЛС специалиста
+            147 spec_ids: ID специальностей
+            148 posts_ids: ID должностей
+
+        """
+        try:
+            params = dict()
+            message = self.__generate_message(dict(doctor=params))
+            result = self.__send('UpdateDoctor', message)
+        except WebFault, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        except Exception, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        else:
+            if hasattr(result, 'AppData'):
+                doctor = getattr(result.AppData, 'doctor', None)
+                if doctor:
+                    return doctor
+                return getattr(result.AppData, 'errors', None)
+        return None
+
+    def DeleteDoctor(self, doctor_id):
+        """Данный профиль используется для удаления специалиста в МО
+
+        Args:
+            <doctor>
+                <id>123</id>
+            </doctor>
+
+            doctor_id ID специалиста
+
+        Returns:
+            <doctor>
+               <status>ok</status>
+            </doctor>
+
+            1 status: статус удаления информации о специалисте
+
+        """
+        try:
+            params = dict()
+            message = self.__generate_message(dict(doctor={'id': doctor_id}))
+            result = self.__send('DeleteDoctor', message)
+        except WebFault, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        except Exception, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        else:
+            if hasattr(result, 'AppData'):
+                doctor = getattr(result.AppData, 'doctor', None)
+                if doctor:
+                    return doctor
+                return getattr(result.AppData, 'errors', None)
+        return None
+
+    def GetDoctors(self, mo_id=None, spec_id=None):
+        """Данный профиль используется для получения перечня специалистов МО
+
+        Args:
+            <params>
+                <mo_id>123</mo_id>
+                <spec_id>1</spec_id>
+            </params>
+
+            1 mo_id: ID МО (необязательный)
+            149 spec_id: ID специальности (необязательный)
+
+        Returns:
+            <doctors>
+                <doctor>
+                    <id>23</id>
+                    <snils>12345678901</snils>
+                    <surname>Никитина</surname>
+                    <name>Татьяна</name>
+                    <patronymic>Николаевна</patronymic>
+                    <spec_ids>
+                        <spec_id>1</spec_id>
+                        <spec_id>2</spec_id>
+                    </spec_ids>
+                    <post_ids>
+                        <post_id>1</post_id>
+                        <post_id>2</post_id>
+                        <post_id>3</post_id>
+                    </post_ids>
+                </doctor>
+            </doctors>
+
+            1 id: ID специалиста
+            150 surname: фамилия специалиста
+            151 name: имя специалиста
+            152 patronymic: отчество специалиста
+            153 snils: СНИЛС специалиста
+            154 spec_ids: ID специальностей
+            155 posts_ids: ID должностей
+
+        """
+        try:
+            params = dict()
+            message = self.__generate_message(dict(doctor=params))
+            result = self.__send('GetDoctors', message)
+        except WebFault, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        except Exception, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        else:
+            if hasattr(result, 'AppData'):
+                doctors = getattr(result.AppData, 'doctors', None)
+                if doctors:
+                    return doctors
+                return getattr(result.AppData, 'errors', None)
+        return None
+
+    def CreateSlot(self, hospital, doctor_id, service_type_id, date, cito=0):
         """Резервирует время на запись
 
         Args:
-            doctor_id: (обязательный) строка, id врача из PostLocations,
-            service_type_id: (обязательный) строка, id типа услуги из GetServiceType,
-            date: (обязательный) словарь с информацией о расписании, вида:
-                {'date': дата приёма,
-                 'start_time': время приёма
-                }
-            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
-                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
-                 'auth_token': token ЛПУ
-                }
-            cito: (необязательный) обозначает, что пациент экстренный и может записаться в любое время.
-                Список возможных значений: 0 - не экстренный; 1 - экстренный.  Значение поумолчанию - 0
+            <slot>
+                <resource_id>123</resource_id>
+                <service_id>243</service_id>
+                <date>2013-10-29</date>
+                <from>10:00</from>
+                <is_urgent>false</is_urgent>
+            </slot>
 
-        Возвращает идентификатор зарезервированного слота
+            1 resource_id: ID очереди;
+            2 service_id: ID вида услуги;
+            3 date: дата приема;
+            4 from: время начала приема;
+            5 is_urgent: признак экстренного приема (необязательный).
+
+        Returns:
+            <slot>
+                <id>123</id>
+                <mo_id>543</mo_id>
+                <resource_id>123</resource_id>
+                <patient/>
+                <service_id>243</service_id>
+                <date>2013-10-29</date>
+                <from>10:00</from>
+                <till>10:15</till>
+                <is_urgent>false</is_urgent>
+                <status>reserved</status>
+                <source_code>mis</source_code>
+                <reject_reason/>
+                <number>42</number>
+                <source_mis_id>4535</source_mis_id>
+                <source_mo_id>876</source_mo_id>
+                <quota_number/>
+                <additions/>
+            </slot>
+
+            1 id: ID записи на прием;
+            6 mo_id: ID МО;
+            7 resource_id: ID очереди;
+            8 patient: информация о пациенте (необязательный);
+            9 service_id: ID вида услуги;
+            10 date: дата приема;
+            11 from: время начала приема в минутах с 00:00;
+            12 till: время окончания приема в минутах с 00:00;
+            13 is_urgent: признак экстренного вызова (необязательный);
+            14 status: статус записи на прием;
+            15 source_code: код источника записи;
+            16 reject_reason: причина отказа в записи на прием;
+            17 number: порядковый номер записи на прием, уникален в рамках даты приёма и медицинской организации;
+            18 source_mis_id: ID записавшей МИС;
+            19 source_mo_id: ID записавшей МО;
+            20 quota_number: квота;
+            21 additions: дополнительная информация для вызовов на дом.
 
         """
         try:
@@ -745,13 +1419,13 @@ class ClientEPGU():
                 params['date'] = date['date']
                 params['start_time'] = date['start_time']
 
-                params['params'] = {'auth_token': hospital['auth_token'], ':cito': cito}
+                params['params'] = {':cito': cito}
             except AttributeError, e:
                 print e
                 logger.error(e, extra=logger_tags)
                 return None
             else:
-                message = self.__generate_message(dict(client_info=params))
+                message = self.__generate_message(dict(slot=params))
                 result = self.__send('CreateSlot', message)
         except WebFault, e:
             print e
@@ -761,28 +1435,111 @@ class ClientEPGU():
             logger.error(e, extra=logger_tags)
         else:
             if hasattr(result, 'AppData'):
-                errors = getattr(result.AppData, 'errors', None)
-                if errors:
-                    return errors
-                return result.AppData
+                slot = getattr(result.AppData, 'slot', None)
+                if slot:
+                    return slot
+                return getattr(result.AppData, 'errors', None)
         return None
 
-    def PutSlot(self, hospital, patient, slot_id):
-        """Запрос на получение из федеральной регистратуры факта записи  на оказание услуги
+    def FinishCreateSlot(self, patient, slot_id):
+        """Запрос на получение из федеральной регистратуры факта записи на оказание услуги
 
         Args:
-            patient: (обязательный) словарь с информацией о пациенте, вида:
-                {'name': (обязательный) имя пациента,
-                 'surname': (обязательный) фамилия пациента,
-                 'patronymic': (необязательный) отчество пациента,
-                 'phone': (обязательный) номер телефона в формате +7(код)номер,
-                 'id': (обязательный) уникальный идентификатор пациента,
-                },
-            slot_id: (обязательный) идентификатор зарезервированного слота, в который производится запись,
-            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
-                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
-                 'auth_token': token ЛПУ
-                }
+            <slot>
+                <id>123</id>
+                <patient>
+                    <snils/>
+                    <passport/>
+                    <oms>1234567890123456</oms>
+                    <is_parental>false</is_parental>
+                    <surname>Иванов</surname>
+                    <name>Иван</name>
+                    <patronymic>Иваныч</patronymic>
+                    <gender>male</gender>
+                    <birthday>1990-01-01</birthday>
+                    <email>foo@bar.com</email>
+                    <phone>+7 (123) 456-78-90</phone>
+                </patient>
+            </slot>
+
+            1 id: ID записи на прием
+            22 patient: сведения о пациенте:
+                surname: фамилия;
+                name: имя;
+                patronymic: отчество;
+                birthday: дата рождения;
+                gender: пол;
+                snils: СНИЛС, только цифры (необязательный)
+                passport: номер паспорта, только цифры (необязательный)
+                oms: номер полиса ОМС, только цифры (необязательный)
+                is_parental: true/false — признак того, что указан номер полиса ОМС родителя или опекуна (необязательный)
+                email: адрес электронной почты (необязательный)
+                phone: номер телефона (необязательный)
+   
+            Примечание:
+                Должен присутствовать хотя бы один из параметров snils, passport, oms.
+
+        Returns:
+            <slot>
+                <id>123</id>
+                <mo_id>543</mo_id>
+                <resource_id>123</resource_id>
+                <patient>
+                    <snils>11111111111</snils>
+                    <passport>1234567890</passport>
+                    <oms>1234567890123456</oms>
+                    <is_parental>false</is_parental>
+                    <surname>Иванов</surname>
+                    <name>Иван</name>
+                    <patronymic>Иваныч</patronymic>
+                    <gender>male</gender>
+                    <birthday>1990-01-01</birthday>
+                    <email>foo@bar.com</email>
+                    <phone>+7 (123) 456-78-90</phone>
+                </patient>
+                <service_id>243</service_id>
+                <date>2013-10-29</date>
+                <from>10:00</from>
+                <till>10:15</till>
+                <is_urgent>false</is_urgent>
+                <status>pending</status>
+                <source_code>mis</source_code>
+                <reject_reason/>
+                <number>42</number>
+                <source_mis_id>4535</source_mis_id>
+                <source_mo_id>876</source_mo_id>
+                <quota_number/>
+                <additions/>
+            </slot>
+
+            1 id: ID записи на прием
+            23 mo_id: ID МО
+            24 resource_id: ID очереди
+            25 patient: сведения о пациенте:
+                surname: фамилия;
+                name: имя;
+                patronymic: отчество;
+                birthday: дата рождения;
+                gender: пол;
+                snils: СНИЛС, только цифры (необязательный)
+                passport: номер паспорта, только цифры (необязательный)
+                oms: номер полиса ОМС, только цифры (необязательный)
+                is_parental: true/false — признак того, что указан номер полиса ОМС родителя или опекуна (необязательный)
+                email: адрес электронной почты (необязательный)
+                phone: номер телефона (необязательный)
+            2 service_id: ID вида услуги
+            3 date: дата приема
+            4 from: время начала приема в минутах с 00:00
+            5 till: время окончания приема в минутах с 00:00
+            6 is_urgent: признак экстренного вызова (необязательный)
+            7 status: статус записи на прием
+            8 source_code: код источника записи
+            9 reject_reason: причина отказа в записи на прием
+            10 number: порядковый номер записи на прием, уникален в рамках даты приёма и медицинской организации
+            11 source_mis_id: ID записавшей МИС
+            12 source_mo_id: ID записавшей МО
+            13 quota_number: квота
+            14 additions: дополнительная информация для вызовов на дом
 
         """
         try:
@@ -794,14 +1551,14 @@ class ClientEPGU():
                 params['phone'] = patient['phone']
                 params['client_id'] = patient['id']
 
-                params['params'] = {'auth_token': hospital['auth_token'], ':slot_id': slot_id}
+                params['params'] = {':slot_id': slot_id}
             except AttributeError, e:
                 print e
                 logger.error(e, extra=logger_tags)
                 return None
             else:
-                message = self.__generate_message(dict(client_info=params))
-                result = self.__send('PutSlot', message)
+                message = self.__generate_message(dict(slot=params))
+                result = self.__send('FinishCreateSlot', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -809,36 +1566,62 @@ class ClientEPGU():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            errors = getattr(result.AppData, 'errors', None)
-            if errors:
-                return errors
+            slot = getattr(result.AppData, 'slot', None)
+            if slot:
+                return slot
+            return getattr(result.AppData, 'errors', None)
             return result.AppData
         return None
 
-    def DeleteSlot(self, hospital, slot_id, comment=None):
+    def DeleteSlot(self, slot_id):
         """Отмена записи на прием к врачу из ЛПУ на ЕПГУ
 
         Args:
-            hospital: (обязательный) словарь с информацией об ЛПУ, вида:
-                {'place_id': идентификатор ЛПУ в ЕПГУ, получаемый в GetPlace,
-                 'auth_token': token ЛПУ
-                }
-            slot_id: (обязательный) идентификатор зарезервированного слота, в который производится запись,
-            comment: (необязательный) комментарий удаления слота
+            <slot>
+                <id>1</id>
+            </slot>
+
+        Returns:
+            <slot>
+                <id>123</id>
+                <mo_id>543</mo_id>
+                <resource_id>123</resource_id>
+                <service_id>243</service_id>
+                <date>2013-10-29</date>
+                <from>10:00</from>
+                <till>10:15</till>
+                <is_urgent>false</is_urgent>
+                <status>service_is_refused</status>
+                <source_code>mis</source_code>
+                <reject_reason/>
+                <number>42</number>
+                <source_mis_id>4535</source_mis_id>
+                <source_mo_id>876</source_mo_id>
+                <quota_number/>
+                <additions/>
+            </slot>
+
+            1 id: ID записи на прием
+            2 mo_id: ID МО
+            3 resource_id: ID очереди
+            2 service_id: ID вида услуги
+            3 date: дата приема
+            4 from: время начала приема в минутах с 00:00
+            5 till: время окончания приема в минутах с 00:00
+            6 is_urgent: признак экстренного вызова (необязательный)
+            7 status: статус записи на прием
+            8 source_code: код источника записи
+            9 reject_reason: причина отказа в записи на прием
+            10 number: порядковый номер записи на прием, уникален в рамках даты приёма и медицинской организации
+            11 source_mis_id: ID записавшей МИС
+            12 source_mo_id: ID записавшей МО
+            13 quota_number: квота
+            14 additions: дополнительная информация для вызовов на дом
 
         """
         try:
-            try:
-                params = {'auth_token': hospital['auth_token'], ':slot_id': slot_id}
-                if comment:
-                    params.update(dict(comment=comment))
-            except AttributeError, e:
-                print e
-                logger.error(e, extra=logger_tags)
-                return None
-            else:
-                message = self.__generate_message(dict(params=params))
-                result = self.__send('DeleteSlot', message)
+            message = self.__generate_message(dict(slot={'id': slot_id}))
+            result = self.__send('DeleteSlot', message)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -846,8 +1629,197 @@ class ClientEPGU():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            errors = getattr(result.AppData, 'errors', None)
-            if errors:
-                return errors
-            return result.AppData
+            slot = getattr(result.AppData, 'slot', None)
+            if slot:
+                return slot
+            return getattr(result.AppData, 'errors', None)
+        return None
+
+    def DeclineSlot(self, slot_id):
+        """Данный профиль используется для отклонения заявки на прием
+
+        Args:
+            <slot>
+                <id>1</id>
+            </slot>
+
+        Returns:
+            <slot>
+                <id>123</id>
+                <mo_id>543</mo_id>
+                <resource_id>123</resource_id>
+                <patient>
+                    <snils>11111111111</snils>
+                    <passport>1234567890</passport>
+                    <oms>1234567890123456</oms>
+                    <is_parental>false</is_parental>
+                    <surname>Иванов</surname>
+                    <name>Иван</name>
+                    <patronymic>Иваныч</patronymic>
+                    <gender>male</gender>
+                    <birthday>1990-01-01</birthday>
+                    <email>foo@bar.com</email>
+                    <phone>+7 (123) 456-78-90</phone>
+                </patient>
+                <service_id>243</service_id>
+                <date>2013-10-29</date>
+                <from>10:00</from>
+                <till>10:15</till>
+                <is_urgent>false</is_urgent>
+                <status>declined</status>
+                <source_code>mis</source_code>
+                <reject_reason/>
+                <number>42</number>
+                <source_mis_id>4535</source_mis_id>
+                <source_mo_id>876</source_mo_id>
+                <quota_number/>
+                <additions/>
+            </slot>
+
+            1 id: ID записи на прием
+            42 mo_id: ID МО
+            43 resource_id: ID очереди
+            44 patient: сведения о пациенте:
+                surname: фамилия;
+                name: имя;
+                patronymic: отчество;
+                gender: пол;
+                birthday: дата рождения;
+                snils: СНИЛС, только цифры (необязательный)
+                passport: номер паспорта, только цифры (необязательный)
+                oms: номер полиса ОМС, только цифры (необязательный)
+                is_parental: true/false — признак того, что указан номер полиса ОМС родителя или опекуна (необязательный)
+                email: адрес электронной почты (необязательный)
+                phone: номер телефона (необязательный)
+            45 service_id: ID вида услуги
+            46 date: дата приема
+            47 from: время начала приема в минутах с 00:00
+            48 till: время окончания приема в минутах с 00:00
+            49 is_urgent: признак экстренного вызова (необязательный)
+            50 status: статус записи на прием
+            51 source_code: код источника записи
+            52 reject_reason: причина отказа в записи на прием
+            53 number: порядковый номер записи на прием, уникален в рамках даты приёма и медицинской организации
+            54 source_mis_id: ID записавшей МИС
+            55 source_mo_id: ID записавшей МО
+            56 quota_number: квота
+            57 additions: дополнительная информация для вызовов на дом
+
+        """
+        try:
+            message = self.__generate_message(dict(slot={'id': slot_id}))
+            result = self.__send('DeclineSlot', message)
+        except WebFault, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        except Exception, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        else:
+            slot = getattr(result.AppData, 'slot', None)
+            if slot:
+                return slot
+            return getattr(result.AppData, 'errors', None)
+        return None
+
+    def RefuseSlot(self, slot_id, reject_reason='patient_decline'):
+        """Данный профиль используется для освобождения времени записи на прием в связи с отказом от записи
+
+        Args:
+            <slot>
+                <id>1</id>
+                <reject_reason>Другая причина</reject_reason>
+            </slot>
+
+            1 id: ID записи на прием
+            58 reject_reason: причина отказа
+            Для указания причин отказа рекомендуется использовать следующие значения, указанные в формате код:наименование :
+                  error_in_slot: Ошибка заполнения заявки;
+                  patient_decline: Отказ пациента от записи на прием;
+                  incorrect_service: Некорректный выбор услуги;
+                  incorrect_data: Предоставление некорректных данных;
+                  mo_decline: Отмена записи на прием со стороны МО;
+                  no_free_space: Нет свободных мест;
+                  no_hospitalization_condition: Нет показаний к госпитализации;
+                  no_accept_diagnosis: Не подтвержден диагноз;
+                  patient_decline_hospitalization: Пациент отказался от госпитализации;
+                  other_reasons: Другие причины.
+
+        Returns:
+            <slot>
+                <id>123</id>
+                <mo_id>543</mo_id>
+                <resource_id>123</resource_id>
+                <patient>
+                    <snils>11111111111</snils>
+                    <passport>1234567890</passport>
+                    <oms>1234567890123456</oms>
+                    <is_parental>false</is_parental>
+                    <surname>Иванов</surname>
+                    <name>Иван</name>
+                    <patronymic>Иваныч</patronymic>
+                    <gender>male</gender>
+                    <birthday>1990-01-01</birthday>
+                    <email>foo@bar.com</email>
+                    <phone>+7 (123) 456-78-90</phone>
+                </patient>
+                <service_id>243</service_id>
+                <date>2013-10-29</date>
+                <from>10:00</from>
+                <till>10:15</till>
+                <is_urgent>false</is_urgent>
+                <status>service_is_not_provided</status>
+                <source_code>mis</source_code>
+                <reject_reason>Другая причина</reject_reason>
+                <number>42</number>
+                <source_mis_id>4535</source_mis_id>
+                <source_mo_id>876</source_mo_id>
+                <quota_number/>
+                <additions/>
+            </slot>
+
+            1 id: ID записи на прием
+            59 mo_id: ID МО
+            60 resource_id: ID очереди
+            61 patient: сведения о пациенте:
+                surname: фамилия;
+                name: имя;
+                patronymic: отчество;
+                birthday: дата рождения;
+                gender: пол;
+                snils: СНИЛС, только цифры (необязательный)
+                passport: номер паспорта, только цифры (необязательный)
+                oms: номер полиса ОМС, только цифры (необязательный)
+                is_parental: true/false — признак того, что указан номер полиса ОМС родителя или опекуна (необязательный)
+                email: адрес электронной почты (необязательный)
+                phone: номер телефона (необязательный)
+            2 service_id: ID вида услуги
+            3 date: дата приема
+            4 from: время начала приема в минутах с 00:00
+            5 till: время окончания приема в минутах с 00:00
+            6 is_urgent: признак экстренного вызова (необязательный)
+            7 status: статус записи на прием
+            8 source_code: код источника записи
+            9 reject_reason: причина отказа в записи на прием
+            10 number: порядковый номер записи на прием, уникален в рамках даты приёма и медицинской организации
+            11 source_mis_id: ID записавшей МИС
+            12 source_mo_id: ID записавшей МО
+            13 quota_number: квота
+            14 additions: дополнительная информация для вызовов на дом
+
+        """
+        try:
+            message = self.__generate_message(dict(slot={'id': slot_id, 'reject_reason': reject_reason}))
+            result = self.__send('RefuseSlot', message)
+        except WebFault, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        except Exception, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        else:
+            slot = getattr(result.AppData, 'slot', None)
+            if slot:
+                return slot
+            return getattr(result.AppData, 'errors', None)
         return None
