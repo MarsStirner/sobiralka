@@ -88,7 +88,8 @@ class EPGUWorker(object):
                 if not lpu.token:
                     continue
 
-                epgu_result = self.proxy_client.GetMedicalSpecializations(lpu.token)
+                self.proxy_client.set_auth_token(lpu.token)
+                epgu_result = self.proxy_client.GetSpecs()
                 specialities = getattr(epgu_result, 'medical-specialization', None)
                 if specialities:
                     epgu_specialities = self.__update_epgu_specialities(specialities=specialities)

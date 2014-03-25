@@ -19,7 +19,7 @@ class ClientEPGU2():
         self.url = settings.EPGU_SERVICE_URL
         self.client = None
         self.jinja2env = Environment(loader=PackageLoader('int_service', 'templates'))
-        self.messageSourceToken = auth_token
+        self.auth_token = auth_token
 
     def __check_url(self, url):
         try:
@@ -41,15 +41,19 @@ class ClientEPGU2():
                 else:
                     self.client = Client(self.url)
 
+    def set_auth_token(self, auth_token):
+        self.auth_token = auth_token
+
     def __send(self, method, message=None):
         self.__init_client()
         params = dict()
         params['messageCode'] = method
-        params['messageSourceToken'] = self.messageSourceToken
+        params['messageSourceToken'] = self.auth_token
         if message:
             params['message'] = base64.b64encode(u'<params>{0}</params>'.format(message).encode('utf-8'))
         if self.client:
-            return self.client.service.Send(MessageData={'AppData': params})
+            result = self.client.service.Send(MessageData={'AppData': params})
+            return getattr(result, 'AppData', None)
         else:
             return None
 
@@ -96,10 +100,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            specs = getattr(result.AppData, 'specs', None)
-            if specs:
-                return specs
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                specs = getattr(result, 'specs', None)
+                if specs:
+                    return specs
+                return getattr(result, 'errors', None)
         return None
 
     def GetServicesSpecs(self):
@@ -130,10 +135,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            specs = getattr(result.AppData, 'specs', None)
-            if specs:
-                return specs
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                specs = getattr(result, 'specs', None)
+                if specs:
+                    return specs
+                return getattr(result, 'errors', None)
         return None
 
     def GetReservationTypes(self, auth_token):
@@ -175,10 +181,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            reservation_types = getattr(result.AppData, 'reservation-types', None)
-            if reservation_types:
-                return reservation_types
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                reservation_types = getattr(result, 'reservation-types', None)
+                if reservation_types:
+                    return reservation_types
+                return getattr(result, 'errors', None)
         return None
 
     def GetPayments(self):
@@ -206,10 +213,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            payment_methods = getattr(result.AppData, 'payments', None)
-            if payment_methods:
-                return payment_methods
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                payment_methods = getattr(result, 'payments', None)
+                if payment_methods:
+                    return payment_methods
+                return getattr(result, 'errors', None)
         return None
 
     def GetServices(self, ms_id):
@@ -248,10 +256,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            service_types = getattr(result.AppData, 'service-types', None)
-            if service_types:
-                return service_types
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                service_types = getattr(result, 'service-types', None)
+                if service_types:
+                    return service_types
+                return getattr(result, 'errors', None)
         return None
 
     def GetService(self, service_id):
@@ -284,10 +293,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            service_type = getattr(result.AppData, 'service-type', None)
-            if service_type:
-                return service_type
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                service_type = getattr(result, 'service-type', None)
+                if service_type:
+                    return service_type
+                return getattr(result, 'errors', None)
         return None
 
     def GetMos(self, **kwargs):
@@ -384,10 +394,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            mos = getattr(result.AppData, 'mos', None)
-            if mos:
-                return getattr(mos, 'mo', None)
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                mos = getattr(result, 'mos', None)
+                if mos:
+                    return getattr(mos, 'mo', None)
+                return getattr(result, 'errors', None)
         return None
 
     def GetMo(self, id, oid):
@@ -466,10 +477,10 @@ class ClientEPGU2():
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                places = getattr(result.AppData, 'mo', None)
+                places = getattr(result, 'mo', None)
                 if places:
                     return places
-                return getattr(result.AppData, 'errors', None)
+                return getattr(result, 'errors', None)
         return None
 
     def GetLocations(self, hospital, service_type_id=None, page=1):
@@ -502,10 +513,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            place_locations_data = getattr(result.AppData, 'place-locations-data', None)
-            if place_locations_data:
-                return place_locations_data
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                place_locations_data = getattr(result, 'place-locations-data', None)
+                if place_locations_data:
+                    return place_locations_data
+                return getattr(result, 'errors', None)
         return None
 
     def GetLocation(self):
@@ -528,10 +540,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            errors = getattr(result.AppData, 'errors', None)
-            if errors:
-                return errors
-            return result.AppData
+            if result:
+                errors = getattr(result, 'errors', None)
+                if errors:
+                    return errors
+                return result
         return None
 
     def CreateResource(self, hospital, doctor, service_types, can_write=None):
@@ -673,10 +686,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            location = getattr(result.AppData, 'resource', None)
-            if location:
-                return location
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                location = getattr(result, 'resource', None)
+                if location:
+                    return location
+                return getattr(result, 'errors', None)
         return None
 
     def UpdateResource(self, hospital, doctor, service_types, can_write=None):
@@ -853,10 +867,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            location = getattr(result.AppData, 'location', None)
-            if location:
-                return location
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                location = getattr(result, 'location', None)
+                if location:
+                    return location
+                return getattr(result, 'errors', None)
         return None
 
     def CreateRule(self, hospital, doctor, period, days, can_write=None):
@@ -1024,10 +1039,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            errors = getattr(result.AppData, 'errors', None)
-            if errors:
-                return errors
-            return result.AppData
+            if result:
+                errors = getattr(result, 'errors', None)
+                if errors:
+                    return errors
+                return result
         return None
 
     def PutLocationSchedule(self, hospital, location_id, rules):
@@ -1080,11 +1096,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            if result is not None:
-                errors = getattr(result.AppData, 'errors', None)
+            if result:
+                errors = getattr(result, 'errors', None)
                 if errors:
                     return errors
-                return result.AppData
+                return result
         return None
 
     def ActivateResource(self, resource_id):
@@ -1107,10 +1123,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            errors = getattr(result.AppData, 'errors', None)
-            if errors:
-                return errors
-            return result.AppData
+            if result:
+                errors = getattr(result, 'errors', None)
+                if errors:
+                    return errors
+                return result
         return None
 
     def CreateDoctor(self):
@@ -1178,11 +1195,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            if hasattr(result, 'AppData'):
-                doctor = getattr(result.AppData, 'doctor', None)
+            if result:
+                doctor = getattr(result, 'doctor', None)
                 if doctor:
                     return doctor
-                return getattr(result.AppData, 'errors', None)
+                return getattr(result, 'errors', None)
         return None
 
     def UpdateDoctor(self):
@@ -1251,11 +1268,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            if hasattr(result, 'AppData'):
-                doctor = getattr(result.AppData, 'doctor', None)
+            if result:
+                doctor = getattr(result, 'doctor', None)
                 if doctor:
                     return doctor
-                return getattr(result.AppData, 'errors', None)
+                return getattr(result, 'errors', None)
         return None
 
     def DeleteDoctor(self, doctor_id):
@@ -1287,11 +1304,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            if hasattr(result, 'AppData'):
-                doctor = getattr(result.AppData, 'doctor', None)
+            if result:
+                doctor = getattr(result, 'doctor', None)
                 if doctor:
                     return doctor
-                return getattr(result.AppData, 'errors', None)
+                return getattr(result, 'errors', None)
         return None
 
     def GetDoctors(self, mo_id=None, spec_id=None):
@@ -1346,11 +1363,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            if hasattr(result, 'AppData'):
-                doctors = getattr(result.AppData, 'doctors', None)
+            if result:
+                doctors = getattr(result, 'doctors', None)
                 if doctors:
                     return doctors
-                return getattr(result.AppData, 'errors', None)
+                return getattr(result, 'errors', None)
         return None
 
     def CreateSlot(self, hospital, doctor_id, service_type_id, date, cito=0):
@@ -1434,11 +1451,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            if hasattr(result, 'AppData'):
-                slot = getattr(result.AppData, 'slot', None)
+            if result:
+                slot = getattr(result, 'slot', None)
                 if slot:
                     return slot
-                return getattr(result.AppData, 'errors', None)
+                return getattr(result, 'errors', None)
         return None
 
     def FinishCreateSlot(self, patient, slot_id):
@@ -1566,11 +1583,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            slot = getattr(result.AppData, 'slot', None)
-            if slot:
-                return slot
-            return getattr(result.AppData, 'errors', None)
-            return result.AppData
+            if result:
+                slot = getattr(result, 'slot', None)
+                if slot:
+                    return slot
+                return getattr(result, 'errors', None)
         return None
 
     def DeleteSlot(self, slot_id):
@@ -1629,10 +1646,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            slot = getattr(result.AppData, 'slot', None)
-            if slot:
-                return slot
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                slot = getattr(result, 'slot', None)
+                if slot:
+                    return slot
+                return getattr(result, 'errors', None)
         return None
 
     def DeclineSlot(self, slot_id):
@@ -1716,10 +1734,11 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            slot = getattr(result.AppData, 'slot', None)
-            if slot:
-                return slot
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                slot = getattr(result, 'slot', None)
+                if slot:
+                    return slot
+                return getattr(result, 'errors', None)
         return None
 
     def RefuseSlot(self, slot_id, reject_reason='patient_decline'):
@@ -1818,8 +1837,9 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            slot = getattr(result.AppData, 'slot', None)
-            if slot:
-                return slot
-            return getattr(result.AppData, 'errors', None)
+            if result:
+                slot = getattr(result, 'slot', None)
+                if slot:
+                    return slot
+                return getattr(result, 'errors', None)
         return None
