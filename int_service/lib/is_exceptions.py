@@ -7,6 +7,12 @@ class ISError(Exception):
     pass
 
 
+class EPGUError(Exception):
+    def __init__(self, code, message):
+        self.code = code
+        self.message = message
+
+
 class ISInvalidInputParametersError(ISError):
     pass
 

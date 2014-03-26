@@ -7,7 +7,7 @@ try:
 except ImportError:
     import simplejson as json
 
-from settings import DEBUG
+from settings import DEBUG, FER_VERSION
 logger_tags = dict(tags=['dataworker', 'IS'])
 
 import logging
@@ -29,6 +29,7 @@ class DataWorker(object):
     @classmethod
     def provider(cls, data_type, *args, **kwargs):
         """Вернёт объект для работы с указанным типом данных"""
+        obj = None
         data_type = data_type.lower()
         if data_type == 'regions':
             obj = RegionsWorker()
@@ -41,9 +42,13 @@ class DataWorker(object):
         elif data_type == 'personal':
             obj = PersonalWorker()
         elif data_type == 'epgu':
-            obj = EPGUWorker(*args, **kwargs)
+            if FER_VERSION == 1:
+                from workers.epgu import EPGUWorker
+                obj = EPGUWorker(*args, **kwargs)
+            elif FER_VERSION == 2:
+                from workers.epgu2 import EPGUWorker
+                obj = EPGUWorker(*args, **kwargs)
         else:
-            obj = None
             raise exceptions.NameError
         return obj
 
@@ -54,4 +59,3 @@ from workers.person import PersonalWorker
 from workers.enqueue import EnqueueWorker
 from workers.regions import RegionsWorker
 from workers.update import UpdateWorker
-from workers.epgu import EPGUWorker

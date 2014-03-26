@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import base64
+from collections import defaultdict
 from suds.client import Client
 from suds import WebFault
+from ..is_exceptions import EPGUError
 import settings
 import urllib2
 import socket
+from lxml import etree
 from ..utils import logger
 
 from jinja2 import Environment, PackageLoader
@@ -16,7 +19,7 @@ class ClientEPGU2():
     """Класс клиента для взаимодействия с ЕПГУ ФЭР2"""
 
     def __init__(self, auth_token):
-        self.url = settings.EPGU_SERVICE_URL
+        self.url = settings.EPGU2_SERVICE_URL
         self.client = None
         self.jinja2env = Environment(loader=PackageLoader('int_service', 'templates'))
         self.auth_token = auth_token
@@ -44,6 +47,25 @@ class ClientEPGU2():
     def set_auth_token(self, auth_token):
         self.auth_token = auth_token
 
+    def __xml_to_dict(self, root):
+        if root is not None:
+            if len(root) == 0:
+                out = {root.tag: root.text}
+            elif len(root) == 1 or root[0].tag != root[1].tag:
+                out = defaultdict(dict)
+                for child in root:
+                    out[root.tag].update(self.__xml_to_dict(child))
+            else:
+                out = defaultdict(list)
+                for child in root:
+                    out[root.tag].append(self.__xml_to_dict(child))
+            return out
+        return dict()
+
+    def __parse_result(self, xml_string):
+        root = etree.fromstring(xml_string)
+        return self.__xml_to_dict(root)
+
     def __send(self, method, message=None):
         self.__init_client()
         params = dict()
@@ -53,7 +75,21 @@ class ClientEPGU2():
             params['message'] = base64.b64encode(u'<params>{0}</params>'.format(message).encode('utf-8'))
         if self.client:
             result = self.client.service.Send(MessageData={'AppData': params})
-            return getattr(result, 'AppData', None)
+            app_data = getattr(result, 'AppData', None)
+            status = getattr(result, 'Status', None)
+            error = getattr(result, 'Error', None)
+            if status == 'ok' and app_data:
+                try:
+                    xml_result = base64.b64decode(app_data)
+                except TypeError, e:
+                    logger.error(e, extra=logger_tags)
+                    raise e
+                else:
+                    result = self.__parse_result(xml_result)
+                return result
+            elif status == 'error' and error:
+                logger.error(error, extra=logger_tags)
+                raise EPGUError(code=error.errorCode, message=error.errorMessage)
         else:
             return None
 
@@ -96,15 +132,8 @@ class ClientEPGU2():
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
-        except Exception, e:
-            print e
-            logger.error(e, extra=logger_tags)
         else:
-            if result:
-                specs = getattr(result, 'specs', None)
-                if specs:
-                    return specs
-                return getattr(result, 'errors', None)
+            return result.get('specs', None)
         return None
 
     def GetServicesSpecs(self):
@@ -135,11 +164,7 @@ class ClientEPGU2():
             print e
             logger.error(e, extra=logger_tags)
         else:
-            if result:
-                specs = getattr(result, 'specs', None)
-                if specs:
-                    return specs
-                return getattr(result, 'errors', None)
+            return getattr(result, 'specs', None)
         return None
 
     def GetReservationTypes(self, auth_token):

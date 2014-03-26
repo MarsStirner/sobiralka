@@ -35,6 +35,9 @@ class LPU(Base):
     protocol = Column(Enum('samson', 'intramed', 'korus20', 'korus30'), nullable=False, default='korus30')
     token = Column(String(45), doc=u'Токен ЕПГУ')
     keyEPGU = Column(String(45), doc=u'ID ЛПУ на ЕПГУ')
+    epgu2_id = Column(Integer, doc=u'ID ЛПУ в ФЭР2')
+    epgu2_oid = Column(String(45), doc=u'OID в НСИ') #TODO: брать из ПУС
+    epgu2_token = Column(String(45), doc=u'Токен в ФЭР2')
 
 
 class LPU_Units(Base):
@@ -107,6 +110,21 @@ class EPGU_Speciality(Base):
         return self.name
 
 
+class EPGU2_Speciality(Base):
+    """Mapping for epgu_specialities table"""
+    __tablename__ = 'epgu2_speciality'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(64), nullable=False, unique=True)
+    code = Column(Integer)
+    recid = Column(Unicode(45))
+    parent_recid = Column(Unicode(45))
+
+    def __unicode__(self):
+        return self.name
+
+
 class EPGU_Service_Type(Base):
     """Mapping for epgu_service_type table"""
     __tablename__ = 'epgu_service_type'
@@ -159,6 +177,8 @@ class Speciality(Base):
     epgu_speciality = relationship(EPGU_Speciality, lazy='joined')
     epgu_service_type_id = Column(Integer, ForeignKey('epgu_service_type.id'), nullable=True, index=True)
     epgu_service_type = relationship(EPGU_Service_Type, lazy='joined')
+    epgu2_speciality_id = Column(Integer, ForeignKey('epgu2_speciality.id'), nullable=True, index=True)
+    epgu2_speciality = relationship(EPGU2_Speciality, lazy='joined')
 
     __mapper_args__ = {'order_by': name}
 

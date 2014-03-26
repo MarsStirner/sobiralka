@@ -6,7 +6,7 @@ from flask.ext.admin.base import expose, BaseView
 from wtforms.fields import SelectField, BooleanField
 
 from admin.models import LPU, Regions, Speciality, EPGU_Speciality, EPGU_Service_Type
-from int_service.lib.dataworker import UpdateWorker, EPGUWorker
+from int_service.lib.dataworker import UpdateWorker, DataWorker
 from is_celery.tasks import sync_schedule_task
 from admin.database import init_task_session
 
@@ -83,7 +83,7 @@ class SyncEPGUAdmin(BaseView):
     @expose('/update_common_data/', methods=('POST',))
     def sync_common_data(self):
         if request.form['do_update']:
-            data_worker = EPGUWorker(db_session)
+            data_worker = DataWorker.provider('epgu', db_session)
             data_worker.sync_hospitals()
             data_worker.sync_reservation_types()
             data_worker.sync_payment_methods()
@@ -96,7 +96,7 @@ class SyncEPGUAdmin(BaseView):
     @expose('/update_specialities/', methods=('POST',))
     def sync_specialities(self):
         if request.form['do_update']:
-            data_worker = EPGUWorker(db_session)
+            data_worker = DataWorker.provider('epgu', db_session)
             data_worker.sync_specialities()
             msg = data_worker.msg
             del data_worker
@@ -107,7 +107,7 @@ class SyncEPGUAdmin(BaseView):
     @expose('/update_locations/', methods=('POST',))
     def sync_locations(self):
         if request.form['do_update']:
-            data_worker = EPGUWorker(db_session)
+            data_worker = DataWorker.provider('epgu', db_session)
             data_worker.sync_locations()
             msg = data_worker.msg
             del data_worker
@@ -118,7 +118,7 @@ class SyncEPGUAdmin(BaseView):
     @expose('/activate_locations/', methods=('POST',))
     def activate_locations(self):
         if request.form['do_update']:
-            data_worker = EPGUWorker(db_session)
+            data_worker = DataWorker.provider('epgu', db_session)
             data_worker.activate_locations()
             msg = data_worker.msg
             del data_worker

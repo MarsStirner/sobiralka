@@ -22,6 +22,7 @@ from ..service_clients import Clients, CouponStatus
 from admin.database import Session, Session2, init_task_session, shutdown_session
 from ..utils import logger
 from ..dataworker import DataWorker
+from ..is_exceptions import EPGUError
 
 logger_tags = dict(tags=['dataworker', 'IS'])
 
@@ -38,16 +39,16 @@ class EPGUWorker(object):
         self.time_table_period = 90  # TODO: вынести в настройки
         self.schedule_weeks_period = 3  # TODO: вынести в настройки
         self.default_phone = '+79011111111'
-
-        self.proxy_client = Clients.provider('epgu2', self.__get_token(lpu_id))
         if session is not None and isinstance(session, sqlalchemy.orm.Session):
             self.session = session
         else:
             self.session = Session2()
 
+        self.proxy_client = Clients.provider('epgu2', auth_token=self.__get_token(lpu_id))
+
     def __del__(self):
         shutdown_session()
-        logger.debug(u'\n'.join(self.msg), extra=dict(tags=['epgu_worker', 'IS', __file__]))
+        logger.debug(u'\n'.join(self.msg), extra=dict(tags=['epgu2_worker', 'IS']))
 
     def __log(self, msg):
         if msg:
@@ -60,11 +61,12 @@ class EPGUWorker(object):
 
     def __get_token(self, lpu_id=None):
         if lpu_id:
-            lpu_token = self.session.query(LPU.token).filter(and_(LPU.id == lpu_id)).first()
+            lpu_token = self.session.query(LPU.epgu2_token).filter(and_(LPU.id == lpu_id)).first()
         else:
-            lpu_token = self.session.query(LPU.token).filter(and_(LPU.token != '', LPU.token != None)).first()
+            lpu_token = self.session.query(LPU.epgu2_token).filter(and_(LPU.epgu2_token != '',
+                                                                        LPU.epgu2_token != None)).first()
         if lpu_token:
-            return lpu_token.token
+            return lpu_token.epgu2_token
         return None
 
     def __failed_update(self, error=""):
@@ -87,28 +89,31 @@ class EPGUWorker(object):
             for lpu in lpu_list:
                 if not lpu.token:
                     continue
-
-                self.proxy_client.set_auth_token(lpu.token)
-                epgu_result = self.proxy_client.GetSpecs()
-                specialities = getattr(epgu_result, 'medical-specialization', None)
-                if specialities:
-                    epgu_specialities = self.__update_epgu_specialities(specialities=specialities)
-                    self.__update_services(specialities=epgu_specialities, lpu_token=lpu.token)
+                self.proxy_client.set_auth_token(lpu.epgu2_token)
+                try:
+                    specialities = self.proxy_client.GetSpecs()
+                except EPGUError, e:
+                    self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
                 else:
-                    self.__log(getattr(epgu_result, 'error', None))
-                self.__log(u'Синхронизированы специальности и услуги по ЛПУ %s' % lpu.name)
-                self.__log(u'----------------------------')
+                    if specialities:
+                        epgu_specialities = self.__update_epgu_specialities(specialities=specialities)
+                        self.__update_services(specialities=epgu_specialities, lpu_token=lpu.epgu2_token)
+                    self.__log(u'Синхронизированы специальности и услуги по ЛПУ %s' % lpu.name)
+                    self.__log(u'----------------------------')
 
     def __update_epgu_specialities(self, specialities):
         result = []
         for speciality in specialities:
-            db_speciality = self.session.query(EPGU_Speciality).filter(EPGU_Speciality.name == speciality.name).first()
+            # TODO: use id when finally switch to EPGU2
+            # db_speciality = self.session.query(EPGU2_Speciality).get(speciality.id)
+            db_speciality = self.session.query(EPGU_Speciality).filter(
+                EPGU_Speciality.name == speciality['spec']['name']).first()
             if not db_speciality:
-                epgu_speciality = EPGU_Speciality(name=speciality.name, keyEPGU=str(speciality.id))
+                epgu_speciality = EPGU_Speciality(**speciality)
                 self.session.add(epgu_speciality)
                 result.append(epgu_speciality)
-            elif not db_speciality.keyEPGU:
-                db_speciality.keyEPGU = speciality.id
+            elif not db_speciality.code:
+                db_speciality.code = speciality.code
                 result.append(db_speciality)
         self.session.commit()
         return result
@@ -187,7 +192,7 @@ class EPGUWorker(object):
                      Personal.LastName == lastname,
                      Personal.FirstName.ilike('%s%%' % firstname),
                      Personal.PatrName.ilike('%s%%' % patrname),
-                     Personal.speciality.any(Speciality.epgu_speciality.has(EPGU_Speciality.keyEPGU == location['epgu_speciality'])),
+                     Personal.speciality.any(Speciality.epgu_speciality.has(EPGU2_Speciality.keyEPGU == location['epgu_speciality'])),
                      )
             # ).group_by(Personal.doctor_id).one()
             ).group_by(Personal.doctor_id).first()

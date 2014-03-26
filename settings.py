@@ -20,6 +20,8 @@ SOAP_NAMESPACE = 'tns'
 FLASK_SECRET_KEY = ''
 
 EPGU_SERVICE_URL = ''
+EPGU2_SERVICE_URL = 'http://api-er2.rosminzdrav.ru/mis?wsdl'
+FER_VERSION = 1
 
 SIMPLELOGS_URL = 'http://127.0.0.1:5500'
 

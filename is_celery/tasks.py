@@ -6,7 +6,7 @@ from celery import group, chain
 from celery.signals import task_postrun
 from celery.utils.log import get_task_logger
 from is_celery.celery_init import celery
-from int_service.lib.dataworker import EPGUWorker, UpdateWorker
+from int_service.lib.dataworker import UpdateWorker, DataWorker
 from admin.database import init_task_session
 from admin.models import LPU, Personal, Personal_KeyEPGU
 from kombu.transport.sqlalchemy.models import Message
@@ -37,7 +37,7 @@ def appoint_patients(parent_task_returns, hospital, doctor):
     rules, patient_slots = parent_task_returns
     if not patient_slots:
         return None
-    epgu_dw = EPGUWorker(db_session)
+    epgu_dw = DataWorker.provider('epgu', db_session)
     epgu_dw.appoint_patients(patient_slots, hospital, doctor)
     return epgu_dw.msg
 
@@ -46,7 +46,7 @@ def appoint_patients(parent_task_returns, hospital, doctor):
 def activate_location(parent_task_returns, hospital, location_id):
     if not parent_task_returns:
         return None
-    epgu_dw = EPGUWorker(db_session)
+    epgu_dw = DataWorker.provider('epgu', db_session)
     epgu_dw.activate_location(hospital, location_id)
     return parent_task_returns
 
@@ -56,14 +56,14 @@ def link_schedule(parent_task_returns, hospital, location_id):
     rules, busy_by_patients = parent_task_returns
     if not rules:
         return None
-    epgu_dw = EPGUWorker(db_session)
+    epgu_dw = DataWorker.provider('epgu', db_session)
     epgu_dw.link_schedule(rules, hospital, location_id)
     return parent_task_returns
 
 
 @celery.task(base=SqlAlchemyTask)
 def doctor_schedule_task(doctor, hospital_dict):
-    epgu_dw = EPGUWorker(db_session)
+    epgu_dw = DataWorker.provider('epgu', db_session)
     return epgu_dw.doctor_schedule_task(doctor, hospital_dict)
 
 
@@ -89,7 +89,7 @@ def lpu_tickets_task(hospital_id, hospital_dict):
         Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
     ).all()
     if epgu_doctors:
-        epgu_dw = EPGUWorker(db_session)
+        epgu_dw = DataWorker.provider('epgu', db_session)
         group([appoint_patients.s((None, epgu_dw.get_doctor_tickets(doctor)), hospital_dict, doctor)
                for doctor in epgu_doctors])()
 
@@ -137,7 +137,7 @@ def sync_schedule_task():
 
 @celery.task(base=SqlAlchemyTask)
 def sync_locations():
-    epgu_dw = EPGUWorker(db_session)
+    epgu_dw = DataWorker.provider('epgu', db_session)
     epgu_dw.sync_locations()
 
 
@@ -155,7 +155,7 @@ def clear_broker_messages():
 
 @celery.task(base=SqlAlchemyTask)
 def epgu_send_lpu_tickets(hospital_id, hospital):
-    epgu_dw = EPGUWorker(Task_Session())
+    epgu_dw = DataWorker.provider('epgu', Task_Session())
     try:
         epgu_dw.send_new_tickets(hospital_id, hospital)
     except exceptions.Exception, e:
