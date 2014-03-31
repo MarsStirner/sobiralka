@@ -1,22 +1,15 @@
 # -*- coding: utf-8 -*-
-from __builtin__ import classmethod
-
 import logging
 from spyne.application import Application
 from spyne.protocol.soap import Soap11
 from spyne.interface.wsdl.wsdl11 import Wsdl11
-from spyne.util.simple import wsgi_soap_application
-from spyne.server.wsgi import WsgiApplication
 from spyne.util.wsgi_wrapper import WsgiMounter
-from spyne.decorator import rpc
 from spyne.service import ServiceBase
-from spyne.protocol.http import HttpRpc
-from spyne.model.primitive import NATIVE_MAP, Mandatory, AnyDict, String
 from spyne.decorator import srpc, rpc
-from spyne.model.complex import Array, Iterable, ComplexModel
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, SOAP_NAMESPACE, DEBUG
-from dataworker import DataWorker, EPGUWorker
+from dataworker import DataWorker
+from workers.epgu import EPGUWorker
 import soap_models
 import version
 from admin.database import shutdown_session
@@ -153,7 +146,9 @@ class EPGUGateServer(ServiceBase):
           _returns=soap_models.ResponseType, _out_variable_name='Response',
           _throws=soap_models.ErrorResponseType)
     def Request(parameters):
-        obj = DataWorker.provider('epgu')
+        # EPGU2 пока не вывешиваем на получение данных
+        # obj = DataWorker.provider('epgu')
+        obj = EPGUWorker()
         try:
             MessageData = parameters.MessageData
             _format = str(MessageData.format)

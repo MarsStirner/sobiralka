@@ -13,7 +13,7 @@ from sqlalchemy.orm.scoping import ScopedSession
 from suds import WebFault
 
 from admin.models import LPU, LPU_Units, UnitsParentForId, Enqueue, Personal, Speciality, Regions, LPU_Specialities
-from admin.models import Personal_Specialities, Personal_KeyEPGU
+from admin.models import Personal_Specialities, Personal_KeyEPGU, Post, Personal_Posts
 from ..service_clients import Clients
 from ..is_exceptions import exception_by_code, IS_ConnectionError
 
@@ -180,6 +180,10 @@ class UpdateWorker(object):
                                         lpu_id=lpu.id,
                                         speciality=doctor.speciality.strip()
                                     )
+                                    post = self.__update_post(
+                                        lpu_id=lpu.id,
+                                        post=doctor.post.strip()
+                                    )
                                     if not speciality:
                                         continue
 
@@ -206,11 +210,13 @@ class UpdateWorker(object):
                                         PatrName=doctor.patrName,
                                         LastName=doctor.lastName,
                                         office=getattr(doctor, 'office', None),
+                                        snils=getattr(doctor, 'snils', None)
                                     )
                                     self.session.add(personal)
                                     self.session.commit()
 
                                     self.__add_personal_speciality(personal.id, speciality.id)
+                                    self.__add_personal_post(personal.id, post.id)
 
                                     self.__log(u'%s: %s %s %s (%s)' % (doctor.id,
                                                                       doctor.firstName,
@@ -235,8 +241,27 @@ class UpdateWorker(object):
         self.__add_lpu_speciality(speciality_id=speciality.id, lpu_id=kwargs.get('lpu_id'))
         return speciality
 
+    def __update_post(self, **kwargs):
+        post = self.session.query(Post).filter(Post.name == kwargs.get('post')).first()
+        if not post:
+            try:
+                post = Post(name=kwargs.get('post'))
+            except InvalidRequestError, e:
+                print e
+                logger.error(e, extra=logger_tags)
+                self.__failed_update(e)
+                return False
+            else:
+                self.session.add(post)
+                self.session.commit()
+        return post
+
     def __add_personal_speciality(self, doctor_id, speciality_id):
         self.session.add(Personal_Specialities(personal_id=doctor_id, speciality_id=speciality_id,))
+        self.session.commit()
+
+    def __add_personal_post(self, doctor_id, post_id):
+        self.session.add(Personal_Posts(personal_id=doctor_id, post_id=post_id,))
         self.session.commit()
 
     def __add_lpu_speciality(self, **kwargs):
@@ -272,6 +297,7 @@ class UpdateWorker(object):
         lpu_list = lpu_dw.get_list()
         if lpu_list:
             for lpu in lpu_list:
+                # TODO: возможно ли избавиться от удаления врачей?
                 self.__clear_data(lpu)
                 self.__log(u'Обновление ЛПУ: %s' % lpu.name)
                 try:

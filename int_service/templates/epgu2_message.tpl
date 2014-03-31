@@ -3,7 +3,7 @@
 <{{ key }}>
 {% if key == 'params' %}
     {% for k, v in value.items() %}
-        <param name="{{ k }}">{{ v }}</param>
+        <{{ k }}>{{ v }}</{{ k }}>
     {% endfor %}
 {% else %}
     {{ value }}

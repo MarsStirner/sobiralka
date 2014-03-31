@@ -110,21 +110,6 @@ class EPGU_Speciality(Base):
         return self.name
 
 
-class EPGU2_Speciality(Base):
-    """Mapping for epgu_specialities table"""
-    __tablename__ = 'epgu2_speciality'
-    __table_args__ = {'mysql_engine': 'InnoDB'}
-
-    id = Column(Integer, primary_key=True)
-    name = Column(Unicode(64), nullable=False, unique=True)
-    code = Column(Integer)
-    recid = Column(Unicode(45))
-    parent_recid = Column(Unicode(45))
-
-    def __unicode__(self):
-        return self.name
-
-
 class EPGU_Service_Type(Base):
     """Mapping for epgu_service_type table"""
     __tablename__ = 'epgu_service_type'
@@ -144,6 +129,56 @@ class EPGU_Service_Type(Base):
         return self.name
 
 
+class EPGU2_Speciality(Base):
+    """Mapping for epgu_specialities table"""
+    __tablename__ = 'epgu2_speciality'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(128), nullable=False)
+    code = Column(Integer, nullable=False)
+    recid = Column(Integer, nullable=False, unique=True)
+    parent_recid = Column(Unicode(32))
+
+    __mapper_args__ = {'order_by': [name, parent_recid]}
+
+    def __unicode__(self):
+        return self.name
+
+
+class EPGU2_Post(Base):
+    """Mapping for epgu_post table"""
+    __tablename__ = 'epgu2_post'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(128), nullable=False)
+    recid = Column(Integer, nullable=False, unique=True)
+
+    __mapper_args__ = {'order_by': [name, id]}
+
+    def __unicode__(self):
+        return self.name
+
+
+class EPGU2_Service(Base):
+    """Mapping for epgu_service_type table"""
+    __tablename__ = 'epgu2_service'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(128), nullable=False)
+    code = Column(Unicode(32), nullable=False)
+    spec_recid = Column(Integer)
+    speciality_id = Column(Integer, ForeignKey(EPGU2_Speciality.id))
+    epgu_speciality = relationship(EPGU2_Speciality, backref=backref('epgu_service'), lazy='joined')
+
+    __mapper_args__ = {'order_by': name}
+
+    def __unicode__(self):
+        return self.name
+
+
 class EPGU_Reservation_Type(Base):
     """Mapping for epgu_service_type table"""
     __tablename__ = 'epgu_reservation_type'
@@ -153,6 +188,16 @@ class EPGU_Reservation_Type(Base):
     name = Column(Unicode(50), nullable=False)
     code = Column(String(50), nullable=False)
     keyEPGU = Column(String(45))
+
+
+class EPGU2_Payment_Method(Base):
+    """Mapping for epgu_service_type table"""
+    __tablename__ = 'epgu2_payment_method'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(64), nullable=False)
+    code = Column(String(32))
 
 
 class EPGU_Payment_Method(Base):
@@ -179,6 +224,21 @@ class Speciality(Base):
     epgu_service_type = relationship(EPGU_Service_Type, lazy='joined')
     epgu2_speciality_id = Column(Integer, ForeignKey('epgu2_speciality.id'), nullable=True, index=True)
     epgu2_speciality = relationship(EPGU2_Speciality, lazy='joined')
+    epgu2_service_id = Column(Integer, ForeignKey('epgu2_service.id'), nullable=True, index=True)
+    epgu2_service = relationship(EPGU2_Service, lazy='joined')
+
+    __mapper_args__ = {'order_by': name}
+
+
+class Post(Base):
+    """Mapping for speciality table"""
+    __tablename__ = 'post'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    id = Column(Integer, primary_key=True)
+    name = Column(Unicode(64), nullable=False, unique=True)
+    epgu2_post_id = Column(Integer, ForeignKey('epgu2_post.id'), nullable=True, index=True)
+    epgu2_post = relationship(EPGU2_Post, lazy='joined')
 
     __mapper_args__ = {'order_by': name}
 
@@ -191,6 +251,8 @@ class Personal_KeyEPGU(Base):
     lpuId = Column(BigInteger, primary_key=True, autoincrement=False)
     orgId = Column(BigInteger, primary_key=True, autoincrement=False)
     keyEPGU = Column(String(45))
+    epgu2_id = Column(Integer)
+    epgu2_resource_id = Column(Integer)
 
     UniqueConstraint(doctor_id, lpuId, orgId)
 
@@ -209,12 +271,14 @@ class Personal(Base):
     LastName = Column(Unicode(32), nullable=False)
     PatrName = Column(Unicode(32), nullable=False)
     office = Column(Unicode(8), nullable=True)
+    snils = Column(Unicode(11))
     # keyEPGU = Column(String(45))
 
     # lpu = relationship(LPU, backref=backref('personal', order_by=id, lazy='joined'))
     lpu = relationship(LPU)
     # speciality = relationship(Speciality, secondary='personal_speciality', backref=backref('personal'), lazy='joined')
     speciality = relationship(Speciality, secondary='personal_speciality', lazy='joined')
+    post = relationship(Post, secondary='personal_post', lazy='joined')
     UniqueConstraint(doctor_id, lpuId, orgId)
 
     __table_args__ = (
@@ -253,6 +317,20 @@ class Personal_Specialities(Base):
 
     personal = relationship(Personal)
     speciality = relationship(Speciality, lazy='joined')
+
+
+class Personal_Posts(Base):
+    """Mapping for many-to-many relations between Personal and Post"""
+    __tablename__ = 'personal_post'
+    __table_args__ = {'mysql_engine': 'InnoDB'}
+
+    personal_id = Column(BigInteger, ForeignKey('personal.id', ondelete='CASCADE'), primary_key=True)
+    post_id = Column(Integer, ForeignKey('post.id', ondelete='CASCADE'), primary_key=True)
+
+    UniqueConstraint(personal_id, post_id)
+
+    personal = relationship(Personal)
+    post = relationship(Post, lazy='joined')
 
 
 class LPU_Specialities(Base):

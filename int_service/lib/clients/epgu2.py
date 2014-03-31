@@ -66,15 +66,16 @@ class ClientEPGU2():
         root = etree.fromstring(xml_string)
         return self.__xml_to_dict(root)
 
-    def __send(self, method, message=None):
+    def __send(self, method, params=None):
         self.__init_client()
-        params = dict()
-        params['messageCode'] = method
-        params['messageSourceToken'] = self.auth_token
-        if message:
-            params['message'] = base64.b64encode(u'<params>{0}</params>'.format(message).encode('utf-8'))
+        send_data = dict()
+        send_data['messageCode'] = method
+        send_data['messageSourceToken'] = self.auth_token
+        if params:
+            message = self.__generate_message(params)
+            send_data['message'] = base64.b64encode(message.encode('utf-8'))
         if self.client:
-            result = self.client.service.Send(MessageData={'AppData': params})
+            result = self.client.service.Send(MessageData={'AppData': send_data})
             app_data = getattr(result, 'AppData', None)
             status = getattr(result, 'Status', None)
             error = getattr(result, 'Error', None)
@@ -127,13 +128,37 @@ class ClientEPGU2():
         Тег name – название специальности в справочнике ЕПГУ
         """
         try:
-            message = self.__generate_message()
-            result = self.__send('GetSpecs', message)
+            result = self.__send('GetSpecs', {'params': {}})
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
         else:
-            return result.get('specs', None)
+            return result.get('specs', [])
+        return None
+
+    def GetPosts(self):
+        """Получает список должностей из ЕПГУ:
+
+        Returns:
+        <specs>
+            <spec>
+                <id>63</id>
+                <name>врач-терапевт</name>
+                <recid>12365</recid>
+            </spec>
+        </specs>
+
+        1 id: ID должности
+        2 name: наименование должности
+        3 recid: идентификатор в справочнике НСИ
+        """
+        try:
+            result = self.__send('GetPosts', {'params': {}})
+        except WebFault, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        else:
+            return result.get('posts', [])
         return None
 
     def GetServicesSpecs(self):
@@ -155,8 +180,7 @@ class ClientEPGU2():
         8 spec_code: код специальности.
         """
         try:
-            message = self.__generate_message()
-            result = self.__send('GetServicesSpecs', message)
+            result = self.__send('GetServicesSpecs')
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -165,52 +189,6 @@ class ClientEPGU2():
             logger.error(e, extra=logger_tags)
         else:
             return getattr(result, 'specs', None)
-        return None
-
-    def GetReservationTypes(self, auth_token):
-        """Получает список типов записи из ЕПГУ:
-
-        Args:
-            auth_token: указывается token ЛПУ (обязательный)
-
-        Returns:
-        <reservation-type>
-            <id>4f8805b52bcfa52299000011</id>
-            <name>Автоматическая запись</name>
-            <code>automatic</code>
-        </reservation-type>
-        <reservation-type>
-            <id>4f8805b52bcfa52299000013</id>
-            <name>Запись по листу ожидания</name>
-            <code>waiting_list</code>
-        </reservation-type>
-        <reservation-type>
-            <id>4f8805b52bcfa52299000012</id>
-            <name>Запись с подтверждением</name>
-            <code>manual</code>
-        </reservation-type>
-
-        Тег id – идентификатор типа записи в справочнике ЕПГУ
-        Тег name – название типа записи в справочнике ЕПГУ
-        Тег code – код типа записи в справочнике ЕПГУ
-
-        По умолчанию использовать значение automatic.
-        """
-        try:
-            message = self.__generate_message()
-            result = self.__send('GetReservationTypes', message)
-        except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
-        except Exception, e:
-            print e
-            logger.error(e, extra=logger_tags)
-        else:
-            if result:
-                reservation_types = getattr(result, 'reservation-types', None)
-                if reservation_types:
-                    return reservation_types
-                return getattr(result, 'errors', None)
         return None
 
     def GetPayments(self):
@@ -229,8 +207,7 @@ class ClientEPGU2():
 
         """
         try:
-            message = self.__generate_message()
-            result = self.__send('GetPayments', message)
+            result = self.__send('GetPayments', {'params': {}})
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -239,17 +216,14 @@ class ClientEPGU2():
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                payment_methods = getattr(result, 'payments', None)
-                if payment_methods:
-                    return payment_methods
-                return getattr(result, 'errors', None)
+                return result.get('payments', [])
         return None
 
-    def GetServices(self, ms_id):
+    def GetServices(self, spec_id):
         """Получает список медицинских услуг из ЕПГУ:
 
         Args:
-            ms_id: указывается идентификатор медицинской специализации (обязательный)
+            spec_id: указывается идентификатор медицинской специализации (обязательный)
 
         Returns:
         <services>
@@ -270,10 +244,9 @@ class ClientEPGU2():
         """
         try:
             params = dict()
-            if ms_id:
-                params.update(dict(ms_id=ms_id))
-            message = self.__generate_message(dict(params=params))
-            result = self.__send('GetServices', message)
+            if spec_id:
+                params.update(dict(spec_id=spec_id))
+            result = self.__send('GetServices', dict(params=params))
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -282,10 +255,7 @@ class ClientEPGU2():
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                service_types = getattr(result, 'service-types', None)
-                if service_types:
-                    return service_types
-                return getattr(result, 'errors', None)
+                return result.get('services', [])
         return None
 
     def GetService(self, service_id):
@@ -309,8 +279,7 @@ class ClientEPGU2():
 
         """
         try:
-            message = self.__generate_message(dict(params={':service_type_id': service_id}))
-            result = self.__send('GetService', message)
+            result = self.__send('GetService', {':service_type_id': service_id})
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -410,8 +379,7 @@ class ClientEPGU2():
         25 time_zone: часовой пояс РФ
         """
         try:
-            message = self.__generate_message(dict(params=kwargs))
-            result = self.__send('GetMos', message)
+            result = self.__send('GetMos', kwargs)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -508,7 +476,7 @@ class ClientEPGU2():
                 return getattr(result, 'errors', None)
         return None
 
-    def GetLocations(self, hospital, service_type_id=None, page=1):
+    def GetResources(self, params):
         """Получает список врачей для указанного ЛПУ по указанному типу услуг
 
         Args:
@@ -525,12 +493,7 @@ class ClientEPGU2():
 
         """
         try:
-            params = {':place_id': hospital['place_id'],
-                      'page': page}
-            if service_type_id:
-                params['service_type_id'] = service_type_id,
-            message = self.__generate_message(dict(params=params))
-            result = self.__send('GetResource', message)
+            result = self.__send('GetResources', params)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -539,10 +502,10 @@ class ClientEPGU2():
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                place_locations_data = getattr(result, 'place-locations-data', None)
-                if place_locations_data:
-                    return place_locations_data
-                return getattr(result, 'errors', None)
+                resources = result.get('resources', [])
+                if not isinstance(resources, list):
+                    resources = [resources]
+                return resources
         return None
 
     def GetLocation(self):
@@ -556,23 +519,16 @@ class ClientEPGU2():
 
         """
         try:
-            message = self.__generate_message(dict(resource=dict(id=resource_id)))
-            result = self.__send('DeleteResource', message)
+            result = self.__send('DeleteResource', dict(resource=dict(id=resource_id)))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
-        except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                errors = getattr(result, 'errors', None)
-                if errors:
-                    return errors
-                return result
+                return result.get('status', None)
         return None
 
-    def CreateResource(self, hospital, doctor, service_types, can_write=None):
+    def CreateResource(self, params):
         """Используется для создания очереди в федеральной регистратуре (на ЕПГУ)
 
         Args:
@@ -676,49 +632,16 @@ class ClientEPGU2():
 
         """
         try:
-            params = dict()
-            try:
-                params['prefix'] = doctor['prefix']
-                params['medical_specialization_id'] = doctor['medical_specialization_id']
-                params['cabinet_number'] = doctor['cabinet_number']
-                params['time_table_period'] = doctor['time_table_period']
-                params['reservation_time'] = doctor['reservation_time']
-                params['reserved_time_for_slot'] = doctor['reserved_time_for_slot']
-                params['reservation_type_id'] = doctor['reservation_type_id']
-                params['payment_method_id'] = doctor['payment_method_id']
-                params['auto_start'] = 1
-
-                if can_write:
-                    params['can_write'] = can_write
-
-                service_type_ids = dict()
-                for k, service_type in enumerate(service_types):
-                    service_type_ids['st%d' % k] = service_type
-                params['service_types_ids'] = service_type_ids
-
-                params['params'] = {':place_id': hospital['place_id']}
-            except AttributeError, e:
-                print e
-                logger.error(e, extra=logger_tags)
-                return None
-            else:
-                message = self.__generate_message(dict(resource=params))
-                result = self.__send('CreateResource', message)
+            result = self.__send('CreateResource', dict(resource=params))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
-        except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                location = getattr(result, 'resource', None)
-                if location:
-                    return location
-                return getattr(result, 'errors', None)
+                return result.get('resource', {})
         return None
 
-    def UpdateResource(self, hospital, doctor, service_types, can_write=None):
+    def UpdateResource(self, resource_id, params):
         """Используется для редактировани очереди в федеральной регистратуре (на ЕПГУ)
 
         Args:
@@ -859,47 +782,17 @@ class ClientEPGU2():
 
         """
         try:
-            params = dict()
-            try:
-                params['prefix'] = doctor['prefix']
-                params['medical_specialization_id'] = doctor['medical_specialization_id']
-                params['cabinet_number'] = doctor['cabinet_number']
-                params['time_table_period'] = doctor['time_table_period']
-                params['reservation_time'] = doctor['reservation_time']
-                params['reserved_time_for_slot'] = doctor['reserved_time_for_slot']
-                params['reservation_type_id'] = doctor['reservation_type_id']
-                params['payment_method_id'] = doctor['payment_method_id']
-                params['auto_start'] = 1
-
-                service_type_ids = dict()
-                for k, service_type in enumerate(service_types):
-                    service_type_ids['st%d' % k] = service_type
-                params['service_types_ids'] = service_type_ids
-
-                params['params'] = {':place_id': hospital['place_id'],
-                                    ':location_id': doctor['location_id']}
-            except AttributeError, e:
-                print e
-                logger.error(e, extra=logger_tags)
-                return None
-            else:
-                message = self.__generate_message(dict(location=params))
-                result = self.__send('UpdateResource', message)
+            params.update(dict(id=resource_id))
+            result = self.__send('UpdateResource', dict(resource=params))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
-        except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                location = getattr(result, 'location', None)
-                if location:
-                    return location
-                return getattr(result, 'errors', None)
+                return result.get('resource', {})
         return None
 
-    def CreateRule(self, hospital, doctor, period, days, can_write=None):
+    def CreateRule(self, params):
         """Данный профиль используется для добавления расписания
 
         Args:
@@ -1035,40 +928,13 @@ class ClientEPGU2():
 
         """
         try:
-            params = dict()
-            try:
-                params['schedules_rule'] = dict(name=u'%s (%s)' % (doctor, unicode(period)))
-
-                day_rule = dict()
-                for day in days:
-                    key = 'day%d' % (day['date'].isoweekday() % 7)
-                    day_rule[key] = []
-                    for k, interval in enumerate(day['interval']):
-                        day_rule[key].append({'int%s' % k: dict(time0=interval['start'], time1=interval['end'])})
-                params['day_rule'] = day_rule
-
-                if can_write:
-                    params['can_write'] = can_write
-
-            except AttributeError, e:
-                print e
-                logger.error(e, extra=logger_tags)
-                return None
-            else:
-                message = self.__generate_message(dict(rule=params))
-                result = self.__send('CreateRule', message)
+            result = self.__send('CreateRule', params)
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
-        except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                errors = getattr(result, 'errors', None)
-                if errors:
-                    return errors
-                return result
+                return result.get('rule', {})
         return None
 
     def PutLocationSchedule(self, hospital, location_id, rules):
@@ -1155,7 +1021,7 @@ class ClientEPGU2():
                 return result
         return None
 
-    def CreateDoctor(self):
+    def CreateDoctor(self, params):
         """Данный профиль используется для заведения нового специалиста в МО
 
         Args:
@@ -1210,21 +1076,13 @@ class ClientEPGU2():
 
         """
         try:
-            params = dict()
-            message = self.__generate_message(dict(doctor=params))
-            result = self.__send('CreateDoctor', message)
+            result = self.__send('CreateDoctor', dict(doctor=params))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
-        except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                doctor = getattr(result, 'doctor', None)
-                if doctor:
-                    return doctor
-                return getattr(result, 'errors', None)
+                return result.get('doctor', None)
         return None
 
     def UpdateDoctor(self):
@@ -1379,20 +1237,16 @@ class ClientEPGU2():
         """
         try:
             params = dict()
-            message = self.__generate_message(dict(doctor=params))
-            result = self.__send('GetDoctors', message)
+            result = self.__send('GetDoctors', {'params': params})
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
-        except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                doctors = getattr(result, 'doctors', None)
-                if doctors:
-                    return doctors
-                return getattr(result, 'errors', None)
+                doctors = result.get('doctors', [])
+                if not isinstance(doctors, list):
+                    doctors = [doctors]
+                return doctors
         return None
 
     def CreateSlot(self, hospital, doctor_id, service_type_id, date, cito=0):

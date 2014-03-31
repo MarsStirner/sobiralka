@@ -781,6 +781,7 @@ class OrgStructure(object):
   @param address				5) Адрес подразделения
   @param sexFilter				6) Половой фильтр
   @param ageFilter				7) Возрастной фильтр
+  @param availableForExternal  8) Признак досутпности подразделения для внешних подсистем
 
   Attributes:
    - id
@@ -790,6 +791,7 @@ class OrgStructure(object):
    - address
    - sexFilter
    - ageFilter
+   - availableForExternal
   """
 
   thrift_spec = (
@@ -801,9 +803,10 @@ class OrgStructure(object):
     (5, TType.STRING, 'address', None, "", ), # 5
     (6, TType.STRING, 'sexFilter', None, "", ), # 6
     (7, TType.STRING, 'ageFilter', None, "", ), # 7
+    (8, TType.BOOL, 'availableForExternal', None, None, ), # 8
   )
 
-  def __init__(self, id=None, parent_id=thrift_spec[2][4], code=None, name=thrift_spec[4][4], address=thrift_spec[5][4], sexFilter=thrift_spec[6][4], ageFilter=thrift_spec[7][4],):
+  def __init__(self, id=None, parent_id=thrift_spec[2][4], code=None, name=thrift_spec[4][4], address=thrift_spec[5][4], sexFilter=thrift_spec[6][4], ageFilter=thrift_spec[7][4], availableForExternal=None,):
     self.id = id
     self.parent_id = parent_id
     self.code = code
@@ -811,6 +814,7 @@ class OrgStructure(object):
     self.address = address
     self.sexFilter = sexFilter
     self.ageFilter = ageFilter
+    self.availableForExternal = availableForExternal
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -856,6 +860,11 @@ class OrgStructure(object):
           self.ageFilter = iprot.readString().decode('utf-8')
         else:
           iprot.skip(ftype)
+      elif fid == 8:
+        if ftype == TType.BOOL:
+          self.availableForExternal = iprot.readBool();
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -893,6 +902,10 @@ class OrgStructure(object):
     if self.ageFilter is not None:
       oprot.writeFieldBegin('ageFilter', TType.STRING, 7)
       oprot.writeString(self.ageFilter.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.availableForExternal is not None:
+      oprot.writeFieldBegin('availableForExternal', TType.BOOL, 8)
+      oprot.writeBool(self.availableForExternal)
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
@@ -934,6 +947,7 @@ class Person(object):
   @param specialityRegionalCode 10) Региональный код специальности
   @param post					11) Наименование должности
   @param sexFilter				12) Пол работника
+  @param snils                 13) СНИЛС врача
 
   Attributes:
    - id
@@ -948,6 +962,7 @@ class Person(object):
    - specialityRegionalCode
    - post
    - sexFilter
+   - snils
   """
 
   thrift_spec = (
@@ -964,9 +979,10 @@ class Person(object):
     (10, TType.STRING, 'specialityRegionalCode', None, None, ), # 10
     (11, TType.STRING, 'post', None, None, ), # 11
     (12, TType.STRING, 'sexFilter', None, None, ), # 12
+    (13, TType.STRING, 'snils', None, None, ), # 13
   )
 
-  def __init__(self, id=None, code=None, orgStructureId=None, lastName=None, firstName=None, patrName=None, office=None, speciality=None, specialityOKSOCode=None, specialityRegionalCode=None, post=None, sexFilter=None,):
+  def __init__(self, id=None, code=None, orgStructureId=None, lastName=None, firstName=None, patrName=None, office=None, speciality=None, specialityOKSOCode=None, specialityRegionalCode=None, post=None, sexFilter=None, snils=None,):
     self.id = id
     self.code = code
     self.orgStructureId = orgStructureId
@@ -979,6 +995,7 @@ class Person(object):
     self.specialityRegionalCode = specialityRegionalCode
     self.post = post
     self.sexFilter = sexFilter
+    self.snils = snils
 
   def read(self, iprot):
     if iprot.__class__ == TBinaryProtocol.TBinaryProtocolAccelerated and isinstance(iprot.trans, TTransport.CReadableTransport) and self.thrift_spec is not None and fastbinary is not None:
@@ -1049,6 +1066,11 @@ class Person(object):
           self.sexFilter = iprot.readString().decode('utf-8')
         else:
           iprot.skip(ftype)
+      elif fid == 13:
+        if ftype == TType.STRING:
+          self.snils = iprot.readString().decode('utf-8')
+        else:
+          iprot.skip(ftype)
       else:
         iprot.skip(ftype)
       iprot.readFieldEnd()
@@ -1106,6 +1128,10 @@ class Person(object):
     if self.sexFilter is not None:
       oprot.writeFieldBegin('sexFilter', TType.STRING, 12)
       oprot.writeString(self.sexFilter.encode('utf-8'))
+      oprot.writeFieldEnd()
+    if self.snils is not None:
+      oprot.writeFieldBegin('snils', TType.STRING, 13)
+      oprot.writeString(self.snils.encode('utf-8'))
       oprot.writeFieldEnd()
     oprot.writeFieldStop()
     oprot.writeStructEnd()
