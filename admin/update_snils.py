@@ -27,6 +27,7 @@ def _get_lpu_dbs():
 
 
 def _get_lpu_session(db):
+    print db
     DB_CONNECT_STRING = 'mysql://%s:%s@%s:%s/%s?charset=utf8' % ('tmis', 'bdsvai_20', db['ip'], 3306, db['db_name'])
     engine = create_engine(DB_CONNECT_STRING, convert_unicode=True, pool_recycle=600)
     lpu_session = scoped_session(sessionmaker(bind=engine))
@@ -35,9 +36,13 @@ def _get_lpu_session(db):
 
 def _get_lpu_snils(lpu_session):
     res = list()
-    result = lpu_session.execute('SELECT id, snils FROM Person WHERE deleted=0 AND snils')
-    for row in result.fetchall():
-        res.append(row)
+    try:
+        result = lpu_session.execute('SELECT id, snils FROM Person WHERE deleted=0 AND snils')
+    except Exception, e:
+        print e
+    else:
+        for row in result.fetchall():
+            res.append(row)
     return res
 
 
