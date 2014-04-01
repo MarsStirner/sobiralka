@@ -185,7 +185,7 @@ class EPGUWorker(object):
         pass
 
     def __get_doctor_by_location(self, doctor_epgu_id, lpu_id):
-        doctor = self.session.query(Personal).filter(Personal_KeyEPGU.epgu2_id==doctor_epgu_id, Personal.lpuId == lpu_id).first()
+        doctor = self.session.query(Personal).filter(Personal_KeyEPGU.epgu2_id==doctor_epgu_id, Personal_KeyEPGU.lpuId == lpu_id).first()
         return doctor
 
     def __update_doctor(self, doctor, data):
@@ -504,6 +504,7 @@ class EPGUWorker(object):
             result = self.proxy_client.CreateDoctor(params)
         except EPGUError, e:
             self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
+            print e
         else:
             if result['id']:
                 doctor.key_epgu.epgu2_id = result['id']
