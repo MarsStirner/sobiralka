@@ -68,7 +68,7 @@ def update_snils():
                 doctor = _get_person(db['key'], snils['id'])
                 print doctor
                 if doctor and not doctor.snils:
-                    doctor.snils = snils.replace('-', '').replace(' ')
+                    doctor.snils = snils['snils'].replace('-', '').replace(' ')
                     session.commit()
 
 if __name__ == "__main__":
