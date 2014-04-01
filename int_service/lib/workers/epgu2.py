@@ -3,7 +3,7 @@ import exceptions
 import datetime
 import time
 import sqlalchemy
-
+import time
 try:
     import json
 except ImportError:
@@ -413,6 +413,7 @@ class EPGUWorker(object):
                 self.proxy_client.set_auth_token(lpu.epgu2_token)
                 epgu2_doctors = []
                 try:
+                    time.sleep(3)
                     epgu2_doctors = self.proxy_client.GetDoctors()
                 except EPGUError, e:
                     print e
