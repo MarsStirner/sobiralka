@@ -28,7 +28,7 @@ def _get_lpu_dbs():
 
 def _get_lpu_session(db):
     print db
-    DB_CONNECT_STRING = 'mysql://%s:%s@%s:%s/%s?charset=utf8' % ('tmis', 'bdsvai_20', db['ip'], 3306, db['db_name'])
+    DB_CONNECT_STRING = 'mysql://%s:%s@%s:%s/%s?charset=utf8' % ('tmis', 'bdsvai20', db['ip'], 3306, db['db_name'])
     engine = create_engine(DB_CONNECT_STRING, convert_unicode=True, pool_recycle=600)
     lpu_session = scoped_session(sessionmaker(bind=engine))
     return lpu_session
