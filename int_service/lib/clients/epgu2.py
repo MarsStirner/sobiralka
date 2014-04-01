@@ -1085,7 +1085,7 @@ class ClientEPGU2():
                 return result.get('doctor', None)
         return None
 
-    def UpdateDoctor(self):
+    def UpdateDoctor(self, doctor_id, params):
         """Данный профиль используется для изменения параметров специалиста в МО
 
         Args:
@@ -1141,21 +1141,14 @@ class ClientEPGU2():
 
         """
         try:
-            params = dict()
-            message = self.__generate_message(dict(doctor=params))
-            result = self.__send('UpdateDoctor', message)
+            params.update(dict(id=doctor_id))
+            result = self.__send('UpdateDoctor', dict(doctor=params))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
-        except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                doctor = getattr(result, 'doctor', None)
-                if doctor:
-                    return doctor
-                return getattr(result, 'errors', None)
+                return result.get('doctor', None)
         return None
 
     def DeleteDoctor(self, doctor_id):
@@ -1177,9 +1170,7 @@ class ClientEPGU2():
 
         """
         try:
-            params = dict()
-            message = self.__generate_message(dict(doctor={'id': doctor_id}))
-            result = self.__send('DeleteDoctor', message)
+            result = self.__send('DeleteDoctor', dict(doctor={'id': doctor_id}))
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -1188,10 +1179,7 @@ class ClientEPGU2():
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                doctor = getattr(result, 'doctor', None)
-                if doctor:
-                    return doctor
-                return getattr(result, 'errors', None)
+                return result.get('doctor', None)
         return None
 
     def GetDoctors(self, mo_id=None, spec_id=None):

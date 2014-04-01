@@ -468,7 +468,9 @@ class EPGUWorker(object):
                     for doctor in add_epgu_doctors:
                         doctor = self.__find_doctor(doctor, epgu2_doctors)
                         if not doctor.key_epgu.epgu2_id:
-                            doctor = self.__add_doctor(doctor)
+                            doctor = self.__epgu_add_doctor(doctor)
+                        else:
+                            self.__epgu_update_doctor(doctor)
                         location_id = self.__post_location_epgu(doctor)
                         if location_id:
                             message = (u'Для %s %s %s отправлена очередь, получен epgu2_resource_id (%s)' %
@@ -487,13 +489,13 @@ class EPGUWorker(object):
                 break
         return doctor
 
-    def __add_doctor(self, doctor):
+    def __epgu_add_doctor(self, doctor):
         params = dict(snils=doctor.snils, surname=doctor.LastName, name=doctor.FirstName, patronymic=doctor.PatrName)
         if doctor.speciality:
             specs = list()
             for speciality in doctor.speciality:
-                if speciality.epgu2_service_id:
-                    specs.append(dict(spec_id=speciality.epgu2_service_id))
+                if speciality.epgu2_speciality_id:
+                    specs.append(dict(spec_id=speciality.epgu2_speciality_id))
             params.update(dict(spec_ids=specs))
         if doctor.post:
             posts = list()
@@ -509,6 +511,26 @@ class EPGUWorker(object):
             if result['id']:
                 doctor.key_epgu.epgu2_id = result['id']
                 self.session.commit()
+        return doctor
+
+    def __epgu_update_doctor(self, doctor):
+        params = dict(snils=doctor.snils, surname=doctor.LastName, name=doctor.FirstName, patronymic=doctor.PatrName)
+        if doctor.speciality:
+            specs = list()
+            for speciality in doctor.speciality:
+                if speciality.epgu2_speciality_id:
+                    specs.append(dict(spec_id=speciality.epgu2_speciality_id))
+            params.update(dict(spec_ids=specs))
+        if doctor.post:
+            posts = list()
+            for post in doctor.post:
+                posts.append(dict(post_id=post.epgu2_post_id))
+            params.update(dict(post_ids=posts))
+        try:
+            result = self.proxy_client.UpdateDoctor(doctor.key_epgu.epgu2_id, params)
+        except EPGUError, e:
+            self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
+            print e
         return doctor
 
     def __link_activate_schedule(self, hospital, location_id, rules):
