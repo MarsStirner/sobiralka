@@ -2,15 +2,16 @@
 # -*- coding: utf-8 -*-
 import os
 import sys
+
+sys.path.insert(0, os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('.'))
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from database import Session
 from models import Personal, LPU
 import csv
 session = Session()
-
-sys.path.insert(0, os.path.abspath('..'))
-sys.path.insert(0, os.path.abspath('.'))
 
 
 def _get_lpu_dbs():
