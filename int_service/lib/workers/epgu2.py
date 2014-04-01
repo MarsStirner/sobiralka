@@ -502,7 +502,7 @@ class EPGUWorker(object):
         try:
             result = self.proxy_client.CreateDoctor(params)
         except EPGUError, e:
-            self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
+            self.__log(u'Error: {0} (code: {1}). Params: {2}'.format(e.message, e.code, params))
             print e
         else:
             if result['id']:
@@ -526,7 +526,7 @@ class EPGUWorker(object):
         try:
             result = self.proxy_client.UpdateDoctor(doctor.key_epgu.epgu2_id, params)
         except EPGUError, e:
-            self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
+            self.__log(u'Error: {0} (code: {1}). Params: {2}'.format(e.message, e.code, params))
             print e
         return doctor
 
