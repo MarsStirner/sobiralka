@@ -185,7 +185,7 @@ class EPGUWorker(object):
         pass
 
     def __get_doctor_by_location(self, doctor_epgu_id, lpu_id):
-        doctor = self.session.query(Personal).filter(Personal_KeyEPGU.epgu2_id==doctor_epgu_id, Personal_KeyEPGU.lpuId == lpu_id).first()
+        doctor = self.session.query(Personal).join(Personal_KeyEPGU).filter(Personal_KeyEPGU.epgu2_id==doctor_epgu_id, Personal.lpuId == lpu_id).first()
         return doctor
 
     def __update_doctor(self, doctor, data):
@@ -425,6 +425,7 @@ class EPGUWorker(object):
                 resources = self.__get_all_locations()
                 _exists_locations_id = []
                 _synced_doctor = []
+                #TODO: разобраться с очередями, у врача их может быть несколько - не может, должна быть одна
                 if resources:
                     for resource in resources:
                         if not resource:
@@ -434,7 +435,8 @@ class EPGUWorker(object):
                         if doctor and doctor.key_epgu and str(doctor.key_epgu.epgu2_resource_id) == resource['resource']['id']:
                             self.__log(u'Для %s %s %s epgu2_resource_id (%s) в ИС и на ЕПГУ совпадают' %
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, resource['resource']['id']))
-                            _synced_doctor.append(doctor.id)
+                            doctor_id = doctor.id
+                            _synced_doctor.append(doctor_id)
                             result = self.__put_edit_location_epgu(doctor, resource['resource']['id'])
                             if result:
                                 self.__log(u'Очередь обновлена (%s)' % resource['resource']['id'])
@@ -442,7 +444,8 @@ class EPGUWorker(object):
                             self.__update_doctor(doctor, dict(epgu2_resource_id=resource['resource']['id']))
                             self.__log(u'Для %s %s %s получен epgu2_resource_id (%s)' %
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, resource['resource']['id']))
-                            _synced_doctor.append(doctor.id)
+                            doctor_id = doctor.id
+                            _synced_doctor.append(doctor_id)
                             result = self.__put_edit_location_epgu(doctor, resource['resource']['id'])
                             if result:
                                 self.__log(u'Очередь обновлена (%s)' % resource['resource']['id'])
@@ -453,16 +456,9 @@ class EPGUWorker(object):
 
                 add_epgu_doctors = (
                     self.session.query(Personal).
-                    # options(joinedload(Personal.speciality)).
-                    filter(Personal.lpuId == lpu.id).
-                    filter(
-                        or_(
-                            Personal.key_epgu.has(Personal_KeyEPGU.epgu2_id == None),
-                            not_(Personal.id.in_(_synced_doctor)))).
-                    # filter(
-                    #     or_(
-                    #         Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU == None),
-                    #         not_(Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU.in_(_exists_locations_id))))).
+                    filter(Personal.lpuId == lpu.id,
+                           or_(Personal.key_epgu.has(Personal_KeyEPGU.epgu2_id == None),
+                               not_(Personal.id.in_(set(_synced_doctor))))).
                     all())
                 if add_epgu_doctors:
                     for doctor in add_epgu_doctors:
@@ -471,6 +467,7 @@ class EPGUWorker(object):
                             doctor = self.__epgu_add_doctor(doctor)
                         else:
                             self.__epgu_update_doctor(doctor)
+
                         location_id = self.__post_location_epgu(doctor)
                         if location_id:
                             message = (u'Для %s %s %s отправлена очередь, получен epgu2_resource_id (%s)' %
