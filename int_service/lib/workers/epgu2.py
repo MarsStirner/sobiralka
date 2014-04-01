@@ -423,6 +423,8 @@ class EPGUWorker(object):
                 _synced_doctor = []
                 if resources:
                     for resource in resources:
+                        if not resource:
+                            continue
                         doctor_epgu2_id = resource['resource']['doctor_id']
                         doctor = self.__get_doctor_by_location(doctor_epgu2_id, lpu.id)
                         if doctor and doctor.key_epgu and str(doctor.key_epgu.epgu2_resource_id) == resource['resource']['id']:
