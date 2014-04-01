@@ -196,6 +196,8 @@ class EPGUWorker(object):
                 doctor.key_epgu.keyEPGU = v
             elif k == 'epgu2_resource_id':
                 doctor.key_epgu.epgu2_resource_id = v
+            elif k == 'epgu2_id':
+                doctor.key_epgu.epgu2_id = v
             elif hasattr(doctor, k):
                 setattr(doctor, k, v)
         self.session.commit()
@@ -416,6 +418,7 @@ class EPGUWorker(object):
                     epgu2_doctors = self.proxy_client.GetDoctors()
                 except EPGUError, e:
                     self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
+                    print e
 
                 self.__log(u'Синхронизация очередей для %s' % lpu.name)
                 resources = self.__get_all_locations()
@@ -465,7 +468,7 @@ class EPGUWorker(object):
                             doctor = self.__add_doctor(doctor)
                         location_id = self.__post_location_epgu(doctor)
                         if location_id:
-                            message = (u'Для %s %s %s отправлена очередь, получен keyEPGU (%s)' %
+                            message = (u'Для %s %s %s отправлена очередь, получен epgu2_resource_id (%s)' %
                                        (doctor.LastName, doctor.FirstName, doctor.PatrName, location_id))
                             self.__update_doctor(doctor, dict(epgu2_resource_id=location_id))
                             self.__log(message)
@@ -476,9 +479,8 @@ class EPGUWorker(object):
 
     def __find_doctor(self, doctor, epgu_doctors):
         for epgu_doctor in epgu_doctors:
-            if doctor.snils == self.__parse_snils(epgu_doctor['doctor']['snils']):
-                doctor.key_epgu.epgu2_id = epgu_doctor['doctor']['id']
-                self.session.commit()
+            if epgu_doctor and doctor.snils == self.__parse_snils(epgu_doctor['doctor']['snils']):
+                self.__update_doctor(doctor, dict(epgu2_id=epgu_doctor['doctor']['id']))
                 break
         return doctor
 
