@@ -196,8 +196,6 @@ class EPGUWorker(object):
                 doctor.key_epgu.keyEPGU = v
             elif k == 'epgu2_resource_id':
                 doctor.key_epgu.epgu2_resource_id = v
-            elif k == 'epgu2_id':
-                doctor.key_epgu.epgu2_id = v
             elif hasattr(doctor, k):
                 setattr(doctor, k, v)
         self.session.commit()
@@ -417,8 +415,11 @@ class EPGUWorker(object):
                 try:
                     epgu2_doctors = self.proxy_client.GetDoctors()
                 except EPGUError, e:
-                    self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
                     print e
+                    self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
+                except Exception, e:
+                    print e
+                    continue
 
                 self.__log(u'Синхронизация очередей для %s' % lpu.name)
                 resources = self.__get_all_locations()
@@ -426,6 +427,8 @@ class EPGUWorker(object):
                 _synced_doctor = []
                 if resources:
                     for resource in resources:
+                        if not resource:
+                            continue
                         doctor_epgu2_id = resource['resource']['doctor_id']
                         doctor = self.__get_doctor_by_location(doctor_epgu2_id, lpu.id)
                         if doctor and doctor.key_epgu and str(doctor.key_epgu.epgu2_resource_id) == resource['resource']['id']:
