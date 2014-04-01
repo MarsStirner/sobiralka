@@ -418,6 +418,9 @@ class EPGUWorker(object):
                 except EPGUError, e:
                     print e
                     self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
+                except Exception, e:
+                    print e
+                    continue
 
                 self.__log(u'Синхронизация очередей для %s' % lpu.name)
                 resources = self.__get_all_locations()
