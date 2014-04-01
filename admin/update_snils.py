@@ -66,7 +66,6 @@ def update_snils():
         if lpu_snils:
             for snils in lpu_snils:
                 doctor = _get_person(db['key'], snils['id'])
-                print doctor
                 if doctor and not doctor.snils:
                     doctor.snils = snils['snils'].replace('-', '').replace(' ', '')
                     session.commit()
