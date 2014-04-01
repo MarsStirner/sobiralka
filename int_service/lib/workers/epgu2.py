@@ -415,6 +415,7 @@ class EPGUWorker(object):
                 try:
                     epgu2_doctors = self.proxy_client.GetDoctors()
                 except EPGUError, e:
+                    print e
                     self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
 
                 self.__log(u'Синхронизация очередей для %s' % lpu.name)
@@ -478,7 +479,7 @@ class EPGUWorker(object):
 
     def __find_doctor(self, doctor, epgu_doctors):
         for epgu_doctor in epgu_doctors:
-            if doctor.snils == self.__parse_snils(epgu_doctor['doctor']['snils']):
+            if epgu_doctor and doctor.snils == self.__parse_snils(epgu_doctor['doctor']['snils']):
                 doctor.key_epgu.epgu2_id = epgu_doctor['doctor']['id']
                 self.session.commit()
                 break
