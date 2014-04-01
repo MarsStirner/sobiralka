@@ -659,7 +659,7 @@ class EPGUWorker(object):
         params['from'] = rule_start.strftime('%Y-%m-%d')
         params['till'] = rule_end.strftime('%Y-%m-%d')
         params['consider'] = 'all'
-        params['is_exception'] = False
+        params['is_exception'] = True
         params['atoms'] = list()
         for day in days:
             weekday = day['date'].weekday()
@@ -767,6 +767,9 @@ class EPGUWorker(object):
                             if epgu_rule:
                                 doctor_rules.append(epgu_rule)
 
+                        if doctor_rules:
+                            self.__activate_resource(resource_id)
+
                         # if busy_by_patients:
                         #     self.__appoint_patients(hospital[doctor.lpuId], doctor, busy_by_patients)
         else:
@@ -775,6 +778,15 @@ class EPGUWorker(object):
 
     def activate_locations(self):
         self.__log(u'ФЭР2 не требует отдельного запуска активации очередей')
+
+    def __activate_resource(self, resource_id):
+        try:
+            result = self.proxy_client.ActivateResource(resource_id)
+        except EPGUError, e:
+            self.__log(u'Error ActivateResource: {0} (code: {1})'.format(e.message, e.code))
+        else:
+            return result
+        return None
 
     def sync_hospitals(self):
         pass

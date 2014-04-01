@@ -223,7 +223,7 @@ class ClientKorus30(AbstractClient):
                 schedules = getattr(data, 'schedules', dict())
                 person_absences = getattr(data, 'personAbsences', dict())
                 if schedules:
-                    for date_timestamp, schedule in schedules.items():
+                    for date_timestamp, schedule in sorted(schedules.items()):
                         if schedule and hasattr(schedule, 'tickets') and schedule.tickets:
                             date = schedule.date
                             for key, timeslot in enumerate(schedule.tickets):

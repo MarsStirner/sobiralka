@@ -1005,20 +1005,13 @@ class ClientEPGU2():
 
         """
         try:
-            message = self.__generate_message(dict(resource={'id': resource_id}))
-            result = self.__send('ActivateResource', message)
+            result = self.__send('ActivateResource', dict(resource={'id': resource_id}))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
-        except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                errors = getattr(result, 'errors', None)
-                if errors:
-                    return errors
-                return result
+                return result.get('status', None)
         return None
 
     def CreateDoctor(self, params):
