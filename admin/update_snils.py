@@ -54,7 +54,8 @@ def _get_lpu_id(infis):
 
 
 def _get_person(key, doctor_id):
-    return session.query(Personal).filter(Personal.lpu.key == key, Personal.doctor_id == doctor_id).first()
+    lpu_id = _get_lpu_id(key)
+    return session.query(Personal).filter(Personal.lpuId == lpu_id, Personal.doctor_id == doctor_id).first()
 
 
 def update_snils():
@@ -65,6 +66,7 @@ def update_snils():
         if lpu_snils:
             for snils in lpu_snils:
                 doctor = _get_person(db['key'], snils['id'])
+                print doctor
                 if doctor and not doctor.snils:
                     doctor.snils = snils.replace('-', '').replace(' ')
                     session.commit()
