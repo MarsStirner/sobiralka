@@ -1014,6 +1014,26 @@ class ClientEPGU2():
                 return result.get('status', None)
         return None
 
+    def DeactivateResource(self, resource_id):
+        """Активирует очередь
+
+        Args:
+            resource_id: (обязательный) ID очереди
+
+        Returns:
+            Сообщение об ошибке, либо сообщение об успешной записи
+
+        """
+        try:
+            result = self.__send('DeactivateResource', dict(resource={'id': resource_id}))
+        except WebFault, e:
+            print e
+            logger.error(e, extra=logger_tags)
+        else:
+            if result:
+                return result.get('status', None)
+        return None
+
     def CreateDoctor(self, params):
         """Данный профиль используется для заведения нового специалиста в МО
 

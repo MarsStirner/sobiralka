@@ -502,7 +502,9 @@ class EPGUWorker(object):
         try:
             result = self.proxy_client.CreateDoctor(params)
         except EPGUError, e:
-            self.__log(u'Error: {0} (code: {1}). Params: {2}'.format(e.message, e.code, params))
+            self.__log(u'Error: {0} (code: {1}). Params: {2}'.format(e.message,
+                                                                     e.code,
+                                                                     unicode(params).decode('unicode_escape')))
             print e
         else:
             if result['id']:
@@ -526,49 +528,11 @@ class EPGUWorker(object):
         try:
             result = self.proxy_client.UpdateDoctor(doctor.key_epgu.epgu2_id, params)
         except EPGUError, e:
-            self.__log(u'Error: {0} (code: {1}). Params: {2}'.format(e.message, e.code, params))
+            self.__log(u'Error: {0} (code: {1}). Params: {2}'.format(e.message,
+                                                                     e.code,
+                                                                     unicode(params).decode('unicode_escape')))
             print e
         return doctor
-
-    def __link_activate_schedule(self, hospital, location_id, rules):
-        print (hospital, location_id, rules)
-        epgu_result = self.proxy_client.PutLocationSchedule(
-            hospital,
-            location_id,
-            rules)
-        applied_schedule = getattr(epgu_result, 'applied-schedule', None)
-        print applied_schedule
-        if applied_schedule:
-            applied_rules = getattr(applied_schedule, 'applied-rules', None)
-            if applied_rules:
-                applied_rule = getattr(applied_rules, 'applied-rule')
-                if isinstance(applied_rule, list):
-                    for _applied_rule in applied_rule:
-                        self.__log(
-                            u'Очереди (%s) назначено расписание с %s по %s (%s)' %
-                            (getattr(applied_schedule, 'location-id', ''),
-                             getattr(_applied_rule, 'start-date'),
-                             getattr(_applied_rule, 'end-date'),
-                             getattr(_applied_rule, 'rule-id')))
-                else:
-                    if applied_rule:
-                        self.__log(
-                            u'Очереди (%s) назначено расписание с %s по %s (%s)' %
-                            (getattr(applied_schedule, 'location-id', ''),
-                             getattr(applied_rule, 'start-date'),
-                             getattr(applied_rule, 'end-date'),
-                             getattr(applied_rule, 'rule-id')))
-
-            # TODO: На Celery с задержкой
-            time.sleep(3)
-            epgu_result = self.proxy_client.PutActivateLocation(hospital, location_id)
-            location = getattr(epgu_result, 'location', None)
-            if location:
-                self.__log(u'Очередь %s (%s) активирована' % (location.prefix, location.id))
-            else:
-                self.__log(getattr(epgu_result, 'error', None))
-        else:
-            self.__log(getattr(epgu_result, 'error', None))
 
     def __appoint_patients(self, hospital, doctor, patient_slots):
         for patient_slot in patient_slots:
@@ -659,7 +623,7 @@ class EPGUWorker(object):
         params['from'] = rule_start.strftime('%Y-%m-%d')
         params['till'] = rule_end.strftime('%Y-%m-%d')
         params['consider'] = 'all'
-        params['is_exception'] = True
+        params['is_exception'] = False
         params['atoms'] = list()
         for day in days:
             weekday = day['date'].weekday()
@@ -784,6 +748,15 @@ class EPGUWorker(object):
             result = self.proxy_client.ActivateResource(resource_id)
         except EPGUError, e:
             self.__log(u'Error ActivateResource: {0} (code: {1})'.format(e.message, e.code))
+        else:
+            return result
+        return None
+
+    def __deactivate_resource(self, resource_id):
+        try:
+            result = self.proxy_client.DeactivateResource(resource_id)
+        except EPGUError, e:
+            self.__log(u'Error DeactivateResource: {0} (code: {1})'.format(e.message, e.code))
         else:
             return result
         return None
