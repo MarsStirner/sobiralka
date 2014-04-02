@@ -194,6 +194,8 @@ class EPGUWorker(object):
         for k, v in data.items():
             if k == 'keyEPGU':
                 doctor.key_epgu.keyEPGU = v
+            elif k == 'epgu2_id':
+                doctor.key_epgu.epgu2_id = v
             elif k == 'epgu2_resource_id':
                 doctor.key_epgu.epgu2_resource_id = v
             elif hasattr(doctor, k):
@@ -509,8 +511,7 @@ class EPGUWorker(object):
             print e
         else:
             if result['id']:
-                doctor.key_epgu.epgu2_id = result['id']
-                self.session.commit()
+                doctor = self.__update_doctor(doctor, dict(epgu2_id=result['id']))
         return doctor
 
     def __epgu_update_doctor(self, doctor):
