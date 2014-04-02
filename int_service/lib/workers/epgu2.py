@@ -668,6 +668,7 @@ class EPGUWorker(object):
                 if not lpu.epgu2_token:
                     continue
                 self.proxy_client.set_auth_token(lpu.epgu2_token)
+                self.__log(u'Синхронизация расписаний для %s' % lpu.name)
 
                 today = datetime.datetime.today().date()
                 # TODO: get nearest monday for start_date?
