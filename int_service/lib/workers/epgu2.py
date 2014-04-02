@@ -199,6 +199,7 @@ class EPGUWorker(object):
             elif hasattr(doctor, k):
                 setattr(doctor, k, v)
         self.session.commit()
+        return doctor
 
     def __delete_location_epgu(self, resource_id):
         self.proxy_client.DeleteResource(resource_id)
@@ -482,7 +483,7 @@ class EPGUWorker(object):
     def __find_doctor(self, doctor, epgu_doctors):
         for epgu_doctor in epgu_doctors:
             if epgu_doctor and doctor.snils == self.__parse_snils(epgu_doctor['doctor']['snils']):
-                self.__update_doctor(doctor, dict(epgu2_id=epgu_doctor['doctor']['id']))
+                doctor = self.__update_doctor(doctor, dict(epgu2_id=epgu_doctor['doctor']['id']))
                 break
         return doctor
 
