@@ -443,23 +443,23 @@ class EPGUWorker(object):
                             result = self.__put_edit_location_epgu(doctor, resource['resource']['id'])
                             if result:
                                 self.__log(u'Очередь обновлена (%s)' % resource['resource']['id'])
-                        # elif doctor and (not doctor.key_epgu or str(doctor.key_epgu.epgu2_resource_id) != resource['resource']['id']):
-                        #     self.__update_doctor(doctor, dict(epgu2_resource_id=resource['resource']['id']))
-                        #     self.__log(u'Для %s %s %s получен epgu2_resource_id (%s)' %
-                        #                (doctor.LastName, doctor.FirstName, doctor.PatrName, resource['resource']['id']))
-                        #     doctor_id = doctor.id
-                        #     _synced_doctor.append(doctor_id)
-                        #     result = self.__put_edit_location_epgu(doctor, resource['resource']['id'])
-                        #     if result:
-                        #         self.__log(u'Очередь обновлена (%s)' % resource['resource']['id'])
-                        # elif not doctor:
-                        #     status = self.__delete_location_epgu(resource['resource']['id'])
-                        #     self.__log(u'epgu2_resource_id не найден в БД ИС, на ЕПГУ удалена очередь (%s). %s' %
-                        #                (resource['resource']['id'], status))
-                        else:
+                        elif doctor and (not doctor.key_epgu or str(doctor.key_epgu.epgu2_resource_id) != resource['resource']['id']):
+                            self.__update_doctor(doctor, dict(epgu2_resource_id=resource['resource']['id']))
+                            self.__log(u'Для %s %s %s получен epgu2_resource_id (%s)' %
+                                       (doctor.LastName, doctor.FirstName, doctor.PatrName, resource['resource']['id']))
+                            doctor_id = doctor.id
+                            _synced_doctor.append(doctor_id)
+                            result = self.__put_edit_location_epgu(doctor, resource['resource']['id'])
+                            if result:
+                                self.__log(u'Очередь обновлена (%s)' % resource['resource']['id'])
+                        elif not doctor:
                             status = self.__delete_location_epgu(resource['resource']['id'])
                             self.__log(u'epgu2_resource_id не найден в БД ИС, на ЕПГУ удалена очередь (%s). %s' %
                                        (resource['resource']['id'], status))
+                        # else:
+                        #     status = self.__delete_location_epgu(resource['resource']['id'])
+                        #     self.__log(u'epgu2_resource_id не найден в БД ИС, на ЕПГУ удалена очередь (%s). %s' %
+                        #                (resource['resource']['id'], status))
 
                 add_epgu_doctors = (
                     self.session.query(Personal).
