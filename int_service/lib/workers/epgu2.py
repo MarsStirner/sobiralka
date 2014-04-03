@@ -204,7 +204,7 @@ class EPGUWorker(object):
         return doctor
 
     def __delete_location_epgu(self, resource_id):
-        self.proxy_client.DeleteResource(resource_id)
+        return self.proxy_client.DeleteResource(resource_id)
 
     def __get_location_data(self, locations):
         result = []
@@ -453,13 +453,13 @@ class EPGUWorker(object):
                         #     if result:
                         #         self.__log(u'Очередь обновлена (%s)' % resource['resource']['id'])
                         # elif not doctor:
-                        #     self.__delete_location_epgu(resource['resource']['id'])
-                        #     self.__log(u'epgu2_resource_id не найден в БД ИС, на ЕПГУ удалена очередь (%s)' %
-                        #                (resource['resource']['id'],))
+                        #     status = self.__delete_location_epgu(resource['resource']['id'])
+                        #     self.__log(u'epgu2_resource_id не найден в БД ИС, на ЕПГУ удалена очередь (%s). %s' %
+                        #                (resource['resource']['id'], status))
                         else:
-                            self.__delete_location_epgu(resource['resource']['id'])
-                            self.__log(u'epgu2_resource_id не найден в БД ИС, на ЕПГУ удалена очередь (%s)' %
-                                       (resource['resource']['id'],))
+                            status = self.__delete_location_epgu(resource['resource']['id'])
+                            self.__log(u'epgu2_resource_id не найден в БД ИС, на ЕПГУ удалена очередь (%s). %s' %
+                                       (resource['resource']['id'], status))
 
                 add_epgu_doctors = (
                     self.session.query(Personal).
