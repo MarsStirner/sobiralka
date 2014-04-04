@@ -79,18 +79,23 @@ class EnqueueWorker(object):
 
         start, end = self.__get_dates_period(kwargs.get('startDate'), kwargs.get('endDate'))
 
-        proxy_client = Clients.provider(lpu.protocol, lpu.proxy.split(';')[0])
-        params = {
-            'hospital_uid': hospital_uid,
-            'doctor_uid': doctor_uid,
-            'start': start,
-            'end': end,
-            'speciality': speciality,
-            'hospital_uid_from': hospital_uid_from,
-            'server_id': lpu.key
-        }
-        result = proxy_client.getScheduleInfo(**params)
-        shutdown_session()
+        try:
+            proxy_client = Clients.provider(lpu.protocol, lpu.proxy.split(';')[0])
+        except Exception, e:
+            logger.error(e, extra=logger_tags)
+            return None
+        else:
+            params = {
+                'hospital_uid': hospital_uid,
+                'doctor_uid': doctor_uid,
+                'start': start,
+                'end': end,
+                'speciality': speciality,
+                'hospital_uid_from': hospital_uid_from,
+                'server_id': lpu.key
+            }
+            result = proxy_client.getScheduleInfo(**params)
+            shutdown_session()
         return result
 
     def get_closest_tickets(self, hospitalUid, doctors, start=None):
