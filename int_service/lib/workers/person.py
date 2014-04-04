@@ -99,7 +99,7 @@ class PersonalWorker(object):
         if doctor_id:
             query = query.filter(Personal.doctor_id == int(doctor_id))
 
-        return query.one()
+        return query.first()
 
     def get_list_doctors(self, **kwargs):
         """Формирует и возвращает список врачей для SOAP
