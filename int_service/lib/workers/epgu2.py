@@ -314,12 +314,12 @@ class EPGUWorker(object):
         params['span'] = self.time_table_period
         params['reserve'] = 15
         params['payment'] = payment_method.code
-        params['is_automatic'] = True
-        params['is_autoactivated'] = True
+        params['is_automatic'] = 'true'
+        params['is_autoactivated'] = 'true'
         params['resource_type'] = 'single'
-        params['is_dynamic'] = False
-        params['is_quoted'] = False
-        params['has_waits'] = False
+        params['is_dynamic'] = 'false'
+        params['is_quoted'] = 'false'
+        params['has_waits'] = 'false'
         params['quantum'] = quantum_time
         params['source_codes'] = list()
         params['source_codes'].append(dict(source_code='reg'))
@@ -382,12 +382,12 @@ class EPGUWorker(object):
         params['span'] = self.time_table_period
         params['reserve'] = 15
         params['payment'] = payment_method.code
-        params['is_automatic'] = True
-        params['is_autoactivated'] = True
+        params['is_automatic'] = 'true'
+        params['is_autoactivated'] = 'true'
         params['resource_type'] = 'single'
-        params['is_dynamic'] = False
-        params['is_quoted'] = False
-        params['has_waits'] = False
+        params['is_dynamic'] = 'false'
+        params['is_quoted'] = 'false'
+        params['has_waits'] = 'false'
         params['quantum'] = quantum_time
         params['source_codes'] = list()
         params['source_codes'].append(dict(source_code='reg'))
@@ -629,15 +629,15 @@ class EPGUWorker(object):
         params['from'] = rule_start.strftime('%Y-%m-%d')
         params['till'] = rule_end.strftime('%Y-%m-%d')
         params['consider'] = 'all'
-        params['is_exception'] = False
+        params['is_exception'] = 'false'
         params['atoms'] = list()
         for day in days:
             weekday = day['date'].weekday()
             for atom in day['interval']:
                 params['atoms'].append({'atom': {
                     'weekday': weekday,
-                    'even': True,
-                    'odd': True,
+                    'even': 'true',
+                    'odd': 'true',
                     'from': atom['start'],
                     'till': atom['end'],
                     'source_codes': [
