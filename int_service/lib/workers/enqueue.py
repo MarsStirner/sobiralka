@@ -328,6 +328,8 @@ class EnqueueWorker(object):
         for ticket in tickets:
             date_time = getattr(ticket, 'dateTime')
             doctor = doctor_dw.get_doctor(lpu_unit=hospital_uid, doctor_id=getattr(ticket, 'personId', None))
+            if not doctor:
+                continue
             work_times = proxy_client.getWorkTimeAndStatus(personId=getattr(ticket, 'personId'),
                                                            date=date_time.date())
             office = u'-'
