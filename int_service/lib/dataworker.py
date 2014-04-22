@@ -754,6 +754,8 @@ class EnqueueWorker(object):
         for ticket in tickets:
             date_time = getattr(ticket, 'dateTime')
             doctor = doctor_dw.get_doctor(lpu_unit=hospital_uid, doctor_id=getattr(ticket, 'personId', None))
+            if not doctor:
+                continue
             work_times = proxy_client.getWorkTimeAndStatus(personId=getattr(ticket, 'personId'),
                                                            date=date_time.date())
             office = u'-'
@@ -1197,7 +1199,7 @@ class PersonalWorker(object):
         if doctor_id:
             query = query.filter(Personal.doctor_id == int(doctor_id))
 
-        return query.one()
+        return query.first()
 
     def get_list_doctors(self, **kwargs):
         """Формирует и возвращает список врачей для SOAP
