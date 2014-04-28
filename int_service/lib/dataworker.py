@@ -41,6 +41,8 @@ class DataWorker(object):
             obj = EnqueueWorker(*args, **kwargs)
         elif data_type == 'personal':
             obj = PersonalWorker()
+        elif data_type == 'client':
+            obj = ClientWorker()
         elif data_type == 'epgu':
             if FER_VERSION == 1:
                 from workers.epgu import EPGUWorker
@@ -56,6 +58,7 @@ class DataWorker(object):
 from workers.lpu import LPUWorker
 from workers.departments import LPU_UnitsWorker
 from workers.person import PersonalWorker
+from workers.client import ClientWorker
 from workers.enqueue import EnqueueWorker
 from workers.regions import RegionsWorker
 from workers.update import UpdateWorker

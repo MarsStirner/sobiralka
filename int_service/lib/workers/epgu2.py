@@ -540,73 +540,76 @@ class EPGUWorker(object):
             print e
         return doctor
 
-    def __appoint_patients(self, hospital, doctor, patient_slots):
-        for patient_slot in patient_slots:
-            try:
-                service_type = doctor.speciality[0].epgu_service_type
-                service_type_keyEPGU = service_type.keyEPGU
-            except AttributeError, e:
-                print e
-                self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
-                continue
-            fio_list = patient_slot['patient']['fio'].split()
-            patient = dict(firstName=fio_list[1], lastName=fio_list[0], id=patient_slot['patient']['id'])
-            try:
-                patronymic = fio_list[2]
-            except IndexError, e:
-                print e
-                patient['patronymic'] = u''
-            else:
-                patient['patronymic'] = patronymic
-
-            key_epgu = self.session.query(Personal_KeyEPGU).filter(
-                Personal_KeyEPGU.lpuId == doctor.lpuId,
-                Personal_KeyEPGU.orgId == doctor.orgId,
-                Personal_KeyEPGU.doctor_id == doctor.doctor_id
-            ).one()
-            self.epgu_appoint_patient(
-                hospital=hospital,
-                doctor=dict(location_id=key_epgu.keyEPGU, epgu_service_type=service_type_keyEPGU),
-                patient=patient,
-                timeslot=patient_slot['date_time']
-            )
-
-    def epgu_appoint_patient(self, hospital, doctor, patient, timeslot):
-        slot_unique_key = None
-        epgu_result = self.proxy_client.CreateSlot(
-            hospital=hospital,
-            doctor_id=doctor['location_id'],
-            service_type_id=doctor['epgu_service_type'],
-            date=dict(
-                date=timeslot.date().strftime('%Y-%m-%d'), start_time=timeslot.time().strftime('%H:%M')
-            )
-        )
-        slot = getattr(epgu_result, 'slot', None)
-        if slot:
-            patient = dict(name=patient['firstName'],
-                           surname=patient['lastName'],
-                           patronymic=patient['patronymic'],
-                           phone=self.default_phone,
-                           id=patient['id'])
-            epgu_result = self.proxy_client.PutSlot(hospital, patient, getattr(slot, 'unique-key'))
-            slot = getattr(epgu_result, 'slot', None)
-            if slot:
-                slot_unique_key = getattr(slot, 'unique-key')
-                self.__log(u'На ЕПГУ добавлен талончик для %s %s %s (%s %s), ID очереди=%s, получен keyEPGU (%s)'
-                           % (patient['surname'],
-                              patient['name'],
-                              patient['patronymic'],
-                              timeslot.date().strftime('%d.%m.%Y'),
-                              timeslot.time().strftime('%H:%M'),
-                              doctor['location_id'],
-                              slot_unique_key))
-            else:
-                self.__log(getattr(epgu_result, 'error', None))
-                #print getattr(epgu_result, 'error', '').encode('utf-8')
+    def __create_slot(self, resource_id, service_id, date_time):
+        try:
+            slot = self.proxy_client.CreateSlot(resource_id, service_id, date_time)
+        except EPGUError, e:
+            self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
         else:
-            self.__log(getattr(epgu_result, 'error', None))
-            #print getattr(epgu_result, 'error', '').encode('utf-8')
-        return slot_unique_key
+            if slot:
+                return slot['id']
+        return None
+
+    def __get_resource_and_service(self, doctor):
+        resource_id = doctor.key_epgu.epgu2_resource_id
+        try:
+            epgu2_service = self.__get_service_types(doctor, doctor.speciality[0].epgu2_speciality.id)
+            service_id = epgu2_service[0].id
+        except AttributeError, e:
+            print e
+            logger.error(e, extra=logger_tags)
+            self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
+            return None
+        except exceptions.ValueError, e:
+            print e
+            logger.error(e, extra=logger_tags)
+            self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
+            return None
+        return resource_id, service_id
+
+    def __appoint_patients(self, doctor, patient_slots):
+        for patient_slot in patient_slots:
+            self.epgu_appoint_patient(doctor, patient_slot['id'], patient_slot['date_time'])
+
+    def epgu_appoint_patient(self, doctor, patient_id, slot_date_time):
+        resource_id, service_id = self.__get_resource_and_service(doctor)
+        client_dw = DataWorker.provider('client')
+        hospital_uid = '%s/%s' % (doctor.lpuId, doctor.orgId)
+        patient_info = client_dw.get_patient(hospital_uid, patient_id)
+        slot_id = self.__create_slot(resource_id, service_id, slot_date_time)
+        if slot_id:
+            try:
+                passport = '{0}{1}'.format(patient_info['documents'][0]['serial'].replace(' '),
+                                           patient_info['documents'][0]['number'])
+            except IndexError:
+                passport = ''
+            try:
+                policy = '{0}{1}'.format(patient_info['policies'][0]['serial'].replace(' '),
+                                         patient_info['policies'][0]['number'])
+            except IndexError:
+                policy = ''
+
+            patient = dict(name=patient_info['firstName'],
+                           surname=patient_info['lastName'],
+                           patronymic=patient_info['patrName'],
+                           snils=patient_info['snils'].replace('-').replace(' '),
+                           passport=passport,
+                           oms=policy)
+            try:
+                slot = self.proxy_client.FinishCreateSlot(slot_id, patient)
+            except EPGUError, e:
+                self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
+            else:
+                if slot:
+                    self.__log(u'На ЕПГУ добавлен талончик для %s %s %s (%s), ID очереди=%s, получен slot_id: (%s)'
+                               % (patient['firstName'],
+                                  patient['lastName'],
+                                  patient['patrName'],
+                                  patient['date_time'],
+                                  resource_id,
+                                  slot_id))
+                    return slot
+        return None
 
     def epgu_delete_slot(self, hospital, slot_id):
         epgu_result = self.proxy_client.DeleteSlot(hospital, slot_id)
@@ -668,7 +671,6 @@ class EPGUWorker(object):
         lpu_dw = DataWorker.provider('lpu')
         lpu_list = lpu_dw.get_list()
         #TODO: распараллелить по ЛПУ? и вызывать из Celery после апдейта location
-        hospital = list()
         if lpu_list:
             for lpu in lpu_list:
                 if not lpu.epgu2_token:
@@ -725,10 +727,8 @@ class EPGUWorker(object):
                                 week_number += 1
 
                             if timeslot['patientId'] and timeslot['patientInfo']:
-                                busy_by_patients.append(
-                                    dict(date_time=timeslot['start'],
-                                         patient=dict(id=timeslot['patientId'], fio=timeslot['patientInfo'])
-                                         ))
+                                busy_by_patients.append(dict(date_time=timeslot['start'],
+                                                             id=timeslot['patientId']))
 
                         # For last iteration
                         if interval:
@@ -741,8 +741,8 @@ class EPGUWorker(object):
                         if doctor_rules:
                             self.__activate_resource(resource_id)
 
-                        # if busy_by_patients:
-                        #     self.__appoint_patients(hospital[doctor.lpuId], doctor, busy_by_patients)
+                        if busy_by_patients:
+                            self.__appoint_patients(doctor, busy_by_patients)
         else:
             self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
             return False
@@ -863,25 +863,12 @@ class EPGUWorker(object):
     def send_enqueue(self, hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
         print 'send_enqueue %s' % slot_unique_key
         print 'enqueue_id %s' % enqueue_id
-        print 'hospital_auth_token: %s | hospital_place_id: %s' % (hospital['auth_token'], hospital['place_id'])
         if not slot_unique_key:
-            if not hospital['auth_token'] or not hospital['place_id']:
-                return None
-
-            _patient = dict(firstName=patient['fio']['firstName'],
-                            lastName=patient['fio']['lastName'],
-                            patronymic=patient['fio']['patronymic'],
-                            id=patient['id'])
-
-            slot_unique_key = self.epgu_appoint_patient(hospital=hospital,
-                                                        doctor=doctor,
-                                                        patient=_patient,
-                                                        timeslot=timeslot)
-            print slot_unique_key
-        if slot_unique_key:
-            enqueue_dw = DataWorker.provider('enqueue', self.session)
-            _enqueue = enqueue_dw.update_enqueue(enqueue_id, dict(keyEPGU=slot_unique_key))
-            print '_enqueue %s' % _enqueue
+            slot = self.epgu_appoint_patient(doctor, patient['id'], timeslot)
+            if slot:
+                enqueue_dw = DataWorker.provider('enqueue', self.session)
+                _enqueue = enqueue_dw.update_enqueue(enqueue_id, dict(keyEPGU=slot.get('id')))
+                print '_enqueue %s' % _enqueue
 
     def __delete_by_epgu(self, params):
         try:
@@ -929,34 +916,12 @@ class EPGUWorker(object):
         for patient_slot in patient_slots:
             try:
                 service_type = doctor.speciality[0].epgu_service_type
-                service_type_keyEPGU = service_type.keyEPGU
             except AttributeError, e:
                 print e
                 logger.error(e, extra=logger_tags)
                 self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
                 continue
-            fio_list = patient_slot['patient']['fio'].split()
-            patient = dict(firstName=fio_list[1], lastName=fio_list[0], id=patient_slot['patient']['id'])
-            try:
-                patronymic = fio_list[2]
-            except IndexError, e:
-                print e
-                logger.error(e, extra=logger_tags)
-                patient['patronymic'] = u''
-            else:
-                patient['patronymic'] = patronymic
-
-            key_epgu = self.session.query(Personal_KeyEPGU).filter(
-                Personal_KeyEPGU.lpuId == doctor.lpuId,
-                Personal_KeyEPGU.orgId == doctor.orgId,
-                Personal_KeyEPGU.doctor_id == doctor.doctor_id
-            ).one()
-            self.epgu_appoint_patient(
-                hospital=hospital,
-                doctor=dict(location_id=key_epgu.keyEPGU, epgu_service_type=service_type_keyEPGU),
-                patient=patient,
-                timeslot=patient_slot['date_time']
-            )
+            self.epgu_appoint_patient(doctor, patient_slot['patient']['id'], patient_slot['date_time'])
 
     def activate_location(self, hospital, location_id):
         epgu_result = self.proxy_client.PutActivateLocation(hospital, location_id)
@@ -1001,23 +966,25 @@ class EPGUWorker(object):
         return self.msg
 
     def doctor_schedule_task(self, doctor, hospital_dict):
+        self.proxy_client.set_auth_token(hospital_dict['epgu2_token'])
+
         today = datetime.datetime.today().date()
         # TODO: get nearest monday for start_date?
         start_date = today - datetime.timedelta(days=(today.isoweekday() - 1))  # + datetime.timedelta(weeks=1)
         end_date = start_date + datetime.timedelta(weeks=self.schedule_weeks_period)
-        enqueue_dw = DataWorker.provider('enqueue', self.session)
+        enqueue_dw = DataWorker.provider('enqueue', Session2())
         params = {
             'hospitalUid': '%s/%s' % (doctor.lpuId, doctor.orgId),
             'doctorUid': doctor.doctor_id,
             'startDate': start_date,
             'endDate': end_date,
-            }
-        location_id = doctor.key_epgu.keyEPGU
-
+        }
+        resource_id = doctor.key_epgu.epgu2_resource_id
+        doctor_rules, busy_by_patients = [], []
         schedule = enqueue_dw.get_info(**params)
-        doctor_rules = []
-        busy_by_patients = []
         if schedule:
+            doctor_rules = []
+            busy_by_patients = []
             days = []
             interval = []
             week_number = 1
@@ -1038,31 +1005,29 @@ class EPGUWorker(object):
 
                 if timeslot['start'].date() >= (start_date + datetime.timedelta(weeks=week_number)):
                     if days:
-                        epgu_rule = self.__post_rules(start_date, week_number, hospital_dict, doctor, days)
+                        epgu_rule = self.__post_rules(resource_id, start_date, week_number, doctor, days)
                         if epgu_rule:
                             doctor_rules.append(epgu_rule)
                         days = []
-                    week_number += week_number
+                    week_number += 1
 
                 if timeslot['patientId'] and timeslot['patientInfo']:
-                    busy_by_patients.append(
-                        dict(date_time=timeslot['start'],
-                             patient=dict(id=timeslot['patientId'], fio=timeslot['patientInfo'])
-                        ))
+                    busy_by_patients.append(dict(date_time=timeslot['start'],
+                                                 id=timeslot['patientId']))
 
             # For last iteration
             if interval:
                 days.append(dict(date=previous_day, interval=interval))
             if days:
-                epgu_rule = self.__post_rules(start_date, week_number, hospital_dict, doctor, days)
+                epgu_rule = self.__post_rules(resource_id, start_date, week_number, doctor, days)
                 if epgu_rule:
                     doctor_rules.append(epgu_rule)
 
-            # if doctor_rules:
-            #     self.__link_activate_schedule(hospital_dict, location_id, doctor_rules)
-            #
-            # if busy_by_patients:
-            #     self.__appoint_patients(hospital_dict, doctor, busy_by_patients)
+            if doctor_rules:
+                self.__activate_resource(resource_id)
+
+            if busy_by_patients:
+                self.__appoint_patients(doctor, busy_by_patients)
 
         return doctor_rules, busy_by_patients
 
@@ -1088,11 +1053,8 @@ class EPGUWorker(object):
                     continue
 
                 if timeslot['patientId'] and timeslot['patientInfo']:
-                    busy_by_patients.append(
-                        dict(date_time=timeslot['start'],
-                             patient=dict(id=timeslot['patientId'], fio=timeslot['patientInfo'])
-                        ))
-
+                    busy_by_patients.append(dict(date_time=timeslot['start'],
+                                                 id=timeslot['patientId']))
         return busy_by_patients
 
     def _save_ticket(self, lpu_id, ticket, message=None, data=None):
@@ -1134,57 +1096,10 @@ class EPGUWorker(object):
                     _ticket = self._save_ticket(hospital_id, ticket)
                     if _ticket:
                         doctor_info = person_dw.get_doctor(lpu_unit=[hospital_id, 0], doctor_id=ticket.personId)
-                        service_type = doctor_info.speciality[0].epgu_service_type
-                        task_doctor = dict(location_id=getattr(doctor_info.key_epgu, 'keyEPGU', None),
-                                           epgu_service_type=getattr(service_type, 'keyEPGU', None))
-
-
-                        _patient = dict(firstName=ticket.patient.firstName,
-                                        lastName=ticket.patient.lastName,
-                                        patronymic=ticket.patient.patrName,
-                                        id=ticket.patient.id)
                         timeslot = datetime.datetime.utcfromtimestamp(ticket.begDateTime / 1000)
-                        slot_unique_key = self.epgu_appoint_patient(hospital=task_hospital,
-                                                                    doctor=task_doctor,
-                                                                    patient=_patient,
-                                                                    timeslot=timeslot)
+                        slot_unique_key = self.epgu_appoint_patient(doctor_info, ticket.patient.id, timeslot)
                         _ticket.keyEPGU = slot_unique_key
                         self.session.commit()
                 elif ticket.status == CouponStatus.CANCELLED:
                     _ticket = self._get_ticket(hospital_id, ticket.personId, ticket.uuid)
                     self.epgu_delete_slot(task_hospital, _ticket.keyEPGU)
-
-
-    # def lpu_schedule_task(self, hospital_id, hospital_dict):
-    #     epgu_doctors = self.session.query(Personal).filter(Personal.lpuId == hospital_id).filter(
-    #         Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
-    #     ).all()
-    #     obj = EPGUWorker()
-    #     if epgu_doctors:
-    #         group(
-    #             [chain(
-    #                 obj.doctor_schedule_task.s(doctor, hospital_dict),
-    #                 obj.link_schedule.s(hospital_dict, doctor.key_epgu.keyEPGU),
-    #                 obj.activate_location.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=5),
-    #                 obj.appoint_patients.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=5)
-    #             ) for doctor in epgu_doctors])()
-    #
-    # def sync_schedule_task(self):
-    #     lpu_list = (self.session.query(LPU).
-    #                 filter(LPU.keyEPGU != '',
-    #                        LPU.keyEPGU != None,
-    #                        LPU.token != '',
-    #                        LPU.token != None).
-    #                 all())
-    #     if lpu_list:
-    #         obj = EPGUWorker()
-    #         res = group([
-    #             obj.lpu_schedule_task.s(
-    #                 lpu.id,
-    #                 dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
-    #             ) for lpu in lpu_list])()
-    #         # print res.get()
-    #         # print self.msg
-    #     else:
-    #         self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
-    #         return False

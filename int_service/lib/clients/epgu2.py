@@ -1056,7 +1056,7 @@ class ClientEPGU2():
 
             1 surname: фамилия специалиста
             127 name: имя специалиста
-            128 patronymic: отчество специалиста
+            128 patronymic: отчество специалиста (необязательный)
             129 snils: СНИЛС специалиста
             130 spec_ids: ID специальностей
             131 posts_ids: ID должностей
@@ -1120,7 +1120,7 @@ class ClientEPGU2():
             1 id: ID специалиста
             2 surname: фамилия специалиста
             138 name: имя специалиста
-            139 patronymic: отчество специалиста
+            139 patronymic: отчество специалиста (необязательный)
             140 snils: СНИЛС специалиста
             141 spec_ids: ID специальностей
             142 posts_ids: ID должностей
@@ -1250,7 +1250,7 @@ class ClientEPGU2():
                 return doctors
         return None
 
-    def CreateSlot(self, hospital, doctor_id, service_type_id, date, cito=0):
+    def CreateSlot(self, resource_id, service_id, slot_datetime):
         """Резервирует время на запись
 
         Args:
@@ -1308,37 +1308,23 @@ class ClientEPGU2():
             21 additions: дополнительная информация для вызовов на дом.
 
         """
-        try:
-            params = dict()
-            try:
-                params['location_id'] = doctor_id
-                params['service_type_id'] = service_type_id
-                params['date'] = date['date']
-                params['start_time'] = date['start_time']
+        params = dict()
+        params['resource_id'] = resource_id
+        params['service_id'] = service_id
+        params['date'] = slot_datetime.strftime('%Y-%m-%d')
+        params['from'] = slot_datetime.strftime('%H:%M')
 
-                params['params'] = {':cito': cito}
-            except AttributeError, e:
-                print e
-                logger.error(e, extra=logger_tags)
-                return None
-            else:
-                message = self.__generate_message(dict(slot=params))
-                result = self.__send('CreateSlot', message)
+        try:
+            result = self.__send('CreateSlot', {'slot': params})
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
-        except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                slot = getattr(result, 'slot', None)
-                if slot:
-                    return slot
-                return getattr(result, 'errors', None)
+                return result.get('slot', {})
         return None
 
-    def FinishCreateSlot(self, patient, slot_id):
+    def FinishCreateSlot(self, slot_id, patient):
         """Запрос на получение из федеральной регистратуры факта записи на оказание услуги
 
         Args:
@@ -1440,22 +1426,8 @@ class ClientEPGU2():
 
         """
         try:
-            params = dict()
-            try:
-                params['name'] = base64.b64encode(patient['name'].encode('utf-8'))
-                params['surname'] = base64.b64encode(patient['surname'].encode('utf-8'))
-                params['patronymic'] = base64.b64encode(patient['patronymic'].encode('utf-8'))
-                params['phone'] = patient['phone']
-                params['client_id'] = patient['id']
-
-                params['params'] = {':slot_id': slot_id}
-            except AttributeError, e:
-                print e
-                logger.error(e, extra=logger_tags)
-                return None
-            else:
-                message = self.__generate_message(dict(slot=params))
-                result = self.__send('FinishCreateSlot', message)
+            params = {'slot': {'id': slot_id, 'patient': patient}}
+            result = self.__send('FinishCreateSlot', params)
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -1464,10 +1436,7 @@ class ClientEPGU2():
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                slot = getattr(result, 'slot', None)
-                if slot:
-                    return slot
-                return getattr(result, 'errors', None)
+                return result.get('slot', {})
         return None
 
     def DeleteSlot(self, slot_id):

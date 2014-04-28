@@ -126,7 +126,7 @@ def sync_schedule_task():
         res = group([
             lpu_schedule_task.s(
                 lpu.id,
-                dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
+                dict(auth_token=lpu.token, place_id=lpu.keyEPGU, epgu2_token=lpu.epgu2_token)
             ) for lpu in lpu_list])()
         # print res.get()
         # print self.msg
