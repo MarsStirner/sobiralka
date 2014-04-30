@@ -576,36 +576,48 @@ class EPGUWorker(object):
         client_dw = DataWorker.provider('client')
         hospital_uid = '%s/%s' % (doctor.lpuId, doctor.orgId)
         patient_info = client_dw.get_patient(hospital_uid, patient_id)
-        slot_id = self.__create_slot(resource_id, service_id, slot_date_time)
+        slot_id = None
+        if patient_info:
+            slot_id = self.__create_slot(resource_id, service_id, slot_date_time)
         if slot_id:
             try:
-                passport = '{0}{1}'.format(patient_info['documents'][0]['serial'].replace(' '),
-                                           patient_info['documents'][0]['number'])
+                passport = u'{0}{1}'.format(patient_info['documents'][0].serial.replace(' ', ''),
+                                            patient_info['documents'][0].number)
+            except AttributeError:
+                passport = ''
             except IndexError:
                 passport = ''
             try:
-                policy = '{0}{1}'.format(patient_info['policies'][0]['serial'].replace(' '),
-                                         patient_info['policies'][0]['number'])
+                policy = u'{0}{1}'.format(patient_info['policies'][0].serial.replace(' ', ''),
+                                          patient_info['policies'][0].number)
+            except AttributeError:
+                policy = ''
             except IndexError:
                 policy = ''
 
             patient = dict(name=patient_info['firstName'],
                            surname=patient_info['lastName'],
                            patronymic=patient_info['patrName'],
-                           snils=patient_info['snils'].replace('-').replace(' '),
+                           snils=patient_info['snils'].replace('-', '').replace(' ', ''),
                            passport=passport,
+                           birthday=patient_info['birthDate'].strftime('%Y-%m-%d'),
+                           gender='male' if patient_info['sex'] == 1 else 'female',
                            oms=policy)
             try:
                 slot = self.proxy_client.FinishCreateSlot(slot_id, patient)
             except EPGUError, e:
                 self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
+                self.proxy_client.RefuseSlot(slot_id, 'error_in_slot')
+                self.proxy_client.DeclineSlot(slot_id)
+                self.proxy_client.DeleteSlot(slot_id)
+                self.__log(u'Освобождаем слот на ЕПГУ (slot_id: {0})'.format(slot_id))
             else:
                 if slot:
                     self.__log(u'На ЕПГУ добавлен талончик для %s %s %s (%s), ID очереди=%s, получен slot_id: (%s)'
-                               % (patient['firstName'],
-                                  patient['lastName'],
-                                  patient['patrName'],
-                                  patient['date_time'],
+                               % (patient_info['lastName'],
+                                  patient_info['firstName'],
+                                  patient_info['patrName'],
+                                  slot_date_time,
                                   resource_id,
                                   slot_id))
                     return slot

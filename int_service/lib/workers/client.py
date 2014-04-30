@@ -28,6 +28,4 @@ class ClientWorker(object):
             logger.error(e, extra=logger_tags)
             return None
         else:
-            result = proxy_client.getPatientInfo(patientId=patient_id)
-            return result.get(patient_id)
-        return None
+            return proxy_client.getPatientInfo(patientId=patient_id)

@@ -1431,9 +1431,6 @@ class ClientEPGU2():
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
-        except Exception, e:
-            print e
-            logger.error(e, extra=logger_tags)
         else:
             if result:
                 return result.get('slot', {})
@@ -1486,8 +1483,7 @@ class ClientEPGU2():
 
         """
         try:
-            message = self.__generate_message(dict(slot={'id': slot_id}))
-            result = self.__send('DeleteSlot', message)
+            result = self.__send('DeleteSlot', {'slot': {'id': slot_id}})
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -1496,10 +1492,7 @@ class ClientEPGU2():
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                slot = getattr(result, 'slot', None)
-                if slot:
-                    return slot
-                return getattr(result, 'errors', None)
+                return result.get('slot', {})
         return None
 
     def DeclineSlot(self, slot_id):
@@ -1574,8 +1567,7 @@ class ClientEPGU2():
 
         """
         try:
-            message = self.__generate_message(dict(slot={'id': slot_id}))
-            result = self.__send('DeclineSlot', message)
+            result = self.__send('DeclineSlot', {'slot': {'id': slot_id}})
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -1584,10 +1576,7 @@ class ClientEPGU2():
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                slot = getattr(result, 'slot', None)
-                if slot:
-                    return slot
-                return getattr(result, 'errors', None)
+                return result.get('slot', {})
         return None
 
     def RefuseSlot(self, slot_id, reject_reason='patient_decline'):
@@ -1677,8 +1666,7 @@ class ClientEPGU2():
 
         """
         try:
-            message = self.__generate_message(dict(slot={'id': slot_id, 'reject_reason': reject_reason}))
-            result = self.__send('RefuseSlot', message)
+            result = self.__send('RefuseSlot', {'slot': {'id': slot_id, 'reject_reason': reject_reason}})
         except WebFault, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -1687,8 +1675,5 @@ class ClientEPGU2():
             logger.error(e, extra=logger_tags)
         else:
             if result:
-                slot = getattr(result, 'slot', None)
-                if slot:
-                    return slot
-                return getattr(result, 'errors', None)
+                return result.get('slot', {})
         return None
