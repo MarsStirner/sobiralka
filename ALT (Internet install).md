@@ -31,6 +31,8 @@ apt-get upgrade
 * libxslt-devel ```apt-get install libxslt-devel```
 * libmysqlclient-devel ```apt-get install libmysqlclient-devel```
 * zlib-devel ```apt-get install zlib-devel```
+* libxmlsec1-dev ```apt-get install libxmlsec1-dev```
+* libffi-dev ```apt-get install libffi-dev```
 
 **Пакеты для установки из Интернета**
 

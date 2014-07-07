@@ -21,7 +21,8 @@ FLASK_SECRET_KEY = ''
 
 EPGU_SERVICE_URL = ''
 EPGU2_SERVICE_URL = 'http://api-er2.rosminzdrav.ru/mis?wsdl'
-FER_VERSION = 1
+EPGU2_CLIENT_ID = ''
+FER_VERSION = 2
 
 SIMPLELOGS_URL = 'http://127.0.0.1:5500'
 

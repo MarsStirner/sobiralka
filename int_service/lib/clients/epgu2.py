@@ -1,16 +1,51 @@
 # -*- coding: utf-8 -*-
 import base64
+import os
+import random
+import string
 from collections import defaultdict
 from suds.client import Client
 from suds import WebFault
+from suds.wsse import *
 from ..is_exceptions import EPGUError
 import settings
 import urllib2
 import socket
+
 from lxml import etree
 from ..utils import logger
+import logging
 
 from jinja2 import Environment, PackageLoader
+
+import requests
+from suds.transport.http import HttpAuthenticated
+from suds.transport import Reply, TransportError
+from sudssigner.plugin import SignerPlugin
+from xmlsec import HrefRsaSha1
+from suds.sax.element import Element
+from suds.sax.attribute import Attribute
+from suds.xsd.sxbasic import Import
+
+import logging
+logging.basicConfig(level=logging.INFO)
+logging.getLogger('suds.client').setLevel(logging.DEBUG)
+logging.getLogger('suds.transport').setLevel(logging.DEBUG)
+logging.getLogger('suds.xsd.schema').setLevel(logging.DEBUG)
+logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
+
+
+def generate_messageid():
+    fmt = 'xxxxxxxx-xxxxx'
+    resp = ''
+
+    for c in fmt:
+        if c == '-':
+            resp += c
+        else:
+            resp += string.hexdigits[random.randrange(16)]
+
+    return resp
 
 logger_tags = dict(tags=['epgu2_client', 'IS'])
 
@@ -23,6 +58,18 @@ class ClientEPGU2():
         self.client = None
         self.jinja2env = Environment(loader=PackageLoader('int_service', 'templates'))
         self.auth_token = auth_token
+        self.certificate = self.__get_certificate()
+        self.client_id = settings.EPGU2_CLIENT_ID
+
+    def __get_certificate(self):
+        dir_name = 'secure'
+        _dir = os.path.realpath(dir_name)
+        if not os.path.isdir(_dir):
+            _dir = os.path.realpath(os.path.join('..', dir_name))
+        for _file in os.listdir(_dir):
+            if _file.endswith(".pem"):
+                return os.path.join(_dir, _file)
+        return None
 
     def __check_url(self, url):
         try:
@@ -39,10 +86,31 @@ class ClientEPGU2():
     def __init_client(self):
         if not self.client:
             if self.__check_url(self.url):
+                client_params = {}
+                if self.certificate:
+                    client_params['plugins'] = [SignerPlugin(r"{0}".format(self.certificate), keytype=HrefRsaSha1)]
                 if settings.DEBUG:
                     self.client = Client(self.url, cache=None)
                 else:
-                    self.client = Client(self.url)
+                    self.client = Client(self.url, **client_params)
+        self.__set_headers()
+
+    def __set_headers(self):
+        # Create the header
+        wsans = ('wsa', 'http://schemas.xmlsoap.org/ws/2004/08/addressing')
+        egiszns = ('egisz', 'http://egisz.rosminzdrav.ru')
+        address = Element('Address', ns=wsans).setText('anonymous')
+        headers = list()
+        headers.append(Element('ReplyTo', ns=wsans).insert(address))
+        headers.append(Element('To', ns=wsans).setText(self.url.replace('/main.wsdl', '')))
+        headers.append(Element('MessageID', ns=wsans).setText('urn:uuid:%s' % generate_messageid()))
+        headers.append(Element('Action', ns=wsans).setText('Send')) # Или писать имя конкретного метода на ЕПГУ?
+
+        clientEntityId = Element('clientEntityId', ns=egiszns).setText(self.client_id)
+        authInfo = Element('authInfo', ns=egiszns).insert(clientEntityId)
+        headers.append(Element('transportHeader', ns=egiszns).insert(authInfo))
+
+        self.client.set_options(soapheaders=headers)
 
     def set_auth_token(self, auth_token):
         self.auth_token = auth_token
@@ -71,6 +139,7 @@ class ClientEPGU2():
         send_data = dict()
         send_data['messageCode'] = method
         send_data['messageSourceToken'] = self.auth_token
+
         if params:
             message = self.__generate_message(params)
             send_data['message'] = base64.b64encode(message.encode('utf-8'))
@@ -130,8 +199,8 @@ class ClientEPGU2():
         try:
             result = self.__send('GetSpecs', {'params': {}})
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         else:
             return result.get('specs', [])
         return None
@@ -155,11 +224,12 @@ class ClientEPGU2():
         try:
             result = self.__send('GetPosts', {'params': {}})
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         else:
-            return result.get('posts', [])
-        return None
+            if result:
+                return result.get('posts', [])
+        return []
 
     def GetServicesSpecs(self):
         """Получает список специальностей из ЕПГУ:

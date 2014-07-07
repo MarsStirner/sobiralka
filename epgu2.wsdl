@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions xmlns:er="http://mis.er.atc.ru/ws" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:egisz="http://egisz.rosminzdrav.ru" name="mis" targetNamespace="http://mis.er.atc.ru/ws">
+  <wsdl:types>
+    <xs:schema xmlns:er="http://mis.er.atc.ru/ws" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://mis.er.atc.ru/ws">
+      <xs:import namespace="http://egisz.rosminzdrav.ru" schemaLocation="http://api-er2.rosminzdrav.ru/mis?xsd=xsd/transport_header.xsd"/>
+
+      <xs:complexType name="Send">
+        <xs:annotation>
+          <xs:documentation>Запрос в федеральную регистратуру</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element maxOccurs="1" minOccurs="1" name="MessageData" type="er:MessageDataSendRequest"/>
+        </xs:sequence>
+      </xs:complexType>
+
+      <xs:complexType name="MessageDataSendRequest">
+        <xs:annotation>
+          <xs:documentation>Блок-обертка данных</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element maxOccurs="1" minOccurs="1" name="AppData" type="er:AppDataSendRequest"/>
+        </xs:sequence>
+      </xs:complexType>
+
+      <xs:complexType name="AppDataSendRequest">
+        <xs:annotation>
+          <xs:documentation>Содержит входные данные для вызова сервиса федеральной регистратуры</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element maxOccurs="1" minOccurs="1" name="messageCode" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Уникальный идентификатор метода федеральной регистратуры</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element maxOccurs="1" minOccurs="1" name="messageSourceToken" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Уникальный токен авторизации внешней системы, выполняющей запрос</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element maxOccurs="1" minOccurs="0" name="message" type="xs:base64Binary">
+            <xs:annotation>
+              <xs:documentation>XML, передаваемый сервису федеральной регистратуры и закодированный в base64</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+
+      <xs:complexType name="SendResponse">
+        <xs:annotation>
+          <xs:documentation>Возвращает данные, полученные от федеральной регистратуры</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element maxOccurs="1" minOccurs="1" name="MessageData" type="er:MessageDataSendResponse"/>
+        </xs:sequence>
+      </xs:complexType>
+
+      <xs:complexType name="MessageDataSendResponse">
+        <xs:annotation>
+          <xs:documentation>Блок-обертка данных</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+
+          <xs:element maxOccurs="1" minOccurs="1" name="Status" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Статус ответа</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+
+          <xs:element maxOccurs="1" minOccurs="0" name="AppData" type="xs:base64Binary">
+            <xs:annotation>
+              <xs:documentation>Блок-обертка данных</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+
+          <xs:element maxOccurs="1" minOccurs="0" name="Error" type="er:Error">
+            <xs:annotation>
+              <xs:documentation>Содержит сообщение об ошибке</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+
+        </xs:sequence>
+      </xs:complexType>
+
+      <xs:complexType name="Error">
+        <xs:annotation>
+          <xs:documentation>Контейнер сообщения об ошибке</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+          <xs:element maxOccurs="1" minOccurs="1" name="errorCode" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Указывается код в случае возникновения ошибки</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+          <xs:element maxOccurs="1" minOccurs="0" name="errorMessage" type="xs:string">
+            <xs:annotation>
+              <xs:documentation>Указывается описание ошибки</xs:documentation>
+            </xs:annotation>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+
+      <xs:element name="SendRequest" type="er:Send"/>
+      <xs:element name="SendResponse" type="er:SendResponse"/>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="SendRequest">
+    <wsdl:part element="egisz:transportHeader" name="transportHeader"/>
+    <wsdl:part element="er:SendRequest" name="SendRequest">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="SendResponse">
+    <wsdl:part element="er:SendResponse" name="SendResponse">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="misInterface">
+    <wsdl:operation name="Send">
+      <wsdl:input message="er:SendRequest">
+    </wsdl:input>
+      <wsdl:output message="er:SendResponse">
+    </wsdl:output>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="mis" type="er:misInterface">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="Send">
+      <soap:operation soapAction="SendElectronicRegistry" style="document"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="mis">
+    <wsdl:port binding="er:mis" name="mis">
+      <soap:address location="http://ips.rosminzdrav.ru/5358bf30e7897"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
