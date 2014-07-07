@@ -31,17 +31,17 @@ from abstract import AbstractClient
 # TODO: для начала изменить на сайте, потом перенести в Korus20 обратное сопоставление, как только старые КС выпиляться
 # костыль будет не нужен
 _policy_types_mapping = {
-    1: dict(core=2, tfoms=2),
-    2: dict(core=1, tfoms=1),
-    3: dict(core=4, tfoms=4),
+    1: dict(core='cmiTmp', tfoms=2),
+    2: dict(core='cmiOld', tfoms=1),
+    3: dict(core='vmi', tfoms=4),
     4: dict(core='cmiCommonElectron', tfoms=3)
 }
 
 _tfoms_to_core_policy_type = {
-    1: 1,
-    2: 2,
+    1: 'cmiOld',
+    2: 'cmiTmp',
     3: 'cmiCommonElectron',
-    4: 4,
+    4: 'vmi',
 }
 
 logger_tags = dict(tags=['korus30', 'IS'])

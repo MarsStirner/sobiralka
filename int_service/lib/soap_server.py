@@ -174,7 +174,7 @@ class Server(object):
             [InfoServer],
             tns=SOAP_NAMESPACE,
             name='InfoService',
-            #interface=Wsdl11(),
+            interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
@@ -183,7 +183,7 @@ class Server(object):
             [ListServer],
             tns=SOAP_NAMESPACE,
             name='ListService',
-            #interface=Wsdl11(),
+            interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
@@ -192,7 +192,7 @@ class Server(object):
             [ScheduleServer],
             tns=SOAP_NAMESPACE,
             name='ScheduleService',
-            #interface=Wsdl11(),
+            interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
@@ -201,7 +201,7 @@ class Server(object):
             [EPGUGateServer],
             tns='http://erGateService.er.atc.ru/ws',
             name='GateService',
-            #interface=Wsdl11(),
+            interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
