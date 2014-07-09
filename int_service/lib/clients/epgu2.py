@@ -22,7 +22,7 @@ import requests
 from suds.transport.http import HttpAuthenticated
 from suds.transport import Reply, TransportError
 from sudssigner.plugin import SignerPlugin
-from xmlsec import HrefRsaSha1
+from xmlsec import HrefRsaSha1, HrefX509Data
 from suds.sax.element import Element
 from suds.sax.attribute import Attribute
 from suds.xsd.sxbasic import Import
@@ -31,8 +31,8 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logging.getLogger('suds.client').setLevel(logging.DEBUG)
 logging.getLogger('suds.transport').setLevel(logging.DEBUG)
-logging.getLogger('suds.xsd.schema').setLevel(logging.DEBUG)
-logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
+# logging.getLogger('suds.xsd.schema').setLevel(logging.DEBUG)
+# logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
 
 
 def generate_messageid():
@@ -85,26 +85,28 @@ class ClientEPGU2():
 
     def __init_client(self):
         if not self.client:
-            if self.__check_url(self.url):
-                client_params = {}
-                if self.certificate:
-                    client_params['plugins'] = [SignerPlugin(r"{0}".format(self.certificate), keytype=HrefRsaSha1)]
+            client_params = {}
+            if self.certificate:
+                client_params['plugins'] = [SignerPlugin(r"{0}".format(self.certificate), keytype=HrefRsaSha1)]
+            try:
                 if settings.DEBUG:
-                    self.client = Client(self.url, cache=None)
+                    self.client = Client(self.url, cache=None, **client_params)
                 else:
                     self.client = Client(self.url, **client_params)
-        self.__set_headers()
+            except urllib2.URLError, e:
+                logger.error(e.message, extra=logger_tags)
+                self.client = None
 
-    def __set_headers(self):
+    def __set_headers(self, action):
         # Create the header
         wsans = ('wsa', 'http://schemas.xmlsoap.org/ws/2004/08/addressing')
         egiszns = ('egisz', 'http://egisz.rosminzdrav.ru')
-        address = Element('Address', ns=wsans).setText('anonymous')
+        address = Element('Address', ns=wsans).setText('http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous')
         headers = list()
         headers.append(Element('ReplyTo', ns=wsans).insert(address))
-        headers.append(Element('To', ns=wsans).setText(self.url.replace('/main.wsdl', '')))
+        headers.append(Element('To', ns=wsans).setText('https://ips.rosminzdrav.ru/5358bf30e7897'))
         headers.append(Element('MessageID', ns=wsans).setText('urn:uuid:%s' % generate_messageid()))
-        headers.append(Element('Action', ns=wsans).setText('Send')) # Или писать имя конкретного метода на ЕПГУ?
+        headers.append(Element('Action', ns=wsans).setText('Send'))  # писать имя конкретного метода на ЕПГУ?
 
         clientEntityId = Element('clientEntityId', ns=egiszns).setText(self.client_id)
         authInfo = Element('authInfo', ns=egiszns).insert(clientEntityId)
@@ -136,6 +138,8 @@ class ClientEPGU2():
 
     def __send(self, method, params=None):
         self.__init_client()
+        self.__set_headers(action=method)
+
         send_data = dict()
         send_data['messageCode'] = method
         send_data['messageSourceToken'] = self.auth_token
@@ -279,8 +283,8 @@ class ClientEPGU2():
         try:
             result = self.__send('GetPayments', {'params': {}})
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -318,8 +322,8 @@ class ClientEPGU2():
                 params.update(dict(spec_id=spec_id))
             result = self.__send('GetServices', dict(params=params))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -351,8 +355,8 @@ class ClientEPGU2():
         try:
             result = self.__send('GetService', {':service_type_id': service_id})
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -451,8 +455,8 @@ class ClientEPGU2():
         try:
             result = self.__send('GetMos', kwargs)
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -533,8 +537,8 @@ class ClientEPGU2():
             message = self.__generate_message(dict(params={'id': id, 'oid': oid}))
             result = self.__send('GetMo', message)
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -565,8 +569,8 @@ class ClientEPGU2():
         try:
             result = self.__send('GetResources', params)
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -591,8 +595,8 @@ class ClientEPGU2():
         try:
             result = self.__send('DeleteResource', dict(resource=dict(id=resource_id)))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         else:
             if result:
                 return result.get('status', None)
@@ -704,8 +708,8 @@ class ClientEPGU2():
         try:
             result = self.__send('CreateResource', dict(resource=params))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         else:
             if result:
                 return result.get('resource', {})
@@ -855,8 +859,8 @@ class ClientEPGU2():
             params.update(dict(id=resource_id))
             result = self.__send('UpdateResource', dict(resource=params))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         else:
             if result:
                 return result.get('resource', {})
@@ -1000,8 +1004,8 @@ class ClientEPGU2():
         try:
             result = self.__send('CreateRule', params)
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         else:
             if result:
                 return result.get('rule', {})
@@ -1051,8 +1055,8 @@ class ClientEPGU2():
                 message = self.__generate_message(dict(applied_schedule=params))
                 result = self.__send('PutLocationSchedule', message)
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -1077,8 +1081,8 @@ class ClientEPGU2():
         try:
             result = self.__send('ActivateResource', dict(resource={'id': resource_id}))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         else:
             if result:
                 return result.get('status', None)
@@ -1097,8 +1101,8 @@ class ClientEPGU2():
         try:
             result = self.__send('DeactivateResource', dict(resource={'id': resource_id}))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         else:
             if result:
                 return result.get('status', None)
@@ -1161,8 +1165,8 @@ class ClientEPGU2():
         try:
             result = self.__send('CreateDoctor', dict(doctor=params))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         else:
             if result:
                 return result.get('doctor', None)
@@ -1227,8 +1231,8 @@ class ClientEPGU2():
             params.update(dict(id=doctor_id))
             result = self.__send('UpdateDoctor', dict(doctor=params))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         else:
             if result:
                 return result.get('doctor', None)
@@ -1255,8 +1259,8 @@ class ClientEPGU2():
         try:
             result = self.__send('DeleteDoctor', dict(doctor={'id': doctor_id}))
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -1310,8 +1314,8 @@ class ClientEPGU2():
             params = dict()
             result = self.__send('GetDoctors', {'params': params})
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         else:
             if result:
                 doctors = result.get('doctors', [])
@@ -1387,8 +1391,8 @@ class ClientEPGU2():
         try:
             result = self.__send('CreateSlot', {'slot': params})
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         else:
             if result:
                 return result.get('slot', {})
@@ -1499,8 +1503,8 @@ class ClientEPGU2():
             params = {'slot': {'id': slot_id, 'patient': patient}}
             result = self.__send('FinishCreateSlot', params)
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         else:
             if result:
                 return result.get('slot', {})
@@ -1555,8 +1559,8 @@ class ClientEPGU2():
         try:
             result = self.__send('DeleteSlot', {'slot': {'id': slot_id}})
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -1639,8 +1643,8 @@ class ClientEPGU2():
         try:
             result = self.__send('DeclineSlot', {'slot': {'id': slot_id}})
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
@@ -1738,8 +1742,8 @@ class ClientEPGU2():
         try:
             result = self.__send('RefuseSlot', {'slot': {'id': slot_id, 'reject_reason': reject_reason}})
         except WebFault, e:
-            print e
-            logger.error(e, extra=logger_tags)
+            print unicode(e)
+            logger.error(unicode(e), extra=logger_tags)
         except Exception, e:
             print e
             logger.error(e, extra=logger_tags)
