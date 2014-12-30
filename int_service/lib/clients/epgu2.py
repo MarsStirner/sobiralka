@@ -5,12 +5,14 @@ import random
 import string
 from collections import defaultdict
 from suds.client import Client
+from suds.bindings import binding
 from suds import WebFault
 from suds.wsse import *
 from ..is_exceptions import EPGUError
 import settings
 import urllib2
 import socket
+from uuid import uuid4
 
 from lxml import etree
 from ..utils import logger
@@ -21,9 +23,10 @@ from jinja2 import Environment, PackageLoader
 import requests
 from suds.transport.http import HttpAuthenticated
 from suds.transport import Reply, TransportError
-from sudssigner.plugin import SignerPlugin
+from sudssigner.plugin import SignerPlugin, BODY_XPATH, TIMESTAMP_XPATH, etree, lxml_nss, envns, wssens
 from xmlsec import HrefRsaSha1, HrefX509Data
 from suds.sax.element import Element
+from suds.plugin import MessagePlugin
 from suds.sax.attribute import Attribute
 from suds.xsd.sxbasic import Import
 
@@ -33,6 +36,12 @@ logging.getLogger('suds.client').setLevel(logging.DEBUG)
 logging.getLogger('suds.transport').setLevel(logging.DEBUG)
 # logging.getLogger('suds.xsd.schema').setLevel(logging.DEBUG)
 # logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
+
+
+class CorrectNamespace(MessagePlugin):
+    def marshalled(self, context):
+        soap_env_parent = context.envelope
+        soap_env_parent.updatePrefix('SOAP-ENV', 'http://www.w3.org/2003/05/soap-envelope')
 
 
 def generate_messageid():
@@ -45,7 +54,7 @@ def generate_messageid():
         else:
             resp += string.hexdigits[random.randrange(16)]
 
-    return resp
+    return uuid4()
 
 logger_tags = dict(tags=['epgu2_client', 'IS'])
 
@@ -60,6 +69,8 @@ class ClientEPGU2():
         self.auth_token = auth_token
         self.certificate = self.__get_certificate()
         self.client_id = settings.EPGU2_CLIENT_ID
+        self.wsans = ('wsa', 'http://www.w3.org/2005/08/addressing')
+        self.egiszns = ('egisz', 'http://egisz.rosminzdrav.ru')
 
     def __get_certificate(self):
         dir_name = 'secure'
@@ -67,8 +78,9 @@ class ClientEPGU2():
         if not os.path.isdir(_dir):
             _dir = os.path.realpath(os.path.join('..', dir_name))
         for _file in os.listdir(_dir):
-            if _file.endswith(".pem"):
+            if _file.endswith("epgu.pem"):
                 return os.path.join(_dir, _file)
+                # return os.path.join(_dir, 'old/test.pem') #- для такого варианта ключ корректно достаётся
         return None
 
     def __check_url(self, url):
@@ -87,26 +99,50 @@ class ClientEPGU2():
         if not self.client:
             client_params = {}
             if self.certificate:
-                client_params['plugins'] = [SignerPlugin(r"{0}".format(self.certificate), keytype=HrefRsaSha1)]
+                # client_params['plugins'] = [SignerPlugin(r"{0}".format(self.certificate), keytype='http://www.w3.org/2001/04/xmldsig-more#gostr34102001-gostr3411', digestmethod_algorithm='http://www.w3.org/2001/04/xmldsig-more#gostr3411')]
+                client_params['plugins'] = [
+                    SignerPlugin(
+                        r"{0}".format(self.certificate),
+                        items_to_sign=[BODY_XPATH,
+                                       TIMESTAMP_XPATH,
+                                       etree.XPath('/SOAP-ENV:Envelope/SOAP-ENV:Header/wsa:ReplyTo',
+                                                   namespaces=lxml_nss([envns, self.wsans])),
+                                       etree.XPath('/SOAP-ENV:Envelope/SOAP-ENV:Header/wsa:MessageID',
+                                                   namespaces=lxml_nss([envns, self.wsans])),
+                                       etree.XPath('/SOAP-ENV:Envelope/SOAP-ENV:Header/wsa:Action',
+                                                   namespaces=lxml_nss([envns, self.wsans])),
+                                       etree.XPath('/SOAP-ENV:Envelope/SOAP-ENV:Header/wsa:To',
+                                                   namespaces=lxml_nss([envns, self.wsans])),
+                                       etree.XPath('/SOAP-ENV:Envelope/SOAP-ENV:Header/wsa:RelatesTo',
+                                                   namespaces=lxml_nss([envns, self.wsans])),
+                                       etree.XPath(
+                                           '/SOAP-ENV:Envelope/SOAP-ENV:Header/wsse:Security/wsse:BinarySecurityToken',
+                                           namespaces=lxml_nss([envns, wssens])),
+                                       etree.XPath('/SOAP-ENV:Envelope/SOAP-ENV:Header/egisz:transportHeader',
+                                                   namespaces=lxml_nss([envns, self.egiszns]))],
+                        keytype='http://www.w3.org/2001/04/xmldsig-more#gostr34102001-gostr3411')]
+                # client_params['plugins'] = [SignerPlugin(r"{0}".format(self.certificate), keytype=HrefRsaSha1)]
             try:
+                binding.envns = ('SOAP-ENV', 'http://www.w3.org/2003/05/soap-envelope')
+                client_params['headers'] = {'Content-Type': 'application/soap+xml'}
                 if settings.DEBUG:
-                    self.client = Client(self.url, cache=None, **client_params)
+                    self.client = Client(self.url, cache=None, prettyxml=True, **client_params)
                 else:
-                    self.client = Client(self.url, **client_params)
+                    self.client = Client(self.url, prettyxml=True, **client_params)
             except urllib2.URLError, e:
                 logger.error(e.message, extra=logger_tags)
                 self.client = None
 
     def __set_headers(self, action):
         # Create the header
-        wsans = ('wsa', 'http://schemas.xmlsoap.org/ws/2004/08/addressing')
-        egiszns = ('egisz', 'http://egisz.rosminzdrav.ru')
+        wsans = self.wsans
+        egiszns = self.egiszns
         address = Element('Address', ns=wsans).setText('http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous')
         headers = list()
         headers.append(Element('ReplyTo', ns=wsans).insert(address))
         headers.append(Element('To', ns=wsans).setText('https://ips.rosminzdrav.ru/5358bf30e7897'))
-        headers.append(Element('MessageID', ns=wsans).setText('urn:uuid:%s' % generate_messageid()))
-        headers.append(Element('Action', ns=wsans).setText('Send'))  # писать имя конкретного метода на ЕПГУ?
+        headers.append(Element('MessageID', ns=wsans).setText(generate_messageid()))
+        headers.append(Element('Action', ns=wsans).setText('SendElectronicRegistry'))
 
         clientEntityId = Element('clientEntityId', ns=egiszns).setText(self.client_id)
         authInfo = Element('authInfo', ns=egiszns).insert(clientEntityId)
@@ -281,7 +317,7 @@ class ClientEPGU2():
 
         """
         try:
-            result = self.__send('GetPayments', {'params': {}})
+            result = self.__send('GetPayments')
         except WebFault, e:
             print unicode(e)
             logger.error(unicode(e), extra=logger_tags)
