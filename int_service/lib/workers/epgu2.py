@@ -60,13 +60,18 @@ class EPGUWorker(object):
                 self.msg.append(msg)
 
     def __get_token(self, lpu_id=None):
-        if lpu_id:
-            lpu_token = self.session.query(LPU.epgu2_token).filter(and_(LPU.id == lpu_id)).first()
+        try:
+            if lpu_id:
+                lpu_token = self.session.query(LPU.epgu2_token).filter(LPU.id == lpu_id).first()
+            else:
+                lpu_token = self.session.query(LPU.epgu2_token).filter(and_(LPU.epgu2_token != '',
+                                                                            LPU.epgu2_token != None)).first()
+        except Exception, e:
+            print e
+            self.session.rollback()
         else:
-            lpu_token = self.session.query(LPU.epgu2_token).filter(and_(LPU.epgu2_token != '',
-                                                                        LPU.epgu2_token != None)).first()
-        if lpu_token:
-            return lpu_token.epgu2_token
+            if lpu_token:
+                return lpu_token.epgu2_token
         return None
 
     def __failed_update(self, error=""):
@@ -121,7 +126,11 @@ class EPGUWorker(object):
                 epgu_post = EPGU2_Post(**post['post'])
                 self.session.add(epgu_post)
                 result.append(epgu_post.id)
-                self.session.commit()
+                try:
+                    self.session.commit()
+                except Exception as e:
+                    print e
+                    self.session.rollback()
             else:
                 result.append(db_post.id)
         return result
@@ -134,11 +143,19 @@ class EPGUWorker(object):
                 epgu_speciality = EPGU2_Speciality(**speciality['spec'])
                 self.session.add(epgu_speciality)
                 result.append(epgu_speciality.id)
-                self.session.commit()
+                try:
+                    self.session.commit()
+                except Exception as e:
+                    print e
+                    self.session.rollback()
             elif not db_speciality.code:
                 db_speciality.code = speciality['spec']['code']
                 result.append(db_speciality.id)
-                self.session.commit()
+                try:
+                    self.session.commit()
+                except Exception as e:
+                    print e
+                    self.session.rollback()
             else:
                 result.append(db_speciality.id)
         return result
@@ -162,7 +179,11 @@ class EPGUWorker(object):
                                                            code=service['service']['code'],
                                                            spec_recid=service['service']['spec_recid'],
                                                            speciality_id=speciality_id))
-                            self.session.commit()
+                            try:
+                                self.session.commit()
+                            except Exception as e:
+                                print e
+                                self.session.rollback()
 
     def sync_payment_methods(self):
         auth_token = self.__get_token()
@@ -175,7 +196,11 @@ class EPGUWorker(object):
                             count()):
                         self.session.add(EPGU2_Payment_Method(name=_method['payment']['name'],
                                                               code=_method['payment']['code']))
-                        self.session.commit()
+                        try:
+                            self.session.commit()
+                        except Exception as e:
+                            print e
+                            self.session.rollback()
                 self.__log(u'Методы оплаты синхронизированы')
                 self.__log(u'----------------------------')
             else:
@@ -200,7 +225,11 @@ class EPGUWorker(object):
                 doctor.key_epgu.epgu2_resource_id = v
             elif hasattr(doctor, k):
                 setattr(doctor, k, v)
-        self.session.commit()
+        try:
+            self.session.commit()
+        except Exception as e:
+            print e
+            self.session.rollback()
         return doctor
 
     def __delete_location_epgu(self, resource_id):
@@ -257,7 +286,7 @@ class EPGUWorker(object):
             'endDate': date + datetime.timedelta(weeks=self.schedule_weeks_period)
         }
         result = enqueue_dw.get_info(**params)
-        if result['timeslots']:
+        if result and result['timeslots']:
             return self.__get_min_quantum_time(result['timeslots'])
         return None
 
@@ -487,6 +516,8 @@ class EPGUWorker(object):
         return snils.replace('-', '').replace(' ', '')
 
     def __find_doctor(self, doctor, epgu_doctors):
+        if getattr(doctor, 'key_epgu', None):
+            doctor.key_epgu.epgu2_id = None
         for epgu_doctor in epgu_doctors:
             if epgu_doctor and doctor.snils == self.__parse_snils(epgu_doctor['doctor']['snils']):
                 doctor = self.__update_doctor(doctor, dict(epgu2_id=epgu_doctor['doctor']['id']))
@@ -1082,13 +1113,13 @@ class EPGUWorker(object):
             if data:
                 _ticket.data = data
             self.session.add(_ticket)
+            self.session.commit()
         except exceptions.Exception, e:
             print e
             logger.error(e, extra=logger_tags)
             self.session.rollback()
             return None
         else:
-            self.session.commit()
             return _ticket
 
     def _get_ticket(self, lpu_id, doctor_id, ticket_uid):
@@ -1111,7 +1142,11 @@ class EPGUWorker(object):
                         timeslot = datetime.datetime.utcfromtimestamp(ticket.begDateTime / 1000)
                         slot_unique_key = self.epgu_appoint_patient(doctor_info, ticket.patient.id, timeslot)
                         _ticket.keyEPGU = slot_unique_key
-                        self.session.commit()
+                        try:
+                            self.session.commit()
+                        except Exception as e:
+                            print e
+                            self.session.rollback()
                 elif ticket.status == CouponStatus.CANCELLED:
                     _ticket = self._get_ticket(hospital_id, ticket.personId, ticket.uuid)
                     self.epgu_delete_slot(task_hospital, _ticket.keyEPGU)

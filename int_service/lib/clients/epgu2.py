@@ -19,16 +19,8 @@ from ..utils import logger
 import logging
 
 from jinja2 import Environment, PackageLoader
-
-import requests
-from suds.transport.http import HttpAuthenticated
-from suds.transport import Reply, TransportError
 from sudssigner.plugin import SignerPlugin, BODY_XPATH, TIMESTAMP_XPATH, etree, lxml_nss, envns, wssens
-from xmlsec import HrefRsaSha1, HrefX509Data
 from suds.sax.element import Element
-from suds.plugin import MessagePlugin
-from suds.sax.attribute import Attribute
-from suds.xsd.sxbasic import Import
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -38,10 +30,10 @@ logging.getLogger('suds.transport').setLevel(logging.DEBUG)
 # logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
 
 
-class CorrectNamespace(MessagePlugin):
-    def marshalled(self, context):
-        soap_env_parent = context.envelope
-        soap_env_parent.updatePrefix('SOAP-ENV', 'http://www.w3.org/2003/05/soap-envelope')
+# class CorrectNamespace(MessagePlugin):
+#     def marshalled(self, context):
+#         soap_env_parent = context.envelope
+#         soap_env_parent.updatePrefix('SOAP-ENV', 'http://www.w3.org/2003/05/soap-envelope')
 
 
 def generate_messageid():
