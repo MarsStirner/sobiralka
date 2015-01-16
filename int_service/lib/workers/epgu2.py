@@ -92,7 +92,7 @@ class EPGUWorker(object):
         lpu_list = lpu_dw.get_list()
         if lpu_list:
             for lpu in lpu_list:
-                if not lpu.token:
+                if not lpu.epgu2_token:
                     continue
                 self.sync_posts()
                 self.proxy_client.set_auth_token(lpu.epgu2_token)
