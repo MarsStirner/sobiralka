@@ -19,7 +19,6 @@ from ..utils import logger
 import logging
 
 from jinja2 import Environment, PackageLoader
-from sudssigner.plugin import SignerPlugin, BODY_XPATH, TIMESTAMP_XPATH, etree, lxml_nss, envns, wssens
 from suds.sax.element import Element
 
 import logging
@@ -55,7 +54,7 @@ class ClientEPGU2():
     """Класс клиента для взаимодействия с ЕПГУ ФЭР2"""
 
     def __init__(self, auth_token):
-        self.url = settings.EPGU2_SERVICE_URL
+        self.url = '{0}/main.wsdl'.format(settings.EPGU2_SERVICE_URL)
         self.client = None
         self.jinja2env = Environment(loader=PackageLoader('int_service', 'templates'))
         self.auth_token = auth_token
@@ -91,6 +90,7 @@ class ClientEPGU2():
         if not self.client:
             client_params = {}
             if self.certificate:
+                from sudssigner.plugin import SignerPlugin, BODY_XPATH, TIMESTAMP_XPATH, etree, lxml_nss, envns, wssens
                 # client_params['plugins'] = [SignerPlugin(r"{0}".format(self.certificate), keytype='http://www.w3.org/2001/04/xmldsig-more#gostr34102001-gostr3411', digestmethod_algorithm='http://www.w3.org/2001/04/xmldsig-more#gostr3411')]
                 client_params['plugins'] = [
                     SignerPlugin(
@@ -132,7 +132,7 @@ class ClientEPGU2():
         address = Element('Address', ns=wsans).setText('http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous')
         headers = list()
         headers.append(Element('ReplyTo', ns=wsans).insert(address))
-        headers.append(Element('To', ns=wsans).setText('https://ips.rosminzdrav.ru/5358bf30e7897'))
+        headers.append(Element('To', ns=wsans).setText(settings.EPGU2_SERVICE_URL))
         headers.append(Element('MessageID', ns=wsans).setText(generate_messageid()))
         headers.append(Element('Action', ns=wsans).setText('SendElectronicRegistry'))
 
