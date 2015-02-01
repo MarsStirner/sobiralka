@@ -8,7 +8,6 @@ try:
     import json
 except ImportError:
     import simplejson as json
-
 import hl7
 
 from sqlalchemy import or_, and_, func, not_
@@ -482,9 +481,13 @@ class EPGUWorker(object):
                             if result:
                                 self.__log(u'Очередь обновлена (%s)' % resource['resource']['id'])
                         elif not doctor:
-                            status = self.__delete_location_epgu(resource['resource']['id'])
-                            self.__log(u'epgu2_resource_id не найден в БД ИС, на ЕПГУ удалена очередь (%s). %s' %
-                                       (resource['resource']['id'], status))
+                            try:
+                                status = self.__delete_location_epgu(resource['resource']['id'])
+                            except EPGUError as e:
+                                print e.message
+                            else:
+                                self.__log(u'epgu2_resource_id не найден в БД ИС, на ЕПГУ удалена очередь (%s). %s' %
+                                           (resource['resource']['id'], status))
                         # else:
                         #     status = self.__delete_location_epgu(resource['resource']['id'])
                         #     self.__log(u'epgu2_resource_id не найден в БД ИС, на ЕПГУ удалена очередь (%s). %s' %
@@ -618,12 +621,16 @@ class EPGUWorker(object):
                 passport = ''
             except IndexError:
                 passport = ''
+            except TypeError:
+                passport = ''
             try:
                 policy = u'{0}{1}'.format(patient_info['policies'][0].serial.replace(' ', ''),
                                           patient_info['policies'][0].number)
             except AttributeError:
                 policy = ''
             except IndexError:
+                policy = ''
+            except TypeError:
                 policy = ''
 
             patient = dict(name=patient_info['firstName'],
@@ -638,6 +645,12 @@ class EPGUWorker(object):
                 slot = self.proxy_client.FinishCreateSlot(slot_id, patient)
             except EPGUError, e:
                 self.__log(u'Error: {0} (code: {1})'.format(e.message, e.code))
+                self.proxy_client.RefuseSlot(slot_id, 'error_in_slot')
+                self.proxy_client.DeclineSlot(slot_id)
+                self.proxy_client.DeleteSlot(slot_id)
+                self.__log(u'Освобождаем слот на ЕПГУ (slot_id: {0})'.format(slot_id))
+            except Exception, e:
+                self.__log(u'Error: {0}'.format(e))
                 self.proxy_client.RefuseSlot(slot_id, 'error_in_slot')
                 self.proxy_client.DeclineSlot(slot_id)
                 self.proxy_client.DeleteSlot(slot_id)

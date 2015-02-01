@@ -19,6 +19,7 @@ thrift
 mysql-python
 -e git+http://github.com/johnpaulett/python-hl7/#egg=python-hl7
 lxml
+-e git+https://github.com/hitsl/pysimplelogs.git#egg=pysimplelogs
 pyopenssl
 -e git+https://github.com/dnet/pyxmlsec.git#egg=xmlsec
 -e git+https://github.com/hitsl/SudsSigner.git#egg=sudssigner

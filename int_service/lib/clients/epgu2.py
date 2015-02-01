@@ -3,6 +3,7 @@ import base64
 import os
 import random
 import string
+import time
 from collections import defaultdict
 from suds.client import Client
 from suds.bindings import binding
@@ -22,8 +23,8 @@ from jinja2 import Environment, PackageLoader
 from suds.sax.element import Element
 
 import logging
-logging.basicConfig(level=logging.INFO)
-logging.getLogger('suds.client').setLevel(logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG)
+# logging.getLogger('suds.client').setLevel(logging.DEBUG)
 logging.getLogger('suds.transport').setLevel(logging.DEBUG)
 # logging.getLogger('suds.xsd.schema').setLevel(logging.DEBUG)
 # logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
@@ -54,11 +55,14 @@ class ClientEPGU2():
     """Класс клиента для взаимодействия с ЕПГУ ФЭР2"""
 
     def __init__(self, auth_token):
-        self.url = '{0}/main.wsdl'.format(settings.EPGU2_SERVICE_URL)
         self.client = None
         self.jinja2env = Environment(loader=PackageLoader('int_service', 'templates'))
         self.auth_token = auth_token
         self.certificate = self.__get_certificate()
+        if self.certificate:
+            self.url = '{0}/main.wsdl'.format(settings.EPGU2_SERVICE_URL)
+        else:
+            self.url = '{0}?wsdl'.format(settings.EPGU2_SERVICE_URL)
         self.client_id = settings.EPGU2_CLIENT_ID
         self.wsans = ('wsa', 'http://www.w3.org/2005/08/addressing')
         self.egiszns = ('egisz', 'http://egisz.rosminzdrav.ru')
@@ -176,7 +180,15 @@ class ClientEPGU2():
             message = self.__generate_message(params)
             send_data['message'] = base64.b64encode(message.encode('utf-8'))
         if self.client:
-            result = self.client.service.Send(MessageData={'AppData': send_data})
+            result = None
+            for i in range(0, 5):
+                try:
+                    result = self.client.service.Send(MessageData={'AppData': send_data})
+                except urllib2.URLError as e:
+                    print e
+                    time.sleep(2)
+                else:
+                    break
             app_data = getattr(result, 'AppData', None)
             status = getattr(result, 'Status', None)
             error = getattr(result, 'Error', None)
@@ -190,7 +202,7 @@ class ClientEPGU2():
                     result = self.__parse_result(xml_result)
                 return result
             elif status == 'error' and error:
-                logger.error(error, extra=logger_tags)
+                logger.error(error.errorMessage, extra=logger_tags)
                 raise EPGUError(code=error.errorCode, message=error.errorMessage)
         else:
             return None
