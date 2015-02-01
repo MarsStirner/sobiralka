@@ -484,7 +484,7 @@ class EPGUWorker(object):
                             try:
                                 status = self.__delete_location_epgu(resource['resource']['id'])
                             except EPGUError as e:
-                                print e.message
+                                print e
                             else:
                                 self.__log(u'epgu2_resource_id не найден в БД ИС, на ЕПГУ удалена очередь (%s). %s' %
                                            (resource['resource']['id'], status))
