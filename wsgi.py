@@ -7,3 +7,6 @@ from int_service.lib.soap_server import Server
 
 server = Server()
 application = server.applications
+
+if __name__ == '__main__':
+    server.run()

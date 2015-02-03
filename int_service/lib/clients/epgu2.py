@@ -17,15 +17,14 @@ from uuid import uuid4
 
 from lxml import etree
 from ..utils import logger
-import logging
 
 from jinja2 import Environment, PackageLoader
 from suds.sax.element import Element
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
 # logging.getLogger('suds.client').setLevel(logging.DEBUG)
-logging.getLogger('suds.transport').setLevel(logging.DEBUG)
+# logging.getLogger('suds.transport').setLevel(logging.DEBUG)
 # logging.getLogger('suds.xsd.schema').setLevel(logging.DEBUG)
 # logging.getLogger('suds.wsdl').setLevel(logging.DEBUG)
 

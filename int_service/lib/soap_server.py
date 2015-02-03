@@ -22,20 +22,6 @@ from utils import logger
 #     logging.getLogger('spyne.server.wsgi').setLevel(logging.DEBUG)
 
 
-class CustomWsgiMounter(WsgiMounter):
-    """
-    Customized WsgiMounter for bug fix of location address in wsdl:
-
-    <wsdl:port name="Application" binding="tns:Application">
-        <soap:address location="http://127.0.0.1:9900list"/>
-    </wsdl:port>
-    """
-
-    def __call__(self, environ, start_response):
-        environ['SCRIPT_NAME'] = environ.get('SCRIPT_NAME', '').rstrip('/') + '/'
-        return super(CustomWsgiMounter, self).__call__(environ, start_response)
-
-
 class InfoServer(ServiceBase):
 
     @srpc(soap_models.GetHospitalInfoRequest, _returns=soap_models.GetHospitalInfoResponse, _out_variable_name='info')
@@ -199,7 +185,7 @@ class Server(object):
             out_protocol=Soap11()
         )
         epgu_gate_app.event_manager.add_listener('wsgi_close', shutdown_session)
-        self.applications = CustomWsgiMounter({
+        self.applications = WsgiMounter({
             'info': info_app,
             'list': list_app,
             'schedule': schedule_app,

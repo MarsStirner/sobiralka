@@ -7,7 +7,7 @@ Flask-BabelEx
 Celery
 supervisor
 #Flask-Login
-spyne>=2.9.4
+spyne>=2.11
 SQLAlchemy
 #Flask-SQLAlchemy
 pytz

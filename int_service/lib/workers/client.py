@@ -24,8 +24,9 @@ class ClientWorker(object):
             return None
         try:
             proxy_client = Clients.provider(lpu.protocol, lpu.proxy.split(';')[0])
+            result = proxy_client.getPatientInfo(patientId=patient_id)
         except Exception, e:
             logger.error(e, extra=logger_tags)
             return None
         else:
-            return proxy_client.getPatientInfo(patientId=patient_id)
+            return result
