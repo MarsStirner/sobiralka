@@ -656,7 +656,7 @@ class EnqueueWorker(object):
         if hospital_uid:
             hospital_uid = hospital_uid.split('/')
         if len(hospital_uid) > 1:
-            dw = DataWorker.provider('personal')
+            dw = DataWorker.provider('lpu')
             lpu_info = dw.get_by_id(hospital_uid[0])
             proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
         else:
