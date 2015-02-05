@@ -186,6 +186,9 @@ class ClientEPGU2():
                 except urllib2.URLError as e:
                     print e
                     time.sleep(2)
+                except socket.timeout as e:
+                    print e
+                    time.sleep(2)
                 else:
                     break
             app_data = getattr(result, 'AppData', None)
