@@ -511,8 +511,8 @@ class EnqueueWorker(object):
         doctor_info = person_dw.get_doctor(lpu_unit=hospital_uid, doctor_id=doctor_uid)
 
         service_type = doctor_info.speciality[0].epgu_service_type
-        task_doctor = dict(location_id=getattr(doctor_info.key_epgu, 'keyEPGU', None),
-                           epgu_service_type=getattr(service_type, 'keyEPGU', None))
+        # task_doctor = dict(location_id=getattr(doctor_info.key_epgu, 'keyEPGU', None),
+        #                    epgu_service_type=getattr(service_type, 'keyEPGU', None))
         hospital_uid_from = kwargs.get('hospitalUidFrom', '')
 
         if not doctor_info:
@@ -563,7 +563,7 @@ class EnqueueWorker(object):
 
             send_enqueue_task.delay(
                 hospital=task_hospital,
-                doctor=task_doctor,
+                doctor={'lpu_unit': hospital_uid, 'doctor_id': doctor_uid},
                 patient=dict(fio=person_fio, id=_enqueue.get('patient_id')),
                 timeslot=timeslot_start,
                 enqueue_id=enqueue_id,
@@ -698,8 +698,10 @@ from is_celery.celery_init import celery
 def send_enqueue_task(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
     Task_Session = init_task_session()
     try:
+        person_dw = DataWorker.provider('personal', Task_Session())
+        doctor_info = person_dw.get_doctor(doctor['lpu_unit'], doctor['doctor_id'])
         epgu_dw = DataWorker.provider('epgu', Task_Session())
-        epgu_dw.send_enqueue(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key)
+        epgu_dw.send_enqueue(hospital, doctor_info, patient, timeslot, enqueue_id, slot_unique_key)
     except exceptions.Exception, e:
         logger.error(e, extra=logger_tags)
         print e
