@@ -214,12 +214,12 @@ class LPUWorker(object):
                     'id': item.orgId,
                     'uid': uid,
                     'name': item.name,
-                    'phone': item.lpu.phone,
+                    'phone': item.lpu.phone if item.lpu else '',
                     'address': item.address,
                     # TODO: выяснить используется ли wsdlURL и верно ли указан
                     'wsdlURL': "http://" + SOAP_SERVER_HOST + ":" + str(SOAP_SERVER_PORT) + '/schedule/?wsdl',
-                    'token': item.lpu.token,
-                    'key': item.lpu.key,
+                    'token': item.lpu.token if item.lpu else '',
+                    'key': item.lpu.key if item.lpu else '',
                 })
         shutdown_session()
         return result
