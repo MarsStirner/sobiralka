@@ -74,16 +74,15 @@
 </div>
 <div class="loader"></div>
 
-<script type=text/javascript src="{{ url_for('static', filename='jquery.min.js') }}"></script>
 <script type="text/javascript">
     $(document).ready(function(){
         var id = "";
-        $("body").on({
+        $(document).on({
             ajaxStart: function() {
-                $(this).addClass("loading");
+                $("body").addClass("loading");
             },
             ajaxStop: function() {
-                $(this).removeClass("loading");
+                $("body").removeClass("loading");
             },
             ajaxError: function(event, jqxhr, settings, exception) {
                 $('#result_' + id).html(exception);
