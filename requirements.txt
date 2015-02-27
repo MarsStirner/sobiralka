@@ -7,7 +7,7 @@ Flask-BabelEx
 Celery
 supervisor
 #Flask-Login
-spyne<=2.10.10
+spyne>=2.11
 SQLAlchemy
 #Flask-SQLAlchemy
 pytz
@@ -15,9 +15,11 @@ suds
 #xhtml2pdf
 simplejson
 thrift
-twisted
+#twisted
 mysql-python
 -e git+http://github.com/johnpaulett/python-hl7/#egg=python-hl7
 lxml
-
--e git+https://github.com/KorusConsulting/pysimplelogs.git#egg=pysimplelogs
+-e git+https://github.com/hitsl/pysimplelogs.git#egg=pysimplelogs
+pyopenssl
+-e git+https://github.com/dnet/pyxmlsec.git#egg=xmlsec
+-e git+https://github.com/hitsl/SudsSigner.git#egg=sudssigner

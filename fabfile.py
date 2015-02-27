@@ -24,7 +24,7 @@ def prepare_virtual_env():
     with lcd(project_dir_path):
         with settings(warn_only=True):
             local('rm -R  %s' % virtualenv)
-        local('virtualenv %s' % virtualenv)
+        local('virtualenv %s --system-site-packages' % virtualenv)
         local('%s pip' % os.path.join(virtualenv_bin_path, 'easy_install'))
         # local(os.path.join(virtualenv_bin_path, 'activate'))
 

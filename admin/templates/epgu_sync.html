@@ -3,68 +3,69 @@
 <h2>Синхронизация с ЕПГУ</h2>
 <div class="row-fluid">
     <div class="span6">
-        <h4>Обновить справочники</h4>
-        <h6>(ЛПУ, методы оплаты, типы резервирования)</h6>
+        <legend>Обновить справочники <small>(ЛПУ, методы оплаты, типы резервирования)</small></legend>
         <form id="update_common_data" method="POST">
             <div class="control-group">
                 <div class="controls">
-                    <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
-                    <a href="/admin/" class="btn">Отмена</a>
+                    <input type="submit" name="do_update" class="btn btn-primary btn-large" value="Обновить">
+                    <a href="/admin/" class="btn btn-large">Отмена</a>
                 </div>
             </div>
         </form>
         <blockquote style="border-color: #B94A48;"><div id="result_update_common_data"></div></blockquote>
     </div>
     <div class="span6">
-        <h4>Синхронизировать очереди</h4>
+        <legend>Синхронизировать очереди</legend>
         <form id="update_locations" method="POST">
             <div class="control-group">
                 <div class="controls">
-                    <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
-                    <a href="/admin/" class="btn">Отмена</a>
+                    <input type="submit" name="do_update" class="btn btn-primary btn-large" value="Обновить">
+                    <a href="/admin/" class="btn btn-large">Отмена</a>
                 </div>
             </div>
         </form>
         <blockquote style="border-color: #B94A48;"><div id="result_update_locations"></div></blockquote>
     </div>
 </div>
+<hr>
 <div class="row-fluid">
     <div class="span6">
-        <h4>Обновить специальности и услуги</h4>
+        <legend>Обновить специальности и услуги</legend>
         <form id="update_specialities" method="POST">
             <div class="control-group">
                 <div class="controls">
-                    <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
-                    <a href="/admin/" class="btn">Отмена</a>
+                    <input type="submit" name="do_update" class="btn btn-primary btn-large" value="Обновить">
+                    <a href="/admin/" class="btn btn-large">Отмена</a>
                 </div>
             </div>
         </form>
         <blockquote style="border-color: #B94A48;"><div id="result_update_specialities"></div></blockquote>
     </div>
     <div class="span6">
-        <h4>Синхронизировать расписания</h4>
+        <legend>Синхронизировать расписания</legend>
         <form id="update_schedules" method="POST">
             <div class="control-group">
                 <div class="controls">
-                    <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
-                    <a href="/admin/" class="btn">Отмена</a>
+                    <input type="submit" name="do_update" class="btn btn-primary btn-large" value="Обновить">
+                    <a href="/admin/" class="btn btn-large">Отмена</a>
                 </div>
             </div>
         </form>
         <blockquote style="border-color: #B94A48;"><div id="result_update_schedules"></div></blockquote>
     </div>
 </div>
+<hr>
 <div class="row-fluid">
     <div class="span6">
     </div>
     <div class="span6">
-        <h4>Ручная активация очередей</h4>
+        <legend>Ручная активация очередей</legend>
         <div class="alert alert-error">Использовать только в случае, если автоматически не активировалось во время синхронизации расписания</div>
         <form id="activate_locations" method="POST">
             <div class="control-group">
                 <div class="controls">
-                    <input type="submit" name="do_update" class="btn btn-primary" value="Обновить">
-                    <a href="/admin/" class="btn">Отмена</a>
+                    <input type="submit" name="do_update" class="btn btn-primary btn-large" value="Обновить">
+                    <a href="/admin/" class="btn btn-large">Отмена</a>
                 </div>
             </div>
         </form>

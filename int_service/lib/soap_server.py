@@ -1,22 +1,15 @@
 # -*- coding: utf-8 -*-
-from __builtin__ import classmethod
-
 import logging
 from spyne.application import Application
 from spyne.protocol.soap import Soap11
 from spyne.interface.wsdl.wsdl11 import Wsdl11
-from spyne.util.simple import wsgi_soap_application
-from spyne.server.wsgi import WsgiApplication
 from spyne.util.wsgi_wrapper import WsgiMounter
-from spyne.decorator import rpc
 from spyne.service import ServiceBase
-from spyne.protocol.http import HttpRpc
-from spyne.model.primitive import NATIVE_MAP, Mandatory, AnyDict, String
 from spyne.decorator import srpc, rpc
-from spyne.model.complex import Array, Iterable, ComplexModel
 
 from settings import SOAP_SERVER_HOST, SOAP_SERVER_PORT, SOAP_NAMESPACE, DEBUG
-from dataworker import DataWorker, EPGUWorker
+from dataworker import DataWorker
+from workers.epgu import EPGUWorker
 import soap_models
 import version
 from admin.database import shutdown_session
@@ -27,20 +20,6 @@ from utils import logger
 #     logging.getLogger('spyne.protocol.soap').setLevel(logging.DEBUG)
 #     logging.getLogger('spyne.service').setLevel(logging.DEBUG)
 #     logging.getLogger('spyne.server.wsgi').setLevel(logging.DEBUG)
-
-
-class CustomWsgiMounter(WsgiMounter):
-    """
-    Customized WsgiMounter for bug fix of location address in wsdl:
-
-    <wsdl:port name="Application" binding="tns:Application">
-        <soap:address location="http://127.0.0.1:9900list"/>
-    </wsdl:port>
-    """
-
-    def __call__(self, environ, start_response):
-        environ['SCRIPT_NAME'] = environ.get('SCRIPT_NAME', '').rstrip('/') + '/'
-        return super(CustomWsgiMounter, self).__call__(environ, start_response)
 
 
 class InfoServer(ServiceBase):
@@ -153,7 +132,7 @@ class EPGUGateServer(ServiceBase):
           _returns=soap_models.ResponseType, _out_variable_name='Response',
           _throws=soap_models.ErrorResponseType)
     def Request(parameters):
-        obj = EPGUWorker()
+        obj = DataWorker.provider('epgu2')
         try:
             MessageData = parameters.MessageData
             _format = str(MessageData.format)
@@ -174,7 +153,7 @@ class Server(object):
             [InfoServer],
             tns=SOAP_NAMESPACE,
             name='InfoService',
-            interface=Wsdl11(),
+            # interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
@@ -183,7 +162,7 @@ class Server(object):
             [ListServer],
             tns=SOAP_NAMESPACE,
             name='ListService',
-            interface=Wsdl11(),
+            # interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
@@ -192,7 +171,7 @@ class Server(object):
             [ScheduleServer],
             tns=SOAP_NAMESPACE,
             name='ScheduleService',
-            interface=Wsdl11(),
+            # interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
@@ -201,12 +180,12 @@ class Server(object):
             [EPGUGateServer],
             tns='http://erGateService.er.atc.ru/ws',
             name='GateService',
-            interface=Wsdl11(),
+            # interface=Wsdl11(),
             in_protocol=Soap11(),
             out_protocol=Soap11()
         )
         epgu_gate_app.event_manager.add_listener('wsgi_close', shutdown_session)
-        self.applications = CustomWsgiMounter({
+        self.applications = WsgiMounter({
             'info': info_app,
             'list': list_app,
             'schedule': schedule_app,

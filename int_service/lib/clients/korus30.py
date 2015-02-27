@@ -257,11 +257,14 @@ class ClientKorus30(AbstractClient):
             except NotFoundException, e:
                 print e.error_msg
                 logger.error(u'{0}{1}'.format(e, kwargs), extra=logger_tags)
+            except TApplicationException, e:
+                print e
+                logger.error(u'{0}{1}'.format(e, kwargs), extra=logger_tags)
             else:
                 schedules = getattr(data, 'schedules', dict())
                 person_absences = getattr(data, 'personAbsences', dict())
                 if schedules:
-                    for date_timestamp, schedule in schedules.items():
+                    for date_timestamp, schedule in sorted(schedules.items()):
                         if schedule and hasattr(schedule, 'tickets') and schedule.tickets:
                             date = schedule.date
                             for key, timeslot in enumerate(schedule.tickets):
@@ -370,15 +373,28 @@ class ClientKorus30(AbstractClient):
         """
         patient_id = kwargs.get('patientId')
         if patient_id:
-            if not isinstance(patient_id, list):
-                patient_id = [patient_id]
+            patient_id_list = patient_id
+            if not isinstance(patient_id_list, list):
+                patient_id_list = [patient_id]
             try:
-                result = self.client.getPatientInfo(patient_id)
+                result = self.client.getPatientInfo(patient_id_list)
             except WebFault, e:
                 print e
                 logger.error(e, extra=logger_tags)
+            except NotFoundException, e:
+                logger.error(e, extra=logger_tags)
+                raise e
+            except TException, e:
+                logger.error(e, extra=logger_tags)
+                raise e
             else:
-                return result
+                if result:
+                    patient = result.get(patient_id)
+                    if patient:
+                        patient_info = patient.__dict__
+                        patient_info['birthDate'] = datetime.datetime.utcfromtimestamp(
+                            patient_info['birthDate'] / 1000).date()
+                        return patient_info
         else:
             logger.error(exceptions.AttributeError(), extra=logger_tags)
             raise exceptions.AttributeError

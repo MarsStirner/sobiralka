@@ -32,6 +32,9 @@ apt-get upgrade
 apt-get -y install mysql-client libmysqlclient-dev python python-dev python-setuptools libxml2-dev libxslt1-dev
 ```
 
+* libxmlsec1-dev ```apt-get install libxmlsec1-dev```
+* libffi-dev ```apt-get install libffi-dev```
+
 **Установка fabric для автоматического разворачивания проекта**
 
 ```

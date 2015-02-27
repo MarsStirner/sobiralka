@@ -5,10 +5,11 @@ from flask.ext.admin.contrib.sqlamodel import ModelView
 from flask.ext.admin.base import expose, BaseView
 from wtforms.fields import SelectField, BooleanField
 
-from admin.models import LPU, Regions, Speciality, EPGU_Speciality, EPGU_Service_Type
-from int_service.lib.dataworker import UpdateWorker, EPGUWorker
+from admin.models import LPU, Regions, Speciality, EPGU_Speciality, EPGU_Service_Type, Post
+from int_service.lib.dataworker import UpdateWorker, DataWorker
 from is_celery.tasks import sync_schedule_task
 from admin.database import init_task_session
+from settings import FER_VERSION
 
 Task_Session = init_task_session()
 db_session = Task_Session()
@@ -48,15 +49,28 @@ class RegionsAdmin(ModelView):
 
 
 class SpecialityAdmin(ModelView):
-    form_columns = ('name', 'epgu_speciality', 'epgu_service_type')
-    column_list = ('name', 'epgu_speciality', 'epgu_service_type')
+    form_columns = ('name', 'epgu_speciality', 'epgu_service_type', 'epgu2_speciality', 'epgu2_service')
+    column_list = ('name', 'epgu_speciality', 'epgu_service_type', 'epgu2_speciality', 'epgu2_service')
     column_labels = dict(name=u'Специальность',
                          epgu_speciality=u'Соответствие в ЕПГУ',
-                         epgu_service_type=u'Услуга для выгрузки на ЕПГУ')
+                         epgu_service_type=u'Услуга для выгрузки на ЕПГУ',
+                         epgu2_speciality=u'Соответствие в ЕПГУ (ФЭР2)',
+                         epgu2_service=u'Услуга для выгрузки на ЕПГУ (ФЭР2)')
     column_sortable_list = ('name',)
 
     def __init__(self, session, **kwargs):
         super(SpecialityAdmin, self).__init__(Speciality, session, **kwargs)
+
+
+class PostAdmin(ModelView):
+    form_columns = ('name', 'epgu2_post')
+    column_list = ('name', 'epgu2_post')
+    column_labels = dict(name=u'Должность',
+                         epgu2_post=u'Соответствие в ЕПГУ (ФЭР2)')
+    column_sortable_list = ('name',)
+
+    def __init__(self, session, **kwargs):
+        super(PostAdmin, self).__init__(Post, session, **kwargs)
 
 
 class UpdateAdmin(BaseView):
@@ -83,7 +97,7 @@ class SyncEPGUAdmin(BaseView):
     @expose('/update_common_data/', methods=('POST',))
     def sync_common_data(self):
         if request.form['do_update']:
-            data_worker = EPGUWorker(db_session)
+            data_worker = DataWorker.provider('epgu', db_session)
             data_worker.sync_hospitals()
             data_worker.sync_reservation_types()
             data_worker.sync_payment_methods()
@@ -96,7 +110,7 @@ class SyncEPGUAdmin(BaseView):
     @expose('/update_specialities/', methods=('POST',))
     def sync_specialities(self):
         if request.form['do_update']:
-            data_worker = EPGUWorker(db_session)
+            data_worker = DataWorker.provider('epgu', db_session)
             data_worker.sync_specialities()
             msg = data_worker.msg
             del data_worker
@@ -107,7 +121,7 @@ class SyncEPGUAdmin(BaseView):
     @expose('/update_locations/', methods=('POST',))
     def sync_locations(self):
         if request.form['do_update']:
-            data_worker = EPGUWorker(db_session)
+            data_worker = DataWorker.provider('epgu', db_session)
             data_worker.sync_locations()
             msg = data_worker.msg
             del data_worker
@@ -118,7 +132,7 @@ class SyncEPGUAdmin(BaseView):
     @expose('/activate_locations/', methods=('POST',))
     def activate_locations(self):
         if request.form['do_update']:
-            data_worker = EPGUWorker(db_session)
+            data_worker = DataWorker.provider('epgu', db_session)
             data_worker.activate_locations()
             msg = data_worker.msg
             del data_worker
@@ -129,8 +143,14 @@ class SyncEPGUAdmin(BaseView):
     @expose('/update_schedules/', methods=('POST',))
     def sync_schedules(self):
         if request.form['do_update']:
-            sync_schedule_task.delay()
-            msg = [u'Синхронизация запущена в фоновом режиме']
+            if FER_VERSION == 2:
+                data_worker = DataWorker.provider('epgu', db_session)
+                data_worker.sync_schedule()
+                msg = data_worker.msg
+                del data_worker
+            else:
+                sync_schedule_task.delay()
+                msg = [u'Синхронизация запущена в фоновом режиме']
             # data_worker = EPGUWorker()
             # data_worker.sync_schedule()
             # msg = data_worker.msg

@@ -136,6 +136,7 @@ struct OrgStructure{
  * @param specialityRegionalCode 10) Региональный код специальности
  * @param post					11) Наименование должности
  * @param sexFilter				12) Пол работника
+ * @param snils                 13) СНИЛС врача
  */
 struct Person{
 1:required i32 id;
@@ -150,6 +151,7 @@ struct Person{
 10:optional string specialityRegionalCode;
 11:optional string post;
 12:optional string sexFilter;
+13:optional string snils;
 }
 
 //@deprecated
@@ -184,6 +186,34 @@ struct Amb{
 }
 
 /**
+ * Policy
+ * Структура с данными о полисе
+ * @param serial            1)Серия полиса
+ * @param number            2)Номер полиса
+ * @param typeCode          3)Код типа полиса
+ * @param insurerInfisCode  4)Инфис-код страховой организации
+ */
+struct Policy{
+1:optional string serial;
+2:required string number;
+3:required string typeCode;
+4:optional string insurerInfisCode;
+}
+
+/**
+ * Document
+ * Структура с данными о документе
+ * @param serial            1)Серия документа
+ * @param number            2)Номер документа
+ * @param typeCode          3)Код типа документа
+ */
+struct Document{
+1:optional string serial;
+2:optional string number;
+3:required string typeCode;
+}
+
+/**
  * PatientStatus
  * Структура с данными о  результате поиска \ добавления пациента
  * @param success				1) Статус поиска\добавления пациента (true - найдено\добавлено)
@@ -213,6 +243,9 @@ struct Patient{
 4:optional string patrName;
 5:optional timestamp birthDate;
 6:optional i32 sex;
+7:optional string snils;
+8:optional list<Document> documents;
+9:optional list<Policy> policies;
 }
 
 /**
@@ -406,21 +439,6 @@ struct PersonSchedule{
 /////////////////////////////////////////////////////////////////////
 //Type definitions for input params
 /////////////////////////////////////////////////////////////////////
-
-/**
- * Policy
- * Структура с данными о полисе
- * @param serial            1)Серия полиса
- * @param number            2)Номер полиса
- * @param typeCode          3)Код типа полиса
- * @param insurerInfisCode  4)Инфис-код страховой организации
- */
-struct Policy{
-1:optional string serial;
-2:required string number;
-3:required string typeCode;
-4:optional string insurerInfisCode;
-}
 
 struct FindOrgStructureByAddressParameters{
 1:required string pointKLADR;
