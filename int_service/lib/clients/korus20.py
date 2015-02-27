@@ -4,9 +4,13 @@ import datetime
 from suds import WebFault
 from ...lib import is_exceptions
 import settings
-from ..tfoms_service import TFOMSClient, AnswerCodes, logger
+from ..tfoms_service import TFOMSClient, AnswerCodes
 from suds.client import Client
 from abstract import AbstractClient
+
+from ..utils import logger
+
+logger_tags = dict(tags=['korus20', 'IS'])
 
 
 class ClientKorus20(AbstractClient):
@@ -17,6 +21,7 @@ class ClientKorus20(AbstractClient):
             url: URL-адрес WSDL старой КС
 
         """
+        logger_tags.update(dict(tags=[url]))
         if settings.DEBUG:
             self.client = Client(url, cache=None)
         else:
@@ -64,6 +69,7 @@ class ClientKorus20(AbstractClient):
             result = self.client.service.getOrgStructures(**params)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             return result
         return None
@@ -101,8 +107,10 @@ class ClientKorus20(AbstractClient):
             result = self.client.service.getPersonnel(**params)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             return result
         return None
@@ -112,6 +120,7 @@ class ClientKorus20(AbstractClient):
             result = self.client.service.getSpecialities(hospitalUidFrom=hospital_uid_from)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             return result
         return None
@@ -146,9 +155,11 @@ class ClientKorus20(AbstractClient):
                 result = self.client.service.findOrgStructureByAddress(**params)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 return result['list']
         else:
+            logger.error(exceptions.AttributeError(), extra=logger_tags)
             raise exceptions.AttributeError
         return None
 
@@ -179,6 +190,7 @@ class ClientKorus20(AbstractClient):
                 if timeslot:
                     result.extend(timeslot)
         else:
+            logger.error(exceptions.AttributeError(), extra=logger_tags)
             raise exceptions.AttributeError
         return {'timeslots': result}
 
@@ -195,6 +207,7 @@ class ClientKorus20(AbstractClient):
             schedule = self.client.service.getWorkTimeAndStatus(**kwargs)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             if schedule and hasattr(schedule, 'tickets'):
                 result = []
@@ -236,9 +249,11 @@ class ClientKorus20(AbstractClient):
                 result = self.client.service.getPatientQueue(**params)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 return result['list']
         else:
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
         return None
 
@@ -258,9 +273,11 @@ class ClientKorus20(AbstractClient):
                 result = self.client.service.getPatientInfo(**params)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 return result['patientInfo']
         else:
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
         return None
 
@@ -307,13 +324,15 @@ class ClientKorus20(AbstractClient):
             omiPolicy = kwargs.get('omiPolicy')
             if omiPolicy:
                 params['omiPolicy'] = omiPolicy  # для совместимости со старой версией сайта и киоска
-        except exceptions.KeyError:
+        except exceptions.KeyError, e:
+            logger.error(e, extra=logger_tags)
             pass
         else:
             try:
                 result = self.client.service.findPatients(**params)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 return result
         return None
@@ -355,13 +374,15 @@ class ClientKorus20(AbstractClient):
             omiPolicy = kwargs.get('omiPolicy')
             if omiPolicy:
                 params.update({'omiPolicy': omiPolicy}) # для совместимости со старой версией сайта и киоска
-        except exceptions.KeyError:
+        except exceptions.KeyError, e:
+            logger.error(e, extra=logger_tags)
             pass
         else:
             try:
                 result = self.client.service.findPatient(**params)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 return result
         return None
@@ -392,9 +413,11 @@ class ClientKorus20(AbstractClient):
                 result = self.client.service.addPatient(**params)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 return result
         else:
+            logger.error(exceptions.AttributeError(), extra=logger_tags)
             raise exceptions.AttributeError
         return {}
 
@@ -414,8 +437,8 @@ class ClientKorus20(AbstractClient):
         hospital_uid_from = kwargs.get('hospitalUidFrom')
         person = kwargs.get('person')
         if person is None:
+            logger.error(exceptions.AttributeError(), extra=logger_tags)
             raise exceptions.AttributeError
-            return {}
 
         document = kwargs.get('document')
         birthDate = kwargs.get('birthday')
@@ -469,12 +492,14 @@ class ClientKorus20(AbstractClient):
                 'hospitalUidFrom': kwargs.get('hospitalUidFrom'),
             }
         except:
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
         else:
             try:
                 result = self.client.service.enqueuePatient(**params)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 if result.success:
                     return {
@@ -498,11 +523,13 @@ class ClientKorus20(AbstractClient):
                 result = self.client.service.dequeuePatient(serverId=server_id, patientId=patient_id, queueId=ticket_id)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 return dict(
                     success=result.success,
                     comment=u'Запись на приём отменена.' if result.success else u'Ошибка отмены записи на приём.')
         else:
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
         return None
 
@@ -524,6 +551,7 @@ class ClientKorus20(AbstractClient):
                     hospitalUidFrom='')
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 result = dict(timeslotStart=ticket.begDateTime,
                               timeslotEnd=ticket.endDateTime,
@@ -544,6 +572,7 @@ class ClientKorus20(AbstractClient):
             patient = self.findPatient(**params)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
             return dict(status=False, message=u'Пациент не найден')
         else:
             if patient and patient.success and patient.patientId:

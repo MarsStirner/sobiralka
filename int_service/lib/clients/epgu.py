@@ -5,8 +5,11 @@ from suds import WebFault
 import settings
 import urllib2
 import socket
+from ..utils import logger
 
 from jinja2 import Environment, PackageLoader
+
+logger_tags = dict(tags=['epgu_client', 'IS'])
 
 
 class ClientEPGU():
@@ -23,8 +26,10 @@ class ClientEPGU():
                 return True
         except urllib2.URLError, e:
             print e
+            logger.error(e.message, extra=logger_tags)
         except socket.timeout, e:
             print e
+            logger.error(e.message, extra=logger_tags)
         return False
 
     def __init_client(self):
@@ -92,8 +97,10 @@ class ClientEPGU():
             result = self.__send('GetMedicalSpecializations', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             medical_specializations = getattr(result.AppData, 'medical-specializations', None)
             if medical_specializations:
@@ -134,8 +141,10 @@ class ClientEPGU():
             result = self.__send('GetReservationTypes', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             reservation_types = getattr(result.AppData, 'reservation-types', None)
             if reservation_types:
@@ -177,8 +186,10 @@ class ClientEPGU():
             result = self.__send('GetPaymentMethods', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             payment_methods = getattr(result.AppData, 'payment-methods', None)
             if payment_methods:
@@ -225,8 +236,10 @@ class ClientEPGU():
             result = self.__send('GetServiceTypes', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             service_types = getattr(result.AppData, 'service-types', None)
             if service_types:
@@ -271,8 +284,10 @@ class ClientEPGU():
             result = self.__send('GetServiceType', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             service_type = getattr(result.AppData, 'service-type', None)
             if service_type:
@@ -302,8 +317,10 @@ class ClientEPGU():
             result = self.__send('GetPlace', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             if result:
                 places = getattr(result.AppData, 'places', None)
@@ -338,8 +355,10 @@ class ClientEPGU():
             result = self.__send('GetLocations', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             place_locations_data = getattr(result.AppData, 'place-locations-data', None)
             if place_locations_data:
@@ -371,8 +390,10 @@ class ClientEPGU():
             result = self.__send('DeleteEditLocation', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             errors = getattr(result.AppData, 'errors', None)
             if errors:
@@ -441,14 +462,17 @@ class ClientEPGU():
                 params['params'] = {':place_id': hospital['place_id'], 'auth_token': hospital['auth_token']}
             except AttributeError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 return None
             else:
                 message = self.__generate_message(dict(location=params))
                 result = self.__send('PostLocations', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             location = getattr(result.AppData, 'location', None)
             if location:
@@ -517,14 +541,17 @@ class ClientEPGU():
                                     ':location_id': doctor['location_id']}
             except AttributeError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 return None
             else:
                 message = self.__generate_message(dict(location=params))
                 result = self.__send('PutEditLocation', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             location = getattr(result.AppData, 'location', None)
             if location:
@@ -582,14 +609,17 @@ class ClientEPGU():
                 params['params'] = {':place_id': hospital['place_id'], 'auth_token': hospital['auth_token']}
             except AttributeError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 return None
             else:
                 message = self.__generate_message(dict(rule_data=params))
                 result = self.__send('PostRules', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             errors = getattr(result.AppData, 'errors', None)
             if errors:
@@ -635,14 +665,17 @@ class ClientEPGU():
                 params['params'] = {':location_id': location_id, 'auth_token': hospital['auth_token']}
             except AttributeError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 return None
             else:
                 message = self.__generate_message(dict(applied_schedule=params))
                 result = self.__send('PutLocationSchedule', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             if result is not None:
                 errors = getattr(result.AppData, 'errors', None)
@@ -671,8 +704,10 @@ class ClientEPGU():
             result = self.__send('PutActivateLocation', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             errors = getattr(result.AppData, 'errors', None)
             if errors:
@@ -711,14 +746,17 @@ class ClientEPGU():
                 params['params'] = {'auth_token': hospital['auth_token'], ':cito': cito}
             except AttributeError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 return None
             else:
                 message = self.__generate_message(dict(client_info=params))
                 result = self.__send('PostReserve', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             if hasattr(result, 'AppData'):
                 errors = getattr(result.AppData, 'errors', None)
@@ -757,14 +795,17 @@ class ClientEPGU():
                 params['params'] = {'auth_token': hospital['auth_token'], ':slot_id': slot_id}
             except AttributeError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 return None
             else:
                 message = self.__generate_message(dict(client_info=params))
                 result = self.__send('PutSlot', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             errors = getattr(result.AppData, 'errors', None)
             if errors:
@@ -791,14 +832,17 @@ class ClientEPGU():
                     params.update(dict(comment=comment))
             except AttributeError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 return None
             else:
                 message = self.__generate_message(dict(params=params))
                 result = self.__send('DeleteSlot', message)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             errors = getattr(result.AppData, 'errors', None)
             if errors:

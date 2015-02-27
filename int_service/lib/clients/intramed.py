@@ -3,6 +3,9 @@ import exceptions
 from suds.client import Client
 from suds import WebFault
 from abstract import AbstractClient
+from ..utils import logger
+
+logger_tags = dict(tags=['intramed', 'IS'])
 
 
 class ClientIntramed(AbstractClient):
@@ -23,6 +26,7 @@ class ClientIntramed(AbstractClient):
             result = list_client.service.listHospitals()
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             try:
                 hospitals = []
@@ -34,7 +38,8 @@ class ClientIntramed(AbstractClient):
                         'address': unicode(hospital.address),
                     }
                     hospitals.append(self.Struct(**params))
-            except exceptions.AttributeError:
+            except exceptions.AttributeError, e:
+                logger.error(e, extra=logger_tags)
                 pass
             else:
                 return hospitals
@@ -56,6 +61,7 @@ class ClientIntramed(AbstractClient):
             result = list_client.service.listDoctors(**params)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             if 'doctors' in result:
                 for doctor in result.doctors:
@@ -74,6 +80,7 @@ class ClientIntramed(AbstractClient):
             result = self.client.service.getSpecialities({'hospitalUidFrom': hospital_uid_from})
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             return result
         return None
@@ -113,7 +120,9 @@ class ClientIntramed(AbstractClient):
                 return result['list']
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
         else:
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
         return result
 
@@ -149,6 +158,7 @@ class ClientIntramed(AbstractClient):
 #
 #                result['timeslots'].extend(self.getWorkTimeAndStatus(**params))
         else:
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
         return result
 
@@ -176,6 +186,7 @@ class ClientIntramed(AbstractClient):
             schedule = self.client.service.getScheduleInfo(**params)
         except WebFault, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             if schedule:
                 result = []
@@ -209,9 +220,11 @@ class ClientIntramed(AbstractClient):
                 result = self.client.service.getPatientQueue(**params)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 return result['list']
         else:
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
         return None
 
@@ -231,11 +244,12 @@ class ClientIntramed(AbstractClient):
                 result = self.client.service.getPatientQueue(**params)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 return result['patientInfo']
         else:
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
-
         return None
 
     def enqueue(self, **kwargs):
@@ -262,13 +276,15 @@ class ClientIntramed(AbstractClient):
                 'doctorUid': kwargs.get('doctorUid'),
                 'timeslotStart': kwargs.get('timeslotStart'),
             }
-        except:
+        except Exception, e:
+            logger.error(e, extra=logger_tags)
             raise exceptions.ValueError
         else:
             try:
                 result = self.client.service.enqueue(**params)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
             else:
                 if result.enqueueResult == 'accepted':
                     return {

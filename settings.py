@@ -21,6 +21,8 @@ FLASK_SECRET_KEY = ''
 
 EPGU_SERVICE_URL = ''
 
+SIMPLELOGS_URL = 'http://127.0.0.1:5500'
+
 from settings_local import *
 
 DB_CONNECT_STRING = 'mysql://%s:%s@%s:%s/%s?charset=utf8' % (DB_USER , DB_PASSWORD, DB_HOST, DB_PORT, DB_NAME)

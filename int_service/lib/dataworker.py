@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import exceptions
 import urllib2
 import datetime
@@ -29,6 +28,9 @@ from service_clients import Clients, ClientEPGU, CouponStatus
 from is_exceptions import exception_by_code, IS_ConnectionError
 
 from admin.database import Session, Session2, init_task_session, shutdown_session
+from utils import logger
+
+logger_tags = dict(tags=['dataworker', 'IS', __file__])
 
 import logging
 
@@ -214,6 +216,7 @@ class LPUWorker(object):
             try:
                 lpu_ids = query.one()
             except MultipleResultsFound, e:
+                logger.error(e, extra=logger_tags)
                 print e
             else:
                 lpu_list[key]['id'] = lpu_ids.id
@@ -339,6 +342,7 @@ class LPUWorker(object):
             result = self.session.query(LPU).filter(LPU.id == int(id)).one()
         except NoResultFound, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             result.proxy = result.proxy.split(';')[0]
             if result.protocol in ('intramed', 'samson', 'korus20'):
@@ -347,6 +351,7 @@ class LPUWorker(object):
                     if not self.__check_proxy(result.proxy):
                         return None
                 except IS_ConnectionError, e:
+                    logger.error(e, extra=logger_tags)
                     print e
                     return None
             return result
@@ -367,8 +372,10 @@ class LPUWorker(object):
         try:
             result = self.session.query(LPU.id).filter(LPU.key == code).one()
         except NoResultFound, e:
+            logger.error(e, extra=logger_tags)
             print e
         except MultipleResultsFound, e:
+            logger.error(e, extra=logger_tags)
             print e
         else:
             return result
@@ -438,6 +445,7 @@ class LPU_UnitsWorker(object):
         try:
             result = self.session.query(LPU_Units).filter(LPU_Units.id == int(id)).one()
         except NoResultFound, e:
+            logger.error(e, extra=logger_tags)
             print e
         else:
             return result
@@ -479,15 +487,15 @@ class EnqueueWorker(object):
             lpu = lpu_dw.get_by_id(hospital_uid[0])
         else:
             shutdown_session()
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
-            return {'timeslots': []}
 
         if 'doctorUid' in kwargs:
             doctor_uid = int(kwargs.get('doctorUid'))
         else:
             shutdown_session()
+            logger.error(exceptions.KeyError(), extra=logger_tags)
             raise exceptions.KeyError
-            return {'timeslots': []}
 
         speciality = kwargs.get('speciality')
         if not speciality:
@@ -535,6 +543,7 @@ class EnqueueWorker(object):
                 try:
                     ticket = proxy_client.get_closest_free_ticket(doctor_id, start)
                 except Exception, e:
+                    logger.error(e, extra=logger_tags)
                     print e
                 else:
                     #result[doctor_id] = ticket
@@ -576,6 +585,7 @@ class EnqueueWorker(object):
             result = self.session.query(Enqueue).filter(Enqueue.id == int(id)).one()
         except NoResultFound, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             return result
         return None
@@ -618,8 +628,8 @@ class EnqueueWorker(object):
                 return result
         else:
             shutdown_session()
+            logger.error(exceptions.KeyError(), extra=logger_tags)
             raise exceptions.KeyError
-            return {}
 
         last_uid = kwargs.get('lastUid')
 
@@ -744,6 +754,8 @@ class EnqueueWorker(object):
         for ticket in tickets:
             date_time = getattr(ticket, 'dateTime')
             doctor = doctor_dw.get_doctor(lpu_unit=hospital_uid, doctor_id=getattr(ticket, 'personId', None))
+            if not doctor:
+                continue
             work_times = proxy_client.getWorkTimeAndStatus(personId=getattr(ticket, 'personId'),
                                                            date=date_time.date())
             office = u'-'
@@ -820,6 +832,7 @@ class EnqueueWorker(object):
             proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
         else:
             shutdown_session()
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
 
         result = dict()
@@ -836,6 +849,7 @@ class EnqueueWorker(object):
             result = proxy_client.get_patient_tickets(params)
         except Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
             return dict(status=False, message=u'Пациент не найден')
         else:
             if result.get('tickets', None):
@@ -910,12 +924,12 @@ class EnqueueWorker(object):
                 proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
             else:
                 shutdown_session()
+                logger.error(exceptions.ValueError(), extra=logger_tags)
                 raise exceptions.ValueError
-                return {}
         else:
             shutdown_session()
+            logger.error(exceptions.ValueError(), extra=logger_tags)
             raise exceptions.ValueError
-            return {}
 
         result = dict()
 
@@ -929,8 +943,8 @@ class EnqueueWorker(object):
 
         if not doctor_info:
             shutdown_session()
+            logger.error(exceptions.LookupError(), extra=logger_tags)
             raise exceptions.LookupError
-            return {}
 
         person_fio = dict(firstName=patient.firstName,
                           lastName=patient.lastName,
@@ -1023,9 +1037,11 @@ class EnqueueWorker(object):
             self.session.add(enqueue)
         except exceptions.ValueError, e:
             print e
+            logger.error(e, extra=logger_tags)
             self.session.rollback()
         except exceptions.Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
             self.session.rollback()
         else:
             self.session.commit()
@@ -1041,9 +1057,11 @@ class EnqueueWorker(object):
                     setattr(enqueue, k, v)
         except exceptions.ValueError, e:
             print e
+            logger.error(e, extra=logger_tags)
             self.session.rollback()
         except exceptions.Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
             self.session.rollback()
         else:
             self.session.commit()
@@ -1181,7 +1199,7 @@ class PersonalWorker(object):
         if doctor_id:
             query = query.filter(Personal.doctor_id == int(doctor_id))
 
-        return query.one()
+        return query.first()
 
     def get_list_doctors(self, **kwargs):
         """Формирует и возвращает список врачей для SOAP
@@ -1403,6 +1421,7 @@ class UpdateWorker(object):
                         self.session.commit()
             except Exception, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 self.__log(u'Ошибка при добавлении в UnitsParentForId: %s' % e)
                 self.session.rollback()
 
@@ -1420,14 +1439,17 @@ class UpdateWorker(object):
                 units = proxy_client.listHospitals(infis_code=lpu.key)
             except WebFault, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 self.__log(u'Ошибка: %s' % e)
                 return False
             except TypeError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 self.__log(u'Ошибка: %s' % e)
                 return False
             except Exception, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 self.__log(u'Ошибка: %s' % e)
                 return False
             else:
@@ -1466,9 +1488,11 @@ class UpdateWorker(object):
                     try:
                         doctors = proxy_client.listDoctors(hospital_id=unit.id)
                     except WebFault, e:
+                        logger.error(e, extra=logger_tags)
                         self.__log(u'Ошибка при получении списка врачей для %s: %s (%s)' % (unit.id, unit.name, e))
                         continue
                     except Exception, e:
+                        logger.error(e, extra=logger_tags)
                         self.__log(u'Ошибка при получении списка врачей для %s: %s (%s)' % (unit.id, unit.name, e))
                         continue
                     else:
@@ -1526,6 +1550,7 @@ class UpdateWorker(object):
                 speciality = Speciality(name=kwargs.get('speciality'))
             except InvalidRequestError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 self.__failed_update(e)
                 return False
             else:
@@ -1545,6 +1570,7 @@ class UpdateWorker(object):
                 self.session.commit()
             except InvalidRequestError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 self.__failed_update(e)
                 return False
         return True
@@ -1584,20 +1610,25 @@ class UpdateWorker(object):
                     lpu.LastUpdate = time.mktime(datetime.datetime.now().timetuple())
                 except WebFault, e:
                     print e
+                    logger.error(e, extra=logger_tags)
                     self.__failed_update(e)
                 except exceptions.UserWarning, e:
                     print e
+                    logger.error(e, extra=logger_tags)
                     self.__failed_update(e)
                 except urllib2.HTTPError, e:
                     print e
+                    logger.error(e, extra=logger_tags)
                     self.__failed_update(e)
                     continue
                 except IS_ConnectionError, e:
                     print e
+                    logger.error(e, extra=logger_tags)
                     self.__failed_update(e.message)
                     continue
                 except Exception, e:
                     print e
+                    logger.error(e, extra=logger_tags)
                     self.__failed_update(e.message)
                 else:
                     self.__success_update()
@@ -1627,6 +1658,7 @@ class EPGUWorker(object):
 
     def __del__(self):
         shutdown_session()
+        logger.debug(u'\n'.join(self.msg), extra=dict(tags=['epgu_worker', 'IS', __file__]))
 
     def __log(self, msg):
         if msg:
@@ -1755,6 +1787,7 @@ class EPGUWorker(object):
             patrname = fio_list[2].strip()
         except IndexError, e:
             print e
+            logger.error(e, extra=logger_tags)
         else:
             doctor = self.session.query(Personal).filter(
                 and_(Personal.lpuId == lpu_id,
@@ -1793,6 +1826,7 @@ class EPGUWorker(object):
                     ))
         except AttributeError, e:
             print e
+            logger.error(e, extra=logger_tags)
         return result
 
     def __get_all_locations(self, hospital):
@@ -1872,10 +1906,12 @@ class EPGUWorker(object):
             epgu_service_types = self.__get_service_types(doctor, epgu_speciality.id)
         except AttributeError, e:
             print e
+            logger.error(e, extra=logger_tags)
             self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
             return None
         except exceptions.ValueError, e:
             print e
+            logger.error(e, extra=logger_tags)
             self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
             return None
 
@@ -1931,6 +1967,7 @@ class EPGUWorker(object):
             epgu_service_types = self.__get_service_types(doctor, epgu_speciality.id)
         except AttributeError, e:
             print e
+            logger.error(e, extra=logger_tags)
             self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
             return None
 
@@ -1958,7 +1995,6 @@ class EPGUWorker(object):
             reservation_type_id=reservation_type.keyEPGU,
             payment_method_id=payment_method.keyEPGU,
         )
-        print params
         params['service_types'] = []
         for service_type in epgu_service_types:
             params['service_types'].append(service_type.keyEPGU)
@@ -2342,8 +2378,10 @@ class EPGUWorker(object):
             hospital_param = dict(auth_token=doctor.lpu.token, place_id=doctor.lpu.keyEPGU)
         except MultipleResultsFound, e:
             print e
+            logger.error(e, extra=logger_tags)
         except NoResultFound, e:
             print e
+            logger.error(e, extra=logger_tags)
             return None
         else:
             slot_id = params.get('slot_id')
@@ -2351,8 +2389,10 @@ class EPGUWorker(object):
             if slot_id:
                 ticket_exists = self.session.query(Enqueue).filter(Enqueue.keyEPGU == slot_id).count()
                 if ticket_exists:
-                    print u'Талончик с keyEPGU=%s уже существует' % slot_id
-                    self.__log(u'Талончик с keyEPGU=%s уже существует' % slot_id)
+                    logger.error(u'Запись пациента, инициированная ЕПГУ ({0}). '
+                                 u'Запись не осуществлена: '
+                                 u'талончик с keyEPGU={1} уже существует'.format(params, slot_id),
+                                 extra=logger_tags)
                     return False
 
             enqueue_dw = EnqueueWorker(self.session)
@@ -2364,6 +2404,9 @@ class EPGUWorker(object):
                 epgu_slot_id=slot_id
             )
             if _enqueue and _enqueue['result'] is True:
+                logger.debug(u'Запись пациента, инициированная ЕПГУ ({0}). '
+                             u'Запись успешна.'.format(params),
+                             extra=logger_tags)
                 return True
             else:
                 self.epgu_delete_slot(
@@ -2371,7 +2414,6 @@ class EPGUWorker(object):
                     slot_id=params.get('slot_id'))
 
     def send_enqueue(self, hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
-
         print 'send_enqueue %s' % slot_unique_key
         print 'enqueue_id %s' % enqueue_id
         print 'hospital_auth_token: %s | hospital_place_id: %s' % (hospital['auth_token'], hospital['place_id'])
@@ -2399,11 +2441,17 @@ class EPGUWorker(object):
             enqueue = self.session.query(Enqueue).filter(Enqueue.keyEPGU == params.get('slot_id')).one()
         except MultipleResultsFound, e:
             print e
+            logger.error(e, extra=logger_tags)
+            return None
         except NoResultFound, e:
             print e
+            logger.error(e, extra=logger_tags)
             return None
         else:
             data = json.loads(enqueue.Data)
+            result = None
+            logger.debug(u'Удаление записи, инициированное ЕПГУ ({0}).'.format(params),
+                         extra=logger_tags)
             if data['hospitalUid']:
                 enqueue_dw = EnqueueWorker(self.session)
                 result = enqueue_dw.dequeue(hospitalUid=data['hospitalUid'],
@@ -2437,6 +2485,7 @@ class EPGUWorker(object):
                 service_type_keyEPGU = service_type.keyEPGU
             except AttributeError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
                 continue
             fio_list = patient_slot['patient']['fio'].split()
@@ -2445,6 +2494,7 @@ class EPGUWorker(object):
                 patronymic = fio_list[2]
             except IndexError, e:
                 print e
+                logger.error(e, extra=logger_tags)
                 patient['patronymic'] = u''
             else:
                 patient['patronymic'] = patronymic
@@ -2613,6 +2663,7 @@ class EPGUWorker(object):
             self.session.add(_ticket)
         except exceptions.Exception, e:
             print e
+            logger.error(e, extra=logger_tags)
             self.session.rollback()
             return None
         else:
@@ -2703,6 +2754,7 @@ def send_enqueue_task(hospital, doctor, patient, timeslot, enqueue_id, slot_uniq
         epgu_dw = EPGUWorker(Task_Session())
         epgu_dw.send_enqueue(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key)
     except exceptions.Exception, e:
+        logger.error(e, extra=logger_tags)
         print e
     finally:
         Task_Session.remove()
@@ -2715,6 +2767,7 @@ def epgu_delete_slot_task(_hospital, enqueue_keyEPGU):
         epgu_dw = EPGUWorker(Task_Session())
         epgu_dw.epgu_delete_slot(_hospital, enqueue_keyEPGU)
     except exceptions.Exception, e:
+        logger.error(e, extra=logger_tags)
         print e
     finally:
         Task_Session.remove()

@@ -19,3 +19,5 @@ twisted
 mysql-python
 -e git+http://github.com/johnpaulett/python-hl7/#egg=python-hl7
 lxml
+
+-e git+https://github.com/KorusConsulting/pysimplelogs.git#egg=pysimplelogs
