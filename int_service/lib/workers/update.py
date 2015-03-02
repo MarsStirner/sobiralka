@@ -178,11 +178,11 @@ class UpdateWorker(object):
                                 if doctor.firstName and doctor.lastName and doctor.patrName:
                                     speciality = self.__update_speciality(
                                         lpu_id=lpu.id,
-                                        speciality=doctor.speciality.strip()
+                                        speciality=doctor.speciality.strip() if doctor.speciality else ''
                                     )
                                     post = self.__update_post(
                                         lpu_id=lpu.id,
-                                        post=doctor.post.strip()
+                                        post=doctor.post.strip() if doctor.post else ''
                                     )
                                     if not speciality:
                                         continue
