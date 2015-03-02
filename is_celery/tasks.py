@@ -34,7 +34,7 @@ class SqlAlchemyTask(celery.Task):
 def appoint_patients(parent_task_returns, hospital, doctor):
     if not parent_task_returns:
         return None
-    rules, patient_slots = parent_task_returns
+    patient_slots = parent_task_returns
     if not patient_slots:
         return None
     epgu_dw = DataWorker.provider('epgu', db_session)
@@ -51,14 +51,14 @@ def activate_location(parent_task_returns, hospital, location_id):
     return parent_task_returns
 
 
-@celery.task(base=SqlAlchemyTask)
-def link_schedule(parent_task_returns, hospital, location_id):
-    rules, busy_by_patients = parent_task_returns
-    if not rules:
-        return None
-    epgu_dw = DataWorker.provider('epgu', db_session)
-    epgu_dw.link_schedule(rules, hospital, location_id)
-    return parent_task_returns
+# @celery.task(base=SqlAlchemyTask)
+# def link_schedule(parent_task_returns, hospital, location_id):
+#     rules, busy_by_patients = parent_task_returns
+#     if not rules:
+#         return None
+#     epgu_dw = DataWorker.provider('epgu', db_session)
+#     epgu_dw.link_schedule(rules, hospital, location_id)
+#     return parent_task_returns
 
 
 @celery.task(base=SqlAlchemyTask)
@@ -76,8 +76,8 @@ def lpu_schedule_task(hospital_id, hospital_dict):
         group(
             [chain(
                 doctor_schedule_task.s(doctor, hospital_dict),
-                link_schedule.s(hospital_dict, doctor.key_epgu.keyEPGU),
-                activate_location.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=5),
+                # link_schedule.s(hospital_dict, doctor.key_epgu.keyEPGU),
+                # activate_location.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=5),
                 appoint_patients.s(hospital_dict, doctor).set(countdown=5)
             ) for doctor in epgu_doctors])()
     # shutdown_session()

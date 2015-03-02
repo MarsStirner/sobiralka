@@ -987,39 +987,37 @@ class EPGUWorker(object):
         else:
             self.__log(getattr(epgu_result, 'error', None))
 
-    def link_schedule(self, rules, hospital, location_id):
-        if not rules:
-            return None
-        print (hospital, location_id, rules)
-        epgu_result = self.proxy_client.PutLocationSchedule(
-            hospital,
-            location_id,
-            rules)
-        applied_schedule = getattr(epgu_result, 'applied-schedule', None)
-        print applied_schedule
-        if applied_schedule:
-            applied_rules = getattr(applied_schedule, 'applied-rules', None)
-            if applied_rules:
-                applied_rule = getattr(applied_rules, 'applied-rule')
-                if isinstance(applied_rule, list):
-                    for _applied_rule in applied_rule:
-                        self.__log(
-                            u'Очереди (%s) назначено расписание с %s по %s (%s)' %
-                            (getattr(applied_schedule, 'location-id', ''),
-                             getattr(_applied_rule, 'start-date'),
-                             getattr(_applied_rule, 'end-date'),
-                             getattr(_applied_rule, 'rule-id')))
-                else:
-                    if applied_rule:
-                        self.__log(
-                            u'Очереди (%s) назначено расписание с %s по %s (%s)' %
-                            (getattr(applied_schedule, 'location-id', ''),
-                             getattr(applied_rule, 'start-date'),
-                             getattr(applied_rule, 'end-date'),
-                             getattr(applied_rule, 'rule-id')))
-        else:
-            self.__log(getattr(epgu_result, 'error', None))
-        return self.msg
+    # def link_schedule(self, rules, hospital, location_id):
+    #     if not rules:
+    #         return None
+    #     epgu_result = self.proxy_client.PutLocationSchedule(
+    #         hospital,
+    #         location_id,
+    #         rules)
+    #     applied_schedule = getattr(epgu_result, 'applied-schedule', None)
+    #     if applied_schedule:
+    #         applied_rules = getattr(applied_schedule, 'applied-rules', None)
+    #         if applied_rules:
+    #             applied_rule = getattr(applied_rules, 'applied-rule')
+    #             if isinstance(applied_rule, list):
+    #                 for _applied_rule in applied_rule:
+    #                     self.__log(
+    #                         u'Очереди (%s) назначено расписание с %s по %s (%s)' %
+    #                         (getattr(applied_schedule, 'location-id', ''),
+    #                          getattr(_applied_rule, 'start-date'),
+    #                          getattr(_applied_rule, 'end-date'),
+    #                          getattr(_applied_rule, 'rule-id')))
+    #             else:
+    #                 if applied_rule:
+    #                     self.__log(
+    #                         u'Очереди (%s) назначено расписание с %s по %s (%s)' %
+    #                         (getattr(applied_schedule, 'location-id', ''),
+    #                          getattr(applied_rule, 'start-date'),
+    #                          getattr(applied_rule, 'end-date'),
+    #                          getattr(applied_rule, 'rule-id')))
+    #     else:
+    #         self.__log(getattr(epgu_result, 'error', None))
+    #     # return self.msg
 
     def doctor_schedule_task(self, doctor, hospital_dict):
         self.proxy_client.set_auth_token(hospital_dict['epgu2_token'])
@@ -1082,10 +1080,10 @@ class EPGUWorker(object):
             if doctor_rules:
                 self.__activate_resource(resource_id)
 
-            if busy_by_patients:
-                self.__appoint_patients(doctor, busy_by_patients)
+            # if busy_by_patients:
+            #     self.__appoint_patients(doctor, busy_by_patients)
 
-        return doctor_rules, busy_by_patients
+        return busy_by_patients
 
     def get_doctor_tickets(self, doctor):
         today = datetime.datetime.today().date()
