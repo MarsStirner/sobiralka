@@ -51,14 +51,15 @@ def activate_location(parent_task_returns, hospital, location_id):
     return parent_task_returns
 
 
-# @celery.task(base=SqlAlchemyTask)
-# def link_schedule(parent_task_returns, hospital, location_id):
-#     rules, busy_by_patients = parent_task_returns
-#     if not rules:
-#         return None
-#     epgu_dw = DataWorker.provider('epgu', db_session)
-#     epgu_dw.link_schedule(rules, hospital, location_id)
-#     return parent_task_returns
+@celery.task(base=SqlAlchemyTask)
+def link_schedule(parent_task_returns, hospital, location_id):
+    # rules, busy_by_patients = parent_task_returns
+    # if not rules:
+    #     return None
+    # epgu_dw = DataWorker.provider('epgu', db_session)
+    # epgu_dw.link_schedule(rules, hospital, location_id)
+    # return parent_task_returns
+    pass
 
 
 @celery.task(base=SqlAlchemyTask)
