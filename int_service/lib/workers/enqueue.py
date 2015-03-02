@@ -699,7 +699,7 @@ def send_enqueue_task(hospital, doctor, patient, timeslot, enqueue_id, slot_uniq
     Task_Session = init_task_session()
     try:
         person_dw = DataWorker.provider('personal', Task_Session())
-        doctor_info = person_dw.get_doctor(doctor['lpu_unit'], doctor['doctor_id'])
+        doctor_info = person_dw.get_doctor(lpu_unit=doctor['lpu_unit'], doctor_id=doctor['doctor_id'])
         epgu_dw = DataWorker.provider('epgu', Task_Session())
         epgu_dw.send_enqueue(hospital, doctor_info, patient, timeslot, enqueue_id, slot_unique_key)
     except exceptions.Exception, e:
