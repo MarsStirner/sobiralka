@@ -977,7 +977,7 @@ class EPGUWorker(object):
                 logger.error(e, extra=logger_tags)
                 self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
                 continue
-            self.epgu_appoint_patient(doctor, patient_slot['patient']['id'], patient_slot['date_time'])
+            self.epgu_appoint_patient(doctor, patient_slot['id'], patient_slot['date_time'])
 
     def activate_location(self, hospital, location_id):
         epgu_result = self.proxy_client.PutActivateLocation(hospital, location_id)
