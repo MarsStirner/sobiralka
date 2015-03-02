@@ -27,7 +27,7 @@ celery.conf.update(
     # ADMINS = (('Admin', 'admin@localhost'), )
 #    CELERYD_MAX_TASKS_PER_CHILD=5,
     CELERY_TASK_RESULT_EXPIRES=172800,
-    CELERY_DEFAULT_DELIVERY_MODE = 'transient',
+    CELERY_DEFAULT_DELIVERY_MODE = 'transient'
 )
 
 celery.conf.update(
@@ -55,7 +55,7 @@ celery.conf.update(
         'periodical_send_inside_tickets': {
             'task': 'is_celery.tasks.epgu_send_new_tickets',
             'schedule': crontab(minute=0),
-        },
+        }
     }
 )
 
