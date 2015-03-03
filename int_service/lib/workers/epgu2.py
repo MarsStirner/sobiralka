@@ -472,9 +472,10 @@ class EPGUWorker(object):
                             if result:
                                 self.__log(u'Очередь обновлена (%s)' % resource['resource']['id'])
                         elif doctor and (not doctor.key_epgu or str(doctor.key_epgu.epgu2_resource_id) != resource['resource']['id']):
+                            LastName, FirstName, PatrName = doctor.LastName, doctor.FirstName, doctor.PatrName
                             self.__update_doctor(doctor, dict(epgu2_resource_id=resource['resource']['id']))
                             self.__log(u'Для %s %s %s получен epgu2_resource_id (%s)' %
-                                       (doctor.LastName, doctor.FirstName, doctor.PatrName, resource['resource']['id']))
+                                       (LastName, FirstName, PatrName, resource['resource']['id']))
                             doctor_id = doctor.id
                             _synced_doctor.append(doctor_id)
                             result = self.__put_edit_location_epgu(doctor, resource['resource']['id'])
