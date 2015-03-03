@@ -611,8 +611,10 @@ class EPGUWorker(object):
         hospital_uid = '%s/%s' % (doctor.lpuId, doctor.orgId)
         patient_info = client_dw.get_patient(hospital_uid, patient_id)
         slot_id = None
+        print patient_info
         if patient_info:
             slot_id = self.__create_slot(resource_id, service_id, slot_date_time)
+            print slot_id
         if slot_id:
             try:
                 passport = u'{0}{1}'.format(patient_info['documents'][0].serial.replace(' ', ''),
@@ -641,6 +643,7 @@ class EPGUWorker(object):
                            birthday=patient_info['birthDate'].strftime('%Y-%m-%d'),
                            gender='male' if patient_info['sex'] == 1 else 'female',
                            oms=policy)
+            print patient
             try:
                 slot = self.proxy_client.FinishCreateSlot(slot_id, patient)
             except EPGUError, e:
@@ -966,17 +969,10 @@ class EPGUWorker(object):
         return result
 
     # SYNC SCHEDULE TASKS
-    def appoint_patients(self, patient_slots, hospital, doctor):
+    def appoint_patients(self, patient_slots, doctor):
         if not patient_slots:
             return None
         for patient_slot in patient_slots:
-            try:
-                service_type = doctor.speciality[0].epgu_service_type
-            except AttributeError, e:
-                print e
-                logger.error(e, extra=logger_tags)
-                self.__log(u'Для специальности %s не указана услуга для выгрузки на ЕПГУ' % doctor.speciality[0].name)
-                continue
             self.epgu_appoint_patient(doctor, patient_slot['id'], patient_slot['date_time'])
 
     def activate_location(self, hospital, location_id):

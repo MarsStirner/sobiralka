@@ -31,14 +31,14 @@ class SqlAlchemyTask(celery.Task):
 
 # SYNC SCHEDULE TASKS
 @celery.task(base=SqlAlchemyTask)
-def appoint_patients(parent_task_returns, hospital, doctor):
+def appoint_patients(parent_task_returns, doctor):
     if not parent_task_returns:
         return None
     patient_slots = parent_task_returns
     if not patient_slots:
         return None
     epgu_dw = DataWorker.provider('epgu', db_session)
-    epgu_dw.appoint_patients(patient_slots, hospital, doctor)
+    epgu_dw.appoint_patients(patient_slots, doctor)
     return epgu_dw.msg
 
 
@@ -79,19 +79,19 @@ def lpu_schedule_task(hospital_id, hospital_dict):
                 doctor_schedule_task.s(doctor, hospital_dict),
                 # link_schedule.s(hospital_dict, doctor.key_epgu.keyEPGU),
                 # activate_location.s(hospital_dict, doctor.key_epgu.keyEPGU).set(countdown=5),
-                appoint_patients.s(hospital_dict, doctor).set(countdown=5)
+                appoint_patients.s(doctor).set(countdown=5)
             ) for doctor in epgu_doctors])()
     # shutdown_session()
 
 
 @celery.task(base=SqlAlchemyTask)
-def lpu_tickets_task(hospital_id, hospital_dict):
+def lpu_tickets_task(hospital_id):
     epgu_doctors = db_session.query(Personal).filter(Personal.lpuId == hospital_id).filter(
         Personal.key_epgu.has(Personal_KeyEPGU.keyEPGU != None)
     ).all()
     if epgu_doctors:
         epgu_dw = DataWorker.provider('epgu', db_session)
-        group([appoint_patients.s((None, epgu_dw.get_doctor_tickets(doctor)), hospital_dict, doctor)
+        group([appoint_patients.s((None, epgu_dw.get_doctor_tickets(doctor)), doctor)
                for doctor in epgu_doctors])()
 
 
@@ -105,10 +105,7 @@ def sync_tickets_task():
                 all())
     if lpu_list:
         res = group([
-            lpu_tickets_task.s(
-                lpu.id,
-                dict(auth_token=lpu.token, place_id=lpu.keyEPGU)
-            ) for lpu in lpu_list])()
+            lpu_tickets_task.s(lpu.id) for lpu in lpu_list])()
         # print res.get()
     else:
         # self.__log(u'Нет ни одного ЛПУ, синхронизированного с ЕПГУ')
@@ -127,7 +124,7 @@ def sync_schedule_task():
         res = group([
             lpu_schedule_task.s(
                 lpu.id,
-                dict(auth_token=lpu.token, place_id=lpu.keyEPGU, epgu2_token=lpu.epgu2_token)
+                dict(epgu2_token=lpu.epgu2_token)
             ) for lpu in lpu_list])()
         # print res.get()
         # print self.msg
@@ -166,10 +163,8 @@ def epgu_send_lpu_tickets(hospital_id, hospital):
 @celery.task(base=SqlAlchemyTask)
 def epgu_send_new_tickets():
     lpu_list = (db_session.query(LPU).
-                filter(LPU.keyEPGU != '',
-                       LPU.keyEPGU != None,
-                       LPU.token != '',
-                       LPU.token != None).
+                filter(LPU.epgu2_token != '',
+                       LPU.epgu2_token != None).
                 all())
     if lpu_list:
         res = group([
