@@ -33,7 +33,7 @@ class EPGUWorker(object):
         def __init__(self, **kwargs):
             self.__dict__.update(kwargs)
 
-    def __init__(self, session=None, lpu_id=None):
+    def __init__(self, session=None, auth_token=None, lpu_id=None):
         self.msg = []
         self.time_table_period = 90  # TODO: вынести в настройки
         self.schedule_weeks_period = 3  # TODO: вынести в настройки
@@ -43,7 +43,7 @@ class EPGUWorker(object):
         else:
             self.session = Session2()
 
-        self.proxy_client = Clients.provider('epgu2', auth_token=self.__get_token(lpu_id))
+        self.proxy_client = Clients.provider('epgu2', auth_token=auth_token or self.__get_token(lpu_id))
 
     def __del__(self):
         shutdown_session()
@@ -670,8 +670,8 @@ class EPGUWorker(object):
                     return slot
         return None
 
-    def epgu_delete_slot(self, hospital, slot_id):
-        epgu_result = self.proxy_client.DeleteSlot(hospital, slot_id)
+    def epgu_delete_slot(self, slot_id):
+        epgu_result = self.proxy_client.DeleteSlot(slot_id)
         _hash = getattr(epgu_result, '_hash', None)
         if not _hash:
             self.__log(getattr(epgu_result, 'error', None))
@@ -915,11 +915,9 @@ class EPGUWorker(object):
                              extra=logger_tags)
                 return True
             else:
-                self.epgu_delete_slot(
-                    hospital=hospital_param,
-                    slot_id=params.get('slot_id'))
+                self.epgu_delete_slot(slot_id=params.get('slot_id'))
 
-    def send_enqueue(self, hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
+    def send_enqueue(self, doctor, patient, timeslot, enqueue_id, slot_unique_key):
         print 'send_enqueue %s' % slot_unique_key
         print 'enqueue_id %s' % enqueue_id
         if not slot_unique_key:
@@ -1015,8 +1013,8 @@ class EPGUWorker(object):
     #         self.__log(getattr(epgu_result, 'error', None))
     #     # return self.msg
 
-    def doctor_schedule_task(self, doctor, hospital_dict):
-        self.proxy_client.set_auth_token(hospital_dict['epgu2_token'])
+    def doctor_schedule_task(self, doctor, auth_token):
+        self.proxy_client.set_auth_token(auth_token)
 
         today = datetime.datetime.today().date()
         # TODO: get nearest monday for start_date?
@@ -1135,11 +1133,10 @@ class EPGUWorker(object):
                                                     Tickets.ticket_uuid == ticket_uid).first()
         return ticket
 
-    def send_new_tickets(self, hospital_id, hospital_info):
+    def send_new_tickets(self, hospital_id):
         person_dw = DataWorker.provider('personal')
         enqueue_dw = DataWorker.provider('enqueue')
         tickets = enqueue_dw.get_new_tickets(hospital_id)
-        task_hospital = hospital_info  # dict(auth_token=lpu_info.token, place_id=lpu_info.keyEPGU)
         if tickets:
             for ticket in tickets:
                 if ticket.status == CouponStatus.NEW:
@@ -1156,4 +1153,4 @@ class EPGUWorker(object):
                             self.session.rollback()
                 elif ticket.status == CouponStatus.CANCELLED:
                     _ticket = self._get_ticket(hospital_id, ticket.personId, ticket.uuid)
-                    self.epgu_delete_slot(task_hospital, _ticket.keyEPGU)
+                    self.epgu_delete_slot(_ticket.keyEPGU)

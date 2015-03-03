@@ -494,7 +494,7 @@ class EnqueueWorker(object):
             if len(hospital_uid) > 1:
                 dw = DataWorker.provider('lpu')
                 lpu_info = dw.get_by_id(hospital_uid[0])
-                task_hospital = dict(auth_token=lpu_info.token, place_id=lpu_info.keyEPGU)
+                auth_token = lpu_info.epgu2_token
                 proxy_client = Clients.provider(lpu_info.protocol, lpu_info.proxy.split(';')[0])
             else:
                 shutdown_session()
@@ -562,7 +562,7 @@ class EnqueueWorker(object):
             # Call Task send_enqueue to epgu
 
             send_enqueue_task.delay(
-                hospital=task_hospital,
+                auth_token=auth_token,
                 doctor={'lpu_unit': hospital_uid, 'doctor_id': doctor_uid},
                 patient=dict(fio=person_fio, id=_enqueue.get('patient_id')),
                 timeslot=timeslot_start,
@@ -588,21 +588,17 @@ class EnqueueWorker(object):
         return result
 
     def __delete_epgu_slot(self, hospital, patient_id, ticket_id):
-        if not hospital.token or not hospital.keyEPGU:
+        if not hospital.epgu2_token:
             return None
-        # TODO: может возникнуть ситуация, когда patient_id и ticket_id совпадают для разных ЛПУ
-        # TODO: тогда может не произвестись отмена записи на ГП, т.к. мы достанем не тот keyEPGU
-        # TODO: решается учётом lpu_id
         enqueue_record = (self.session.query(Enqueue).
                           filter(and_(Enqueue.patient_id == int(patient_id), Enqueue.ticket_id == int(ticket_id))).
                           one())
-        _hospital = dict(auth_token=hospital.token, place_id=hospital.keyEPGU)
         if enqueue_record:
             # epgu_dw = EPGUWorker()
             # epgu_dw.epgu_delete_slot(_hospital, enqueue_record.keyEPGU)
 
             # Call task delete slot in EPGU
-            epgu_delete_slot_task.delay(_hospital, enqueue_record.keyEPGU)
+            epgu_delete_slot_task.delay(hospital.epgu2_token, enqueue_record.keyEPGU)
 
     def __add_ticket(self, **kwargs):
         """Добавляет информацию о талончике в БД ИС"""
@@ -690,18 +686,18 @@ class EnqueueWorker(object):
         return result
 
 
-#INLINE EPGU TASKS
+# INLINE EPGU TASKS
 from is_celery.celery_init import celery
 
 
 @celery.task(interval_start=5, interval_step=5)
-def send_enqueue_task(hospital, doctor, patient, timeslot, enqueue_id, slot_unique_key):
+def send_enqueue_task(auth_token, doctor, patient, timeslot, enqueue_id, slot_unique_key):
     Task_Session = init_task_session()
     try:
         person_dw = DataWorker.provider('personal', Task_Session())
         doctor_info = person_dw.get_doctor(lpu_unit=doctor['lpu_unit'], doctor_id=doctor['doctor_id'])
-        epgu_dw = DataWorker.provider('epgu', Task_Session())
-        epgu_dw.send_enqueue(hospital, doctor_info, patient, timeslot, enqueue_id, slot_unique_key)
+        epgu_dw = DataWorker.provider('epgu', Task_Session(), auth_token=auth_token)
+        epgu_dw.send_enqueue(doctor_info, patient, timeslot, enqueue_id, slot_unique_key)
     except exceptions.Exception, e:
         logger.error(e, extra=logger_tags)
         print e
@@ -710,11 +706,11 @@ def send_enqueue_task(hospital, doctor, patient, timeslot, enqueue_id, slot_uniq
 
 
 @celery.task(interval_start=5, interval_step=5)
-def epgu_delete_slot_task(_hospital, enqueue_keyEPGU):
+def epgu_delete_slot_task(auth_token, enqueue_keyEPGU):
     Task_Session = init_task_session()
     try:
-        epgu_dw = DataWorker.provider('epgu', Task_Session())
-        epgu_dw.epgu_delete_slot(_hospital, enqueue_keyEPGU)
+        epgu_dw = DataWorker.provider('epgu', Task_Session(), auth_token=auth_token)
+        epgu_dw.epgu_delete_slot(enqueue_keyEPGU)
     except exceptions.Exception, e:
         logger.error(e, extra=logger_tags)
         print e
