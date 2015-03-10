@@ -9,7 +9,6 @@ from is_celery.celery_init import celery
 from int_service.lib.dataworker import UpdateWorker, DataWorker
 from admin.database import init_task_session
 from admin.models import LPU, Personal, Personal_KeyEPGU
-from kombu.transport.sqlalchemy.models import Message
 
 task_logger = get_task_logger(__name__)
 Task_Session = init_task_session()
@@ -124,7 +123,7 @@ def close_session(*args, **kwargs):
 
 @celery.task(base=SqlAlchemyTask)
 def clear_broker_messages():
-    db_session.query(Message).filter(Message.visible == 0).delete()
+    db_session.execute('DELETE FROM kombu_message WHERE visible=0')
     db_session.commit()
 
 
@@ -159,3 +158,5 @@ def epgu_send_new_tickets():
 def update_db():
     data_worker = UpdateWorker(db_session)
     data_worker.update_data()
+
+clear_broker_messages()
