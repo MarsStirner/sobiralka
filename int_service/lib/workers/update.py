@@ -297,6 +297,8 @@ class UpdateWorker(object):
         lpu_list = lpu_dw.get_list()
         if lpu_list:
             for lpu in lpu_list:
+                if not lpu.id:
+                    continue
                 # TODO: возможно ли избавиться от удаления врачей?
                 self.__clear_data(lpu)
                 self.__log(u'Обновление ЛПУ: %s' % lpu.name)
