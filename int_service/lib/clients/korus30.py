@@ -895,17 +895,18 @@ class ClientKorus30(AbstractClient):
             hospitalUidFrom: id ЛПУ, из которого производится запись (необязательный)
 
         """
+        tfoms_result = None
         ################################################################
         # Search in TFOMS
         ################################################################
-        tfoms_result = None
-        tfoms_params = self.__prepare_tfoms_params(self.__update_policy_type_code(deepcopy(kwargs), 'tfoms'))
-        try:
-            tfoms_result = self.__check_by_tfoms(tfoms_params)
-            logger.debug('QUERY TO TFOMS WAS SENT', extra=logger_tags)
-        except Exception, e:
-            logger.error(e, extra=logger_tags)
-            print e
+        if settings.ENQ_CLIENT_TFOMS_CHECK:
+            tfoms_params = self.__prepare_tfoms_params(self.__update_policy_type_code(deepcopy(kwargs), 'tfoms'))
+            try:
+                tfoms_result = self.__check_by_tfoms(tfoms_params)
+                logger.debug('QUERY TO TFOMS WAS SENT', extra=logger_tags)
+            except Exception, e:
+                logger.error(e, extra=logger_tags)
+                print e
         ################################################################
         # TODO: избавиться от костыля.
         kwargs = self.__update_policy_type_code(deepcopy(kwargs), 'core')
