@@ -498,6 +498,7 @@ class ClientKorus30(AbstractClient):
             birthDate: дата рождения (необязательный)
 
         """
+        document = kwargs.get('document')
         params = AddPatientParameters(
             lastName=kwargs.get('lastName'),
             firstName=kwargs.get('firstName'),
@@ -505,6 +506,12 @@ class ClientKorus30(AbstractClient):
             #omiPolicy = kwargs['omiPolicyNumber'],
             birthDate=kwargs.get('birthDate'),
             sex=int(kwargs.get('sex', 0)),
+            documentSerial=document.get('series'),
+            documentNumber=document.get('number'),
+            documentTypeCode=document.get('document_code'),
+            policySerial=document.get('series'),
+            policyNumber=document.get('number'),
+            policyTypeCode=document.get('policy_type')
         )
         try:
             result = self.client.addPatient(params)
