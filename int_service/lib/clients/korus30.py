@@ -506,10 +506,10 @@ class ClientKorus30(AbstractClient):
             #omiPolicy = kwargs['omiPolicyNumber'],
             birthDate=kwargs.get('birthDate'),
             sex=int(kwargs.get('sex', 0)),
-            documentSerial=document.get('series'),
+            documentSerial=document.get('serial'),
             documentNumber=document.get('number'),
             documentTypeCode=document.get('document_code'),
-            policySerial=document.get('series'),
+            policySerial=document.get('serial'),
             policyNumber=document.get('number'),
             policyTypeCode=document.get('policy_type')
         )
