@@ -684,7 +684,7 @@ class ClientKorus30(AbstractClient):
         patient = self.get_patient(patient_params, data)
         hospital_uid_from = data.get('hospitalUidFrom')
 
-        if not patient.success and hospital_uid_from and hospital_uid_from != '0':
+        if not patient.success:  # and hospital_uid_from and hospital_uid_from != '0':
             patient = self.addPatient(**patient_params)
         return patient
 
